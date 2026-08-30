@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parknacross Weather</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Live local weather</p>
+      <h1>Parknacross Weather</h1>
+      <p id="updated">Waiting for live Ecowitt data…</p>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="card primary">
+      <span>Temperature</span>
+      <strong id="temperature">--</strong>
+      <small>°C</small>
+    </section>
+
+    <section class="card">
+      <span>Feels like</span>
+      <strong id="feelsLike">--</strong>
+      <small>°C</small>
+    </section>
+
+    <section class="card">
+      <span>Humidity</span>
+      <strong id="humidity">--</strong>
+      <small>%</small>
+    </section>
+
+    <section class="card">
+      <span>Pressure</span>
+      <strong id="pressure">--</strong>
+      <small>hPa</small>
+    </section>
+
+    <section class="card">
+      <span>Wind speed</span>
+      <strong id="windSpeed">--</strong>
+      <small>km/h</small>
+    </section>
+
+    <section class="card">
+      <span>Wind direction</span>
+      <strong id="windDirection">--</strong>
+      <small>°</small>
+    </section>
+
+    <section class="card">
+      <span>Wind gust</span>
+      <strong id="windGust">--</strong>
+      <small>km/h</small>
+    </section>
+
+    <section class="card">
+      <span>Rainfall</span>
+      <strong id="rainfall">--</strong>
+      <small>mm</small>
+    </section>
+
+    <section class="card">
+      <span>UV index</span>
+      <strong id="uv">--</strong>
+      <small>UV</small>
+    </section>
+
+    <section class="card">
+      <span>Solar radiation</span>
+      <strong id="solar">--</strong>
+      <small>W/m²</small>
+    </section>
+  </main>
+
+  <footer>
+    <p>Weather data from Ecowitt • Parknacross</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
