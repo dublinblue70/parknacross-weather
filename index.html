@@ -3,86 +3,525 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Parknacross Weather Station</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#07141d" />
+  <title>Parknacross Weather | North Wexford Coast</title>
+
+  <style>
+    :root {
+      --bg: #06131c;
+      --bg2: #0b2230;
+      --card: rgba(14, 38, 52, 0.86);
+      --card-border: rgba(148, 210, 220, 0.16);
+      --text: #f3f8fa;
+      --muted: #9ab2bd;
+      --sea: #65d3d0;
+      --blue: #7bb7ff;
+      --rain: #5cc8ff;
+      --sun: #ffd36a;
+      --wind: #99e2d0;
+      --danger: #ff8b8b;
+      --shadow: 0 18px 45px rgba(0,0,0,.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(26, 110, 130, .22), transparent 35%),
+        radial-gradient(circle at 85% 15%, rgba(69, 121, 164, .17), transparent 30%),
+        linear-gradient(180deg, #06131c 0%, #071a25 48%, #05121a 100%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", sans-serif;
+    }
+
+    body {
+      padding: 28px 18px 42px;
+    }
+
+    .wrap {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--sea);
+      font-size: .78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      line-height: .98;
+      letter-spacing: -.045em;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: .98rem;
+    }
+
+    .status {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      background: rgba(255,255,255,.035);
+      color: var(--muted);
+      font-size: .85rem;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64737b;
+      box-shadow: 0 0 0 4px rgba(100,115,123,.12);
+    }
+
+    .dot.live {
+      background: #68df9f;
+      box-shadow: 0 0 0 4px rgba(104,223,159,.13);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr .7fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(17,48,65,.91), rgba(9,30,43,.91));
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .temperature-card {
+      min-height: 330px;
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .temperature-card::after {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      right: -75px;
+      top: -100px;
+      background: radial-gradient(circle, rgba(101,211,208,.18), transparent 67%);
+      pointer-events: none;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-weight: 700;
+    }
+
+    .temp {
+      margin: 24px 0 4px;
+      font-size: clamp(5.8rem, 16vw, 10rem);
+      line-height: .84;
+      font-weight: 800;
+      letter-spacing: -.075em;
+    }
+
+    .temp .unit {
+      font-size: .3em;
+      vertical-align: top;
+      margin-left: 4px;
+      color: #d8e7ec;
+      letter-spacing: 0;
+    }
+
+    .feels {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .side-card {
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 330px;
+    }
+
+    .side-main {
+      margin-top: 22px;
+      font-size: clamp(2.6rem, 7vw, 4.8rem);
+      line-height: 1;
+      font-weight: 750;
+      letter-spacing: -.04em;
+    }
+
+    .side-unit {
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 600;
+      margin-left: 4px;
+    }
+
+    .direction {
+      margin-top: 10px;
+      color: var(--wind);
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .mini-row {
+      border-top: 1px solid var(--card-border);
+      padding-top: 16px;
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .mini-row strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      padding: 22px;
+      min-height: 170px;
+    }
+
+    .metric-value {
+      margin-top: 20px;
+      font-size: 2.55rem;
+      line-height: 1;
+      font-weight: 760;
+      letter-spacing: -.035em;
+    }
+
+    .metric-unit {
+      font-size: .9rem;
+      color: var(--muted);
+      font-weight: 600;
+      margin-left: 3px;
+    }
+
+    .accent-wind { color: var(--wind); }
+    .accent-rain { color: var(--rain); }
+    .accent-sun  { color: var(--sun); }
+    .accent-blue { color: var(--blue); }
+
+    .about {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+
+    .about .card {
+      padding: 24px;
+    }
+
+    .about h2 {
+      margin: 8px 0 10px;
+      font-size: 1.35rem;
+    }
+
+    .about p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: .94rem;
+    }
+
+    .station-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 17px;
+    }
+
+    .station-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0;
+      border-top: 1px solid var(--card-border);
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .station-item strong {
+      color: var(--text);
+      text-align: right;
+    }
+
+    footer {
+      text-align: center;
+      color: #6f8995;
+      font-size: .78rem;
+      margin-top: 26px;
+    }
+
+    .error {
+      color: var(--danger);
+    }
+
+    @media (max-width: 820px) {
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .hero,
+      .about {
+        grid-template-columns: 1fr;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .side-card,
+      .temperature-card {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 500px) {
+      body {
+        padding: 20px 12px 32px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .temperature-card,
+      .side-card,
+      .metric,
+      .about .card {
+        border-radius: 20px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <header class="hero">
-    <div>
-      <p class="eyebrow">Live local weather</p>
-      <h1>Parknacross Weather</h1>
-      <div class="sub"->Live weather from the North Wexford coast</div>
-      <p id="updated">Waiting for live Ecowitt data…</p>
-    </div>
-  </header>
+  <main class="wrap">
+    <header>
+      <div>
+        <p class="eyebrow">North Wexford Coast</p>
+        <h1>Parknacross Weather</h1>
+        <p class="subtitle">Live local conditions from Parknacross, Ardamine</p>
+      </div>
 
-  <main class="grid">
-    <section class="card primary">
-      <span>Temperature</span>
-      <strong id="temperature">--</strong>
-      <small>°C</small>
+      <div class="status">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText">Waiting for station data</span>
+      </div>
+    </header>
+
+    <section class="hero">
+      <article class="card temperature-card">
+        <div class="label">Outdoor temperature</div>
+        <div class="temp">
+          <span id="temperature">--</span><span class="unit">°C</span>
+        </div>
+        <div class="feels">
+          Feels like <strong id="feelsLike">--</strong>°C
+          &nbsp; · &nbsp;
+          Humidity <strong id="humidity">--</strong>%
+        </div>
+      </article>
+
+      <article class="card side-card">
+        <div>
+          <div class="label">Wind</div>
+          <div class="side-main">
+            <span id="windSpeed">--</span><span class="side-unit">km/h</span>
+          </div>
+          <div class="direction" id="windDirection">--</div>
+        </div>
+
+        <div class="mini-row">
+          <span>Today's gust</span>
+          <strong><span id="windGust">--</span> km/h</strong>
+        </div>
+      </article>
     </section>
 
-    <section class="card">
-      <span>Feels like</span>
-      <strong id="feelsLike">--</strong>
-      <small>°C</small>
+    <section class="grid">
+      <article class="card metric">
+        <div class="label">Wind gust</div>
+        <div class="metric-value accent-wind">
+          <span id="gust">--</span><span class="metric-unit">km/h</span>
+        </div>
+      </article>
+
+      <article class="card metric">
+        <div class="label">Rain today</div>
+        <div class="metric-value accent-rain">
+          <span id="rain">--</span><span class="metric-unit">mm</span>
+        </div>
+      </article>
+
+      <article class="card metric">
+        <div class="label">Solar radiation</div>
+        <div class="metric-value accent-sun">
+          <span id="solar">--</span><span class="metric-unit">W/m²</span>
+        </div>
+      </article>
+
+      <article class="card metric">
+        <div class="label">Pressure</div>
+        <div class="metric-value accent-blue">
+          <span id="pressure">--</span><span class="metric-unit">hPa</span>
+        </div>
+      </article>
     </section>
 
-    <section class="card">
-      <span>Humidity</span>
-      <strong id="humidity">--</strong>
-      <small>%</small>
+    <section class="about">
+      <article class="card">
+        <div class="label">About the station</div>
+        <h2>Weather from the North Wexford coast</h2>
+        <p>
+          This personal weather station reports local conditions from Parknacross,
+          near Ardamine and Courtown. Readings are collected by Ecowitt hardware
+          and displayed here for a simple, at-a-glance view of current conditions.
+        </p>
+      </article>
+
+      <article class="card">
+        <div class="label">Station equipment</div>
+        <div class="station-list">
+          <div class="station-item">
+            <span>Outdoor sensor</span>
+            <strong>Ecowitt WS90</strong>
+          </div>
+          <div class="station-item">
+            <span>Gateway</span>
+            <strong>Ecowitt GW3000 / GW3001</strong>
+          </div>
+          <div class="station-item">
+            <span>Last update</span>
+            <strong id="lastUpdated">--</strong>
+          </div>
+        </div>
+      </article>
     </section>
 
-    <section class="card">
-      <span>Pressure</span>
-      <strong id="pressure">--</strong>
-      <small>hPa</small>
-    </section>
-
-    <section class="card">
-      <span>Wind speed</span>
-      <strong id="windSpeed">--</strong>
-      <small>km/h</small>
-    </section>
-
-    <section class="card">
-      <span>Wind direction</span>
-      <strong id="windDirection">--</strong>
-      <small>°</small>
-    </section>
-
-    <section class="card">
-      <span>Wind gust</span>
-      <strong id="windGust">--</strong>
-      <small>km/h</small>
-    </section>
-
-    <section class="card">
-      <span>Rainfall</span>
-      <strong id="rainfall">--</strong>
-      <small>mm</small>
-    </section>
-
-    <section class="card">
-      <span>UV index</span>
-      <strong id="uv">--</strong>
-      <small>UV</small>
-    </section>
-
-    <section class="card">
-      <span>Solar radiation</span>
-      <strong id="solar">--</strong>
-      <small>W/m²</small>
-    </section>
+    <footer>
+      Parknacross Weather · North Wexford, Ireland
+    </footer>
   </main>
 
-  <footer>
-    <p>Weather data from Ecowitt • Parknacross</p>
-  </footer>
+  <script>
+    /*
+      Replace the URL below with your own Cloudflare Worker / API endpoint.
 
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+      Expected JSON example:
+      {
+        "temperature": 14.8,
+        "feelsLike": 13.9,
+        "humidity": 82,
+        "windSpeed": 12.4,
+        "windGust": 21.7,
+        "windDirection": "WSW",
+        "rain": 1.2,
+        "solar": 245,
+        "pressure": 1014.6,
+        "timestamp": "2026-08-30T14:45:00+01:00"
+      }
+    */
+
+    const WEATHER_API_URL = "https://YOUR-WORKER.workers.dev/";
+
+    function display(value, fallback = "--") {
+      return value === undefined || value === null || value === "" ? fallback : value;
+    }
+
+    async function loadWeather() {
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+
+      if (WEATHER_API_URL.includes("YOUR-WORKER")) {
+        statusText.textContent = "Live data not connected";
+        return;
+      }
+
+      try {
+        const response = await fetch(WEATHER_API_URL, { cache: "no-store" });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        document.getElementById("temperature").textContent = display(data.temperature);
+        document.getElementById("feelsLike").textContent = display(data.feelsLike);
+        document.getElementById("humidity").textContent = display(data.humidity);
+        document.getElementById("windSpeed").textContent = display(data.windSpeed);
+        document.getElementById("windGust").textContent = display(data.windGust);
+        document.getElementById("gust").textContent = display(data.windGust);
+        document.getElementById("windDirection").textContent = display(data.windDirection);
+        document.getElementById("rain").textContent = display(data.rain);
+        document.getElementById("solar").textContent = display(data.solar);
+        document.getElementById("pressure").textContent = display(data.pressure);
+
+        const timestamp = data.timestamp ? new Date(data.timestamp) : new Date();
+        document.getElementById("lastUpdated").textContent =
+          timestamp.toLocaleString("en-IE", {
+            hour: "2-digit",
+            minute: "2-digit",
+            day: "2-digit",
+            month: "short"
+          });
+
+        statusText.textContent = "Station online";
+        statusDot.classList.add("live");
+      } catch (error) {
+        console.error("Weather data error:", error);
+        statusText.textContent = "Unable to load live data";
+        statusText.classList.add("error");
+        statusDot.classList.remove("live");
+      }
+    }
+
+    loadWeather();
+    setInterval(loadWeather, 60 * 1000);
+  </script>
 </body>
 </html>
