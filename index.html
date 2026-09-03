@@ -1,180 +1,1165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#071821">
-  <meta name="description" content="Live local weather from Parknacross, Ardamine on the North Wexford coast.">
-  <title>Parknacross Weather | Ardamine, North Wexford</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050816" />
+  <meta name="description" content="Parknacross Weather — ultra cool weather dashboard for Ardamine, Co. Wexford." />
+  <title>Parknacross Weather</title>
+  <style>
+    :root{
+      --bg:#050816;
+      --bg2:#071226;
+      --panel:rgba(14,24,44,.62);
+      --panel-strong:rgba(16,27,48,.82);
+      --line:rgba(147,196,255,.18);
+      --text:#eef6ff;
+      --muted:#a6b8d4;
+      --cyan:#76d9ff;
+      --blue:#7aa6ff;
+      --purple:#b48cff;
+      --pink:#ff78c8;
+      --green:#7ef7b8;
+      --yellow:#ffd86f;
+      --orange:#ffb058;
+      --red:#ff7d7d;
+      --shadow:0 25px 70px rgba(0,0,0,.38);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(118,217,255,.16), transparent 20%),
+        radial-gradient(circle at 85% 15%, rgba(180,140,255,.14), transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(255,120,200,.10), transparent 28%),
+        linear-gradient(180deg, #030611 0%, #071226 100%);
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    body::before,
+    body::after{
+      content:"";
+      position:fixed;
+      inset:auto;
+      width:42vw;
+      height:42vw;
+      border-radius:50%;
+      filter:blur(90px);
+      opacity:.22;
+      pointer-events:none;
+      z-index:0;
+      animation: drift 16s ease-in-out infinite alternate;
+    }
+    body::before{
+      top:-10vw; left:-8vw;
+      background:linear-gradient(135deg,var(--cyan),transparent 60%);
+    }
+    body::after{
+      right:-10vw; bottom:-12vw;
+      background:linear-gradient(135deg,var(--purple),transparent 60%);
+      animation-duration:20s;
+    }
+    @keyframes drift{
+      from{transform:translate(0,0) scale(1)}
+      to{transform:translate(40px,20px) scale(1.08)}
+    }
+
+    .wrap{
+      position:relative;
+      z-index:1;
+      width:min(1540px, calc(100% - 28px));
+      margin:14px auto;
+      border:1px solid var(--line);
+      border-radius:28px;
+      overflow:hidden;
+      background:linear-gradient(180deg, rgba(6,13,28,.84), rgba(5,10,22,.92));
+      backdrop-filter: blur(18px);
+      box-shadow:var(--shadow);
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:24px;
+      padding:20px 28px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      backdrop-filter:blur(12px);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:16px;
+    }
+    .brand-icon{
+      width:58px;height:58px;border-radius:18px;
+      display:grid;place-items:center;
+      font-size:30px;
+      background:linear-gradient(135deg, rgba(118,217,255,.22), rgba(180,140,255,.20));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
+    }
+    .brand h1{
+      margin:0;
+      font-size:clamp(1.3rem,2.6vw,2.1rem);
+      font-weight:700;
+      letter-spacing:.04em;
+      background:linear-gradient(90deg,#f3f9ff,#9cd8ff 40%,#d5c4ff 90%);
+      -webkit-background-clip:text;background-clip:text;color:transparent;
+    }
+    .brand p{
+      margin:4px 0 0;
+      color:#d3deef;
+      font-size:.95rem;
+    }
+
+    .nav{
+      display:flex;
+      gap:28px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .nav a{
+      text-decoration:none;
+      color:#c3d0e6;
+      font-size:.96rem;
+      position:relative;
+      padding:8px 0;
+    }
+    .nav a.active,
+    .nav a:hover{color:#fff}
+    .nav a.active::after,
+    .nav a:hover::after{
+      content:"";
+      position:absolute;left:0;right:0;bottom:-7px;height:2px;border-radius:99px;
+      background:linear-gradient(90deg,var(--cyan),var(--purple));
+      box-shadow:0 0 18px rgba(118,217,255,.6);
+    }
+
+    main{padding:24px 28px 32px}
+
+    .hero{
+      display:grid;
+      grid-template-columns: 1.45fr .95fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .glass{
+      background:linear-gradient(180deg, rgba(17,30,54,.74), rgba(10,19,36,.82));
+      border:1px solid rgba(159,205,255,.16);
+      border-radius:var(--radius);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 10px 30px rgba(0,0,0,.18);
+      backdrop-filter: blur(16px);
+    }
+
+    .hero-card{
+      position:relative;
+      overflow:hidden;
+      padding:24px;
+      min-height:260px;
+    }
+
+    .hero-card::before{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(118,217,255,.16), transparent 32%),
+        radial-gradient(circle at 80% 10%, rgba(180,140,255,.12), transparent 32%);
+      pointer-events:none;
+    }
+
+    .hero-top{
+      position:relative;
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:flex-start;
+      margin-bottom:18px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:.8rem;
+      color:#d9ebff;
+      padding:8px 12px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      backdrop-filter:blur(10px);
+    }
+    .dot{
+      width:8px;height:8px;border-radius:50%;
+      background:linear-gradient(180deg,#78ffb0,#34d47c);
+      box-shadow:0 0 12px rgba(80,255,160,.7);
+    }
+
+    .last-updated{
+      color:var(--muted);
+      font-size:.9rem;
+      text-align:right;
+      line-height:1.5;
+    }
+
+    .hero-main{
+      position:relative;
+      display:grid;
+      grid-template-columns: auto 1fr auto;
+      align-items:center;
+      gap:24px;
+    }
+
+    .weather-icon{
+      width:100px;height:100px;border-radius:28px;
+      display:grid;place-items:center;
+      font-size:56px;
+      background:linear-gradient(135deg, rgba(118,217,255,.18), rgba(255,216,111,.12));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .temp-block .status{
+      font-size:.98rem;
+      color:#cfe3ff;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+    }
+    .temp-big{
+      display:flex;align-items:flex-start;gap:10px;
+      margin-top:8px;
+      line-height:.92;
+    }
+    .temp-big .num{
+      font-size:clamp(3.6rem,8vw,6.2rem);
+      font-weight:280;
+      letter-spacing:-.04em;
+    }
+    .temp-big .unit{
+      font-size:1.4rem;
+      color:#d4e3f3;
+      margin-top:10px;
+    }
+    .temp-meta{
+      margin-top:14px;
+      display:flex;gap:16px;flex-wrap:wrap;
+      color:#bfd1e4;
+      font-size:.95rem;
+    }
+
+    .mini-overview{
+      display:grid;
+      gap:12px;
+      min-width:250px;
+    }
+    .mini-row{
+      display:flex;justify-content:space-between;gap:18px;
+      padding:11px 12px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;
+      color:#dce8f8;
+    }
+    .mini-row span{color:#a8bdd7}
+
+    .metric-grid{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0,1fr));
+      gap:16px;
+      margin-bottom:18px;
+    }
+    .metric{
+      padding:18px 18px 16px;
+      min-height:160px;
+      position:relative;
+      overflow:hidden;
+    }
+    .metric::before{
+      content:"";
+      position:absolute; inset:-30% auto auto -20%;
+      width:120px;height:120px;border-radius:50%;
+      background:radial-gradient(circle, rgba(118,217,255,.14), transparent 65%);
+      pointer-events:none;
+    }
+    .metric-label{
+      display:flex;align-items:center;gap:10px;
+      color:#ebf3ff;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+      font-size:.8rem;
+    }
+    .metric-label i{
+      width:30px;height:30px;border-radius:10px;
+      display:grid;place-items:center;
+      background:rgba(255,255,255,.06);
+      font-style:normal;
+    }
+    .metric-value{
+      display:flex; align-items:flex-end; gap:8px;
+      margin-top:20px;
+    }
+    .metric-value .v{
+      font-size:clamp(1.85rem,3.7vw,3rem);
+      font-weight:300;line-height:1;
+    }
+    .metric-value .u{
+      color:#d3dfef;
+      font-size:.95rem;
+      margin-bottom:4px;
+    }
+    .metric-sub{
+      margin-top:14px;
+      color:#c4d2e3;
+      font-size:.95rem;
+      line-height:1.5;
+    }
+    .trend-up{color:var(--green)}
+    .trend-down{color:var(--red)}
+    .accent-cyan{color:var(--cyan)}
+    .accent-orange{color:var(--orange)}
+    .accent-purple{color:var(--purple)}
+    .accent-green{color:var(--green)}
+
+    .chips{
+      display:flex;flex-wrap:wrap;gap:12px;
+      margin-bottom:18px;
+    }
+    .chip{
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      color:#dce7f8;
+      font-size:.93rem;
+      display:flex;align-items:center;gap:10px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .chip strong{color:#fff}
+
+    .chart-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:18px;
+    }
+    .chart-card{
+      padding:18px;
+      min-height:425px;
+    }
+    .card-head{
+      display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+      margin-bottom:12px;
+    }
+    .card-head h2{
+      margin:0;
+      font-size:1.06rem;
+      font-weight:600;
+      color:#f7fbff;
+    }
+    .card-head p{
+      margin:6px 0 0;
+      color:#9fb4cd;
+      font-size:.88rem;
+    }
+    .tag{
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:.77rem;
+      color:#dce9f9;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+
+    .chart-wrap{
+      height:295px;
+      position:relative;
+    }
+
+    .mini-stats{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+    }
+    .mini-stat{
+      padding:12px 10px;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      text-align:center;
+    }
+    .mini-stat span{
+      display:block;
+      color:#9fb4cd;
+      text-transform:uppercase;
+      font-size:.72rem;
+      letter-spacing:.05em;
+    }
+    .mini-stat strong{
+      display:block;
+      margin-top:7px;
+      color:#fff;
+      font-size:1rem;
+      font-weight:600;
+    }
+
+    .wind-block{
+      display:grid;
+      grid-template-columns:1fr 230px;
+      gap:18px;
+      align-items:center;
+      min-height:330px;
+    }
+    .compass{
+      width:min(340px, 82vw);
+      aspect-ratio:1;
+      margin:auto;
+      position:relative;
+      border-radius:50%;
+      border:1px solid rgba(154,204,255,.20);
+      background:
+        radial-gradient(circle, transparent 0 24%, rgba(163,209,255,.12) 24.2% 24.8%, transparent 25% 49%, rgba(163,209,255,.10) 49.2% 49.8%, transparent 50%),
+        linear-gradient(90deg, transparent 49.8%, rgba(163,209,255,.18) 50%, transparent 50.2%),
+        linear-gradient(0deg, transparent 49.8%, rgba(163,209,255,.18) 50%, transparent 50.2%);
+      box-shadow:inset 0 0 80px rgba(118,217,255,.04);
+    }
+    .compass .n,.compass .e,.compass .s,.compass .w{
+      position:absolute;color:#f0f6ff;font-weight:700;
+    }
+    .n{left:50%;top:-26px;transform:translateX(-50%)}
+    .e{right:-21px;top:50%;transform:translateY(-50%)}
+    .s{left:50%;bottom:-28px;transform:translateX(-50%)}
+    .w{left:-22px;top:50%;transform:translateY(-50%)}
+    .needle{
+      position:absolute;
+      left:calc(50% - 4px);
+      bottom:50%;
+      width:8px;height:44%;
+      border-radius:999px 999px 0 0;
+      background:linear-gradient(180deg,var(--yellow), rgba(255,216,111,.14));
+      transform-origin:50% 100%;
+      box-shadow:0 0 18px rgba(255,216,111,.35);
+    }
+    .needle::before{
+      content:"";
+      position:absolute;left:50%;top:-14px;transform:translateX(-50%);
+      border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:18px solid var(--yellow);
+    }
+    .calm{
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+      width:102px;height:102px;border-radius:50%;
+      display:grid;place-items:center;text-align:center;
+      background:rgba(13,24,42,.92);
+      border:1px solid rgba(255,255,255,.08);
+      color:#aac0d8;font-size:.8rem;
+      box-shadow:0 0 24px rgba(0,0,0,.22);
+    }
+    .calm strong{display:block;color:#fff;font-size:1.1rem;margin-top:4px}
+
+    .legend{
+      display:grid;gap:12px;color:#d9e5f5;font-size:.9rem;
+    }
+    .legend-item{display:flex;align-items:center;gap:10px}
+    .legend-swatch{
+      width:22px;height:12px;border-radius:4px;
+    }
+    .sw1{background:#ff8d8d}
+    .sw2{background:#ffbc64}
+    .sw3{background:#cfe25f}
+    .sw4{background:#6ef0be}
+    .sw5{background:#7aa6ff}
+
+    .bottom-grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:18px;
+      margin-top:18px;
+    }
+    .info-strip{
+      padding:18px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+    }
+    .info{
+      padding:16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      display:flex;align-items:center;gap:14px;
+    }
+    .info .ico{
+      width:48px;height:48px;border-radius:14px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg, rgba(118,217,255,.15), rgba(180,140,255,.14));
+      font-size:24px;
+    }
+    .info span,.info small{
+      display:block;color:#a6bbd2
+    }
+    .info strong{
+      display:block;margin:4px 0;color:#fff;font-size:1.02rem
+    }
+
+    .aside{
+      padding:18px;
+    }
+    .aside h3{
+      margin:0 0 12px;
+      font-size:1.02rem;
+    }
+    .highlight-list{
+      display:grid;gap:12px;
+    }
+    .highlight{
+      padding:14px 15px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .highlight .label{
+      color:#9fb4cd;
+      font-size:.83rem;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+      margin-bottom:6px;
+    }
+    .highlight .value{
+      font-size:1.15rem;
+      font-weight:650;
+    }
+
+    footer{
+      display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+      padding:18px 28px;
+      border-top:1px solid var(--line);
+      color:#93a9c2;
+      font-size:.86rem;
+    }
+    footer a{color:#9ddcff;text-decoration:none}
+
+    @media (max-width: 1220px){
+      .metric-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .hero{grid-template-columns:1fr}
+      .bottom-grid{grid-template-columns:1fr}
+    }
+    @media (max-width: 920px){
+      .chart-grid{grid-template-columns:1fr}
+      .topbar{flex-direction:column;align-items:flex-start}
+      .hero-main{grid-template-columns:1fr}
+      .mini-overview{min-width:0}
+      .wind-block{grid-template-columns:1fr}
+      .info-strip{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width: 680px){
+      .wrap{width:100%;margin:0;border-radius:0;border-left:none;border-right:none}
+      .topbar, main, footer{padding-left:14px;padding-right:14px}
+      .metric-grid{grid-template-columns:1fr}
+      .mini-stats{grid-template-columns:repeat(2,1fr)}
+      .info-strip{grid-template-columns:1fr}
+      .nav{gap:16px}
+      .brand p{font-size:.85rem}
+      .weather-icon{width:84px;height:84px;font-size:44px}
+      .hero-card{padding:18px}
+    }
+  </style>
 </head>
 <body>
-  <div class="sky-glow sky-glow-one"></div>
-  <div class="sky-glow sky-glow-two"></div>
-
-  <main class="page-shell">
-    <header class="site-header">
-      <div>
-        <p class="eyebrow">Ardamine · North Wexford Coast · Ireland</p>
-        <h1>Parknacross Weather</h1>
-        <p class="subtitle">Live conditions from a personal weather station near Courtown, Co. Wexford</p>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">🌤️</div>
+        <div>
+          <h1>PARKNACROSS WEATHER</h1>
+          <p>Ardamine, Co. Wexford, Ireland</p>
+        </div>
       </div>
-
-      <div class="status-pill" id="statusPill" aria-live="polite">
-        <span class="status-dot" id="statusDot"></span>
-        <span id="statusText">Connecting to station…</span>
-      </div>
+      <nav class="nav">
+        <a class="active" href="#dashboard">Dashboard</a>
+        <a href="#graphs">Graphs</a>
+        <a href="#station">Station</a>
+        <a href="#records">Records</a>
+        <a href="https://github.com/dublinblue70/parknacross-weather" target="_blank" rel="noopener">GitHub</a>
+      </nav>
     </header>
 
-    <section class="hero-grid" aria-label="Current conditions">
-      <article class="panel temperature-panel">
-        <div class="panel-topline">
-          <span class="metric-label">Outdoor temperature</span>
-          <span class="updated-compact" id="updatedCompact">Updated --</span>
-        </div>
-
-        <div class="temperature-reading">
-          <span id="temperature">--</span><span class="temperature-unit">°C</span>
-        </div>
-
-        <div class="condition-summary" id="conditionSummary">Waiting for live station data</div>
-
-        <div class="temperature-details">
-          <div>
-            <span class="detail-label">Feels like</span>
-            <strong><span id="feelsLike">--</span>°C</strong>
-          </div>
-          <div>
-            <span class="detail-label">Humidity</span>
-            <strong><span id="humidity">--</span>%</strong>
-          </div>
-          <div>
-            <span class="detail-label">Today</span>
-            <strong>↑ <span id="tempHigh">--</span>° &nbsp; ↓ <span id="tempLow">--</span>°</strong>
-          </div>
-        </div>
-      </article>
-
-      <article class="panel wind-panel">
-        <div class="panel-topline">
-          <span class="metric-label">Wind</span>
-          <span class="coastal-badge">Coastal reading</span>
-        </div>
-
-        <div class="wind-content">
-          <div class="compass" aria-label="Wind direction compass">
-            <span class="compass-point north">N</span>
-            <span class="compass-point east">E</span>
-            <span class="compass-point south">S</span>
-            <span class="compass-point west">W</span>
-            <div class="compass-ring"></div>
-            <div class="wind-arrow" id="windArrow">↑</div>
+    <main id="dashboard">
+      <section class="hero">
+        <div class="hero-card glass">
+          <div class="hero-top">
+            <div class="pill"><span class="dot"></span> LIVE LOCAL WEATHER</div>
+            <div class="last-updated" id="lastUpdated">Last updated: --</div>
           </div>
 
-          <div class="wind-reading">
-            <div class="wind-speed"><span id="windSpeed">--</span><small>km/h</small></div>
-            <div class="wind-direction"><span id="windDirection">--</span><span id="windDegrees"></span></div>
-            <div class="wind-gust">Gust <strong><span id="windGust">--</span> km/h</strong></div>
+          <div class="hero-main">
+            <div class="weather-icon">⛅</div>
+
+            <div class="temp-block">
+              <div class="status">Current Conditions</div>
+              <div class="temp-big">
+                <span class="num" id="heroTemp">14.6</span>
+                <span class="unit">°C</span>
+              </div>
+              <div class="temp-meta">
+                <span>Feels like <strong id="heroFeels">13.8°C</strong></span>
+                <span>Humidity <strong id="heroHumidity">73%</strong></span>
+                <span>Pressure <strong id="heroPressure">1014.2 hPa</strong></span>
+              </div>
+            </div>
+
+            <div class="mini-overview">
+              <div class="mini-row"><span>Wind</span><strong id="heroWind">18.7 km/h</strong></div>
+              <div class="mini-row"><span>Rain today</span><strong id="heroRain">3.6 mm</strong></div>
+              <div class="mini-row"><span>Dew point</span><strong id="heroDew">9.6 °C</strong></div>
+              <div class="mini-row"><span>Trend</span><strong id="heroTrend">Falling pressure</strong></div>
+            </div>
           </div>
         </div>
-      </article>
-    </section>
 
-    <section class="metrics-grid" aria-label="Weather measurements">
-      <article class="panel metric-card rain-card">
-        <div class="metric-icon">◌</div>
-        <span class="metric-label">Rain today</span>
-        <div class="metric-reading"><span id="rainfall">--</span><small>mm</small></div>
-        <div class="metric-foot">Rate <strong><span id="rainRate">--</span> mm/h</strong></div>
-      </article>
-
-      <article class="panel metric-card pressure-card">
-        <div class="metric-icon">◎</div>
-        <span class="metric-label">Pressure</span>
-        <div class="metric-reading"><span id="pressure">--</span><small>hPa</small></div>
-        <div class="metric-foot" id="pressureTrend">Sea-level pressure</div>
-      </article>
-
-      <article class="panel metric-card solar-card">
-        <div class="metric-icon">☼</div>
-        <span class="metric-label">Solar radiation</span>
-        <div class="metric-reading"><span id="solar">--</span><small>W/m²</small></div>
-        <div class="metric-foot">UV index <strong id="uv">--</strong></div>
-      </article>
-
-      <article class="panel metric-card gust-card">
-        <div class="metric-icon">≈</div>
-        <span class="metric-label">Strongest gust</span>
-        <div class="metric-reading"><span id="maxGust">--</span><small>km/h</small></div>
-        <div class="metric-foot">Current gust <strong><span id="gustDuplicate">--</span> km/h</strong></div>
-      </article>
-    </section>
-
-    <section class="history-section">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">At a glance</p>
-          <h2>Recent station readings</h2>
-        </div>
-        <p>Charts will populate automatically from readings collected by this browser.</p>
-      </div>
-
-      <div class="charts-grid">
-        <article class="panel chart-card">
-          <div class="chart-heading">
-            <span>Temperature</span>
-            <strong>Last 24h</strong>
+        <div class="hero-card glass">
+          <div class="card-head">
+            <div>
+              <h2>Today's vibe</h2>
+              <p>Quick-glance summary from the station</p>
+            </div>
+            <div class="tag" id="conditionsTag">Fresh & breezy</div>
           </div>
-          <canvas id="temperatureChart" height="180"></canvas>
-          <div class="chart-empty" id="temperatureChartEmpty">Waiting for enough readings to draw the chart</div>
+
+          <div class="highlight-list">
+            <div class="highlight">
+              <div class="label">Temperature range</div>
+              <div class="value"><span id="todayLow">11.8</span>°C → <span id="todayHigh">17.3</span>°C</div>
+            </div>
+            <div class="highlight">
+              <div class="label">Peak gust</div>
+              <div class="value"><span id="peakGust">31.5</span> km/h</div>
+            </div>
+            <div class="highlight">
+              <div class="label">Rain this month</div>
+              <div class="value"><span id="monthRain">42.8</span> mm</div>
+            </div>
+            <div class="highlight">
+              <div class="label">Solar peak</div>
+              <div class="value"><span id="solarPeak">93</span> klux</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="chips">
+        <div class="chip">🌅 Sunrise <strong id="sunriseChip">05:40</strong></div>
+        <div class="chip">🌇 Sunset <strong id="sunsetChip">21:17</strong></div>
+        <div class="chip">🌙 Moon <strong id="moonChip">Waning Gibbous · 82%</strong></div>
+        <div class="chip">📡 Station <strong>WS90 + GW3001</strong></div>
+        <div class="chip">✅ Signal <strong>Excellent</strong></div>
+      </section>
+
+      <section class="metric-grid">
+        <article class="metric glass">
+          <div class="metric-label"><i>🌡️</i> Outdoor temp</div>
+          <div class="metric-value"><span class="v" id="tempVal">14.6</span><span class="u">°C</span></div>
+          <div class="metric-sub">Feels like <strong id="feelsVal">13.8°C</strong><br><span class="trend-up">↑ <span id="tempMax">17.3</span>°C</span> &nbsp; <span class="trend-down">↓ <span id="tempMin">11.8</span>°C</span></div>
         </article>
 
-        <article class="panel chart-card">
-          <div class="chart-heading">
-            <span>Wind speed</span>
-            <strong>Last 24h</strong>
-          </div>
-          <canvas id="windChart" height="180"></canvas>
-          <div class="chart-empty" id="windChartEmpty">Waiting for enough readings to draw the chart</div>
+        <article class="metric glass">
+          <div class="metric-label"><i>💧</i> Humidity</div>
+          <div class="metric-value"><span class="v" id="humVal">73</span><span class="u">%</span></div>
+          <div class="metric-sub">Dew point <strong id="dewVal">9.6°C</strong><br>Comfort: <span class="accent-cyan" id="comfortVal">Damp</span></div>
         </article>
-      </div>
-    </section>
 
-    <section class="about-grid">
-      <article class="panel about-card">
-        <p class="eyebrow">About the station</p>
-        <h2>Local weather from Parknacross</h2>
-        <p>
-          This personal weather station reports conditions from Parknacross, Ardamine,
-          near Courtown on the North Wexford coast in Ireland. It is intended as a simple local
-          snapshot of temperature, wind, rainfall, pressure and sunshine.
-        </p>
-      </article>
+        <article class="metric glass">
+          <div class="metric-label"><i>💨</i> Wind</div>
+          <div class="metric-value"><span class="v" id="windVal">18.7</span><span class="u">km/h</span></div>
+          <div class="metric-sub">Gust <strong id="gustVal">31.5 km/h</strong><br><span class="accent-cyan" id="dirVal">WSW (247°)</span></div>
+        </article>
 
-      <article class="panel station-card">
-        <p class="eyebrow">Station details</p>
-        <div class="station-row">
-          <span>Outdoor sensor</span><strong>Ecowitt WS90</strong>
+        <article class="metric glass">
+          <div class="metric-label"><i>🌧️</i> Rain today</div>
+          <div class="metric-value"><span class="v" id="rainVal">3.6</span><span class="u">mm</span></div>
+          <div class="metric-sub">Rate <strong id="rainRateVal">0.4 mm/h</strong><br>This month: <span class="accent-green" id="rainMonthVal">42.8 mm</span></div>
+        </article>
+
+        <article class="metric glass">
+          <div class="metric-label"><i>🧭</i> Pressure</div>
+          <div class="metric-value"><span class="v" id="pressureVal">1014.2</span><span class="u">hPa</span></div>
+          <div class="metric-sub"><span class="accent-purple" id="pressureTrendVal">Falling</span><br>24h change <strong id="pressureChangeVal">-2.6 hPa</strong></div>
+        </article>
+      </section>
+
+      <section id="graphs" class="chart-grid">
+        <article class="chart-card glass">
+          <div class="card-head">
+            <div>
+              <h2>Temperature & Dew Point</h2>
+              <p>Last 24 hours</p>
+            </div>
+            <div class="tag">24h trend</div>
+          </div>
+          <div class="chart-wrap"><canvas id="temperatureChart"></canvas></div>
+        </article>
+
+        <article class="chart-card glass">
+          <div class="card-head">
+            <div>
+              <h2>Wind Speed & Gust</h2>
+              <p>Last 24 hours</p>
+            </div>
+            <div class="tag">Live breeze profile</div>
+          </div>
+          <div class="chart-wrap"><canvas id="windChart"></canvas></div>
+        </article>
+
+        <article class="chart-card glass">
+          <div class="card-head">
+            <div>
+              <h2>Rainfall</h2>
+              <p>Last 7 days</p>
+            </div>
+            <div class="tag">Accumulation</div>
+          </div>
+          <div class="chart-wrap"><canvas id="rainChart"></canvas></div>
+          <div class="mini-stats">
+            <div class="mini-stat"><span>Today</span><strong id="statRainToday">3.6 mm</strong></div>
+            <div class="mini-stat"><span>This month</span><strong id="statRainMonth">42.8 mm</strong></div>
+            <div class="mini-stat"><span>This year</span><strong id="statRainYear">812.0 mm</strong></div>
+            <div class="mini-stat"><span>Wettest day</span><strong id="statWettest">28.4 mm</strong></div>
+          </div>
+        </article>
+
+        <article class="chart-card glass">
+          <div class="card-head">
+            <div>
+              <h2>Barometric Pressure</h2>
+              <p>Last 24 hours</p>
+            </div>
+            <div class="tag">Pressure watch</div>
+          </div>
+          <div class="chart-wrap"><canvas id="pressureChart"></canvas></div>
+          <div class="mini-stats">
+            <div class="mini-stat"><span>Current</span><strong id="statPressure">1014.2 hPa</strong></div>
+            <div class="mini-stat"><span>24h change</span><strong id="statPressureChange">-2.6 hPa</strong></div>
+            <div class="mini-stat"><span>Trend</span><strong id="statPressureTrend">Falling</strong></div>
+            <div class="mini-stat"><span>Inches</span><strong id="statPressureInHg">29.95 inHg</strong></div>
+          </div>
+        </article>
+
+        <article class="chart-card glass">
+          <div class="card-head">
+            <div>
+              <h2>Solar Light & UV</h2>
+              <p>Today</p>
+            </div>
+            <div class="tag">Sun energy</div>
+          </div>
+          <div class="chart-wrap"><canvas id="solarChart"></canvas></div>
+        </article>
+
+        <article class="chart-card glass">
+          <div class="card-head">
+            <div>
+              <h2>Wind Direction</h2>
+              <p>Prevailing direction over the last 24 hours</p>
+            </div>
+            <div class="tag">Compass view</div>
+          </div>
+
+          <div class="wind-block">
+            <div class="compass">
+              <span class="n">N</span>
+              <span class="e">E</span>
+              <span class="s">S</span>
+              <span class="w">W</span>
+              <div class="needle" id="needle"></div>
+              <div class="calm">Prevailing<strong id="prevailing">WSW</strong></div>
+            </div>
+
+            <div class="legend">
+              <div class="legend-item"><span class="legend-swatch sw1"></span> &gt; 30 km/h</div>
+              <div class="legend-item"><span class="legend-swatch sw2"></span> 20–30 km/h</div>
+              <div class="legend-item"><span class="legend-swatch sw3"></span> 10–20 km/h</div>
+              <div class="legend-item"><span class="legend-swatch sw4"></span> 1–10 km/h</div>
+              <div class="legend-item"><span class="legend-swatch sw5"></span> Direction focus</div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="bottom-grid" id="station">
+        <div class="info-strip glass">
+          <div class="info">
+            <div class="ico">🌅</div>
+            <div><span>Sunrise</span><strong id="sunrise">05:40</strong><small>Morning light</small></div>
+          </div>
+          <div class="info">
+            <div class="ico">🌇</div>
+            <div><span>Sunset</span><strong id="sunset">21:17</strong><small>Evening light</small></div>
+          </div>
+          <div class="info">
+            <div class="ico">🌙</div>
+            <div><span>Moon phase</span><strong id="moonPhase">Waning Gibbous</strong><small id="moonPercent">82%</small></div>
+          </div>
+          <div class="info">
+            <div class="ico">📶</div>
+            <div><span>Station health</span><strong>WS90 & GW3001</strong><small>Signal: Excellent</small></div>
+          </div>
         </div>
-        <div class="station-row">
-          <span>Gateway</span><strong>Ecowitt GW3001</strong>
-        </div>
-        <div class="station-row">
-          <span>Refresh interval</span><strong>60 seconds</strong>
-        </div>
-        <div class="station-row">
-          <span>Last station update</span><strong id="lastUpdated">--</strong>
-        </div>
-      </article>
-    </section>
+
+        <aside class="aside glass" id="records">
+          <h3>Highlights</h3>
+          <div class="highlight-list">
+            <div class="highlight">
+              <div class="label">Best use for your site</div>
+              <div class="value">Looks great on desktop, tablet and mobile</div>
+            </div>
+            <div class="highlight">
+              <div class="label">Current data mode</div>
+              <div class="value">Stylish demo data for layout testing</div>
+            </div>
+            <div class="highlight">
+              <div class="label">Next step</div>
+              <div class="value">Connect live GW3001 data feed later</div>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
 
     <footer>
-      <span>Parknacross Weather · Ardamine · Co. Wexford · Ireland</span>
-      <span>Personal weather station data</span>
+      <span>© <span id="year"></span> Parknacross Weather</span>
+      <span>Ultra-cool dashboard concept for your Ecowitt WS90 & GW3001</span>
+      <a href="https://github.com/dublinblue70/parknacross-weather" target="_blank" rel="noopener">View on GitHub</a>
     </footer>
-  </main>
+  </div>
 
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script>
+    const weather = {
+      current: {
+        temperature: 14.6,
+        feelsLike: 13.8,
+        high: 17.3,
+        low: 11.8,
+        humidity: 73,
+        dewPoint: 9.6,
+        comfort: "Damp",
+        windSpeed: 18.7,
+        windGust: 31.5,
+        windDirection: "WSW (247°)",
+        windShort: "WSW",
+        windDegrees: 247,
+        rainToday: 3.6,
+        rainRate: 0.4,
+        rainMonth: 42.8,
+        pressure: 1014.2,
+        pressureTrend: "Falling",
+        pressureChange: -2.6,
+        conditionsTag: "Fresh & breezy"
+      },
+      records: {
+        rainYear: 812.0,
+        wettestDay: 28.4
+      },
+      astro: {
+        sunrise: "05:40",
+        sunset: "21:17",
+        moonPhase: "Waning Gibbous",
+        moonPercent: "82%"
+      },
+      temperature24h: [
+        ["12:00", 13.8, 10.5], ["13:00", 14.5, 10.8], ["14:00", 16.3, 11.0],
+        ["15:00", 17.7, 11.6], ["16:00", 18.4, 12.0], ["17:00", 18.0, 11.7],
+        ["18:00", 17.5, 11.3], ["19:00", 17.8, 11.0], ["20:00", 16.9, 10.7],
+        ["21:00", 16.3, 11.0], ["22:00", 15.6, 10.7], ["23:00", 14.8, 10.6],
+        ["00:00", 14.2, 10.4], ["01:00", 13.8, 10.5], ["02:00", 13.7, 10.4],
+        ["03:00", 13.8, 10.7], ["04:00", 13.7, 11.0], ["05:00", 13.4, 11.1],
+        ["06:00", 13.0, 10.8], ["07:00", 12.7, 10.4], ["08:00", 12.4, 10.1],
+        ["09:00", 12.2, 9.9], ["10:00", 12.0, 9.8], ["11:00", 11.8, 9.6]
+      ],
+      wind24h: [
+        ["12:00", 8, 16], ["13:00", 11, 21], ["14:00", 14, 27], ["15:00", 17, 23],
+        ["16:00", 15, 30], ["17:00", 21, 34], ["18:00", 24, 42], ["19:00", 20, 35],
+        ["20:00", 25, 39], ["21:00", 22, 40], ["22:00", 21, 34], ["23:00", 18, 37],
+        ["00:00", 20, 31], ["01:00", 17, 33], ["02:00", 19, 28], ["03:00", 15, 25],
+        ["04:00", 16, 29], ["05:00", 14, 26], ["06:00", 15, 31], ["07:00", 13, 25],
+        ["08:00", 12, 21], ["09:00", 14, 24], ["10:00", 11, 20], ["11:00", 9, 17]
+      ],
+      rainfall7d: [
+        ["Fri", 1.1], ["Sat", 6.8], ["Sun", 2.2], ["Mon", 0.0], ["Tue", 11.4], ["Wed", 3.8], ["Thu", 1.2]
+      ],
+      pressure24h: [
+        ["12:00", 1020.3], ["13:00", 1020.0], ["14:00", 1019.8], ["15:00", 1019.6],
+        ["16:00", 1019.4], ["17:00", 1019.2], ["18:00", 1019.0], ["19:00", 1018.7],
+        ["20:00", 1018.5], ["21:00", 1018.1], ["22:00", 1017.6], ["23:00", 1017.1],
+        ["00:00", 1016.8], ["01:00", 1016.4], ["02:00", 1016.1], ["03:00", 1015.7],
+        ["04:00", 1015.5], ["05:00", 1015.2], ["06:00", 1015.0], ["07:00", 1014.8],
+        ["08:00", 1014.6], ["09:00", 1014.4], ["10:00", 1014.3], ["11:00", 1014.2]
+      ],
+      solarToday: [
+        ["06:00", 0, 0], ["07:00", 2, 0], ["08:00", 12, 0.5], ["09:00", 30, 1.0],
+        ["10:00", 55, 1.5], ["11:00", 76, 2.0], ["12:00", 88, 2.3], ["13:00", 93, 2.5],
+        ["14:00", 85, 2.2], ["15:00", 76, 1.9], ["16:00", 58, 1.5], ["17:00", 35, 1.0],
+        ["18:00", 12, 0.4], ["19:00", 2, 0], ["20:00", 0, 0], ["21:00", 0, 0]
+      ]
+    };
+
+    const ids = (obj) => Object.fromEntries(Object.entries(obj).map(([k,v]) => [k, document.getElementById(v)]));
+    const els = ids({
+      lastUpdated:"lastUpdated", heroTemp:"heroTemp", heroFeels:"heroFeels", heroHumidity:"heroHumidity", heroPressure:"heroPressure",
+      heroWind:"heroWind", heroRain:"heroRain", heroDew:"heroDew", heroTrend:"heroTrend", conditionsTag:"conditionsTag",
+      todayLow:"todayLow", todayHigh:"todayHigh", peakGust:"peakGust", monthRain:"monthRain", solarPeak:"solarPeak",
+      sunriseChip:"sunriseChip", sunsetChip:"sunsetChip", moonChip:"moonChip",
+      tempVal:"tempVal", feelsVal:"feelsVal", tempMax:"tempMax", tempMin:"tempMin",
+      humVal:"humVal", dewVal:"dewVal", comfortVal:"comfortVal", windVal:"windVal", gustVal:"gustVal", dirVal:"dirVal",
+      rainVal:"rainVal", rainRateVal:"rainRateVal", rainMonthVal:"rainMonthVal",
+      pressureVal:"pressureVal", pressureTrendVal:"pressureTrendVal", pressureChangeVal:"pressureChangeVal",
+      statRainToday:"statRainToday", statRainMonth:"statRainMonth", statRainYear:"statRainYear", statWettest:"statWettest",
+      statPressure:"statPressure", statPressureChange:"statPressureChange", statPressureTrend:"statPressureTrend", statPressureInHg:"statPressureInHg",
+      prevailing:"prevailing", sunrise:"sunrise", sunset:"sunset", moonPhase:"moonPhase", moonPercent:"moonPercent", year:"year", needle:"needle"
+    });
+
+    function set(el, value){ if(el) el.textContent = value; }
+
+    function setData(){
+      const c = weather.current;
+      const a = weather.astro;
+      const peakSolar = Math.max(...weather.solarToday.map(x => x[1]));
+      const now = new Date();
+
+      set(els.lastUpdated, "Last updated: " + now.toLocaleDateString("en-IE", {day:"numeric", month:"short", year:"numeric"}) + " · " + now.toLocaleTimeString("en-IE", {hour:"2-digit", minute:"2-digit"}));
+      set(els.heroTemp, c.temperature.toFixed(1));
+      set(els.heroFeels, c.feelsLike.toFixed(1) + "°C");
+      set(els.heroHumidity, c.humidity + "%");
+      set(els.heroPressure, c.pressure.toFixed(1) + " hPa");
+      set(els.heroWind, c.windSpeed.toFixed(1) + " km/h");
+      set(els.heroRain, c.rainToday.toFixed(1) + " mm");
+      set(els.heroDew, c.dewPoint.toFixed(1) + " °C");
+      set(els.heroTrend, c.pressureTrend + " pressure");
+      set(els.conditionsTag, c.conditionsTag);
+
+      set(els.todayLow, c.low.toFixed(1));
+      set(els.todayHigh, c.high.toFixed(1));
+      set(els.peakGust, c.windGust.toFixed(1));
+      set(els.monthRain, c.rainMonth.toFixed(1));
+      set(els.solarPeak, peakSolar.toFixed(0));
+
+      set(els.sunriseChip, a.sunrise);
+      set(els.sunsetChip, a.sunset);
+      set(els.moonChip, a.moonPhase + " · " + a.moonPercent);
+
+      set(els.tempVal, c.temperature.toFixed(1));
+      set(els.feelsVal, c.feelsLike.toFixed(1) + "°C");
+      set(els.tempMax, c.high.toFixed(1));
+      set(els.tempMin, c.low.toFixed(1));
+
+      set(els.humVal, c.humidity);
+      set(els.dewVal, c.dewPoint.toFixed(1) + "°C");
+      set(els.comfortVal, c.comfort);
+
+      set(els.windVal, c.windSpeed.toFixed(1));
+      set(els.gustVal, c.windGust.toFixed(1) + " km/h");
+      set(els.dirVal, c.windDirection);
+
+      set(els.rainVal, c.rainToday.toFixed(1));
+      set(els.rainRateVal, c.rainRate.toFixed(1) + " mm/h");
+      set(els.rainMonthVal, c.rainMonth.toFixed(1) + " mm");
+
+      set(els.pressureVal, c.pressure.toFixed(1));
+      set(els.pressureTrendVal, c.pressureTrend);
+      set(els.pressureChangeVal, (c.pressureChange > 0 ? "+" : "") + c.pressureChange.toFixed(1) + " hPa");
+
+      set(els.statRainToday, c.rainToday.toFixed(1) + " mm");
+      set(els.statRainMonth, c.rainMonth.toFixed(1) + " mm");
+      set(els.statRainYear, weather.records.rainYear.toFixed(1) + " mm");
+      set(els.statWettest, weather.records.wettestDay.toFixed(1) + " mm");
+
+      set(els.statPressure, c.pressure.toFixed(1) + " hPa");
+      set(els.statPressureChange, (c.pressureChange > 0 ? "+" : "") + c.pressureChange.toFixed(1) + " hPa");
+      set(els.statPressureTrend, c.pressureTrend);
+      set(els.statPressureInHg, (c.pressure * 0.0295299830714).toFixed(2) + " inHg");
+
+      set(els.prevailing, c.windShort);
+      set(els.sunrise, a.sunrise);
+      set(els.sunset, a.sunset);
+      set(els.moonPhase, a.moonPhase);
+      set(els.moonPercent, a.moonPercent);
+      set(els.year, now.getFullYear());
+
+      if(els.needle) els.needle.style.transform = "rotate(" + c.windDegrees + "deg)";
+    }
+
+    function makeGradient(ctx, c1, c2){
+      const g = ctx.createLinearGradient(0,0,0,300);
+      g.addColorStop(0, c1);
+      g.addColorStop(1, c2);
+      return g;
+    }
+
+    function lineDataset(label, data, borderColor, bgColor, axis="y"){
+      return {
+        label,
+        data,
+        borderColor,
+        backgroundColor:bgColor || borderColor,
+        borderWidth:2.4,
+        pointRadius:0,
+        pointHoverRadius:4,
+        tension:.35,
+        fill:false,
+        yAxisID:axis
+      };
+    }
+
+    function commonScales(yTitle, yMin, yMax){
+      return {
+        x:{
+          grid:{color:"transparent"},
+          ticks:{color:"#afc1d6", maxTicksLimit:8}
+        },
+        y:{
+          min:yMin,
+          suggestedMax:yMax,
+          grid:{color:"rgba(163,209,255,.11)"},
+          ticks:{color:"#afc1d6"},
+          title:{display:true,text:yTitle,color:"#afc1d6"}
+        }
+      };
+    }
+
+    function createCharts(){
+      Chart.defaults.color = "#bfd0e3";
+      Chart.defaults.font.family = 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      Chart.defaults.plugins.legend.labels.usePointStyle = true;
+      Chart.defaults.plugins.legend.labels.boxWidth = 10;
+      Chart.defaults.plugins.legend.labels.boxHeight = 10;
+
+      const tempCtx = document.getElementById("temperatureChart").getContext("2d");
+      const tempRed = makeGradient(tempCtx, "rgba(255,125,125,.95)", "rgba(255,125,125,.15)");
+      const tempGreen = makeGradient(tempCtx, "rgba(126,247,184,.95)", "rgba(126,247,184,.15)");
+      new Chart(tempCtx, {
+        type:"line",
+        data:{
+          labels:weather.temperature24h.map(v=>v[0]),
+          datasets:[
+            lineDataset("Temperature (°C)", weather.temperature24h.map(v=>v[1]), tempRed, tempRed),
+            lineDataset("Dew point (°C)", weather.temperature24h.map(v=>v[2]), tempGreen, tempGreen)
+          ]
+        },
+        options:{
+          maintainAspectRatio:false,
+          interaction:{mode:"index", intersect:false},
+          scales:commonScales("°C", 4, 20),
+          plugins:{legend:{position:"bottom"}}
+        }
+      });
+
+      const windCtx = document.getElementById("windChart").getContext("2d");
+      const windBlue = makeGradient(windCtx, "rgba(118,217,255,.95)", "rgba(118,217,255,.12)");
+      const gustOrange = makeGradient(windCtx, "rgba(255,176,88,.95)", "rgba(255,176,88,.12)");
+      new Chart(windCtx,{
+        type:"line",
+        data:{
+          labels:weather.wind24h.map(v=>v[0]),
+          datasets:[
+            lineDataset("Wind speed (km/h)", weather.wind24h.map(v=>v[1]), windBlue, windBlue),
+            lineDataset("Gust (km/h)", weather.wind24h.map(v=>v[2]), gustOrange, gustOrange)
+          ]
+        },
+        options:{
+          maintainAspectRatio:false,
+          interaction:{mode:"index", intersect:false},
+          scales:commonScales("km/h", 0, 50),
+          plugins:{legend:{position:"bottom"}}
+        }
+      });
+
+      const rainCtx = document.getElementById("rainChart").getContext("2d");
+      const barGrad = rainCtx.createLinearGradient(0, 0, 0, 300);
+      barGrad.addColorStop(0, "rgba(122,166,255,.95)");
+      barGrad.addColorStop(1, "rgba(118,217,255,.38)");
+      new Chart(rainCtx,{
+        type:"bar",
+        data:{
+          labels:weather.rainfall7d.map(v=>v[0]),
+          datasets:[{
+            label:"Rainfall (mm)",
+            data:weather.rainfall7d.map(v=>v[1]),
+            backgroundColor:barGrad,
+            borderColor:"rgba(154,204,255,.9)",
+            borderWidth:1.2,
+            borderRadius:8
+          }]
+        },
+        options:{
+          maintainAspectRatio:false,
+          scales:commonScales("mm", 0, 15),
+          plugins:{legend:{display:false}}
+        }
+      });
+
+      const pressureCtx = document.getElementById("pressureChart").getContext("2d");
+      const pressureGrad = makeGradient(pressureCtx, "rgba(180,140,255,.95)", "rgba(180,140,255,.10)");
+      new Chart(pressureCtx,{
+        type:"line",
+        data:{
+          labels:weather.pressure24h.map(v=>v[0]),
+          datasets:[lineDataset("Pressure (hPa)", weather.pressure24h.map(v=>v[1]), pressureGrad, pressureGrad)]
+        },
+        options:{
+          maintainAspectRatio:false,
+          interaction:{mode:"index", intersect:false},
+          scales:commonScales("hPa", 1010, 1022),
+          plugins:{legend:{display:false}}
+        }
+      });
+
+      const solarCtx = document.getElementById("solarChart").getContext("2d");
+      const solarYellow = makeGradient(solarCtx, "rgba(255,216,111,.98)", "rgba(255,216,111,.12)");
+      const uvPurple = makeGradient(solarCtx, "rgba(180,140,255,.95)", "rgba(180,140,255,.12)");
+      new Chart(solarCtx,{
+        type:"line",
+        data:{
+          labels:weather.solarToday.map(v=>v[0]),
+          datasets:[
+            lineDataset("Solar light (klux)", weather.solarToday.map(v=>v[1]), solarYellow, solarYellow, "y"),
+            lineDataset("UV index", weather.solarToday.map(v=>v[2]), uvPurple, uvPurple, "y1")
+          ]
+        },
+        options:{
+          maintainAspectRatio:false,
+          interaction:{mode:"index", intersect:false},
+          scales:{
+            x:{grid:{color:"transparent"}, ticks:{color:"#afc1d6"}},
+            y:{
+              min:0, suggestedMax:100, position:"left",
+              grid:{color:"rgba(163,209,255,.11)"},
+              ticks:{color:"#afc1d6"},
+              title:{display:true,text:"klux",color:"#afc1d6"}
+            },
+            y1:{
+              min:0, suggestedMax:10, position:"right",
+              grid:{drawOnChartArea:false},
+              ticks:{color:"#afc1d6"},
+              title:{display:true,text:"UV",color:"#afc1d6"}
+            }
+          },
+          plugins:{legend:{position:"bottom"}}
+        }
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setData();
+      createCharts();
+    });
+  </script>
 </body>
 </html>
