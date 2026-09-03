@@ -538,6 +538,54 @@
       font-weight:650;
     }
 
+
+    .records-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-top:6px;
+    }
+    .record-tile{
+      min-height:92px;
+      padding:14px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+      border:1px solid rgba(255,255,255,.07);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+    }
+    .record-tile.wide{
+      grid-column:span 2;
+    }
+    .record-icon{
+      width:42px;
+      height:42px;
+      flex:0 0 42px;
+      display:grid;
+      place-items:center;
+      border-radius:13px;
+      background:linear-gradient(135deg, rgba(118,217,255,.16), rgba(180,140,255,.15));
+      border:1px solid rgba(255,255,255,.07);
+      font-size:21px;
+    }
+    .record-label{
+      display:block;
+      color:#9fb4cd;
+      text-transform:uppercase;
+      letter-spacing:.045em;
+      font-size:.7rem;
+      margin-bottom:5px;
+    }
+    .record-tile strong{
+      display:block;
+      color:#fff;
+      font-size:1rem;
+      font-weight:650;
+    }
+
     footer{
       display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
       padding:18px 28px;
@@ -814,19 +862,61 @@
         </div>
 
         <aside class="aside glass" id="records">
-          <h3>Highlights</h3>
-          <div class="highlight-list">
-            <div class="highlight">
-              <div class="label">Best use for your site</div>
-              <div class="value">Looks great on desktop, tablet and mobile</div>
+          <div class="card-head">
+            <div>
+              <h2>Today’s Weather Records</h2>
+              <p>Key station readings at a glance</p>
             </div>
-            <div class="highlight">
-              <div class="label">Current data mode</div>
-              <div class="value">Stylish demo data for layout testing</div>
+            <div class="tag">Today</div>
+          </div>
+
+          <div class="records-grid">
+            <div class="record-tile">
+              <span class="record-icon">🌡️</span>
+              <div>
+                <span class="record-label">High temperature</span>
+                <strong id="recordHigh">17.3°C</strong>
+              </div>
             </div>
-            <div class="highlight">
-              <div class="label">Next step</div>
-              <div class="value">Connect live GW3001 data feed later</div>
+
+            <div class="record-tile">
+              <span class="record-icon">❄️</span>
+              <div>
+                <span class="record-label">Low temperature</span>
+                <strong id="recordLow">11.8°C</strong>
+              </div>
+            </div>
+
+            <div class="record-tile">
+              <span class="record-icon">💨</span>
+              <div>
+                <span class="record-label">Peak gust</span>
+                <strong id="recordGust">31.5 km/h</strong>
+              </div>
+            </div>
+
+            <div class="record-tile">
+              <span class="record-icon">🌧️</span>
+              <div>
+                <span class="record-label">Rain today</span>
+                <strong id="recordRain">3.6 mm</strong>
+              </div>
+            </div>
+
+            <div class="record-tile wide">
+              <span class="record-icon">🧭</span>
+              <div>
+                <span class="record-label">Pressure trend</span>
+                <strong id="recordPressure">Falling · -2.6 hPa</strong>
+              </div>
+            </div>
+
+            <div class="record-tile wide">
+              <span class="record-icon">☀️</span>
+              <div>
+                <span class="record-label">Daylight</span>
+                <strong id="recordDaylight">15h 37m</strong>
+              </div>
             </div>
           </div>
         </aside>
@@ -923,7 +1013,7 @@
       pressureVal:"pressureVal", pressureTrendVal:"pressureTrendVal", pressureChangeVal:"pressureChangeVal",
       statRainToday:"statRainToday", statRainMonth:"statRainMonth", statRainYear:"statRainYear", statWettest:"statWettest",
       statPressure:"statPressure", statPressureChange:"statPressureChange", statPressureTrend:"statPressureTrend", statPressureInHg:"statPressureInHg",
-      prevailing:"prevailing", sunrise:"sunrise", sunset:"sunset", moonPhase:"moonPhase", moonPercent:"moonPercent", year:"year", needle:"needle"
+      prevailing:"prevailing", sunrise:"sunrise", sunset:"sunset", moonPhase:"moonPhase", moonPercent:"moonPercent", year:"year", needle:"needle", recordHigh:"recordHigh", recordLow:"recordLow", recordGust:"recordGust", recordRain:"recordRain", recordPressure:"recordPressure", recordDaylight:"recordDaylight"
     });
 
     function set(el, value){ if(el) el.textContent = value; }
@@ -992,6 +1082,17 @@
       set(els.moonPhase, a.moonPhase);
       set(els.moonPercent, a.moonPercent);
       set(els.year, now.getFullYear());
+
+      set(els.recordHigh, c.high.toFixed(1) + "°C");
+      set(els.recordLow, c.low.toFixed(1) + "°C");
+      set(els.recordGust, c.windGust.toFixed(1) + " km/h");
+      set(els.recordRain, c.rainToday.toFixed(1) + " mm");
+      set(els.recordPressure, c.pressureTrend + " · " + (c.pressureChange > 0 ? "+" : "") + c.pressureChange.toFixed(1) + " hPa");
+
+      const [srH, srM] = a.sunrise.split(":").map(Number);
+      const [ssH, ssM] = a.sunset.split(":").map(Number);
+      const daylightMinutes = (ssH * 60 + ssM) - (srH * 60 + srM);
+      set(els.recordDaylight, Math.floor(daylightMinutes / 60) + "h " + (daylightMinutes % 60) + "m");
 
       if(els.needle) els.needle.style.transform = "rotate(" + c.windDegrees + "deg)";
     }
