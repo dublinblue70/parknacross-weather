@@ -670,13 +670,61 @@ async function getJSON(url) {
 
 async function loadForecast() {
   try {
+    /*
+     * Normal route: use the Cloudflare Worker proxy.
+     * This avoids browser cross-origin restrictions and keeps the
+     * Met Éireann parsing in one place.
+     */
     const forecast = await getJSON(FORECAST_URL);
+
     set("forecastToday", forecast.today || "Forecast unavailable.");
     set("forecastTonight", forecast.tonight || "--");
     set("forecastTomorrow", forecast.tomorrow || "--");
-  } catch (error) {
-    console.warn("Met Éireann forecast:", error);
-    set("forecastToday", "Official forecast temporarily unavailable.");
+    return;
+  } catch (workerError) {
+    console.warn("Worker forecast route unavailable:", workerError);
+  }
+
+  /*
+   * Extra fallback: some browsers can read Met Éireann's public JSON
+   * directly. If CORS blocks this, the catch below handles it cleanly.
+   */
+  try {
+    const response = await fetch(
+      "https://www.met.ie/Open_Data/json/Leinster.json",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Met Éireann HTTP ${response.status}`);
+    }
+
+    const raw = await response.json();
+    const regions = raw?.forecasts?.[0]?.regions;
+
+    if (!Array.isArray(regions)) {
+      throw new Error("Unexpected Met Éireann forecast format");
+    }
+
+    const forecast = {};
+    regions.forEach(item => {
+      if (item && typeof item === "object") {
+        Object.assign(forecast, item);
+      }
+    });
+
+    set("forecastToday", forecast.today || "Forecast unavailable.");
+    set("forecastTonight", forecast.tonight || "--");
+    set("forecastTomorrow", forecast.tomorrow || "--");
+  } catch (directError) {
+    console.warn("Direct Met Éireann forecast fallback:", directError);
+
+    set(
+      "forecastToday",
+      "The official Met Éireann forecast could not be loaded right now. Use the met.ie link above to view it directly."
+    );
+    set("forecastTonight", "--");
+    set("forecastTomorrow", "--");
   }
 }
 

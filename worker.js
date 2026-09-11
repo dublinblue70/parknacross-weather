@@ -460,25 +460,84 @@ function recordObject(row, field) {
 }
 
 async function getMetForecast() {
-  const response = await fetch(
-    "https://www.met.ie/Open_Data/json/Leinster.json",
-    { headers: { "Accept": "application/json" } }
-  );
+  /*
+   * Met Éireann publishes the regional text forecast as a small JSON file.
+   * Fetch Leinster first. If that endpoint ever has a transient problem,
+   * fall back to the National text feed so the website does not simply show
+   * "forecast temporarily unavailable".
+   */
+  const sources = [
+    {
+      name: "Leinster",
+      url: "https://www.met.ie/Open_Data/json/Leinster.json"
+    },
+    {
+      name: "National",
+      url: "https://www.met.ie/Open_Data/json/National.json"
+    }
+  ];
 
-  if (!response.ok) throw new Error(`Met Éireann forecast HTTP ${response.status}`);
+  let lastError = null;
 
-  const raw = await response.json();
-  const parts = raw?.forecasts?.[0]?.regions || [];
-  const merged = Object.assign({}, ...parts);
+  for (const source of sources) {
+    try {
+      const response = await fetch(source.url, {
+        headers: {
+          "Accept": "application/json,text/plain,*/*",
+          "User-Agent": "ParknacrossWeather/1.0"
+        },
+        cf: {
+          cacheTtl: 300,
+          cacheEverything: true
+        }
+      });
 
-  return {
-    region: merged.region || "Leinster",
-    issued: merged.issued || null,
-    today: merged.today || "",
-    tonight: merged.tonight || "",
-    tomorrow: merged.tomorrow || "",
-    outlook: merged.outlook || ""
-  };
+      if (!response.ok) {
+        throw new Error(`${source.name} forecast HTTP ${response.status}`);
+      }
+
+      const text = await response.text();
+
+      let raw;
+      try {
+        raw = JSON.parse(text);
+      } catch {
+        throw new Error(`${source.name} forecast returned invalid JSON`);
+      }
+
+      const regions = raw?.forecasts?.[0]?.regions;
+
+      if (!Array.isArray(regions)) {
+        throw new Error(`${source.name} forecast JSON structure was not recognised`);
+      }
+
+      const merged = {};
+      for (const item of regions) {
+        if (item && typeof item === "object") {
+          Object.assign(merged, item);
+        }
+      }
+
+      if (!merged.today && !merged.tonight && !merged.tomorrow) {
+        throw new Error(`${source.name} forecast contained no forecast text`);
+      }
+
+      return {
+        source: source.name,
+        region: merged.region || source.name,
+        issued: merged.issued || null,
+        today: merged.today || "",
+        tonight: merged.tonight || "",
+        tomorrow: merged.tomorrow || "",
+        outlook: merged.outlook || ""
+      };
+    } catch (error) {
+      lastError = error;
+      console.warn(`Met Éireann ${source.name} forecast failed:`, error);
+    }
+  }
+
+  throw lastError || new Error("Met Éireann forecast unavailable");
 }
 
 async function getMetWarnings() {
