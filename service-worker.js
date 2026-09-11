@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v1";
+const CACHE_NAME = "parknacross-weather-v2";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -6,7 +6,6 @@ const STATIC_ASSETS = [
   "./app.js",
   "./history.html",
   "./history.js",
-  "./station.html",
   "./manifest.webmanifest",
   "./favicon.svg",
   "./icon-192.png",
