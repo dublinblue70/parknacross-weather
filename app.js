@@ -1,609 +1,883 @@
-const REFRESH_MS = 60 * 1000;
-const HISTORY_REFRESH_MS = 5 * 60 * 1000;
+const CURRENT_URL = "https://parknacross-weather.dave-s-carter.workers.dev/current";
+const HISTORY_24_URL = "https://parknacross-weather.dave-s-carter.workers.dev/history?hours=24";
+const HISTORY_7D_URL = "https://parknacross-weather.dave-s-carter.workers.dev/history?hours=168";
 
-const CURRENT_API_URL =
-  "https://parknacross-weather.dave-s-carter.workers.dev/current";
+const $ = id => document.getElementById(id);
+const set = (id,value) => { const e=$(id); if(e) e.textContent=value; };
+const usable = v => v!==null && v!==undefined && v!=="" && Number.isFinite(Number(v));
+const n = (v,d=1) => usable(v) ? Number(v).toFixed(d) : "--";
 
-const HISTORY_API_URL =
-  "https://parknacross-weather.dave-s-carter.workers.dev/history?hours=24";
+let history24=[];
+let history7d=[];
+let charts={};
 
-const STALE_AFTER_MS = 10 * 60 * 1000;
-
-const el = (id) => document.getElementById(id);
-
-let historyCache = [];
-let lastHistoryFetch = 0;
-
-function usable(value) {
-  return (
-    value !== undefined &&
-    value !== null &&
-    value !== "" &&
-    !Number.isNaN(Number(value))
-  );
-}
-
-function number(value, digits = 1) {
-  if (!usable(value)) return "--";
-  return Number(value).toFixed(digits).replace(/\.0$/, "");
-}
-
-function first(...values) {
-  return values.find(
-    (v) => v !== undefined && v !== null && v !== ""
-  );
-}
-
-const compassDegrees = {
-  N: 0, NNE: 22.5, NE: 45, ENE: 67.5,
-  E: 90, ESE: 112.5, SE: 135, SSE: 157.5,
-  S: 180, SSW: 202.5, SW: 225, WSW: 247.5,
-  W: 270, WNW: 292.5, NW: 315, NNW: 337.5
-};
-
-function directionTextFromDegrees(deg) {
-  if (!usable(deg)) return "--";
-
-  const labels = [
-    "N","NNE","NE","ENE","E","ESE","SE","SSE",
-    "S","SSW","SW","WSW","W","WNW","NW","NNW"
-  ];
-
-  const normalized = ((Number(deg) % 360) + 360) % 360;
-  return labels[Math.round(normalized / 22.5) % 16];
-}
-
-function inferCondition(data) {
-  const rainRate = Number(first(data.rainRate, 0)) || 0;
-  const solar = Number(first(data.solar, 0)) || 0;
-  const wind = Number(first(data.windSpeed, 0)) || 0;
-
-  if (rainRate >= 2.5) return "Rainy at Parknacross";
-  if (rainRate > 0) return "Light rain at Parknacross";
-  if (wind >= 35) return "Windy on the North Wexford coast";
-  if (solar >= 500) return "Bright conditions";
-  if (solar >= 150) return "Some brightness";
-  return "Current local conditions";
-}
-
-function parseTimestamp(data) {
-  const raw = first(
-    data.timestamp,
-    data.received_at,
-    data.updated,
-    data.time
-  );
-
-  if (usable(data.epoch) && !raw) {
-    const fromEpoch = new Date(Number(data.epoch) * 1000);
-    if (!Number.isNaN(fromEpoch.getTime())) return fromEpoch;
+function readingTime(r){
+  if(r?.received_at){
+    const t=new Date(r.received_at).getTime();
+    if(Number.isFinite(t)) return t;
   }
-
-  const parsed = raw ? new Date(raw) : new Date();
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  return usable(r?.epoch) ? Number(r.epoch)*1000 : null;
 }
 
-function updateStatus(timestamp, hasData) {
-  const pill = el("statusPill");
-  pill.className = "status-pill";
-
-  if (!hasData) {
-    pill.classList.add("delayed");
-    el("statusText").textContent =
-      "Station connected · awaiting readings";
-    return;
-  }
-
-  const age = Date.now() - timestamp.getTime();
-
-  if (age > STALE_AFTER_MS) {
-    pill.classList.add("delayed");
-    el("statusText").textContent = "Station data delayed";
-  } else {
-    pill.classList.add("live");
-    const mins = Math.max(0, Math.round(age / 60000));
-
-    el("statusText").textContent =
-      mins < 1
-        ? "LIVE · updated just now"
-        : `LIVE · updated ${mins} min ago`;
-  }
+function sameDay(t,ref=new Date()){
+  const d=new Date(t);
+  return d.getFullYear()===ref.getFullYear() && d.getMonth()===ref.getMonth() && d.getDate()===ref.getDate();
 }
 
-function setWind(direction, degrees) {
-  const deg = usable(degrees)
-    ? Number(degrees)
-    : compassDegrees[String(direction || "").toUpperCase()];
-
-  const dir = direction || directionTextFromDegrees(deg);
-
-  el("windDirection").textContent = dir || "--";
-  el("windDegrees").textContent =
-    usable(deg) ? `${Math.round(deg)}°` : "";
-
-  el("windArrow").style.transform =
-    `rotate(${usable(deg) ? deg : 0}deg)`;
+function maxField(rows,field){
+  const vals=rows.map(r=>Number(r[field])).filter(Number.isFinite);
+  return vals.length ? Math.max(...vals) : null;
 }
 
-function normaliseCurrent(raw) {
+function minField(rows,field){
+  const vals=rows.map(r=>Number(r[field])).filter(Number.isFinite);
+  return vals.length ? Math.min(...vals) : null;
+}
+
+function compass(deg){
+  if(!usable(deg)) return "--";
+  const labels=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  const d=((Number(deg)%360)+360)%360;
+  return labels[Math.round(d/22.5)%16];
+}
+
+function pressureStats(){
+  const rows=history24.filter(r=>usable(r.pressure_hpa));
+  if(rows.length<2) return {change:null,trend:"--"};
+  const change=Number(rows.at(-1).pressure_hpa)-Number(rows[0].pressure_hpa);
+  return {change,trend:change>.5?"Rising":change<-.5?"Falling":"Steady"};
+}
+
+function prevailingWind(){
+  const rows=history24.filter(r=>usable(r.wind_direction_deg));
+  if(!rows.length) return {deg:null,text:"--"};
+
+  let x=0;
+  let y=0;
+
+  rows.forEach(r=>{
+    const weight=usable(r.wind_speed_kmh)
+      ? Math.max(Number(r.wind_speed_kmh),1)
+      : 1;
+
+    const rad=Number(r.wind_direction_deg)*Math.PI/180;
+
+    x+=Math.cos(rad)*weight;
+    y+=Math.sin(rad)*weight;
+  });
+
+  const deg=(Math.atan2(y,x)*180/Math.PI+360)%360;
+
   return {
-    timestamp: first(
-      raw.received_at,
-      raw.timestamp,
-      raw.updated,
-      raw.time
-    ),
-
-    epoch: raw.epoch,
-
-    temperature: first(
-      raw.temperature_c,
-      raw.temperature,
-      raw.temp
-    ),
-
-    feelsLike: first(
-      raw.feels_like_c,
-      raw.feelsLike,
-      raw.feels_like,
-      raw.apparentTemperature
-    ),
-
-    humidity: first(
-      raw.humidity,
-      raw.outdoorHumidity
-    ),
-
-    dewPoint: first(
-      raw.dew_point_c,
-      raw.dewPoint
-    ),
-
-    pressure: first(
-      raw.pressure_hpa,
-      raw.pressure,
-      raw.relativePressure,
-      raw.pressureRelative
-    ),
-
-    windSpeed: first(
-      raw.wind_speed_kmh,
-      raw.windSpeed,
-      raw.wind_speed
-    ),
-
-    windGust: first(
-      raw.wind_gust_kmh,
-      raw.windGust,
-      raw.wind_gust,
-      raw.gust
-    ),
-
-    windDirection: first(
-      raw.windDirection,
-      raw.wind_direction
-    ),
-
-    windDegrees: first(
-      raw.wind_direction_deg,
-      raw.windDegrees,
-      raw.wind_degree,
-      raw.windDirectionDegrees
-    ),
-
-    rainfall: first(
-      raw.rain_daily_mm,
-      raw.rainfall,
-      raw.rain,
-      raw.dailyRain
-    ),
-
-    rainRate: first(
-      raw.rain_rate_mm_h,
-      raw.rainRate,
-      raw.rain_rate
-    ),
-
-    solar: first(
-      raw.solar_w_m2,
-      raw.solar,
-      raw.solarRadiation
-    ),
-
-    uv: first(
-      raw.uv_index,
-      raw.uv,
-      raw.uvIndex
-    ),
-
-    battery: first(
-      raw.battery_v,
-      raw.battery
-    )
+    deg,
+    text:compass(deg)
   };
 }
 
-function normaliseHistoryReading(raw) {
-  let time = null;
+function comfort(h){
+  h=Number(h);
 
-  if (raw.received_at) {
-    time = new Date(raw.received_at).getTime();
-  } else if (usable(raw.epoch)) {
-    time = Number(raw.epoch) * 1000;
+  if(!Number.isFinite(h)) return "--";
+  if(h<35) return "Dry";
+  if(h<=65) return "Comfortable";
+  if(h<=80) return "Humid";
+
+  return "Very humid";
+}
+
+function conditionInfo(c){
+  const rain=Number(c.rain_rate_mm_h||0);
+  const wind=Number(c.wind_speed_kmh||0);
+  const solar=Number(c.solar_w_m2||0);
+  const uv=Number(c.uv_index||0);
+
+  if(rain>=2.5){
+    return {
+      tag:"Rainy",
+      icon:"🌧️",
+      story:`Rain is falling at ${n(rain)} mm/h.`
+    };
+  }
+
+  if(rain>0){
+    return {
+      tag:"Light rain",
+      icon:"🌦️",
+      story:`Light rain is falling at ${n(rain)} mm/h.`
+    };
+  }
+
+  if(wind>=35){
+    return {
+      tag:"Very windy",
+      icon:"💨",
+      story:`A lively Wexford breeze is blowing at ${n(wind)} km/h.`
+    };
+  }
+
+  if(wind>=20){
+    return {
+      tag:"Breezy",
+      icon:"🌬️",
+      story:`Breezy conditions with wind around ${n(wind)} km/h.`
+    };
+  }
+
+  if(uv>=5){
+    return {
+      tag:"Bright",
+      icon:"☀️",
+      story:`Bright conditions with UV index ${n(uv,0)}.`
+    };
+  }
+
+  if(solar>=400){
+    return {
+      tag:"Bright",
+      icon:"🌤️",
+      story:"Good brightness over Parknacross right now."
+    };
+  }
+
+  if(solar>=100){
+    return {
+      tag:"Some brightness",
+      icon:"⛅",
+      story:"Some brightness breaking through at Parknacross."
+    };
   }
 
   return {
-    time,
-    temperature: first(raw.temperature_c, raw.temperature),
-    windSpeed: first(raw.wind_speed_kmh, raw.windSpeed),
-    windGust: first(raw.wind_gust_kmh, raw.windGust),
-    rainfall: first(raw.rain_daily_mm, raw.rainfall),
-    rainRate: first(raw.rain_rate_mm_h, raw.rainRate),
-    pressure: first(raw.pressure_hpa, raw.pressure),
-    humidity: raw.humidity
+    tag:"Calm & local",
+    icon:"☁️",
+    story:"Quiet local conditions at Parknacross."
   };
 }
 
-function sameLocalDay(timestamp, reference = new Date()) {
-  const d = new Date(timestamp);
+function dailyRainTotals(){
+  const days=new Map();
 
-  return (
-    d.getFullYear() === reference.getFullYear() &&
-    d.getMonth() === reference.getMonth() &&
-    d.getDate() === reference.getDate()
-  );
-}
+  history7d.forEach(r=>{
+    const t=readingTime(r);
 
-function todayStats(history) {
-  const today = history.filter(
-    (p) =>
-      p.time &&
-      !Number.isNaN(Number(p.time)) &&
-      sameLocalDay(p.time)
-  );
+    if(!t || !usable(r.rain_daily_mm)){
+      return;
+    }
 
-  const temperatures = today
-    .map((p) => Number(p.temperature))
-    .filter(Number.isFinite);
+    const d=new Date(t);
 
-  const gusts = today
-    .map((p) => Number(p.windGust))
-    .filter(Number.isFinite);
+    const key=`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
-  return {
-    tempHigh:
-      temperatures.length ? Math.max(...temperatures) : null,
+    const rain=Number(r.rain_daily_mm);
+    const existing=days.get(key);
 
-    tempLow:
-      temperatures.length ? Math.min(...temperatures) : null,
-
-    maxGust:
-      gusts.length ? Math.max(...gusts) : null
-  };
-}
-
-function render(data) {
-  const temperature = data.temperature;
-  const feelsLike = data.feelsLike;
-  const humidity = data.humidity;
-  const pressure = data.pressure;
-  const windSpeed = data.windSpeed;
-  const windGust = data.windGust;
-  const windDirection = data.windDirection;
-  const windDegrees = data.windDegrees;
-  const rainfall = data.rainfall;
-  const rainRate = data.rainRate;
-  const solar = data.solar;
-  const uv = data.uv;
-
-  const stats = todayStats(historyCache);
-
-  const tempHigh = first(stats.tempHigh, temperature);
-  const tempLow = first(stats.tempLow, temperature);
-  const maxGust = first(stats.maxGust, windGust);
-
-  el("temperature").textContent = number(temperature);
-  el("feelsLike").textContent = number(feelsLike);
-  el("humidity").textContent = number(humidity, 0);
-  el("pressure").textContent = number(pressure);
-  el("windSpeed").textContent = number(windSpeed);
-  el("windGust").textContent = number(windGust);
-  el("gustDuplicate").textContent = number(windGust);
-  el("maxGust").textContent = number(maxGust);
-  el("rainfall").textContent = number(rainfall);
-  el("rainRate").textContent = number(rainRate);
-  el("solar").textContent = number(solar, 0);
-  el("uv").textContent = number(uv);
-  el("tempHigh").textContent = number(tempHigh);
-  el("tempLow").textContent = number(tempLow);
-
-  setWind(windDirection, windDegrees);
-
-  const timestamp = parseTimestamp(data);
-
-  const timeText = timestamp.toLocaleTimeString(
-    "en-IE",
-    { hour: "2-digit", minute: "2-digit" }
-  );
-
-  const dateText = timestamp.toLocaleDateString(
-    "en-IE",
-    { day: "2-digit", month: "short" }
-  );
-
-  el("updatedCompact").textContent =
-    `Updated ${timeText}`;
-
-  el("lastUpdated").textContent =
-    `${timeText} · ${dateText}`;
-
-  el("conditionSummary").textContent =
-    inferCondition(data);
-
-  const hasData = [
-    temperature,
-    humidity,
-    windSpeed,
-    pressure,
-    rainfall,
-    solar
-  ].some(usable);
-
-  updateStatus(timestamp, hasData);
-  drawHistory();
-}
-
-function drawLineChart(canvasId, emptyId, history, field) {
-  const canvas = el(canvasId);
-  const empty = el(emptyId);
-
-  const points = history.filter(
-    (p) => p.time && usable(p[field])
-  );
-
-  if (points.length < 2) {
-    canvas.style.visibility = "hidden";
-    empty.style.display = "grid";
-    return;
-  }
-
-  canvas.style.visibility = "visible";
-  empty.style.display = "none";
-
-  const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-
-  canvas.width = Math.max(1, rect.width * dpr);
-  canvas.height = 180 * dpr;
-
-  const ctx = canvas.getContext("2d");
-  ctx.scale(dpr, dpr);
-
-  const w = rect.width;
-  const h = 180;
-  const pad = { l: 34, r: 10, t: 15, b: 25 };
-
-  const values = points.map(
-    (p) => Number(p[field])
-  );
-
-  let min = Math.min(...values);
-  let max = Math.max(...values);
-
-  if (min === max) {
-    min -= 1;
-    max += 1;
-  }
-
-  ctx.clearRect(0, 0, w, h);
-  ctx.strokeStyle = "rgba(159, 211, 220, .12)";
-  ctx.lineWidth = 1;
-
-  for (let i = 0; i < 4; i++) {
-    const y =
-      pad.t +
-      i * ((h - pad.t - pad.b) / 3);
-
-    ctx.beginPath();
-    ctx.moveTo(pad.l, y);
-    ctx.lineTo(w - pad.r, y);
-    ctx.stroke();
-  }
-
-  ctx.fillStyle = "#718c98";
-  ctx.font = "11px system-ui";
-
-  ctx.fillText(max.toFixed(0), 4, pad.t + 4);
-  ctx.fillText(min.toFixed(0), 4, h - pad.b + 4);
-
-  const start = points[0].time;
-  const end = points[points.length - 1].time;
-  const span = Math.max(1, end - start);
-
-  ctx.strokeStyle =
-    field === "temperature"
-      ? "#69d4d0"
-      : "#a2e6dd";
-
-  ctx.lineWidth = 2;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  ctx.beginPath();
-
-  points.forEach((p, i) => {
-    const x =
-      pad.l +
-      ((p.time - start) / span) *
-        (w - pad.l - pad.r);
-
-    const y =
-      pad.t +
-      (1 -
-        (Number(p[field]) - min) /
-          (max - min)) *
-        (h - pad.t - pad.b);
-
-    if (i === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
+    if(!existing || rain>existing.rain){
+      days.set(key,{
+        time:t,
+        rain
+      });
     }
   });
 
-  ctx.stroke();
-
-  const fmt = (t) =>
-    new Date(t).toLocaleTimeString(
-      "en-IE",
-      { hour: "2-digit", minute: "2-digit" }
-    );
-
-  ctx.fillStyle = "#718c98";
-  ctx.fillText(fmt(start), pad.l, h - 5);
-
-  const endLabel = fmt(end);
-  const endWidth = ctx.measureText(endLabel).width;
-
-  ctx.fillText(
-    endLabel,
-    w - pad.r - endWidth,
-    h - 5
-  );
+  return [...days.values()]
+    .sort((a,b)=>a.time-b.time)
+    .slice(-7);
 }
 
-function drawHistory() {
-  drawLineChart(
-    "temperatureChart",
-    "temperatureChartEmpty",
-    historyCache,
-    "temperature"
-  );
+function updateDashboard(c){
+  const today=history24.filter(r=>{
+    const t=readingTime(r);
+    return t && sameDay(t);
+  });
 
-  drawLineChart(
-    "windChart",
-    "windChartEmpty",
-    historyCache,
-    "windSpeed"
-  );
-}
+  const high=maxField(today,"temperature_c");
+  const low=minField(today,"temperature_c");
+  const peak=maxField(today,"wind_gust_kmh");
+  const solarPeak=maxField(today,"solar_w_m2");
 
-async function fetchCurrent() {
-  const response = await fetch(
-    CURRENT_API_URL,
-    { cache: "no-store" }
-  );
+  const pressure=pressureStats();
+  const dir=compass(c.wind_direction_deg);
+  const info=conditionInfo(c);
 
-  if (!response.ok) {
-    throw new Error(
-      `Current weather HTTP ${response.status}`
+  const t=readingTime(c);
+
+  if(t){
+    const d=new Date(t);
+
+    set(
+      "lastUpdated",
+      `Updated ${d.toLocaleTimeString("en-IE",{
+        hour:"2-digit",
+        minute:"2-digit"
+      })} · ${d.toLocaleDateString("en-IE",{
+        day:"2-digit",
+        month:"short"
+      })}`
     );
   }
 
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.error);
-  }
-
-  return normaliseCurrent(data);
-}
-
-async function fetchHistory(force = false) {
-  const now = Date.now();
-
-  if (
-    !force &&
-    historyCache.length &&
-    now - lastHistoryFetch < HISTORY_REFRESH_MS
-  ) {
-    return historyCache;
-  }
-
-  const response = await fetch(
-    HISTORY_API_URL,
-    { cache: "no-store" }
+  set("heroTemp",n(c.temperature_c));
+  set("heroFeels",`${n(c.feels_like_c)}°C`);
+  set("heroHumidity",`${n(c.humidity,0)}%`);
+  set("heroDew",`${n(c.dew_point_c)}°C`);
+  set("heroWind",`${n(c.wind_speed_kmh)} km/h`);
+  set("heroRain",`${n(c.rain_daily_mm)} mm`);
+  set("heroPressure",`${n(c.pressure_hpa)} hPa`);
+  set(
+    "heroTrend",
+    pressure.trend==="--"
+      ? "--"
+      : `${pressure.trend} pressure`
   );
 
-  if (!response.ok) {
-    throw new Error(
-      `History HTTP ${response.status}`
-    );
+  set("weatherStory",info.story);
+  set("conditionsTag",info.tag);
+  set("weatherIcon",info.icon);
+
+  set("todayLow",n(low));
+  set("todayHigh",n(high));
+  set("peakGust",n(peak));
+  set("summaryRain",n(c.rain_daily_mm));
+  set("solarPeak",n(solarPeak,0));
+
+  set("tempVal",n(c.temperature_c));
+  set("feelsVal",`${n(c.feels_like_c)}°C`);
+  set("tempMin",n(low));
+  set("tempMax",n(high));
+
+  set("humVal",n(c.humidity,0));
+  set("dewVal",`${n(c.dew_point_c)}°C`);
+  set("comfortVal",comfort(c.humidity));
+
+  set("windVal",n(c.wind_speed_kmh));
+  set("gustVal",`${n(c.wind_gust_kmh)} km/h`);
+
+  set(
+    "dirVal",
+    usable(c.wind_direction_deg)
+      ? `${dir} (${Math.round(Number(c.wind_direction_deg))}°)`
+      : dir
+  );
+
+  set("rainVal",n(c.rain_daily_mm));
+  set("rainRateVal",`${n(c.rain_rate_mm_h)} mm/h`);
+
+  set("pressureVal",n(c.pressure_hpa));
+  set("pressureTrend",pressure.trend);
+
+  set(
+    "pressureChange",
+    usable(pressure.change)
+      ? `${pressure.change>=0?"+":""}${n(pressure.change)} hPa`
+      : "--"
+  );
+
+  set("solarVal",n(c.solar_w_m2,0));
+  set("uvVal",n(c.uv_index,0));
+
+  set(
+    "battery",
+    usable(c.battery_v)
+      ? `${n(c.battery_v,2)} V`
+      : "--"
+  );
+
+  set("cloudStatus","Connected");
+  $("cloudStatus")?.classList.add("ok");
+
+  set("sampleCount",history24.length);
+
+  const prev=prevailingWind();
+
+  set("prevailing",prev.text);
+
+  if(usable(prev.deg)){
+    $("needle").style.transform=`rotate(${prev.deg}deg)`;
   }
 
-  const data = await response.json();
+  set(
+    "currentDirection",
+    usable(c.wind_direction_deg)
+      ? `${dir} · ${Math.round(Number(c.wind_direction_deg))}°`
+      : dir
+  );
 
-  const readings =
-    Array.isArray(data.readings)
-      ? data.readings
-      : [];
+  set(
+    "currentWind",
+    `${n(c.wind_speed_kmh)} km/h`
+  );
 
-  historyCache = readings
-    .map(normaliseHistoryReading)
-    .filter(
-      (p) =>
-        p.time &&
-        !Number.isNaN(Number(p.time))
-    )
-    .sort(
-      (a, b) => a.time - b.time
-    );
+  set(
+    "currentGust",
+    `${n(c.wind_gust_kmh)} km/h`
+  );
 
-  lastHistoryFetch = now;
+  set(
+    "recordHigh",
+    `${n(high)} °C`
+  );
 
-  return historyCache;
+  set(
+    "recordLow",
+    `${n(low)} °C`
+  );
+
+  set(
+    "recordGust",
+    `${n(peak)} km/h`
+  );
+
+  set(
+    "recordRain",
+    `${n(c.rain_daily_mm)} mm`
+  );
+
+  set(
+    "year",
+    new Date().getFullYear()
+  );
 }
 
-async function loadWeather() {
-  try {
-    try {
-      await fetchHistory(false);
-    } catch (historyError) {
-      console.warn(
-        "Parknacross history error:",
-        historyError
-      );
+function scales(title){
+  return {
+    x:{
+      grid:{
+        color:"transparent"
+      },
+      ticks:{
+        color:"#a8bfd4",
+        maxTicksLimit:8
+      }
+    },
+
+    y:{
+      grid:{
+        color:"rgba(163,209,255,.10)"
+      },
+      ticks:{
+        color:"#a8bfd4"
+      },
+      title:{
+        display:true,
+        text:title,
+        color:"#a8bfd4"
+      }
     }
+  };
+}
 
-    const current = await fetchCurrent();
-    render(current);
-  } catch (error) {
-    console.error(
-      "Parknacross weather data error:",
-      error
+function line(label,color,axis="y"){
+  return {
+    label,
+    data:[],
+    borderColor:color,
+    backgroundColor:color,
+    borderWidth:2.2,
+    pointRadius:0,
+    pointHoverRadius:4,
+    tension:.3,
+    fill:false,
+    yAxisID:axis
+  };
+}
+
+function createCharts(){
+  Chart.defaults.color="#bfd0e3";
+
+  Chart.defaults.font.family=
+    "Inter,system-ui,sans-serif";
+
+  charts.temperature=new Chart(
+    $("temperatureChart"),
+    {
+      type:"line",
+
+      data:{
+        labels:[],
+        datasets:[
+          line(
+            "Temperature °C",
+            "#ff8d8d"
+          ),
+
+          line(
+            "Dew point °C",
+            "#6ef1cb"
+          )
+        ]
+      },
+
+      options:{
+        maintainAspectRatio:false,
+
+        interaction:{
+          mode:"index",
+          intersect:false
+        },
+
+        scales:scales("°C"),
+
+        plugins:{
+          legend:{
+            position:"bottom"
+          }
+        }
+      }
+    }
+  );
+
+  charts.wind=new Chart(
+    $("windChart"),
+    {
+      type:"line",
+
+      data:{
+        labels:[],
+
+        datasets:[
+          line(
+            "Wind km/h",
+            "#74ddff"
+          ),
+
+          line(
+            "Gust km/h",
+            "#ffad66"
+          )
+        ]
+      },
+
+      options:{
+        maintainAspectRatio:false,
+
+        interaction:{
+          mode:"index",
+          intersect:false
+        },
+
+        scales:scales("km/h"),
+
+        plugins:{
+          legend:{
+            position:"bottom"
+          }
+        }
+      }
+    }
+  );
+
+  charts.pressure=new Chart(
+    $("pressureChart"),
+    {
+      type:"line",
+
+      data:{
+        labels:[],
+
+        datasets:[
+          line(
+            "Pressure hPa",
+            "#b594ff"
+          )
+        ]
+      },
+
+      options:{
+        maintainAspectRatio:false,
+
+        interaction:{
+          mode:"index",
+          intersect:false
+        },
+
+        scales:scales("hPa"),
+
+        plugins:{
+          legend:{
+            display:false
+          }
+        }
+      }
+    }
+  );
+
+  charts.rain=new Chart(
+    $("rainChart"),
+    {
+      type:"bar",
+
+      data:{
+        labels:[],
+
+        datasets:[
+          {
+            label:"Rainfall mm",
+            data:[],
+            backgroundColor:"#7ca9ff",
+            borderRadius:8
+          }
+        ]
+      },
+
+      options:{
+        maintainAspectRatio:false,
+
+        scales:scales("mm"),
+
+        plugins:{
+          legend:{
+            display:false
+          }
+        }
+      }
+    }
+  );
+
+  charts.solar=new Chart(
+    $("solarChart"),
+    {
+      type:"line",
+
+      data:{
+        labels:[],
+
+        datasets:[
+          line(
+            "Solar W/m²",
+            "#ffd77a",
+            "y"
+          ),
+
+          line(
+            "UV index",
+            "#b594ff",
+            "y1"
+          )
+        ]
+      },
+
+      options:{
+        maintainAspectRatio:false,
+
+        interaction:{
+          mode:"index",
+          intersect:false
+        },
+
+        scales:{
+          x:{
+            grid:{
+              color:"transparent"
+            },
+
+            ticks:{
+              color:"#a8bfd4",
+              maxTicksLimit:8
+            }
+          },
+
+          y:{
+            position:"left",
+            beginAtZero:true,
+
+            grid:{
+              color:"rgba(163,209,255,.10)"
+            },
+
+            ticks:{
+              color:"#a8bfd4"
+            },
+
+            title:{
+              display:true,
+              text:"W/m²",
+              color:"#a8bfd4"
+            }
+          },
+
+          y1:{
+            position:"right",
+            beginAtZero:true,
+
+            grid:{
+              drawOnChartArea:false
+            },
+
+            ticks:{
+              color:"#a8bfd4"
+            },
+
+            title:{
+              display:true,
+              text:"UV",
+              color:"#a8bfd4"
+            }
+          }
+        },
+
+        plugins:{
+          legend:{
+            position:"bottom"
+          }
+        }
+      }
+    }
+  );
+}
+
+function updateCharts(){
+  const rows=history24.filter(
+    r=>readingTime(r)
+  );
+
+  const labels=rows.map(
+    r=>
+      new Date(
+        readingTime(r)
+      ).toLocaleTimeString(
+        "en-IE",
+        {
+          hour:"2-digit",
+          minute:"2-digit"
+        }
+      )
+  );
+
+  charts.temperature.data.labels=labels;
+
+  charts.temperature
+    .data
+    .datasets[0]
+    .data=
+      rows.map(
+        r=>r.temperature_c
+      );
+
+  charts.temperature
+    .data
+    .datasets[1]
+    .data=
+      rows.map(
+        r=>r.dew_point_c
+      );
+
+  charts.temperature.update();
+
+  charts.wind.data.labels=labels;
+
+  charts.wind
+    .data
+    .datasets[0]
+    .data=
+      rows.map(
+        r=>r.wind_speed_kmh
+      );
+
+  charts.wind
+    .data
+    .datasets[1]
+    .data=
+      rows.map(
+        r=>r.wind_gust_kmh
+      );
+
+  charts.wind.update();
+
+  charts.pressure.data.labels=labels;
+
+  charts.pressure
+    .data
+    .datasets[0]
+    .data=
+      rows.map(
+        r=>r.pressure_hpa
+      );
+
+  charts.pressure.update();
+
+  charts.solar.data.labels=labels;
+
+  charts.solar
+    .data
+    .datasets[0]
+    .data=
+      rows.map(
+        r=>r.solar_w_m2
+      );
+
+  charts.solar
+    .data
+    .datasets[1]
+    .data=
+      rows.map(
+        r=>r.uv_index
+      );
+
+  charts.solar.update();
+
+  const rain=dailyRainTotals();
+
+  charts.rain.data.labels=
+    rain.map(
+      d=>
+        new Date(
+          d.time
+        ).toLocaleDateString(
+          "en-IE",
+          {
+            weekday:"short"
+          }
+        )
     );
 
-    el("statusPill").className =
-      "status-pill error";
+  charts.rain
+    .data
+    .datasets[0]
+    .data=
+      rain.map(
+        d=>d.rain
+      );
 
-    el("statusText").textContent =
-      "Unable to load station data";
+  charts.rain.update();
+}
 
-    el("conditionSummary").textContent =
-      "The weather feed is temporarily unavailable";
+async function getJSON(url){
+  const r=await fetch(
+    url,
+    {
+      cache:"no-store"
+    }
+  );
 
-    drawHistory();
+  if(!r.ok){
+    throw new Error(
+      `HTTP ${r.status}`
+    );
+  }
+
+  const data=
+    await r.json();
+
+  if(data.error){
+    throw new Error(
+      data.error
+    );
+  }
+
+  return data;
+}
+
+async function loadEverything(){
+  try{
+    const [
+      current,
+      h24,
+      h7
+    ]=
+      await Promise.all([
+        getJSON(
+          CURRENT_URL
+        ),
+
+        getJSON(
+          HISTORY_24_URL
+        ),
+
+        getJSON(
+          HISTORY_7D_URL
+        )
+      ]);
+
+    history24=
+      Array.isArray(
+        h24.readings
+      )
+        ? h24.readings
+        : [];
+
+    history7d=
+      Array.isArray(
+        h7.readings
+      )
+        ? h7.readings
+        : [];
+
+    updateDashboard(
+      current
+    );
+
+    updateCharts();
+
+  }catch(err){
+
+    console.error(
+      "Parknacross Weather:",
+      err
+    );
+
+    set(
+      "cloudStatus",
+      "Error"
+    );
+
+    $("cloudStatus")
+      ?.classList
+      .add(
+        "bad"
+      );
+
+    set(
+      "conditionsTag",
+      "Feed unavailable"
+    );
+
+    set(
+      "lastUpdated",
+      "Unable to load live weather"
+    );
   }
 }
 
-(async () => {
-  try {
-    await fetchHistory(true);
-  } catch (error) {
-    console.warn(
-      "Initial history load failed:",
-      error
+async function refreshCurrent(){
+  try{
+    const current=
+      await getJSON(
+        CURRENT_URL
+      );
+
+    updateDashboard(
+      current
+    );
+
+  }catch(err){
+
+    console.error(
+      "Current refresh:",
+      err
+    );
+
+    set(
+      "cloudStatus",
+      "Delayed"
     );
   }
+}
 
-  await loadWeather();
-})();
+document.addEventListener(
+  "DOMContentLoaded",
+  ()=>{
+    createCharts();
 
-setInterval(
-  loadWeather,
-  REFRESH_MS
-);
+    loadEverything();
 
-window.addEventListener(
-  "resize",
-  drawHistory
+    setInterval(
+      refreshCurrent,
+      60*1000
+    );
+
+    setInterval(
+      loadEverything,
+      5*60*1000
+    );
+  }
 );
