@@ -1,54 +1,47 @@
-const CURRENT_URL =
-  "https://parknacross-weather.dave-s-carter.workers.dev/current";
+const API_BASE = "https://parknacross-weather.dave-s-carter.workers.dev";
+const CURRENT_URL = `${API_BASE}/current`;
+const HISTORY_24_URL = `${API_BASE}/history?hours=24`;
+const HISTORY_7D_URL = `${API_BASE}/history?hours=168`;
+const STATS_URL = `${API_BASE}/stats`;
+const FORECAST_URL = `${API_BASE}/met/forecast`;
+const WARNINGS_URL = `${API_BASE}/met/warnings`;
 
-const HISTORY_24_URL =
-  "https://parknacross-weather.dave-s-carter.workers.dev/history?hours=24";
+const ARDAMINE_LAT = 52.6247;
+const ARDAMINE_LON = -6.25;
+const STALE_AFTER_MS = 10 * 60 * 1000;
+const OFFLINE_AFTER_MS = 30 * 60 * 1000;
 
-const HISTORY_7D_URL =
-  "https://parknacross-weather.dave-s-carter.workers.dev/history?hours=168";
+const $ = id => document.getElementById(id);
 
+const set = (id, value) => {
+  const element = $(id);
 
-const $ =
-  id => document.getElementById(id);
+  if (element) {
+    element.textContent = value;
+  }
+};
 
+const usable = value =>
+  value !== null &&
+  value !== undefined &&
+  value !== "" &&
+  Number.isFinite(Number(value));
 
-const set =
-  (id, value) => {
-    const element = $(id);
-
-    if (element) {
-      element.textContent = value;
-    }
-  };
-
-
-const usable =
-  value =>
-    value !== null &&
-    value !== undefined &&
-    value !== "" &&
-    Number.isFinite(Number(value));
-
-
-const n =
-  (value, digits = 1) =>
-    usable(value)
-      ? Number(value).toFixed(digits)
-      : "--";
-
+const n = (value, digits = 1) =>
+  usable(value)
+    ? Number(value).toFixed(digits)
+    : "--";
 
 let history24 = [];
 let history7d = [];
+let stats = null;
 let charts = {};
+let deferredInstallPrompt = null;
 
 
 /*
- * Rain correction
- *
- * 0.1 mm recorded on 11 September 2026 was generated
- * while testing the new weather station.
- *
- * It was not genuine rainfall.
+ * 0.1 mm on commissioning day was a test,
+ * not real rainfall.
  */
 const RAIN_CORRECTIONS_MM = {
   "2026-09-11": 0.1
@@ -64,23 +57,14 @@ function readingTime(reading) {
         reading.received_at
       ).getTime();
 
-
     if (Number.isFinite(time)) {
       return time;
     }
   }
 
-
-  if (usable(reading?.epoch)) {
-
-    return (
-      Number(reading.epoch) *
-      1000
-    );
-  }
-
-
-  return null;
+  return usable(reading?.epoch)
+    ? Number(reading.epoch) * 1000
+    : null;
 }
 
 
@@ -89,15 +73,12 @@ function localDateKey(reading) {
   const time =
     readingTime(reading);
 
-
   if (!time) {
     return null;
   }
 
-
   const date =
     new Date(time);
-
 
   return [
     date.getFullYear(),
@@ -126,38 +107,23 @@ function correctedDailyRain(reading) {
       reading?.rain_daily_mm
     );
 
-
   if (!Number.isFinite(raw)) {
     return null;
   }
 
-
-  const dateKey =
-    localDateKey(reading);
-
-
   const correction =
     Number(
       RAIN_CORRECTIONS_MM[
-        dateKey
+        localDateKey(reading)
       ] || 0
     );
 
-
-  const corrected =
-    Math.max(
-      0,
-      raw - correction
-    );
-
-
-  /*
-   * Prevent tiny floating-point values such as
-   * 0.00000000001 appearing instead of 0.0.
-   */
   return (
     Math.round(
-      corrected * 10
+      Math.max(
+        0,
+        raw - correction
+      ) * 10
     ) / 10
   );
 }
@@ -170,7 +136,6 @@ function sameDay(
 
   const date =
     new Date(time);
-
 
   return (
     date.getFullYear() ===
@@ -185,60 +150,11 @@ function sameDay(
 }
 
 
-function maxField(
-  rows,
-  field
-) {
-
-  const values =
-    rows
-      .map(
-        row =>
-          Number(
-            row[field]
-          )
-      )
-      .filter(
-        Number.isFinite
-      );
-
-
-  return values.length
-    ? Math.max(...values)
-    : null;
-}
-
-
-function minField(
-  rows,
-  field
-) {
-
-  const values =
-    rows
-      .map(
-        row =>
-          Number(
-            row[field]
-          )
-      )
-      .filter(
-        Number.isFinite
-      );
-
-
-  return values.length
-    ? Math.min(...values)
-    : null;
-}
-
-
 function compass(degrees) {
 
   if (!usable(degrees)) {
     return "--";
   }
-
 
   const labels = [
     "N",
@@ -259,7 +175,6 @@ function compass(degrees) {
     "NNW"
   ];
 
-
   const direction =
     (
       (
@@ -270,12 +185,145 @@ function compass(degrees) {
     ) %
     360;
 
-
   return labels[
     Math.round(
       direction / 22.5
     ) % 16
   ];
+}
+
+
+function comfort(humidity) {
+
+  const value =
+    Number(humidity);
+
+  if (!Number.isFinite(value)) {
+    return "--";
+  }
+
+  if (value < 35) {
+    return "Dry";
+  }
+
+  if (value <= 65) {
+    return "Comfortable";
+  }
+
+  if (value <= 80) {
+    return "Humid";
+  }
+
+  return "Very humid";
+}
+
+
+function recordReading(
+  rows,
+  field,
+  mode = "max"
+) {
+
+  const valid =
+    rows.filter(
+      row =>
+        usable(
+          row[field]
+        )
+    );
+
+  if (!valid.length) {
+    return null;
+  }
+
+  return valid.reduce(
+    (best, row) => {
+
+      if (!best) {
+        return row;
+      }
+
+      const a =
+        Number(
+          row[field]
+        );
+
+      const b =
+        Number(
+          best[field]
+        );
+
+      return mode === "min"
+        ? (
+            a < b
+              ? row
+              : best
+          )
+        : (
+            a > b
+              ? row
+              : best
+          );
+    },
+    null
+  );
+}
+
+
+function timeLabel(reading) {
+
+  const time =
+    readingTime(
+      reading
+    );
+
+  if (!time) {
+    return "--";
+  }
+
+  return new Date(
+    time
+  ).toLocaleTimeString(
+    "en-IE",
+    {
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  );
+}
+
+
+function dateLabel(value) {
+
+  if (!value) {
+    return "--";
+  }
+
+  const date =
+    typeof value === "number"
+      ? new Date(
+          value * 1000
+        )
+      : new Date(
+          value
+        );
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return "--";
+  }
+
+  return date.toLocaleDateString(
+    "en-IE",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    }
+  );
 }
 
 
@@ -289,7 +337,6 @@ function pressureStats() {
         )
     );
 
-
   if (rows.length < 2) {
 
     return {
@@ -298,45 +345,126 @@ function pressureStats() {
     };
   }
 
-
-  const first =
+  const change =
+    Number(
+      rows.at(-1)
+        .pressure_hpa
+    ) -
     Number(
       rows[0]
         .pressure_hpa
     );
 
-
-  const last =
-    Number(
-      rows[
-        rows.length - 1
-      ]
-        .pressure_hpa
-    );
-
-
-  const change =
-    last - first;
-
-
-  let trend =
-    "Steady";
-
-
-  if (change > 0.5) {
-    trend = "Rising";
-  }
-
-
-  if (change < -0.5) {
-    trend = "Falling";
-  }
-
-
   return {
     change,
-    trend
+
+    trend:
+      change > 0.5
+        ? "Rising"
+        : change < -0.5
+          ? "Falling"
+          : "Steady"
   };
+}
+
+
+function closestReadingTo(
+  targetTime
+) {
+
+  if (!history24.length) {
+    return null;
+  }
+
+  return history24.reduce(
+    (best, row) => {
+
+      const time =
+        readingTime(row);
+
+      if (!time) {
+        return best;
+      }
+
+      if (!best) {
+        return row;
+      }
+
+      return (
+        Math.abs(
+          time -
+          targetTime
+        ) <
+        Math.abs(
+          readingTime(best) -
+          targetTime
+        )
+      )
+        ? row
+        : best;
+    },
+    null
+  );
+}
+
+
+function updateTrend(
+  id,
+  currentValue,
+  oldValue,
+  unit,
+  digits = 1
+) {
+
+  const element =
+    $(id);
+
+  if (
+    !element ||
+    !usable(currentValue) ||
+    !usable(oldValue)
+  ) {
+
+    set(
+      id,
+      "--"
+    );
+
+    return;
+  }
+
+  const delta =
+    Number(currentValue) -
+    Number(oldValue);
+
+  const arrow =
+    delta > 0.05
+      ? "↑"
+      : delta < -0.05
+        ? "↓"
+        : "→";
+
+  const sign =
+    delta > 0
+      ? "+"
+      : "";
+
+  element.textContent =
+    `${arrow} ${sign}${delta.toFixed(digits)} ${unit}`;
+
+  element.classList.remove(
+    "trend-up",
+    "trend-down",
+    "trend-flat"
+  );
+
+  element.classList.add(
+    delta > 0.05
+      ? "trend-up"
+      : delta < -0.05
+        ? "trend-down"
+        : "trend-flat"
+  );
 }
 
 
@@ -350,7 +478,6 @@ function prevailingWind() {
         )
     );
 
-
   if (!rows.length) {
 
     return {
@@ -359,10 +486,8 @@ function prevailingWind() {
     };
   }
 
-
   let x = 0;
   let y = 0;
-
 
   rows.forEach(
     row => {
@@ -379,7 +504,6 @@ function prevailingWind() {
             )
           : 1;
 
-
       const radians =
         Number(
           row.wind_direction_deg
@@ -387,13 +511,11 @@ function prevailingWind() {
         Math.PI /
         180;
 
-
       x +=
         Math.cos(
           radians
         ) *
         weight;
-
 
       y +=
         Math.sin(
@@ -402,7 +524,6 @@ function prevailingWind() {
         weight;
     }
   );
-
 
   const degrees =
     (
@@ -416,7 +537,6 @@ function prevailingWind() {
     ) %
     360;
 
-
   return {
     deg: degrees,
     text: compass(degrees)
@@ -424,37 +544,10 @@ function prevailingWind() {
 }
 
 
-function comfort(humidity) {
-
-  const value =
-    Number(humidity);
-
-
-  if (!Number.isFinite(value)) {
-    return "--";
-  }
-
-
-  if (value < 35) {
-    return "Dry";
-  }
-
-
-  if (value <= 65) {
-    return "Comfortable";
-  }
-
-
-  if (value <= 80) {
-    return "Humid";
-  }
-
-
-  return "Very humid";
-}
-
-
-function conditionInfo(current) {
+function conditionInfo(
+  current,
+  isNight
+) {
 
   const rain =
     Number(
@@ -462,13 +555,11 @@ function conditionInfo(current) {
       0
     );
 
-
   const wind =
     Number(
       current.wind_speed_kmh ||
       0
     );
-
 
   const solar =
     Number(
@@ -476,13 +567,11 @@ function conditionInfo(current) {
       0
     );
 
-
   const uv =
     Number(
       current.uv_index ||
       0
     );
-
 
   if (rain >= 2.5) {
 
@@ -490,10 +579,11 @@ function conditionInfo(current) {
       tag: "Rainy",
       icon: "🌧️",
       story:
-        `Rain is falling at ${n(rain)} mm/h.`
+        `Rain is falling at ${n(rain)} mm/h.`,
+      className:
+        "weather-rain"
     };
   }
-
 
   if (rain > 0) {
 
@@ -501,10 +591,11 @@ function conditionInfo(current) {
       tag: "Light rain",
       icon: "🌦️",
       story:
-        `Light rain is falling at ${n(rain)} mm/h.`
+        `Light rain is falling at ${n(rain)} mm/h.`,
+      className:
+        "weather-rain"
     };
   }
-
 
   if (wind >= 35) {
 
@@ -512,10 +603,11 @@ function conditionInfo(current) {
       tag: "Very windy",
       icon: "💨",
       story:
-        `A lively Wexford breeze is blowing at ${n(wind)} km/h.`
+        `A lively Wexford breeze is blowing at ${n(wind)} km/h.`,
+      className:
+        "weather-windy"
     };
   }
-
 
   if (wind >= 20) {
 
@@ -523,32 +615,38 @@ function conditionInfo(current) {
       tag: "Breezy",
       icon: "🌬️",
       story:
-        `Breezy conditions with wind around ${n(wind)} km/h.`
+        `Breezy conditions with wind around ${n(wind)} km/h.`,
+      className:
+        "weather-windy"
     };
   }
 
+  if (isNight) {
 
-  if (uv >= 5) {
+    return {
+      tag: "Night",
+      icon: "🌙",
+      story:
+        "Night-time conditions at Parknacross.",
+      className:
+        "weather-neutral"
+    };
+  }
+
+  if (
+    uv >= 5 ||
+    solar >= 400
+  ) {
 
     return {
       tag: "Bright",
       icon: "☀️",
       story:
-        `Bright conditions with UV index ${n(uv, 0)}.`
+        "Bright conditions over Parknacross right now.",
+      className:
+        "weather-bright"
     };
   }
-
-
-  if (solar >= 400) {
-
-    return {
-      tag: "Bright",
-      icon: "🌤️",
-      story:
-        "Good brightness over Parknacross right now."
-    };
-  }
-
 
   if (solar >= 100) {
 
@@ -556,17 +654,363 @@ function conditionInfo(current) {
       tag: "Some brightness",
       icon: "⛅",
       story:
-        "Some brightness breaking through at Parknacross."
+        "Some brightness breaking through at Parknacross.",
+      className:
+        "weather-bright"
     };
   }
-
 
   return {
     tag: "Calm & local",
     icon: "☁️",
     story:
-      "Quiet local conditions at Parknacross."
+      "Quiet local conditions at Parknacross.",
+    className:
+      "weather-neutral"
   };
+}
+
+
+/*
+ * NOAA-style sunrise/sunset calculation
+ * using the public Ardamine area centre.
+ */
+function dayOfYear(date) {
+
+  const start =
+    new Date(
+      date.getFullYear(),
+      0,
+      0
+    );
+
+  return Math.floor(
+    (
+      date -
+      start
+    ) /
+    86400000
+  );
+}
+
+
+function normalize360(value) {
+
+  return (
+    (
+      value %
+      360
+    ) +
+    360
+  ) %
+  360;
+}
+
+
+function sunEvent(
+  date,
+  latitude,
+  longitude,
+  sunrise
+) {
+
+  const zenith =
+    90.833;
+
+  const N =
+    dayOfYear(
+      date
+    );
+
+  const lngHour =
+    longitude /
+    15;
+
+  const t =
+    N +
+    (
+      (
+        sunrise
+          ? 6
+          : 18
+      ) -
+      lngHour
+    ) /
+    24;
+
+  const M =
+    (
+      0.9856 *
+      t
+    ) -
+    3.289;
+
+  let L =
+    M +
+    1.916 *
+    Math.sin(
+      M *
+      Math.PI /
+      180
+    ) +
+    0.020 *
+    Math.sin(
+      2 *
+      M *
+      Math.PI /
+      180
+    ) +
+    282.634;
+
+  L =
+    normalize360(
+      L
+    );
+
+  let RA =
+    Math.atan(
+      0.91764 *
+      Math.tan(
+        L *
+        Math.PI /
+        180
+      )
+    ) *
+    180 /
+    Math.PI;
+
+  RA =
+    normalize360(
+      RA
+    );
+
+  const Lquadrant =
+    Math.floor(
+      L /
+      90
+    ) *
+    90;
+
+  const RAquadrant =
+    Math.floor(
+      RA /
+      90
+    ) *
+    90;
+
+  RA =
+    (
+      RA +
+      (
+        Lquadrant -
+        RAquadrant
+      )
+    ) /
+    15;
+
+  const sinDec =
+    0.39782 *
+    Math.sin(
+      L *
+      Math.PI /
+      180
+    );
+
+  const cosDec =
+    Math.cos(
+      Math.asin(
+        sinDec
+      )
+    );
+
+  const cosH =
+    (
+      Math.cos(
+        zenith *
+        Math.PI /
+        180
+      ) -
+      (
+        sinDec *
+        Math.sin(
+          latitude *
+          Math.PI /
+          180
+        )
+      )
+    ) /
+    (
+      cosDec *
+      Math.cos(
+        latitude *
+        Math.PI /
+        180
+      )
+    );
+
+  if (
+    cosH > 1 ||
+    cosH < -1
+  ) {
+    return null;
+  }
+
+  let H =
+    sunrise
+      ? 360 -
+        Math.acos(
+          cosH
+        ) *
+        180 /
+        Math.PI
+      : Math.acos(
+          cosH
+        ) *
+        180 /
+        Math.PI;
+
+  H /=
+    15;
+
+  const T =
+    H +
+    RA -
+    (
+      0.06571 *
+      t
+    ) -
+    6.622;
+
+  const UT =
+    normalize360(
+      (
+        T -
+        lngHour
+      ) *
+      15
+    ) /
+    15;
+
+  return new Date(
+    Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      0,
+      0,
+      0
+    ) +
+    UT *
+    3600000
+  );
+}
+
+
+function updateSunInfo() {
+
+  const now =
+    new Date();
+
+  const rise =
+    sunEvent(
+      now,
+      ARDAMINE_LAT,
+      ARDAMINE_LON,
+      true
+    );
+
+  const setTime =
+    sunEvent(
+      now,
+      ARDAMINE_LAT,
+      ARDAMINE_LON,
+      false
+    );
+
+  const fmt =
+    date =>
+      date
+        ? date.toLocaleTimeString(
+            "en-IE",
+            {
+              hour: "2-digit",
+              minute: "2-digit"
+            }
+          )
+        : "--";
+
+  set(
+    "sunrise",
+    fmt(rise)
+  );
+
+  set(
+    "sunset",
+    fmt(setTime)
+  );
+
+  const isNight =
+    !!(
+      rise &&
+      setTime &&
+      (
+        now < rise ||
+        now >= setTime
+      )
+    );
+
+  if (
+    rise &&
+    setTime
+  ) {
+
+    if (
+      now >= rise &&
+      now < setTime
+    ) {
+
+      const mins =
+        Math.max(
+          0,
+          Math.floor(
+            (
+              setTime -
+              now
+            ) /
+            60000
+          )
+        );
+
+      set(
+        "daylightRemaining",
+        `${
+          Math.floor(
+            mins /
+            60
+          )
+        }h ${
+          mins %
+          60
+        }m`
+      );
+    }
+    else {
+
+      set(
+        "daylightRemaining",
+        "Night"
+      );
+    }
+  }
+
+  document.body
+    .classList
+    .toggle(
+      "is-night",
+      isNight
+    );
+
+  return isNight;
 }
 
 
@@ -575,19 +1019,18 @@ function dailyRainTotals() {
   const days =
     new Map();
 
-
   history7d.forEach(
     reading => {
 
       const time =
-        readingTime(reading);
-
+        readingTime(
+          reading
+        );
 
       const correctedRain =
         correctedDailyRain(
           reading
         );
-
 
       if (
         !time ||
@@ -598,10 +1041,10 @@ function dailyRainTotals() {
         return;
       }
 
-
       const date =
-        new Date(time);
-
+        new Date(
+          time
+        );
 
       const key =
         [
@@ -610,22 +1053,16 @@ function dailyRainTotals() {
           date.getDate()
         ].join("-");
 
-
       const rain =
         Number(
           correctedRain
         );
 
-
       const existing =
-        days.get(key);
+        days.get(
+          key
+        );
 
-
-      /*
-       * Ecowitt daily rain is cumulative,
-       * so keep the highest value recorded
-       * during each day.
-       */
       if (
         !existing ||
         rain >
@@ -643,19 +1080,289 @@ function dailyRainTotals() {
     }
   );
 
-
   return [
     ...days.values()
   ]
     .sort(
-      (a, b) =>
-        a.time - b.time
+      (
+        a,
+        b
+      ) =>
+        a.time -
+        b.time
     )
     .slice(-7);
 }
 
 
+function updateFreshness(current) {
+
+  const time =
+    readingTime(
+      current
+    );
+
+  const pill =
+    $("livePill");
+
+  if (
+    !time ||
+    !pill
+  ) {
+    return;
+  }
+
+  const age =
+    Date.now() -
+    time;
+
+  pill.classList.remove(
+    "delayed",
+    "offline"
+  );
+
+  if (
+    age >=
+    OFFLINE_AFTER_MS
+  ) {
+
+    pill.classList.add(
+      "offline"
+    );
+
+    set(
+      "liveText",
+      "STATION DATA OFFLINE"
+    );
+
+    set(
+      "cloudStatus",
+      "Offline"
+    );
+
+    $("cloudStatus")
+      ?.classList
+      .add(
+        "bad"
+      );
+  }
+  else if (
+    age >=
+    STALE_AFTER_MS
+  ) {
+
+    pill.classList.add(
+      "delayed"
+    );
+
+    set(
+      "liveText",
+      "STATION DATA DELAYED"
+    );
+
+    set(
+      "cloudStatus",
+      "Delayed"
+    );
+
+    $("cloudStatus")
+      ?.classList
+      .add(
+        "warn"
+      );
+  }
+  else {
+
+    set(
+      "liveText",
+      "LIVE FROM PARKNACROSS"
+    );
+
+    set(
+      "cloudStatus",
+      "Connected"
+    );
+
+    $("cloudStatus")
+      ?.classList
+      .remove(
+        "bad",
+        "warn"
+      );
+
+    $("cloudStatus")
+      ?.classList
+      .add(
+        "ok"
+      );
+  }
+}
+
+
+function updateStatsPanel() {
+
+  if (!stats) {
+    return;
+  }
+
+  set(
+    "monthRain",
+    `${n(
+      stats.month_rain_mm
+    )} mm`
+  );
+
+  set(
+    "monthRainDays",
+    `${
+      stats.month_rain_days ??
+      0
+    } rain day${
+      stats.month_rain_days === 1
+        ? ""
+        : "s"
+    } this month`
+  );
+
+  set(
+    "yearRain",
+    `${n(
+      stats.year_rain_mm
+    )} mm`
+  );
+
+  set(
+    "stationSince",
+    dateLabel(
+      stats.first_epoch
+    )
+  );
+
+  if (
+    stats.wettest_day
+  ) {
+
+    set(
+      "wettestDay",
+      `${n(
+        stats.wettest_day
+          .rain_mm
+      )} mm`
+    );
+
+    set(
+      "wettestDate",
+      dateLabel(
+        `${
+          stats.wettest_day
+            .day
+        }T12:00:00`
+      )
+    );
+  }
+
+  const records =
+    stats.records ||
+    {};
+
+  if (
+    records.high_temperature
+  ) {
+
+    set(
+      "allHigh",
+      `${n(
+        records
+          .high_temperature
+          .value
+      )} °C`
+    );
+
+    set(
+      "allHighDate",
+      dateLabel(
+        records
+          .high_temperature
+          .epoch
+      )
+    );
+  }
+
+  if (
+    records.low_temperature
+  ) {
+
+    set(
+      "allLow",
+      `${n(
+        records
+          .low_temperature
+          .value
+      )} °C`
+    );
+
+    set(
+      "allLowDate",
+      dateLabel(
+        records
+          .low_temperature
+          .epoch
+      )
+    );
+  }
+
+  if (
+    records.peak_gust
+  ) {
+
+    set(
+      "allGust",
+      `${n(
+        records
+          .peak_gust
+          .value
+      )} km/h`
+    );
+
+    set(
+      "allGustDate",
+      dateLabel(
+        records
+          .peak_gust
+          .epoch
+      )
+    );
+  }
+
+  if (
+    records.high_pressure
+  ) {
+
+    set(
+      "allPressure",
+      `${n(
+        records
+          .high_pressure
+          .value
+      )} hPa`
+    );
+
+    set(
+      "allPressureDate",
+      dateLabel(
+        records
+          .high_pressure
+          .epoch
+      )
+    );
+  }
+}
+
+
 function updateDashboard(current) {
+
+  const now =
+    new Date();
 
   const today =
     history24.filter(
@@ -666,116 +1373,120 @@ function updateDashboard(current) {
             reading
           );
 
-
         return (
           time &&
-          sameDay(time)
+          sameDay(
+            time,
+            now
+          )
         );
       }
     );
 
-
-  const high =
-    maxField(
+  const highReading =
+    recordReading(
       today,
-      "temperature_c"
+      "temperature_c",
+      "max"
     );
 
-
-  const low =
-    minField(
+  const lowReading =
+    recordReading(
       today,
-      "temperature_c"
+      "temperature_c",
+      "min"
     );
 
-
-  const peak =
-    maxField(
+  const gustReading =
+    recordReading(
       today,
-      "wind_gust_kmh"
+      "wind_gust_kmh",
+      "max"
     );
 
-
-  const solarPeak =
-    maxField(
+  const solarReading =
+    recordReading(
       today,
-      "solar_w_m2"
+      "solar_w_m2",
+      "max"
     );
-
 
   const pressure =
     pressureStats();
 
-
   const direction =
     compass(
-      current.wind_direction_deg
-    );
-
-
-  const condition =
-    conditionInfo(
       current
+        .wind_direction_deg
     );
-
 
   const rainToday =
     correctedDailyRain(
       current
     );
 
-
-  const time =
+  const currentTime =
     readingTime(
       current
     );
 
+  const isNight =
+    updateSunInfo();
 
-  if (time) {
+  const condition =
+    conditionInfo(
+      current,
+      isNight
+    );
+
+  if (currentTime) {
 
     const date =
-      new Date(time);
-
+      new Date(
+        currentTime
+      );
 
     set(
       "lastUpdated",
-
       `Updated ${
         date.toLocaleTimeString(
           "en-IE",
           {
-            hour: "2-digit",
-            minute: "2-digit"
+            hour:
+              "2-digit",
+            minute:
+              "2-digit"
           }
         )
       } · ${
         date.toLocaleDateString(
           "en-IE",
           {
-            day: "2-digit",
-            month: "short"
+            day:
+              "2-digit",
+            month:
+              "short"
           }
         )
       }`
     );
   }
 
-
   set(
     "heroTemp",
     n(
-      current.temperature_c
+      current
+        .temperature_c
     )
   );
-
 
   set(
     "heroFeels",
     `${n(
-      current.feels_like_c
+      current
+        .feels_like_c
     )}°C`
   );
-
 
   set(
     "heroHumidity",
@@ -785,22 +1496,21 @@ function updateDashboard(current) {
     )}%`
   );
 
-
   set(
     "heroDew",
     `${n(
-      current.dew_point_c
+      current
+        .dew_point_c
     )}°C`
   );
-
 
   set(
     "heroWind",
     `${n(
-      current.wind_speed_kmh
+      current
+        .wind_speed_kmh
     )} km/h`
   );
-
 
   set(
     "heroRain",
@@ -809,14 +1519,13 @@ function updateDashboard(current) {
     )} mm`
   );
 
-
   set(
     "heroPressure",
     `${n(
-      current.pressure_hpa
+      current
+        .pressure_hpa
     )} hPa`
   );
-
 
   set(
     "heroTrend",
@@ -825,85 +1534,107 @@ function updateDashboard(current) {
       : `${pressure.trend} pressure`
   );
 
-
   set(
     "weatherStory",
     condition.story
   );
-
 
   set(
     "conditionsTag",
     condition.tag
   );
 
-
   set(
     "weatherIcon",
     condition.icon
   );
 
+  document.body
+    .classList
+    .remove(
+      "weather-neutral",
+      "weather-rain",
+      "weather-bright",
+      "weather-windy"
+    );
+
+  document.body
+    .classList
+    .add(
+      condition.className
+    );
 
   set(
     "todayLow",
-    n(low)
+    n(
+      lowReading
+        ?.temperature_c
+    )
   );
-
 
   set(
     "todayHigh",
-    n(high)
+    n(
+      highReading
+        ?.temperature_c
+    )
   );
-
 
   set(
     "peakGust",
-    n(peak)
+    n(
+      gustReading
+        ?.wind_gust_kmh
+    )
   );
-
 
   set(
     "summaryRain",
-    n(rainToday)
+    n(
+      rainToday
+    )
   );
-
 
   set(
     "solarPeak",
     n(
-      solarPeak,
+      solarReading
+        ?.solar_w_m2,
       0
     )
   );
 
-
   set(
     "tempVal",
     n(
-      current.temperature_c
+      current
+        .temperature_c
     )
   );
-
 
   set(
     "feelsVal",
     `${n(
-      current.feels_like_c
+      current
+        .feels_like_c
     )}°C`
   );
 
-
   set(
     "tempMin",
-    n(low)
+    n(
+      lowReading
+        ?.temperature_c
+    )
   );
-
 
   set(
     "tempMax",
-    n(high)
+    n(
+      highReading
+        ?.temperature_c
+    )
   );
-
 
   set(
     "humVal",
@@ -913,14 +1644,13 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "dewVal",
     `${n(
-      current.dew_point_c
+      current
+        .dew_point_c
     )}°C`
   );
-
 
   set(
     "comfortVal",
@@ -929,64 +1659,68 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "windVal",
     n(
-      current.wind_speed_kmh
+      current
+        .wind_speed_kmh
     )
   );
-
 
   set(
     "gustVal",
     `${n(
-      current.wind_gust_kmh
+      current
+        .wind_gust_kmh
     )} km/h`
   );
-
 
   set(
     "dirVal",
     usable(
-      current.wind_direction_deg
+      current
+        .wind_direction_deg
     )
-      ? `${direction} (${Math.round(
-          Number(
-            current.wind_direction_deg
+      ? `${
+          direction
+        } (${
+          Math.round(
+            Number(
+              current
+                .wind_direction_deg
+            )
           )
-        )}°)`
+        }°)`
       : direction
   );
 
-
   set(
     "rainVal",
-    n(rainToday)
+    n(
+      rainToday
+    )
   );
-
 
   set(
     "rainRateVal",
     `${n(
-      current.rain_rate_mm_h
+      current
+        .rain_rate_mm_h
     )} mm/h`
   );
-
 
   set(
     "pressureVal",
     n(
-      current.pressure_hpa
+      current
+        .pressure_hpa
     )
   );
-
 
   set(
     "pressureTrend",
     pressure.trend
   );
-
 
   set(
     "pressureChange",
@@ -997,78 +1731,85 @@ function updateDashboard(current) {
           pressure.change >= 0
             ? "+"
             : ""
-        }${n(
-          pressure.change
-        )} hPa`
+        }${
+          n(
+            pressure.change
+          )
+        } hPa`
       : "--"
   );
-
 
   set(
     "solarVal",
     n(
-      current.solar_w_m2,
+      current
+        .solar_w_m2,
       0
     )
   );
-
 
   set(
     "uvVal",
     n(
-      current.uv_index,
+      current
+        .uv_index,
       0
     )
   );
 
-
   set(
     "battery",
     usable(
-      current.battery_v
+      current
+        .battery_v
     )
       ? `${n(
-          current.battery_v,
+          current
+            .battery_v,
           2
         )} V`
       : "--"
   );
-
-
-  set(
-    "cloudStatus",
-    "Connected"
-  );
-
-
-  $("cloudStatus")
-    ?.classList
-    .remove(
-      "bad",
-      "warn"
-    );
-
-
-  $("cloudStatus")
-    ?.classList
-    .add("ok");
-
 
   set(
     "sampleCount",
     history24.length
   );
 
+  const threeHoursAgo =
+    closestReadingTo(
+      Date.now() -
+      3 *
+      60 *
+      60 *
+      1000
+    );
+
+  updateTrend(
+    "temp3h",
+    current
+      .temperature_c,
+    threeHoursAgo
+      ?.temperature_c,
+    "°C"
+  );
+
+  updateTrend(
+    "pressure3h",
+    current
+      .pressure_hpa,
+    threeHoursAgo
+      ?.pressure_hpa,
+    "hPa"
+  );
 
   const prevailing =
     prevailingWind();
-
 
   set(
     "prevailing",
     prevailing.text
   );
-
 
   if (
     usable(
@@ -1083,55 +1824,97 @@ function updateDashboard(current) {
         `rotate(${prevailing.deg}deg)`;
   }
 
-
   set(
     "currentDirection",
-
     usable(
-      current.wind_direction_deg
+      current
+        .wind_direction_deg
     )
-      ? `${direction} · ${Math.round(
-          Number(
-            current.wind_direction_deg
+      ? `${
+          direction
+        } · ${
+          Math.round(
+            Number(
+              current
+                .wind_direction_deg
+            )
           )
-        )}°`
+        }°`
       : direction
   );
-
 
   set(
     "currentWind",
     `${n(
-      current.wind_speed_kmh
+      current
+        .wind_speed_kmh
     )} km/h`
   );
-
 
   set(
     "currentGust",
     `${n(
-      current.wind_gust_kmh
+      current
+        .wind_gust_kmh
     )} km/h`
   );
 
-
   set(
     "recordHigh",
-    `${n(high)} °C`
+    `${n(
+      highReading
+        ?.temperature_c
+    )} °C`
   );
 
+  set(
+    "recordHighTime",
+    highReading
+      ? `at ${
+          timeLabel(
+            highReading
+          )
+        }`
+      : "--"
+  );
 
   set(
     "recordLow",
-    `${n(low)} °C`
+    `${n(
+      lowReading
+        ?.temperature_c
+    )} °C`
   );
 
+  set(
+    "recordLowTime",
+    lowReading
+      ? `at ${
+          timeLabel(
+            lowReading
+          )
+        }`
+      : "--"
+  );
 
   set(
     "recordGust",
-    `${n(peak)} km/h`
+    `${n(
+      gustReading
+        ?.wind_gust_kmh
+    )} km/h`
   );
 
+  set(
+    "recordGustTime",
+    gustReading
+      ? `at ${
+          timeLabel(
+            gustReading
+          )
+        }`
+      : "--"
+  );
 
   set(
     "recordRain",
@@ -1140,6 +1923,11 @@ function updateDashboard(current) {
     )} mm`
   );
 
+  updateFreshness(
+    current
+  );
+
+  updateStatsPanel();
 
   set(
     "year",
@@ -1168,7 +1956,6 @@ function scales(title) {
           8
       }
     },
-
 
     y: {
 
@@ -1204,16 +1991,34 @@ function line(
 ) {
 
   return {
+
     label,
+
     data: [],
-    borderColor: colour,
-    backgroundColor: colour,
-    borderWidth: 2.2,
-    pointRadius: 0,
-    pointHoverRadius: 4,
-    tension: 0.3,
-    fill: false,
-    yAxisID: axis
+
+    borderColor:
+      colour,
+
+    backgroundColor:
+      colour,
+
+    borderWidth:
+      2.2,
+
+    pointRadius:
+      0,
+
+    pointHoverRadius:
+      4,
+
+    tension:
+      0.3,
+
+    fill:
+      false,
+
+    yAxisID:
+      axis
   };
 }
 
@@ -1223,7 +2028,6 @@ function createCharts() {
   Chart.defaults.color =
     "#bfd0e3";
 
-
   Chart.defaults.font.family =
     "Inter,system-ui,sans-serif";
 
@@ -1232,12 +2036,15 @@ function createCharts() {
     new Chart(
       $("temperatureChart"),
       {
-        type: "line",
+        type:
+          "line",
 
         data: {
+
           labels: [],
 
           datasets: [
+
             line(
               "Temperature °C",
               "#ff8d8d"
@@ -1251,6 +2058,7 @@ function createCharts() {
         },
 
         options: {
+
           maintainAspectRatio:
             false,
 
@@ -1263,7 +2071,9 @@ function createCharts() {
           },
 
           scales:
-            scales("°C"),
+            scales(
+              "°C"
+            ),
 
           plugins: {
             legend: {
@@ -1284,9 +2094,11 @@ function createCharts() {
           "line",
 
         data: {
+
           labels: [],
 
           datasets: [
+
             line(
               "Wind km/h",
               "#74ddff"
@@ -1300,6 +2112,7 @@ function createCharts() {
         },
 
         options: {
+
           maintainAspectRatio:
             false,
 
@@ -1312,7 +2125,9 @@ function createCharts() {
           },
 
           scales:
-            scales("km/h"),
+            scales(
+              "km/h"
+            ),
 
           plugins: {
             legend: {
@@ -1333,9 +2148,11 @@ function createCharts() {
           "line",
 
         data: {
+
           labels: [],
 
           datasets: [
+
             line(
               "Pressure hPa",
               "#b594ff"
@@ -1344,6 +2161,7 @@ function createCharts() {
         },
 
         options: {
+
           maintainAspectRatio:
             false,
 
@@ -1356,7 +2174,9 @@ function createCharts() {
           },
 
           scales:
-            scales("hPa"),
+            scales(
+              "hPa"
+            ),
 
           plugins: {
             legend: {
@@ -1377,6 +2197,7 @@ function createCharts() {
           "bar",
 
         data: {
+
           labels: [],
 
           datasets: [
@@ -1384,8 +2205,7 @@ function createCharts() {
               label:
                 "Rainfall mm",
 
-              data:
-                [],
+              data: [],
 
               backgroundColor:
                 "#7ca9ff",
@@ -1397,11 +2217,14 @@ function createCharts() {
         },
 
         options: {
+
           maintainAspectRatio:
             false,
 
           scales:
-            scales("mm"),
+            scales(
+              "mm"
+            ),
 
           plugins: {
             legend: {
@@ -1422,9 +2245,11 @@ function createCharts() {
           "line",
 
         data: {
+
           labels: [],
 
           datasets: [
+
             line(
               "Solar W/m²",
               "#ffd77a",
@@ -1440,6 +2265,7 @@ function createCharts() {
         },
 
         options: {
+
           maintainAspectRatio:
             false,
 
@@ -1468,7 +2294,6 @@ function createCharts() {
                   8
               }
             },
-
 
             y: {
 
@@ -1499,7 +2324,6 @@ function createCharts() {
                   "#a8bfd4"
               }
             },
-
 
             y1: {
 
@@ -1554,7 +2378,6 @@ function updateCharts() {
         )
     );
 
-
   const labels =
     rows.map(
       reading =>
@@ -1562,7 +2385,8 @@ function updateCharts() {
           readingTime(
             reading
           )
-        ).toLocaleTimeString(
+        )
+        .toLocaleTimeString(
           "en-IE",
           {
             hour:
@@ -1574,32 +2398,28 @@ function updateCharts() {
         )
     );
 
-
   charts.temperature
     .data
     .labels =
       labels;
-
 
   charts.temperature
     .data
     .datasets[0]
     .data =
       rows.map(
-        reading =>
-          reading.temperature_c
+        row =>
+          row.temperature_c
       );
-
 
   charts.temperature
     .data
     .datasets[1]
     .data =
       rows.map(
-        reading =>
-          reading.dew_point_c
+        row =>
+          row.dew_point_c
       );
-
 
   charts.temperature
     .update();
@@ -1610,26 +2430,23 @@ function updateCharts() {
     .labels =
       labels;
 
-
   charts.wind
     .data
     .datasets[0]
     .data =
       rows.map(
-        reading =>
-          reading.wind_speed_kmh
+        row =>
+          row.wind_speed_kmh
       );
-
 
   charts.wind
     .data
     .datasets[1]
     .data =
       rows.map(
-        reading =>
-          reading.wind_gust_kmh
+        row =>
+          row.wind_gust_kmh
       );
-
 
   charts.wind
     .update();
@@ -1640,16 +2457,14 @@ function updateCharts() {
     .labels =
       labels;
 
-
   charts.pressure
     .data
     .datasets[0]
     .data =
       rows.map(
-        reading =>
-          reading.pressure_hpa
+        row =>
+          row.pressure_hpa
       );
-
 
   charts.pressure
     .update();
@@ -1660,26 +2475,23 @@ function updateCharts() {
     .labels =
       labels;
 
-
   charts.solar
     .data
     .datasets[0]
     .data =
       rows.map(
-        reading =>
-          reading.solar_w_m2
+        row =>
+          row.solar_w_m2
       );
-
 
   charts.solar
     .data
     .datasets[1]
     .data =
       rows.map(
-        reading =>
-          reading.uv_index
+        row =>
+          row.uv_index
       );
-
 
   charts.solar
     .update();
@@ -1688,7 +2500,6 @@ function updateCharts() {
   const rainfall =
     dailyRainTotals();
 
-
   charts.rain
     .data
     .labels =
@@ -1696,7 +2507,8 @@ function updateCharts() {
         day =>
           new Date(
             day.time
-          ).toLocaleDateString(
+          )
+          .toLocaleDateString(
             "en-IE",
             {
               weekday:
@@ -1704,7 +2516,6 @@ function updateCharts() {
             }
           )
       );
-
 
   charts.rain
     .data
@@ -1714,7 +2525,6 @@ function updateCharts() {
         day =>
           day.rain
       );
-
 
   charts.rain
     .update();
@@ -1732,7 +2542,6 @@ async function getJSON(url) {
       }
     );
 
-
   if (!response.ok) {
 
     throw new Error(
@@ -1740,20 +2549,212 @@ async function getJSON(url) {
     );
   }
 
-
   const data =
     await response.json();
 
-
-  if (data.error) {
+  if (data?.error) {
 
     throw new Error(
       data.error
     );
   }
 
-
   return data;
+}
+
+
+async function loadForecast() {
+
+  try {
+
+    const forecast =
+      await getJSON(
+        FORECAST_URL
+      );
+
+    set(
+      "forecastToday",
+      forecast.today ||
+      "Forecast unavailable."
+    );
+
+    set(
+      "forecastTonight",
+      forecast.tonight ||
+      "--"
+    );
+
+    set(
+      "forecastTomorrow",
+      forecast.tomorrow ||
+      "--"
+    );
+  }
+  catch (error) {
+
+    console.warn(
+      "Met Éireann forecast:",
+      error
+    );
+
+    set(
+      "forecastToday",
+      "Official forecast temporarily unavailable."
+    );
+  }
+}
+
+
+async function loadWarnings() {
+
+  try {
+
+    const warnings =
+      await getJSON(
+        WARNINGS_URL
+      );
+
+    const list =
+      Array.isArray(
+        warnings.warnings
+      )
+        ? warnings.warnings
+        : [];
+
+    const banner =
+      $("warningBanner");
+
+    if (
+      !banner ||
+      !list.length
+    ) {
+
+      if (banner) {
+        banner.hidden = true;
+      }
+
+      return;
+    }
+
+    const warning =
+      list[0];
+
+    banner.hidden =
+      false;
+
+    banner.classList.remove(
+      "level-orange",
+      "level-red"
+    );
+
+    if (
+      String(
+        warning.level
+      ).toLowerCase() ===
+      "orange"
+    ) {
+
+      banner.classList.add(
+        "level-orange"
+      );
+    }
+
+    if (
+      String(
+        warning.level
+      ).toLowerCase() ===
+      "red"
+    ) {
+
+      banner.classList.add(
+        "level-red"
+      );
+    }
+
+    set(
+      "warningTitle",
+      `${
+        String(
+          warning.level ||
+          "Weather"
+        ).toUpperCase()
+      } warning for Wexford${
+        warning.type
+          ? ` · ${warning.type}`
+          : ""
+      }`
+    );
+
+    const onset =
+      warning.onset
+        ? new Date(
+            warning.onset
+          )
+        : null;
+
+    const expires =
+      warning.expires
+        ? new Date(
+            warning.expires
+          )
+        : null;
+
+    const timing =
+      onset &&
+      expires
+        ? `Valid ${
+            onset.toLocaleString(
+              "en-IE",
+              {
+                day:
+                  "numeric",
+
+                month:
+                  "short",
+
+                hour:
+                  "2-digit",
+
+                minute:
+                  "2-digit"
+              }
+            )
+          } to ${
+            expires.toLocaleString(
+              "en-IE",
+              {
+                day:
+                  "numeric",
+
+                month:
+                  "short",
+
+                hour:
+                  "2-digit",
+
+                minute:
+                  "2-digit"
+              }
+            )
+          }. `
+        : "";
+
+    set(
+      "warningText",
+      `${timing}${
+        warning.description ||
+        warning.headline ||
+        ""
+      }`
+    );
+  }
+  catch (error) {
+
+    console.warn(
+      "Met Éireann warnings:",
+      error
+    );
+  }
 }
 
 
@@ -1761,10 +2762,19 @@ async function loadEverything() {
 
   try {
 
+    /*
+     * Current conditions and 24h history are
+     * the essential feeds.
+     *
+     * The longer-range history and new stats
+     * endpoint are optional so the main dashboard
+     * still works while the upgraded Worker
+     * is being deployed.
+     */
+
     const [
       current,
-      history24Response,
-      history7Response
+      history24Response
     ] =
       await Promise.all(
         [
@@ -1774,38 +2784,67 @@ async function loadEverything() {
 
           getJSON(
             HISTORY_24_URL
-          ),
-
-          getJSON(
-            HISTORY_7D_URL
           )
         ]
       );
 
-
     history24 =
       Array.isArray(
-        history24Response.readings
+        history24Response
+          .readings
       )
-        ? history24Response.readings
+        ? history24Response
+            .readings
         : [];
 
+    try {
 
-    history7d =
-      Array.isArray(
-        history7Response.readings
-      )
-        ? history7Response.readings
-        : [];
+      const history7Response =
+        await getJSON(
+          HISTORY_7D_URL
+        );
 
+      history7d =
+        Array.isArray(
+          history7Response
+            .readings
+        )
+          ? history7Response
+              .readings
+          : [];
+    }
+    catch (error) {
+
+      console.warn(
+        "7-day history unavailable:",
+        error
+      );
+
+      history7d = [];
+    }
+
+    try {
+
+      stats =
+        await getJSON(
+          STATS_URL
+        );
+    }
+    catch (error) {
+
+      console.warn(
+        "Extended station stats unavailable:",
+        error
+      );
+
+      stats = null;
+    }
 
     updateDashboard(
       current
     );
 
-
     updateCharts();
-
   }
   catch (error) {
 
@@ -1814,12 +2853,10 @@ async function loadEverything() {
       error
     );
 
-
     set(
       "cloudStatus",
       "Error"
     );
-
 
     $("cloudStatus")
       ?.classList
@@ -1828,23 +2865,31 @@ async function loadEverything() {
         "warn"
       );
 
-
     $("cloudStatus")
       ?.classList
       .add(
         "bad"
       );
 
-
     set(
       "conditionsTag",
       "Feed unavailable"
     );
 
-
     set(
       "lastUpdated",
       "Unable to load live weather"
+    );
+
+    $("livePill")
+      ?.classList
+      .add(
+        "offline"
+      );
+
+    set(
+      "liveText",
+      "STATION DATA UNAVAILABLE"
     );
   }
 }
@@ -1859,11 +2904,9 @@ async function refreshCurrent() {
         CURRENT_URL
       );
 
-
     updateDashboard(
       current
     );
-
   }
   catch (error) {
 
@@ -1871,28 +2914,73 @@ async function refreshCurrent() {
       "Current refresh:",
       error
     );
+  }
+}
 
 
-    set(
-      "cloudStatus",
-      "Delayed"
-    );
+function setupPWA() {
 
+  if (
+    "serviceWorker" in
+    navigator
+  ) {
 
-    $("cloudStatus")
-      ?.classList
-      .remove(
-        "ok",
-        "bad"
-      );
-
-
-    $("cloudStatus")
-      ?.classList
-      .add(
-        "warn"
+    navigator.serviceWorker
+      .register(
+        "service-worker.js"
+      )
+      .catch(
+        error =>
+          console.warn(
+            "Service worker:",
+            error
+          )
       );
   }
+
+  window.addEventListener(
+    "beforeinstallprompt",
+    event => {
+
+      event.preventDefault();
+
+      deferredInstallPrompt =
+        event;
+
+      const button =
+        $("installButton");
+
+      if (button) {
+        button.hidden = false;
+      }
+    }
+  );
+
+  $("installButton")
+    ?.addEventListener(
+      "click",
+      async () => {
+
+        if (
+          !deferredInstallPrompt
+        ) {
+          return;
+        }
+
+        deferredInstallPrompt
+          .prompt();
+
+        await deferredInstallPrompt
+          .userChoice;
+
+        deferredInstallPrompt =
+          null;
+
+        $("installButton")
+          .hidden =
+            true;
+      }
+    );
 }
 
 
@@ -1902,27 +2990,39 @@ document.addEventListener(
 
     createCharts();
 
+    updateSunInfo();
 
     loadEverything();
 
+    loadForecast();
 
-    /*
-     * Refresh the latest weather reading
-     * every 60 seconds.
-     */
+    loadWarnings();
+
+    setupPWA();
+
     setInterval(
       refreshCurrent,
       60 * 1000
     );
 
-
-    /*
-     * Reload history and charts
-     * every 5 minutes.
-     */
     setInterval(
       loadEverything,
       5 * 60 * 1000
+    );
+
+    setInterval(
+      updateSunInfo,
+      60 * 1000
+    );
+
+    setInterval(
+      loadWarnings,
+      5 * 60 * 1000
+    );
+
+    setInterval(
+      loadForecast,
+      30 * 60 * 1000
     );
   }
 );
