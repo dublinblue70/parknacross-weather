@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#06111f">
+  <meta name="description" content="Parknacross Weather historical station records and trends.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <title>History · Parknacross Weather</title>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <div class="brand-badge">🌤️</div>
+      <div><h1>PARKNACROSS WEATHER</h1><p>Historical observations</p></div>
+    </a>
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="index.html#graphs">Graphs</a>
+      <a href="station.html">Station</a>
+      <a href="index.html#records">Records</a>
+      <a class="active" href="history.html">History</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="glass page-hero">
+      <h2>Weather history</h2>
+      <p>
+        Explore daily Parknacross station observations. The charts build over time as more
+        readings are collected, so the archive becomes more useful the longer the station runs.
+      </p>
+    </section>
+
+    <section class="climate-grid">
+      <article class="glass climate-card"><span>Rain this month</span><strong id="historyMonthRain">--</strong><small id="historyMonthRainDays">--</small></article>
+      <article class="glass climate-card"><span>Rain this year</span><strong id="historyYearRain">--</strong><small>Station observations</small></article>
+      <article class="glass climate-card"><span>Wettest day</span><strong id="historyWettest">--</strong><small id="historyWettestDate">--</small></article>
+      <article class="glass climate-card"><span>Records began</span><strong id="historySince">--</strong><small>First stored reading</small></article>
+    </section>
+
+    <div class="section-head">
+      <div><h2>Daily trends</h2><p>High/low temperature and rainfall</p></div>
+      <div class="range-controls">
+        <button data-days="30" class="active">30 days</button>
+        <button data-days="90">90 days</button>
+        <button data-days="365">1 year</button>
+      </div>
+    </div>
+
+    <section class="chart-grid">
+      <article class="glass chart-card">
+        <div class="section-head"><div><h2>Daily temperature range</h2><p>High and low</p></div><div class="tag">°C</div></div>
+        <div class="chart-wrap"><canvas id="dailyTempChart"></canvas></div>
+      </article>
+
+      <article class="glass chart-card">
+        <div class="section-head"><div><h2>Daily rainfall</h2><p>Corrected daily totals</p></div><div class="tag">mm</div></div>
+        <div class="chart-wrap"><canvas id="dailyRainChart"></canvas></div>
+      </article>
+    </section>
+
+    <div class="section-head">
+      <div><h2>All-time records</h2><p>Since the station archive began</p></div>
+    </div>
+
+    <section class="records-grid-page">
+      <article class="glass climate-card"><span>Highest temperature</span><strong id="histAllHigh">--</strong><small id="histAllHighDate">--</small></article>
+      <article class="glass climate-card"><span>Lowest temperature</span><strong id="histAllLow">--</strong><small id="histAllLowDate">--</small></article>
+      <article class="glass climate-card"><span>Strongest gust</span><strong id="histAllGust">--</strong><small id="histAllGustDate">--</small></article>
+      <article class="glass climate-card"><span>Highest pressure</span><strong id="histAllPressureHigh">--</strong><small id="histAllPressureHighDate">--</small></article>
+      <article class="glass climate-card"><span>Lowest pressure</span><strong id="histAllPressureLow">--</strong><small id="histAllPressureLowDate">--</small></article>
+      <article class="glass climate-card"><span>Total saved samples</span><strong id="histSamples">--</strong><small>Cloud archive</small></article>
+    </section>
+  </main>
+
+  <footer>
+    <span>© <span id="year"></span> Parknacross Weather</span>
+    <span>Personal weather station · Ardamine, Co. Wexford</span>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="history.js"></script>
+</body>
+</html>
