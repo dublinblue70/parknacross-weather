@@ -1686,3 +1686,99 @@ canvas {
   }
 }
 
+
+
+/* ============================================================
+   DASHBOARD COASTAL THUMBNAIL
+   ============================================================ */
+.hero-top-row {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  align-items: start;
+  gap: 28px;
+}
+
+.hero-top-row .hero-kicker {
+  min-width: 0;
+}
+
+.dashboard-thumb {
+  position: relative;
+  width: 260px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: #0a1b26;
+  box-shadow: 0 10px 28px rgba(0,0,0,.16);
+}
+
+.dashboard-thumb img {
+  display: block;
+  width: 100%;
+  height: 94px;
+  object-fit: cover;
+}
+
+.dashboard-thumb figcaption {
+  position: absolute;
+  right: 8px;
+  bottom: 7px;
+  max-width: calc(100% - 16px);
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: rgba(4, 15, 23, .76);
+  color: rgba(255,255,255,.94);
+  font-size: .7rem;
+  font-weight: 650;
+  letter-spacing: .01em;
+  backdrop-filter: blur(6px);
+}
+
+@media (max-width: 900px) {
+  .hero-top-row {
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 18px;
+  }
+
+  .dashboard-thumb {
+    width: 220px;
+  }
+
+  .dashboard-thumb img {
+    height: 86px;
+  }
+}
+
+@media (max-width: 700px) {
+  .hero-top-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .dashboard-thumb {
+    width: 100%;
+    max-width: none;
+  }
+
+  .dashboard-thumb img {
+    width: 100%;
+    height: 128px;
+  }
+
+  .dashboard-thumb figcaption {
+    font-size: .68rem;
+  }
+
+  .hero-layout {
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-thumb img {
+    height: 112px;
+  }
+}

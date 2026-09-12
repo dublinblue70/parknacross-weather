@@ -1,11 +1,11 @@
-const CACHE_NAME = "parknacross-weather-v2-profooter-20260912";
+const CACHE_NAME = "parknacross-weather-v2-dashboardphoto-20260912";
 const STATIC_ASSETS = [
   "./", "./index.html", "./styles.css", "./app.js", "./site-config.js", "./platform.js",
   "./radar.html", "./radar.js", "./graphs.html", "./graphs.js", "./rain.html", "./rain.js",
   "./climate.html", "./climate.js", "./coast.html", "./coast.js", "./sky.html", "./sky.js",
   "./station.html", "./station-v2.js", "./history.html", "./history.js",
   "./manifest.webmanifest", "./favicon.svg", "./icon-192.png", "./icon-512.png",
-  "./apple-touch-icon.png", "./og-image.png"
+  "./apple-touch-icon.png", "./og-image.png", "./north-wexford-coast.jpg"
 ];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache =>
