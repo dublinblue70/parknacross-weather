@@ -10,6 +10,82 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css?v=20260912-analytics1">
   <title>Station · Parknacross Weather</title>
+
+  <style>
+    .storage-panel {
+      margin-top: 18px;
+    }
+    .storage-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .storage-stat {
+      min-width: 0;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--surface-soft);
+    }
+    .storage-stat span,
+    .storage-stat small {
+      display: block;
+      color: var(--muted);
+    }
+    .storage-stat span {
+      margin-bottom: 7px;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .storage-stat strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      overflow-wrap: anywhere;
+    }
+    .storage-stat small {
+      font-size: .78rem;
+      line-height: 1.4;
+    }
+    .storage-meter {
+      height: 12px;
+      margin-top: 18px;
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--surface-2);
+    }
+    .storage-meter-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--green);
+      transition: width .45s ease;
+    }
+    .storage-meter-copy {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+    .storage-note {
+      margin: 15px 0 0;
+      color: var(--muted);
+      font-size: .84rem;
+      line-height: 1.55;
+    }
+    @media (max-width: 900px) {
+      .storage-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      .storage-summary { grid-template-columns: 1fr; }
+      .storage-meter-copy { flex-direction: column; gap: 3px; }
+    }
+  </style>
 </head>
 <body>
 <div class="shell">
@@ -104,6 +180,54 @@
       </article>
     </section>
 
+
+    <section class="page-section">
+      <article class="info-card storage-panel">
+        <div class="section-heading compact-heading">
+          <div>
+            <span class="section-eyebrow">D1 archive</span>
+            <h2>Database storage</h2>
+            <p>Live storage usage for the historical Parknacross weather archive.</p>
+          </div>
+        </div>
+
+        <div class="storage-summary">
+          <div class="storage-stat">
+            <span>Database used</span>
+            <strong id="d1StorageUsed">--</strong>
+            <small id="d1StoragePercent">Checking Cloudflare D1…</small>
+          </div>
+          <div class="storage-stat">
+            <span>Space remaining</span>
+            <strong id="d1StorageFree">--</strong>
+            <small>of the configured 500 MB D1 limit</small>
+          </div>
+          <div class="storage-stat">
+            <span>Archived observations</span>
+            <strong id="d1StorageSamples">--</strong>
+            <small>weather rows currently stored</small>
+          </div>
+          <div class="storage-stat">
+            <span>Estimated capacity</span>
+            <strong id="d1StorageEstimate">--</strong>
+            <small id="d1StorageProjection">A forecast appears after 7 days of archive history</small>
+          </div>
+        </div>
+
+        <div class="storage-meter" role="progressbar" aria-label="Cloudflare D1 database storage used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="d1StorageMeter">
+          <div class="storage-meter-fill" id="d1StorageFill"></div>
+        </div>
+        <div class="storage-meter-copy">
+          <span id="d1StorageMeterLabel">0% used</span>
+          <span>Limit: 500 MB</span>
+        </div>
+        <p class="storage-note">
+          The capacity forecast is based on the database's observed growth rate and is only an estimate.
+          If old raw JSON is trimmed later, the archive can retain the actual weather measurements for substantially longer.
+        </p>
+      </article>
+    </section>
+
     <section class="page-section">
       <article class="info-card">
         <div class="section-heading compact-heading"><div><span class="section-eyebrow">Important</span><h2>Personal observations</h2></div></div>
@@ -188,11 +312,66 @@ function refreshRelativeAge() {
   }
 }
 
+function formatMegabytes(bytes) {
+  if (!usable(bytes)) return "--";
+  return `${(Number(bytes) / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatInteger(value) {
+  if (!usable(value)) return "--";
+  return Math.round(Number(value)).toLocaleString("en-IE");
+}
+
+function formatCapacityEstimate(days) {
+  if (!usable(days)) return "Building estimate";
+  const d = Number(days);
+  if (d < 60) return `~${Math.max(1, Math.round(d))} days left`;
+  if (d < 730) return `~${(d / 30.44).toFixed(1)} months left`;
+  return `~${(d / 365.25).toFixed(1)} years left`;
+}
+
+function renderStorage(storage) {
+  if (!storage || !usable(storage.size_bytes) || !usable(storage.limit_bytes)) return;
+
+  const usedPercent = Math.max(0, Math.min(100, Number(storage.used_percent || 0)));
+  set("d1StorageUsed", formatMegabytes(storage.size_bytes));
+  set("d1StorageFree", formatMegabytes(storage.remaining_bytes));
+  set("d1StorageSamples", formatInteger(storage.total_samples));
+  set("d1StoragePercent", `${usedPercent.toFixed(2)}% of 500 MB used`);
+  set("d1StorageMeterLabel", `${usedPercent.toFixed(2)}% used`);
+  set("d1StorageEstimate", formatCapacityEstimate(storage.estimated_days_remaining));
+
+  if (storage.projected_80_percent_date) {
+    const date = new Date(storage.projected_80_percent_date);
+    if (!Number.isNaN(date.getTime())) {
+      set(
+        "d1StorageProjection",
+        `80% capacity projected around ${date.toLocaleDateString("en-IE", { month: "short", year: "numeric" })}`
+      );
+    }
+  } else {
+    set("d1StorageProjection", "A forecast appears after 7 days of archive history");
+  }
+
+  const fill = document.getElementById("d1StorageFill");
+  const meter = document.getElementById("d1StorageMeter");
+  if (fill) {
+    fill.style.width = `${Math.max(0.4, usedPercent)}%`;
+    fill.style.background = usedPercent >= 90
+      ? "var(--red)"
+      : usedPercent >= 70
+      ? "var(--amber)"
+      : "var(--green)";
+  }
+  if (meter) meter.setAttribute("aria-valuenow", usedPercent.toFixed(2));
+}
+
 async function loadStationStatus() {
   try {
-    const [statsResponse, currentResponse] = await Promise.all([
+    const [statsResponse, currentResponse, storageResponse] = await Promise.all([
       fetch(`${API_BASE}/stats`, { cache: "no-store" }),
-      fetch(`${API_BASE}/current`, { cache: "no-store" })
+      fetch(`${API_BASE}/current`, { cache: "no-store" }),
+      fetch(`${API_BASE}/storage-stats`, { cache: "no-store" })
     ]);
 
     if (statsResponse.ok) {
@@ -207,6 +386,13 @@ async function loadStationStatus() {
           })
         );
       }
+    }
+
+    if (storageResponse.ok) {
+      renderStorage(await storageResponse.json());
+    } else {
+      set("d1StoragePercent", "Storage status unavailable");
+      set("d1StorageProjection", "Check the Cloudflare Worker deployment");
     }
 
     if (currentResponse.ok) {
