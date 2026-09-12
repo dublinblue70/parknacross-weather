@@ -1,4 +1,5 @@
-const CACHE_NAME = "parknacross-weather-v2";
+const CACHE_NAME = "parknacross-weather-v2-professional";
+
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +7,7 @@ const STATIC_ASSETS = [
   "./app.js",
   "./history.html",
   "./history.js",
+  "./station.html",
   "./manifest.webmanifest",
   "./favicon.svg",
   "./icon-192.png",
@@ -24,7 +26,11 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      )
     )
   );
   self.clients.claim();
@@ -34,7 +40,6 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Always use the network for weather APIs and Chart.js.
   if (
     url.hostname.includes("workers.dev") ||
     url.hostname.includes("cdn.jsdelivr.net") ||

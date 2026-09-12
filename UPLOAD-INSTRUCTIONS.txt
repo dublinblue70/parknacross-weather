@@ -1,0 +1,24 @@
+PARKNACROSS WEATHER - PROFESSIONAL REDESIGN
+
+Replace these files in the ROOT of your existing GitHub repository:
+
+1. index.html
+2. styles.css
+3. station.html
+4. history.html
+5. service-worker.js
+
+IMPORTANT:
+- KEEP your current working app.js exactly as it is.
+- KEEP history.js exactly as it is.
+- KEEP CNAME unchanged.
+- KEEP manifest.webmanifest and all icon/image files unchanged.
+- Do not change worker.js in Cloudflare.
+
+The new HTML uses versioned references such as:
+  styles.css?v=20260912-pro
+  app.js?v=20260912-pro
+
+This helps force browsers to load the refreshed front end.
+
+After committing all five files to GitHub, open parknacrossweather.ie and hard-refresh once.
