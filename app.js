@@ -90,37 +90,22 @@ function compass(degrees) {
   if (!usable(degrees)) return "--";
 
   const labels = [
-    "N",
-    "NNE",
-    "NE",
-    "ENE",
-    "E",
-    "ESE",
-    "SE",
-    "SSE",
-    "S",
-    "SSW",
-    "SW",
-    "WSW",
-    "W",
-    "WNW",
-    "NW",
-    "NNW"
+    "N", "NNE", "NE", "ENE",
+    "E", "ESE", "SE", "SSE",
+    "S", "SSW", "SW", "WSW",
+    "W", "WNW", "NW", "NNW"
   ];
 
   const direction =
     ((Number(degrees) % 360) + 360) % 360;
 
-  return labels[
-    Math.round(direction / 22.5) % 16
-  ];
+  return labels[Math.round(direction / 22.5) % 16];
 }
 
 function comfort(humidity) {
   const value = Number(humidity);
 
   if (!Number.isFinite(value)) return "--";
-
   if (value < 35) return "Dry";
   if (value <= 65) return "Comfortable";
   if (value <= 80) return "Humid";
@@ -142,8 +127,7 @@ function batteryStatus(voltage) {
 }
 
 function recordReading(rows, field, mode = "max") {
-  const valid =
-    rows.filter(row => usable(row[field]));
+  const valid = rows.filter(row => usable(row[field]));
 
   if (!valid.length) return null;
 
@@ -164,13 +148,10 @@ function timeLabel(reading) {
 
   if (!time) return "--";
 
-  return new Date(time).toLocaleTimeString(
-    "en-IE",
-    {
-      hour: "2-digit",
-      minute: "2-digit"
-    }
-  );
+  return new Date(time).toLocaleTimeString("en-IE", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function dateLabel(value) {
@@ -181,25 +162,17 @@ function dateLabel(value) {
       ? new Date(value * 1000)
       : new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return "--";
-  }
+  if (Number.isNaN(date.getTime())) return "--";
 
-  return date.toLocaleDateString(
-    "en-IE",
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-    }
-  );
+  return date.toLocaleDateString("en-IE", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
 }
 
 function pressureStats() {
-  const rows =
-    history24.filter(
-      row => usable(row.pressure_hpa)
-    );
+  const rows = history24.filter(row => usable(row.pressure_hpa));
 
   if (rows.length < 2) {
     return {
@@ -226,22 +199,17 @@ function pressureStats() {
 function closestReadingTo(targetTime) {
   if (!history24.length) return null;
 
-  return history24.reduce(
-    (best, row) => {
-      const t = readingTime(row);
+  return history24.reduce((best, row) => {
+    const t = readingTime(row);
 
-      if (!t) return best;
-      if (!best) return row;
+    if (!t) return best;
+    if (!best) return row;
 
-      return Math.abs(t - targetTime) <
-        Math.abs(
-          readingTime(best) - targetTime
-        )
-        ? row
-        : best;
-    },
-    null
-  );
+    return Math.abs(t - targetTime) <
+      Math.abs(readingTime(best) - targetTime)
+      ? row
+      : best;
+  }, null);
 }
 
 function updateTrend(
@@ -295,13 +263,9 @@ function updateTrend(
 }
 
 function prevailingWind() {
-  const rows =
-    history24.filter(
-      row =>
-        usable(
-          row.wind_direction_deg
-        )
-    );
+  const rows = history24.filter(
+    row => usable(row.wind_direction_deg)
+  );
 
   if (!rows.length) {
     return {
@@ -316,26 +280,16 @@ function prevailingWind() {
   rows.forEach(row => {
     const weight =
       usable(row.wind_speed_kmh)
-        ? Math.max(
-            Number(row.wind_speed_kmh),
-            1
-          )
+        ? Math.max(Number(row.wind_speed_kmh), 1)
         : 1;
 
     const radians =
-      Number(
-        row.wind_direction_deg
-      ) *
+      Number(row.wind_direction_deg) *
       Math.PI /
       180;
 
-    x +=
-      Math.cos(radians) *
-      weight;
-
-    y +=
-      Math.sin(radians) *
-      weight;
+    x += Math.cos(radians) * weight;
+    y += Math.sin(radians) * weight;
   });
 
   const degrees =
@@ -352,38 +306,18 @@ function prevailingWind() {
   };
 }
 
-function conditionInfo(
-  current,
-  isNight
-) {
-  const rain =
-    Number(
-      current.rain_rate_mm_h || 0
-    );
-
-  const wind =
-    Number(
-      current.wind_speed_kmh || 0
-    );
-
-  const solar =
-    Number(
-      current.solar_w_m2 || 0
-    );
-
-  const uv =
-    Number(
-      current.uv_index || 0
-    );
+function conditionInfo(current, isNight) {
+  const rain = Number(current.rain_rate_mm_h || 0);
+  const wind = Number(current.wind_speed_kmh || 0);
+  const solar = Number(current.solar_w_m2 || 0);
+  const uv = Number(current.uv_index || 0);
 
   if (rain >= 2.5) {
     return {
       tag: "Rainy",
       icon: "🌧️",
-      story:
-        `Rain is falling at ${n(rain)} mm/h.`,
-      className:
-        "weather-rain"
+      story: `Rain is falling at ${n(rain)} mm/h.`,
+      className: "weather-rain"
     };
   }
 
@@ -391,10 +325,8 @@ function conditionInfo(
     return {
       tag: "Light rain",
       icon: "🌦️",
-      story:
-        `Light rain is falling at ${n(rain)} mm/h.`,
-      className:
-        "weather-rain"
+      story: `Light rain is falling at ${n(rain)} mm/h.`,
+      className: "weather-rain"
     };
   }
 
@@ -402,10 +334,8 @@ function conditionInfo(
     return {
       tag: "Very windy",
       icon: "💨",
-      story:
-        `A lively Wexford breeze is blowing at ${n(wind)} km/h.`,
-      className:
-        "weather-windy"
+      story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`,
+      className: "weather-windy"
     };
   }
 
@@ -413,10 +343,8 @@ function conditionInfo(
     return {
       tag: "Breezy",
       icon: "🌬️",
-      story:
-        `Breezy conditions with wind around ${n(wind)} km/h.`,
-      className:
-        "weather-windy"
+      story: `Breezy conditions with wind around ${n(wind)} km/h.`,
+      className: "weather-windy"
     };
   }
 
@@ -424,49 +352,34 @@ function conditionInfo(
     return {
       tag: "Night",
       icon: "🌙",
-      story:
-        "Night-time conditions at Parknacross.",
-      className:
-        "weather-neutral"
+      story: "Night-time conditions at Parknacross.",
+      className: "weather-neutral"
     };
   }
 
-  if (
-    uv >= 5 ||
-    solar >= 400
-  ) {
+  if (uv >= 5 || solar >= 400) {
     return {
       tag: "Bright",
       icon: "☀️",
-      story:
-        "Bright conditions over Parknacross right now.",
-      className:
-        "weather-bright"
+      story: "Bright conditions over Parknacross right now.",
+      className: "weather-bright"
     };
   }
 
   if (solar >= 100) {
     return {
-      tag:
-        "Some brightness",
-      icon:
-        "⛅",
-      story:
-        "Some brightness breaking through at Parknacross.",
-      className:
-        "weather-bright"
+      tag: "Some brightness",
+      icon: "⛅",
+      story: "Some brightness breaking through at Parknacross.",
+      className: "weather-bright"
     };
   }
 
   return {
-    tag:
-      "Calm & local",
-    icon:
-      "☁️",
-    story:
-      "Quiet local conditions at Parknacross.",
-    className:
-      "weather-neutral"
+    tag: "Calm & local",
+    icon: "☁️",
+    story: "Quiet local conditions at Parknacross.",
+    className: "weather-neutral"
   };
 }
 
@@ -476,24 +389,19 @@ function conditionInfo(
  */
 
 function dayOfYear(date) {
-  const start =
-    new Date(
-      date.getFullYear(),
-      0,
-      0
-    );
+  const start = new Date(
+    date.getFullYear(),
+    0,
+    0
+  );
 
   return Math.floor(
-    (date - start) /
-    86400000
+    (date - start) / 86400000
   );
 }
 
 function normalize360(value) {
-  return (
-    (value % 360) +
-    360
-  ) % 360;
+  return ((value % 360) + 360) % 360;
 }
 
 function sunEvent(
@@ -503,12 +411,8 @@ function sunEvent(
   sunrise
 ) {
   const zenith = 90.833;
-
-  const N =
-    dayOfYear(date);
-
-  const lngHour =
-    longitude / 15;
+  const N = dayOfYear(date);
+  const lngHour = longitude / 15;
 
   const t =
     N +
@@ -539,8 +443,7 @@ function sunEvent(
       ) +
     282.634;
 
-  L =
-    normalize360(L);
+  L = normalize360(L);
 
   let RA =
     Math.atan(
@@ -554,28 +457,18 @@ function sunEvent(
     180 /
     Math.PI;
 
-  RA =
-    normalize360(RA);
+  RA = normalize360(RA);
 
   const Lquadrant =
-    Math.floor(
-      L / 90
-    ) *
-    90;
+    Math.floor(L / 90) * 90;
 
   const RAquadrant =
-    Math.floor(
-      RA / 90
-    ) *
-    90;
+    Math.floor(RA / 90) * 90;
 
   RA =
     (
       RA +
-      (
-        Lquadrant -
-        RAquadrant
-      )
+      (Lquadrant - RAquadrant)
     ) /
     15;
 
@@ -589,9 +482,7 @@ function sunEvent(
 
   const cosDec =
     Math.cos(
-      Math.asin(
-        sinDec
-      )
+      Math.asin(sinDec)
     );
 
   const cosH =
@@ -619,24 +510,17 @@ function sunEvent(
       )
     );
 
-  if (
-    cosH > 1 ||
-    cosH < -1
-  ) {
+  if (cosH > 1 || cosH < -1) {
     return null;
   }
 
   let H =
     sunrise
       ? 360 -
-        Math.acos(
-          cosH
-        ) *
+        Math.acos(cosH) *
         180 /
         Math.PI
-      : Math.acos(
-          cosH
-        ) *
+      : Math.acos(cosH) *
         180 /
         Math.PI;
 
@@ -673,8 +557,7 @@ function sunEvent(
 }
 
 function updateSunInfo() {
-  const now =
-    new Date();
+  const now = new Date();
 
   const rise =
     sunEvent(
@@ -698,23 +581,14 @@ function updateSunInfo() {
         ? date.toLocaleTimeString(
             "en-IE",
             {
-              hour:
-                "2-digit",
-              minute:
-                "2-digit"
+              hour: "2-digit",
+              minute: "2-digit"
             }
           )
         : "--";
 
-  set(
-    "sunrise",
-    fmt(rise)
-  );
-
-  set(
-    "sunset",
-    fmt(setTime)
-  );
+  set("sunrise", fmt(rise));
+  set("sunset", fmt(setTime));
 
   const isNight =
     !!(
@@ -726,10 +600,7 @@ function updateSunInfo() {
       )
     );
 
-  if (
-    rise &&
-    setTime
-  ) {
+  if (rise && setTime) {
     if (
       now >= rise &&
       now < setTime
@@ -748,9 +619,7 @@ function updateSunInfo() {
 
       set(
         "daylightRemaining",
-        `${Math.floor(
-          mins / 60
-        )}h ${mins % 60}m`
+        `${Math.floor(mins / 60)}h ${mins % 60}m`
       );
     } else {
       set(
@@ -769,67 +638,50 @@ function updateSunInfo() {
 }
 
 function dailyRainTotals() {
-  const days =
-    new Map();
+  const days = new Map();
 
-  history7d.forEach(
-    reading => {
-      const time =
-        readingTime(
-          reading
-        );
+  history7d.forEach(reading => {
+    const time = readingTime(reading);
 
-      const correctedRain =
-        correctedDailyRain(
-          reading
-        );
+    const correctedRain =
+      correctedDailyRain(reading);
 
-      if (
-        !time ||
-        !usable(
-          correctedRain
-        )
-      ) {
-        return;
-      }
-
-      const date =
-        new Date(time);
-
-      const key =
-        [
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate()
-        ].join("-");
-
-      const rain =
-        Number(
-          correctedRain
-        );
-
-      const existing =
-        days.get(key);
-
-      if (
-        !existing ||
-        rain >
-          existing.rain
-      ) {
-        days.set(
-          key,
-          {
-            time,
-            rain
-          }
-        );
-      }
+    if (
+      !time ||
+      !usable(correctedRain)
+    ) {
+      return;
     }
-  );
 
-  return [
-    ...days.values()
-  ]
+    const date = new Date(time);
+
+    const key = [
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    ].join("-");
+
+    const rain =
+      Number(correctedRain);
+
+    const existing =
+      days.get(key);
+
+    if (
+      !existing ||
+      rain > existing.rain
+    ) {
+      days.set(
+        key,
+        {
+          time,
+          rain
+        }
+      );
+    }
+  });
+
+  return [...days.values()]
     .sort(
       (a, b) =>
         a.time -
@@ -838,19 +690,11 @@ function dailyRainTotals() {
     .slice(-7);
 }
 
-function updateFreshness(
-  current
-) {
-  const time =
-    readingTime(current);
+function updateFreshness(current) {
+  const time = readingTime(current);
+  const pill = $("livePill");
 
-  const pill =
-    $("livePill");
-
-  if (
-    !time ||
-    !pill
-  ) {
+  if (!time || !pill) {
     return;
   }
 
@@ -863,13 +707,8 @@ function updateFreshness(
     "offline"
   );
 
-  if (
-    age >=
-    OFFLINE_AFTER_MS
-  ) {
-    pill.classList.add(
-      "offline"
-    );
+  if (age >= OFFLINE_AFTER_MS) {
+    pill.classList.add("offline");
 
     set(
       "liveText",
@@ -885,13 +724,8 @@ function updateFreshness(
       ?.classList
       .add("bad");
 
-  } else if (
-    age >=
-    STALE_AFTER_MS
-  ) {
-    pill.classList.add(
-      "delayed"
-    );
+  } else if (age >= STALE_AFTER_MS) {
+    pill.classList.add("delayed");
 
     set(
       "liveText",
@@ -936,57 +770,34 @@ function updateStatsPanel() {
 
   set(
     "monthRain",
-    `${n(
-      stats.month_rain_mm
-    )} mm`
+    `${n(stats.month_rain_mm)} mm`
   );
 
   set(
     "monthRainDays",
-    `${
-      stats.month_rain_days ??
-      0
-    } rain day${
-      stats.month_rain_days === 1
-        ? ""
-        : "s"
-    } this month`
+    `${stats.month_rain_days ?? 0} rain day${stats.month_rain_days === 1 ? "" : "s"} this month`
   );
 
   set(
     "yearRain",
-    `${n(
-      stats.year_rain_mm
-    )} mm`
+    `${n(stats.year_rain_mm)} mm`
   );
 
   set(
     "stationSince",
-    dateLabel(
-      stats.first_epoch
-    )
+    dateLabel(stats.first_epoch)
   );
 
-  if (
-    stats.wettest_day
-  ) {
+  if (stats.wettest_day) {
     set(
       "wettestDay",
-      `${n(
-        stats
-          .wettest_day
-          .rain_mm
-      )} mm`
+      `${n(stats.wettest_day.rain_mm)} mm`
     );
 
     set(
       "wettestDate",
       dateLabel(
-        `${
-          stats
-            .wettest_day
-            .day
-        }T12:00:00`
+        `${stats.wettest_day.day}T12:00:00`
       )
     );
   }
@@ -994,122 +805,79 @@ function updateStatsPanel() {
   const records =
     stats.records || {};
 
-  if (
-    records
-      .high_temperature
-  ) {
+  if (records.high_temperature) {
     set(
       "allHigh",
-      `${n(
-        records
-          .high_temperature
-          .value
-      )} °C`
+      `${n(records.high_temperature.value)} °C`
     );
 
     set(
       "allHighDate",
       dateLabel(
-        records
-          .high_temperature
-          .epoch
+        records.high_temperature.epoch
       )
     );
   }
 
-  if (
-    records
-      .low_temperature
-  ) {
+  if (records.low_temperature) {
     set(
       "allLow",
-      `${n(
-        records
-          .low_temperature
-          .value
-      )} °C`
+      `${n(records.low_temperature.value)} °C`
     );
 
     set(
       "allLowDate",
       dateLabel(
-        records
-          .low_temperature
-          .epoch
+        records.low_temperature.epoch
       )
     );
   }
 
-  if (
-    records
-      .peak_gust
-  ) {
+  if (records.peak_gust) {
     set(
       "allGust",
-      `${n(
-        records
-          .peak_gust
-          .value
-      )} km/h`
+      `${n(records.peak_gust.value)} km/h`
     );
 
     set(
       "allGustDate",
       dateLabel(
-        records
-          .peak_gust
-          .epoch
+        records.peak_gust.epoch
       )
     );
   }
 
-  if (
-    records
-      .high_pressure
-  ) {
+  if (records.high_pressure) {
     set(
       "allPressure",
-      `${n(
-        records
-          .high_pressure
-          .value
-      )} hPa`
+      `${n(records.high_pressure.value)} hPa`
     );
 
     set(
       "allPressureDate",
       dateLabel(
-        records
-          .high_pressure
-          .epoch
+        records.high_pressure.epoch
       )
     );
   }
 }
 
-function updateDashboard(
-  current
-) {
-  const now =
-    new Date();
+function updateDashboard(current) {
+  const now = new Date();
 
   const today =
-    history24.filter(
-      reading => {
-        const time =
-          readingTime(
-            reading
-          );
+    history24.filter(reading => {
+      const time =
+        readingTime(reading);
 
-        return (
-          time &&
-          sameDay(
-            time,
-            now
-          )
-        );
-      }
-    );
+      return (
+        time &&
+        sameDay(
+          time,
+          now
+        )
+      );
+    });
 
   const highReading =
     recordReading(
@@ -1144,8 +912,7 @@ function updateDashboard(
 
   const direction =
     compass(
-      current
-        .wind_direction_deg
+      current.wind_direction_deg
     );
 
   const rainToday =
@@ -1169,9 +936,7 @@ function updateDashboard(
 
   if (currentTime) {
     const date =
-      new Date(
-        currentTime
-      );
+      new Date(currentTime);
 
     set(
       "lastUpdated",
@@ -1179,20 +944,16 @@ function updateDashboard(
         date.toLocaleTimeString(
           "en-IE",
           {
-            hour:
-              "2-digit",
-            minute:
-              "2-digit"
+            hour: "2-digit",
+            minute: "2-digit"
           }
         )
       } · ${
         date.toLocaleDateString(
           "en-IE",
           {
-            day:
-              "2-digit",
-            month:
-              "short"
+            day: "2-digit",
+            month: "short"
           }
         )
       }`
@@ -1201,58 +962,37 @@ function updateDashboard(
 
   set(
     "heroTemp",
-    n(
-      current
-        .temperature_c
-    )
+    n(current.temperature_c)
   );
 
   set(
     "heroFeels",
-    `${n(
-      current
-        .feels_like_c
-    )}°C`
+    `${n(current.feels_like_c)}°C`
   );
 
   set(
     "heroHumidity",
-    `${n(
-      current
-        .humidity,
-      0
-    )}%`
+    `${n(current.humidity, 0)}%`
   );
 
   set(
     "heroDew",
-    `${n(
-      current
-        .dew_point_c
-    )}°C`
+    `${n(current.dew_point_c)}°C`
   );
 
   set(
     "heroWind",
-    `${n(
-      current
-        .wind_speed_kmh
-    )} km/h`
+    `${n(current.wind_speed_kmh)} km/h`
   );
 
   set(
     "heroRain",
-    `${n(
-      rainToday
-    )} mm`
+    `${n(rainToday)} mm`
   );
 
   set(
     "heroPressure",
-    `${n(
-      current
-        .pressure_hpa
-    )} hPa`
+    `${n(current.pressure_hpa)} hPa`
   );
 
   set(
@@ -1277,175 +1017,110 @@ function updateDashboard(
     condition.icon
   );
 
-  document.body
-    .classList
-    .remove(
-      "weather-neutral",
-      "weather-rain",
-      "weather-bright",
-      "weather-windy"
-    );
+  document.body.classList.remove(
+    "weather-neutral",
+    "weather-rain",
+    "weather-bright",
+    "weather-windy"
+  );
 
-  document.body
-    .classList
-    .add(
-      condition
-        .className
-    );
+  document.body.classList.add(
+    condition.className
+  );
 
   set(
     "todayLow",
-    n(
-      lowReading
-        ?.temperature_c
-    )
+    n(lowReading?.temperature_c)
   );
 
   set(
     "todayHigh",
-    n(
-      highReading
-        ?.temperature_c
-    )
+    n(highReading?.temperature_c)
   );
 
   set(
     "peakGust",
-    n(
-      gustReading
-        ?.wind_gust_kmh
-    )
+    n(gustReading?.wind_gust_kmh)
   );
 
   set(
     "summaryRain",
-    n(
-      rainToday
-    )
+    n(rainToday)
   );
 
   set(
     "solarPeak",
     n(
-      solarReading
-        ?.solar_w_m2,
+      solarReading?.solar_w_m2,
       0
     )
   );
 
   set(
     "tempVal",
-    n(
-      current
-        .temperature_c
-    )
+    n(current.temperature_c)
   );
 
   set(
     "feelsVal",
-    `${n(
-      current
-        .feels_like_c
-    )}°C`
+    `${n(current.feels_like_c)}°C`
   );
 
   set(
     "tempMin",
-    n(
-      lowReading
-        ?.temperature_c
-    )
+    n(lowReading?.temperature_c)
   );
 
   set(
     "tempMax",
-    n(
-      highReading
-        ?.temperature_c
-    )
+    n(highReading?.temperature_c)
   );
 
   set(
     "humVal",
-    n(
-      current
-        .humidity,
-      0
-    )
+    n(current.humidity, 0)
   );
 
   set(
     "dewVal",
-    `${n(
-      current
-        .dew_point_c
-    )}°C`
+    `${n(current.dew_point_c)}°C`
   );
 
   set(
     "comfortVal",
-    comfort(
-      current
-        .humidity
-    )
+    comfort(current.humidity)
   );
 
   set(
     "windVal",
-    n(
-      current
-        .wind_speed_kmh
-    )
+    n(current.wind_speed_kmh)
   );
 
   set(
     "gustVal",
-    `${n(
-      current
-        .wind_gust_kmh
-    )} km/h`
+    `${n(current.wind_gust_kmh)} km/h`
   );
 
   set(
     "dirVal",
-    usable(
-      current
-        .wind_direction_deg
-    )
-      ? `${
-          direction
-        } (${
-          Math.round(
-            Number(
-              current
-                .wind_direction_deg
-            )
-          )
-        }°)`
+    usable(current.wind_direction_deg)
+      ? `${direction} (${Math.round(Number(current.wind_direction_deg))}°)`
       : direction
   );
 
   set(
     "rainVal",
-    n(
-      rainToday
-    )
+    n(rainToday)
   );
 
   set(
     "rainRateVal",
-    `${n(
-      current
-        .rain_rate_mm_h
-    )} mm/h`
+    `${n(current.rain_rate_mm_h)} mm/h`
   );
 
   set(
     "pressureVal",
-    n(
-      current
-        .pressure_hpa
-    )
+    n(current.pressure_hpa)
   );
 
   set(
@@ -1455,55 +1130,25 @@ function updateDashboard(
 
   set(
     "pressureChange",
-    usable(
-      pressure.change
-    )
-      ? `${
-          pressure.change >= 0
-            ? "+"
-            : ""
-        }${
-          n(
-            pressure.change
-          )
-        } hPa`
+    usable(pressure.change)
+      ? `${pressure.change >= 0 ? "+" : ""}${n(pressure.change)} hPa`
       : "--"
   );
 
   set(
     "solarVal",
-    n(
-      current
-        .solar_w_m2,
-      0
-    )
+    n(current.solar_w_m2, 0)
   );
 
   set(
     "uvVal",
-    n(
-      current
-        .uv_index,
-      0
-    )
+    n(current.uv_index, 0)
   );
 
   set(
     "battery",
-    usable(
-      current
-        .battery_v
-    )
-      ? `${n(
-          current
-            .battery_v,
-          2
-        )} V · ${
-          batteryStatus(
-            current
-              .battery_v
-          )
-        }`
+    usable(current.battery_v)
+      ? `${n(current.battery_v, 2)} V · ${batteryStatus(current.battery_v)}`
       : "--"
   );
 
@@ -1518,19 +1163,15 @@ function updateDashboard(
 
   updateTrend(
     "temp3h",
-    current
-      .temperature_c,
-    threeHoursAgo
-      ?.temperature_c,
+    current.temperature_c,
+    threeHoursAgo?.temperature_c,
     "°C"
   );
 
   updateTrend(
     "pressure3h",
-    current
-      .pressure_hpa,
-    threeHoursAgo
-      ?.pressure_hpa,
+    current.pressure_hpa,
+    threeHoursAgo?.pressure_hpa,
     "hPa"
   );
 
@@ -1543,126 +1184,77 @@ function updateDashboard(
   );
 
   if (
-    usable(
-      prevailing.deg
-    ) &&
+    usable(prevailing.deg) &&
     $("needle")
   ) {
-    $("needle")
-      .style
-      .transform =
-        `rotate(${prevailing.deg}deg)`;
+    $("needle").style.transform =
+      `rotate(${prevailing.deg}deg)`;
   }
 
   set(
     "currentDirection",
-    usable(
-      current
-        .wind_direction_deg
-    )
-      ? `${
-          direction
-        } · ${
-          Math.round(
-            Number(
-              current
-                .wind_direction_deg
-            )
-          )
-        }°`
+    usable(current.wind_direction_deg)
+      ? `${direction} · ${Math.round(Number(current.wind_direction_deg))}°`
       : direction
   );
 
   set(
     "currentWind",
-    `${n(
-      current
-        .wind_speed_kmh
-    )} km/h`
+    `${n(current.wind_speed_kmh)} km/h`
   );
 
   set(
     "currentGust",
-    `${n(
-      current
-        .wind_gust_kmh
-    )} km/h`
+    `${n(current.wind_gust_kmh)} km/h`
   );
 
   set(
     "recordHigh",
-    `${n(
-      highReading
-        ?.temperature_c
-    )} °C`
+    `${n(highReading?.temperature_c)} °C`
   );
 
   set(
     "recordHighTime",
     highReading
-      ? `at ${
-          timeLabel(
-            highReading
-          )
-        }`
+      ? `at ${timeLabel(highReading)}`
       : "--"
   );
 
   set(
     "recordLow",
-    `${n(
-      lowReading
-        ?.temperature_c
-    )} °C`
+    `${n(lowReading?.temperature_c)} °C`
   );
 
   set(
     "recordLowTime",
     lowReading
-      ? `at ${
-          timeLabel(
-            lowReading
-          )
-        }`
+      ? `at ${timeLabel(lowReading)}`
       : "--"
   );
 
   set(
     "recordGust",
-    `${n(
-      gustReading
-        ?.wind_gust_kmh
-    )} km/h`
+    `${n(gustReading?.wind_gust_kmh)} km/h`
   );
 
   set(
     "recordGustTime",
     gustReading
-      ? `at ${
-          timeLabel(
-            gustReading
-          )
-        }`
+      ? `at ${timeLabel(gustReading)}`
       : "--"
   );
 
   set(
     "recordRain",
-    `${n(
-      rainToday
-    )} mm`
+    `${n(rainToday)} mm`
   );
 
-  updateFreshness(
-    current
-  );
-
+  updateFreshness(current);
   updateStatsPanel();
 
   set(
     "year",
-    new Date()
-      .getFullYear()
+    new Date().getFullYear()
   );
 }
 
@@ -1670,32 +1262,24 @@ function scales(title) {
   return {
     x: {
       grid: {
-        color:
-          "transparent"
+        color: "transparent"
       },
       ticks: {
-        color:
-          "#a8bfd4",
-        maxTicksLimit:
-          8
+        color: "#a8bfd4",
+        maxTicksLimit: 8
       }
     },
     y: {
       grid: {
-        color:
-          "rgba(163,209,255,.10)"
+        color: "rgba(163,209,255,.10)"
       },
       ticks: {
-        color:
-          "#a8bfd4"
+        color: "#a8bfd4"
       },
       title: {
-        display:
-          true,
-        text:
-          title,
-        color:
-          "#a8bfd4"
+        display: true,
+        text: title,
+        color: "#a8bfd4"
       }
     }
   };
@@ -1709,22 +1293,14 @@ function line(
   return {
     label,
     data: [],
-    borderColor:
-      colour,
-    backgroundColor:
-      colour,
-    borderWidth:
-      2.2,
-    pointRadius:
-      0,
-    pointHoverRadius:
-      4,
-    tension:
-      0.3,
-    fill:
-      false,
-    yAxisID:
-      axis
+    borderColor: colour,
+    backgroundColor: colour,
+    borderWidth: 2.2,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    tension: 0.3,
+    fill: false,
+    yAxisID: axis
   };
 }
 
@@ -1732,17 +1308,14 @@ function createCharts() {
   Chart.defaults.color =
     "#bfd0e3";
 
-  Chart.defaults
-    .font
-    .family =
-      "Inter,system-ui,sans-serif";
+  Chart.defaults.font.family =
+    "Inter,system-ui,sans-serif";
 
   charts.temperature =
     new Chart(
       $("temperatureChart"),
       {
-        type:
-          "line",
+        type: "line",
 
         data: {
           labels: [],
@@ -1759,14 +1332,11 @@ function createCharts() {
         },
 
         options: {
-          maintainAspectRatio:
-            false,
+          maintainAspectRatio: false,
 
           interaction: {
-            mode:
-              "index",
-            intersect:
-              false
+            mode: "index",
+            intersect: false
           },
 
           scales:
@@ -1774,8 +1344,7 @@ function createCharts() {
 
           plugins: {
             legend: {
-              position:
-                "bottom"
+              position: "bottom"
             }
           }
         }
@@ -1786,8 +1355,7 @@ function createCharts() {
     new Chart(
       $("windChart"),
       {
-        type:
-          "line",
+        type: "line",
 
         data: {
           labels: [],
@@ -1804,25 +1372,19 @@ function createCharts() {
         },
 
         options: {
-          maintainAspectRatio:
-            false,
+          maintainAspectRatio: false,
 
           interaction: {
-            mode:
-              "index",
-            intersect:
-              false
+            mode: "index",
+            intersect: false
           },
 
           scales:
-            scales(
-              "km/h"
-            ),
+            scales("km/h"),
 
           plugins: {
             legend: {
-              position:
-                "bottom"
+              position: "bottom"
             }
           }
         }
@@ -1833,8 +1395,7 @@ function createCharts() {
     new Chart(
       $("pressureChart"),
       {
-        type:
-          "line",
+        type: "line",
 
         data: {
           labels: [],
@@ -1847,25 +1408,19 @@ function createCharts() {
         },
 
         options: {
-          maintainAspectRatio:
-            false,
+          maintainAspectRatio: false,
 
           interaction: {
-            mode:
-              "index",
-            intersect:
-              false
+            mode: "index",
+            intersect: false
           },
 
           scales:
-            scales(
-              "hPa"
-            ),
+            scales("hPa"),
 
           plugins: {
             legend: {
-              display:
-                false
+              display: false
             }
           }
         }
@@ -1876,40 +1431,30 @@ function createCharts() {
     new Chart(
       $("rainChart"),
       {
-        type:
-          "bar",
+        type: "bar",
 
         data: {
           labels: [],
 
           datasets: [
             {
-              label:
-                "Rainfall mm",
-
-              data:
-                [],
-
-              backgroundColor:
-                "#7ca9ff",
-
-              borderRadius:
-                8
+              label: "Rainfall mm",
+              data: [],
+              backgroundColor: "#7ca9ff",
+              borderRadius: 8
             }
           ]
         },
 
         options: {
-          maintainAspectRatio:
-            false,
+          maintainAspectRatio: false,
 
           scales:
             scales("mm"),
 
           plugins: {
             legend: {
-              display:
-                false
+              display: false
             }
           }
         }
@@ -1920,8 +1465,7 @@ function createCharts() {
     new Chart(
       $("solarChart"),
       {
-        type:
-          "line",
+        type: "line",
 
         data: {
           labels: [],
@@ -1932,7 +1476,6 @@ function createCharts() {
               "#ffd77a",
               "y"
             ),
-
             line(
               "UV index",
               "#b594ff",
@@ -1942,95 +1485,67 @@ function createCharts() {
         },
 
         options: {
-          maintainAspectRatio:
-            false,
+          maintainAspectRatio: false,
 
           interaction: {
-            mode:
-              "index",
-            intersect:
-              false
+            mode: "index",
+            intersect: false
           },
 
           scales: {
             x: {
               grid: {
-                color:
-                  "transparent"
+                color: "transparent"
               },
 
               ticks: {
-                color:
-                  "#a8bfd4",
-
-                maxTicksLimit:
-                  8
+                color: "#a8bfd4",
+                maxTicksLimit: 8
               }
             },
 
             y: {
-              position:
-                "left",
-
-              beginAtZero:
-                true,
+              position: "left",
+              beginAtZero: true,
 
               grid: {
-                color:
-                  "rgba(163,209,255,.10)"
+                color: "rgba(163,209,255,.10)"
               },
 
               ticks: {
-                color:
-                  "#a8bfd4"
+                color: "#a8bfd4"
               },
 
               title: {
-                display:
-                  true,
-
-                text:
-                  "W/m²",
-
-                color:
-                  "#a8bfd4"
+                display: true,
+                text: "W/m²",
+                color: "#a8bfd4"
               }
             },
 
             y1: {
-              position:
-                "right",
-
-              beginAtZero:
-                true,
+              position: "right",
+              beginAtZero: true,
 
               grid: {
-                drawOnChartArea:
-                  false
+                drawOnChartArea: false
               },
 
               ticks: {
-                color:
-                  "#a8bfd4"
+                color: "#a8bfd4"
               },
 
               title: {
-                display:
-                  true,
-
-                text:
-                  "UV",
-
-                color:
-                  "#a8bfd4"
+                display: true,
+                text: "UV",
+                color: "#a8bfd4"
               }
             }
           },
 
           plugins: {
             legend: {
-              position:
-                "bottom"
+              position: "bottom"
             }
           }
         }
@@ -2042,157 +1557,108 @@ function updateCharts() {
   const rows =
     history24.filter(
       reading =>
-        readingTime(
-          reading
-        )
+        readingTime(reading)
     );
 
   const labels =
     rows.map(
       reading =>
         new Date(
-          readingTime(
-            reading
-          )
+          readingTime(reading)
+        ).toLocaleTimeString(
+          "en-IE",
+          {
+            hour: "2-digit",
+            minute: "2-digit"
+          }
         )
-          .toLocaleTimeString(
-            "en-IE",
-            {
-              hour:
-                "2-digit",
-
-              minute:
-                "2-digit"
-            }
-          )
     );
 
-  charts.temperature
-    .data
-    .labels =
-      labels;
+  charts.temperature.data.labels =
+    labels;
 
-  charts.temperature
-    .data
-    .datasets[0]
-    .data =
-      rows.map(
-        row =>
-          row.temperature_c
-      );
+  charts.temperature.data.datasets[0].data =
+    rows.map(
+      row =>
+        row.temperature_c
+    );
 
-  charts.temperature
-    .data
-    .datasets[1]
-    .data =
-      rows.map(
-        row =>
-          row.dew_point_c
-      );
+  charts.temperature.data.datasets[1].data =
+    rows.map(
+      row =>
+        row.dew_point_c
+    );
 
-  charts.temperature
-    .update();
+  charts.temperature.update();
 
-  charts.wind
-    .data
-    .labels =
-      labels;
+  charts.wind.data.labels =
+    labels;
 
-  charts.wind
-    .data
-    .datasets[0]
-    .data =
-      rows.map(
-        row =>
-          row.wind_speed_kmh
-      );
+  charts.wind.data.datasets[0].data =
+    rows.map(
+      row =>
+        row.wind_speed_kmh
+    );
 
-  charts.wind
-    .data
-    .datasets[1]
-    .data =
-      rows.map(
-        row =>
-          row.wind_gust_kmh
-      );
+  charts.wind.data.datasets[1].data =
+    rows.map(
+      row =>
+        row.wind_gust_kmh
+    );
 
-  charts.wind
-    .update();
+  charts.wind.update();
 
-  charts.pressure
-    .data
-    .labels =
-      labels;
+  charts.pressure.data.labels =
+    labels;
 
-  charts.pressure
-    .data
-    .datasets[0]
-    .data =
-      rows.map(
-        row =>
-          row.pressure_hpa
-      );
+  charts.pressure.data.datasets[0].data =
+    rows.map(
+      row =>
+        row.pressure_hpa
+    );
 
-  charts.pressure
-    .update();
+  charts.pressure.update();
 
-  charts.solar
-    .data
-    .labels =
-      labels;
+  charts.solar.data.labels =
+    labels;
 
-  charts.solar
-    .data
-    .datasets[0]
-    .data =
-      rows.map(
-        row =>
-          row.solar_w_m2
-      );
+  charts.solar.data.datasets[0].data =
+    rows.map(
+      row =>
+        row.solar_w_m2
+    );
 
-  charts.solar
-    .data
-    .datasets[1]
-    .data =
-      rows.map(
-        row =>
-          row.uv_index
-      );
+  charts.solar.data.datasets[1].data =
+    rows.map(
+      row =>
+        row.uv_index
+    );
 
-  charts.solar
-    .update();
+  charts.solar.update();
 
   const rainfall =
     dailyRainTotals();
 
-  charts.rain
-    .data
-    .labels =
-      rainfall.map(
-        day =>
-          new Date(
-            day.time
-          )
-            .toLocaleDateString(
-              "en-IE",
-              {
-                weekday:
-                  "short"
-              }
-            )
-      );
+  charts.rain.data.labels =
+    rainfall.map(
+      day =>
+        new Date(
+          day.time
+        ).toLocaleDateString(
+          "en-IE",
+          {
+            weekday: "short"
+          }
+        )
+    );
 
-  charts.rain
-    .data
-    .datasets[0]
-    .data =
-      rainfall.map(
-        day =>
-          day.rain
-      );
+  charts.rain.data.datasets[0].data =
+    rainfall.map(
+      day =>
+        day.rain
+    );
 
-  charts.rain
-    .update();
+  charts.rain.update();
 }
 
 async function getJSON(url) {
@@ -2200,8 +1666,7 @@ async function getJSON(url) {
     await fetch(
       url,
       {
-        cache:
-          "no-store"
+        cache: "no-store"
       }
     );
 
@@ -2283,8 +1748,7 @@ async function loadWarnings() {
       !list.length
     ) {
       if (banner) {
-        banner.hidden =
-          true;
+        banner.hidden = true;
       }
 
       return;
@@ -2353,35 +1817,25 @@ async function loadWarnings() {
       onset &&
       expires
         ? `Valid ${
-            onset
-              .toLocaleString(
-                "en-IE",
-                {
-                  day:
-                    "numeric",
-                  month:
-                    "short",
-                  hour:
-                    "2-digit",
-                  minute:
-                    "2-digit"
-                }
-              )
+            onset.toLocaleString(
+              "en-IE",
+              {
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            )
           } to ${
-            expires
-              .toLocaleString(
-                "en-IE",
-                {
-                  day:
-                    "numeric",
-                  month:
-                    "short",
-                  hour:
-                    "2-digit",
-                  minute:
-                    "2-digit"
-                }
-              )
+            expires.toLocaleString(
+              "en-IE",
+              {
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            )
           }. `
         : "";
 
@@ -2416,24 +1870,20 @@ async function loadEverything() {
       current,
       history24Response
     ] =
-      await Promise.all(
-        [
-          getJSON(
-            CURRENT_URL
-          ),
-          getJSON(
-            HISTORY_24_URL
-          )
-        ]
-      );
+      await Promise.all([
+        getJSON(
+          CURRENT_URL
+        ),
+        getJSON(
+          HISTORY_24_URL
+        )
+      ]);
 
     history24 =
       Array.isArray(
-        history24Response
-          .readings
+        history24Response.readings
       )
-        ? history24Response
-            .readings
+        ? history24Response.readings
         : [];
 
     try {
@@ -2444,11 +1894,9 @@ async function loadEverything() {
 
       history7d =
         Array.isArray(
-          history7Response
-            .readings
+          history7Response.readings
         )
-          ? history7Response
-              .readings
+          ? history7Response.readings
           : [];
 
     } catch (error) {
@@ -2457,8 +1905,7 @@ async function loadEverything() {
         error
       );
 
-      history7d =
-        [];
+      history7d = [];
     }
 
     try {
@@ -2473,8 +1920,7 @@ async function loadEverything() {
         error
       );
 
-      stats =
-        null;
+      stats = null;
     }
 
     updateDashboard(
@@ -2517,9 +1963,7 @@ async function loadEverything() {
 
     $("livePill")
       ?.classList
-      .add(
-        "offline"
-      );
+      .add("offline");
 
     set(
       "liveText",
@@ -2549,8 +1993,7 @@ async function refreshCurrent() {
 
 function setupPWA() {
   if (
-    "serviceWorker" in
-    navigator
+    "serviceWorker" in navigator
   ) {
     navigator
       .serviceWorker
@@ -2594,18 +2037,15 @@ function setupPWA() {
           return;
         }
 
-        deferredInstallPrompt
-          .prompt();
+        deferredInstallPrompt.prompt();
 
-        await deferredInstallPrompt
-          .userChoice;
+        await deferredInstallPrompt.userChoice;
 
         deferredInstallPrompt =
           null;
 
-        $("installButton")
-          .hidden =
-            true;
+        $("installButton").hidden =
+          true;
       }
     );
 }
@@ -2614,15 +2054,10 @@ document.addEventListener(
   "DOMContentLoaded",
   () => {
     createCharts();
-
     updateSunInfo();
-
     loadEverything();
-
     loadForecast();
-
     loadWarnings();
-
     setupPWA();
 
     setInterval(
