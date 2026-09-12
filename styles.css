@@ -628,6 +628,7 @@ body.is-night .weather-orb::before {
   max-width: 860px;
 }
 .page-hero .section-eyebrow { display: inline-block; margin-bottom: 2px; }
+.station-page-hero { max-width: 980px; }
 .page-hero p { font-size: .95rem; }
 .station-story {
   margin-top: 32px;

@@ -1,4 +1,4 @@
-PARKNACROSS WEATHER — FINISHING RELEASE
+PARKNACROSS WEATHER — STATION ALIGNMENT + IRELAND CORRECTION
 
 Replace these files in the ROOT of your GitHub repository:
 1. index.html
@@ -14,12 +14,9 @@ DO NOT replace or edit:
 - CNAME
 - manifest.webmanifest
 
-What this release changes:
-- Cloud renamed to Data feed
-- Last observation now shows relative freshness (e.g. "1 min ago") plus exact time
-- Remaining condition emoji replaced visually with a consistent professional weather icon
-- Station page polished with live feed, latest observation, battery and archive status
-- Service worker cache bumped and page navigations made network-first to reduce stale "/" vs "/index.html" behaviour
-- Existing live-data logic remains untouched
-
-After committing all five files, refresh the site. The new service worker will remove older Parknacross Weather caches when it activates.
+Changes in this correction:
+- The paragraph under “About the Parknacross station” now uses the same 980px text width as the Station specification paragraph.
+- “Ireland” is now shown clearly in the site location/header wording.
+- Station location now reads “Ardamine, north County Wexford, Ireland”.
+- Footer/location wording includes Ireland.
+- Cache version bumped so the corrected layout is not hidden by an older cached stylesheet/page.
