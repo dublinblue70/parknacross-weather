@@ -1,2335 +1,810 @@
+const API_BASE = "https://parknacross-weather.dave-s-carter.workers.dev";
+const CURRENT_URL = `${API_BASE}/current`;
+const HISTORY_24_URL = `${API_BASE}/history?hours=24`;
+const HISTORY_7D_URL = `${API_BASE}/history?hours=168`;
+const STATS_URL = `${API_BASE}/stats`;
+const FORECAST_URL = `${API_BASE}/met/forecast`;
+const WARNINGS_URL = `${API_BASE}/met/warnings`;
 
+const ARDAMINE_LAT = 52.6247;
+const ARDAMINE_LON = -6.25;
+const STALE_AFTER_MS = 10 * 60 * 1000;
+const OFFLINE_AFTER_MS = 30 * 60 * 1000;
+
+const $ = id => document.getElementById(id);
 const set = (id, value) => {
-const element = $(id);
+  const element = $(id);
+  if (element) element.textContent = value;
+};
+const usable = value =>
+  value !== null &&
+  value !== undefined &&
+  value !== "" &&
+  Number.isFinite(Number(value));
 
-if (element) {
-element.textContent = value;
-}
-@@ -40,101 +39,62 @@ let charts = {};
+const n = (value, digits = 1) =>
+  usable(value) ? Number(value).toFixed(digits) : "--";
+
+let history24 = [];
+let history7d = [];
+let stats = null;
+let charts = {};
 let deferredInstallPrompt = null;
 
-
-/* ---------------------------------------------------------
-   Rain correction
---------------------------------------------------------- */
-
-/*
- * 0.1 mm on commissioning day was a test,
- * not genuine rainfall.
- */
-/* =========================================================
-   RAIN CORRECTION
-========================================================= */
-
+/* 0.1 mm on commissioning day was a test, not real rainfall. */
 const RAIN_CORRECTIONS_MM = {
-"2026-09-11": 0.1
+  "2026-09-11": 0.1
 };
 
-
-/* ---------------------------------------------------------
-   General helpers
---------------------------------------------------------- */
-/* =========================================================
-   GENERAL HELPERS
-========================================================= */
-
 function readingTime(reading) {
-
-if (reading?.received_at) {
+  if (reading?.received_at) {
     const time = new Date(reading.received_at).getTime();
-
-    const time =
-      new Date(
-        reading.received_at
-      ).getTime();
-
-    if (
-      Number.isFinite(time)
-    ) {
-    if (Number.isFinite(time)) {
-return time;
+    if (Number.isFinite(time)) return time;
+  }
+  return usable(reading?.epoch) ? Number(reading.epoch) * 1000 : null;
 }
-}
-
-  return usable(
-    reading?.epoch
-  )
-    ? Number(
-        reading.epoch
-      ) * 1000
-  return usable(reading?.epoch)
-    ? Number(reading.epoch) * 1000
-: null;
-}
-
 
 function localDateKey(reading) {
-
-  const time =
-    readingTime(
-      reading
-    );
   const time = readingTime(reading);
-
-if (!time) {
-return null;
-}
-
-  const date =
-    new Date(time);
+  if (!time) return null;
   const date = new Date(time);
-
-return [
-date.getFullYear(),
-    String(
-      date.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    ),
-    String(
-      date.getDate()
-    ).padStart(
-      2,
-      "0"
-    )
+  return [
+    date.getFullYear(),
     String(date.getMonth() + 1).padStart(2, "0"),
     String(date.getDate()).padStart(2, "0")
-].join("-");
+  ].join("-");
 }
-
 
 function correctedDailyRain(reading) {
   const raw = Number(reading?.rain_daily_mm);
-
-  const raw =
-    Number(
-      reading?.rain_daily_mm
-    );
-
-  if (
-    !Number.isFinite(raw)
-  ) {
-  if (!Number.isFinite(raw)) {
-return null;
+  if (!Number.isFinite(raw)) return null;
+  const correction = Number(RAIN_CORRECTIONS_MM[localDateKey(reading)] || 0);
+  return Math.round(Math.max(0, raw - correction) * 10) / 10;
 }
 
-const correction =
-Number(
-RAIN_CORRECTIONS_MM[
-        localDateKey(
-          reading
-        )
-        localDateKey(reading)
-] || 0
-);
-
-@@ -149,371 +109,200 @@ function correctedDailyRain(reading) {
-}
-
-
-function sameDay(
-  time,
-  reference = new Date()
-) {
-
-  const date =
-    new Date(time);
 function sameDay(time, reference = new Date()) {
   const date = new Date(time);
-
-return (
-    date.getFullYear() ===
-      reference.getFullYear() &&
-
-    date.getMonth() ===
-      reference.getMonth() &&
-
-    date.getDate() ===
-      reference.getDate()
+  return (
     date.getFullYear() === reference.getFullYear() &&
     date.getMonth() === reference.getMonth() &&
     date.getDate() === reference.getDate()
-);
+  );
 }
-
 
 function compass(degrees) {
-
-  if (
-    !usable(degrees)
-  ) {
-  if (!usable(degrees)) {
-return "--";
+  if (!usable(degrees)) return "--";
+  const labels = [
+    "N","NNE","NE","ENE","E","ESE","SE","SSE",
+    "S","SSW","SW","WSW","W","WNW","NW","NNW"
+  ];
+  const direction = ((Number(degrees) % 360) + 360) % 360;
+  return labels[Math.round(direction / 22.5) % 16];
 }
-
-const labels = [
-    "N",
-    "NNE",
-    "NE",
-    "ENE",
-    "E",
-    "ESE",
-    "SE",
-    "SSE",
-    "S",
-    "SSW",
-    "SW",
-    "WSW",
-    "W",
-    "WNW",
-    "NW",
-    "NNW"
-    "N", "NNE", "NE", "ENE",
-    "E", "ESE", "SE", "SSE",
-    "S", "SSW", "SW", "WSW",
-    "W", "WNW", "NW", "NNW"
-];
-
-const direction =
-    (
-      (
-        Number(degrees) %
-        360
-      ) +
-      360
-    ) %
-    360;
-    ((Number(degrees) % 360) + 360) % 360;
-
-return labels[
-    Math.round(
-      direction / 22.5
-    ) % 16
-    Math.round(direction / 22.5) % 16
-];
-}
-
 
 function comfort(humidity) {
   const value = Number(humidity);
-
-  const value =
-    Number(humidity);
-
-  if (
-    !Number.isFinite(value)
-  ) {
-  if (!Number.isFinite(value)) {
-return "--";
+  if (!Number.isFinite(value)) return "--";
+  if (value < 35) return "Dry";
+  if (value <= 65) return "Comfortable";
+  if (value <= 80) return "Humid";
+  return "Very humid";
 }
-
-  if (
-    value < 35
-  ) {
-  if (value < 35) {
-return "Dry";
-}
-
-  if (
-    value <= 65
-  ) {
-  if (value <= 65) {
-return "Comfortable";
-}
-
-  if (
-    value <= 80
-  ) {
-  if (value <= 80) {
-return "Humid";
-}
-
-return "Very humid";
-}
-
-
-/* ---------------------------------------------------------
-   WS90 battery
---------------------------------------------------------- */
-
-/*
- * The Ecowitt WS90 battery value currently arriving
- * through the feed behaves as a status flag:
- *
- * 0 = battery OK
- * 1 = battery low
- *
- * If Ecowitt supplies an actual voltage instead,
- * the fallback voltage logic below will handle it.
- */
-
-function batteryStatus(value) {
-
-  if (
-    !usable(value)
-  ) {
-    return "--";
-  }
-
-  const battery =
-    Number(value);
-
-  if (
-    battery === 0
-  ) {
-    return "OK";
-  }
-/* =========================================================
-   WS90 BATTERY STATUS
-
-  if (
-    battery === 1
-  ) {
-    return "Low";
-  }
-   Ecowitt WS90 battery status:
-   0 = OK
-   1 = LOW
-========================================================= */
-
-function batteryDisplay(value) {
-if (
-    battery >= 3.0
-    value === null ||
-    value === undefined ||
-    value === ""
-) {
-    return "Excellent";
-    return "Status unavailable";
-}
-
-  if (
-    battery >= 2.8
-  ) {
-    return "Good";
-  }
-  const battery = Number(value);
-
-  if (
-    battery >= 2.5
-  ) {
-    return "Fair";
-  if (!Number.isFinite(battery)) {
-    return "Status unavailable";
-}
-
-  if (
-    battery >= 2.3
-  ) {
-    return "Low";
-  if (battery === 0) {
-    return "OK";
-}
-
-  return "Check";
-}
-
-
-function batteryDisplay(value) {
-
-  if (
-    !usable(value)
-  ) {
-    return "--";
-  if (battery === 1) {
-    return "LOW";
-}
-
-  const battery =
-    Number(value);
-
-/*
-   * Ecowitt status flag
-   * Fallback in case a future feed supplies
-   * an actual voltage instead of a status flag.
-  */
-
-  if (
-    battery === 0
-  ) {
-  if (battery >= 2.3) {
-return "OK";
-}
-
-  if (
-    battery === 1
-  ) {
-    return "Low";
-  }
-
-  /*
-   * Actual voltage fallback
-   */
-
-  return (
-    `${battery.toFixed(2)} V · ${batteryStatus(battery)}`
-  );
-  return "Check";
-}
-
-
-/* ---------------------------------------------------------
-   Records
---------------------------------------------------------- */
-
-function recordReading(
-  rows,
-  field,
-  mode = "max"
-) {
-/* =========================================================
-   RECORD HELPERS
-========================================================= */
 
 function recordReading(rows, field, mode = "max") {
-const valid =
-rows.filter(
-      row =>
-        usable(
-          row[field]
-        )
-      row => usable(row[field])
-);
-
-  if (
-    !valid.length
-  ) {
-  if (!valid.length) {
-return null;
+  const valid = rows.filter(row => usable(row[field]));
+  if (!valid.length) return null;
+  return valid.reduce((best, row) => {
+    if (!best) return row;
+    const a = Number(row[field]);
+    const b = Number(best[field]);
+    return mode === "min" ? (a < b ? row : best) : (a > b ? row : best);
+  }, null);
 }
-
-return valid.reduce(
-    (
-      best,
-      row
-    ) => {
-
-    (best, row) => {
-if (!best) {
-return row;
-}
-
-      const a =
-        Number(
-          row[field]
-        );
-      const a = Number(row[field]);
-      const b = Number(best[field]);
-
-      const b =
-        Number(
-          best[field]
-        );
-
-      return (
-        mode === "min"
-          ? (
-              a < b
-                ? row
-                : best
-            )
-          : (
-              a > b
-                ? row
-                : best
-            )
-      );
-      return mode === "min"
-        ? (a < b ? row : best)
-        : (a > b ? row : best);
-},
-null
-);
-}
-
 
 function timeLabel(reading) {
-
-  const time =
-    readingTime(
-      reading
-    );
   const time = readingTime(reading);
-
-if (!time) {
-return "--";
+  if (!time) return "--";
+  return new Date(time).toLocaleTimeString("en-IE", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
-
-  return new Date(
-    time
-  ).toLocaleTimeString(
-    "en-IE",
-    {
-      hour:
-        "2-digit",
-
-      minute:
-        "2-digit"
-    }
-  );
-  return new Date(time)
-    .toLocaleTimeString(
-      "en-IE",
-      {
-        hour: "2-digit",
-        minute: "2-digit"
-      }
-    );
-}
-
 
 function dateLabel(value) {
-
-if (!value) {
-return "--";
+  if (!value) return "--";
+  const date = typeof value === "number" ? new Date(value * 1000) : new Date(value);
+  if (Number.isNaN(date.getTime())) return "--";
+  return date.toLocaleDateString("en-IE", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
 }
-
-const date =
-typeof value === "number"
-      ? new Date(
-          value * 1000
-        )
-      : new Date(
-          value
-        );
-      ? new Date(value * 1000)
-      : new Date(value);
-
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-  if (Number.isNaN(date.getTime())) {
-return "--";
-}
-
-return date.toLocaleDateString(
-"en-IE",
-{
-      day:
-        "numeric",
-
-      month:
-        "short",
-
-      year:
-        "numeric"
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-}
-);
-}
-
-
-/* ---------------------------------------------------------
-   Pressure
---------------------------------------------------------- */
-/* =========================================================
-   PRESSURE
-========================================================= */
 
 function pressureStats() {
-
-const rows =
-history24.filter(
-      row =>
-        usable(
-          row.pressure_hpa
-        )
-      row => usable(row.pressure_hpa)
-);
-
-  if (
-    rows.length < 2
-  ) {
-  if (rows.length < 2) {
-return {
-      change:
-        null,
-
-      trend:
-        "--"
-      change: null,
-      trend: "--"
-};
-}
-
-const change =
-    Number(
-      rows.at(-1)
-        .pressure_hpa
-    ) -
-    Number(
-      rows[0]
-        .pressure_hpa
-    );
+  const rows = history24.filter(row => usable(row.pressure_hpa));
+  if (rows.length < 2) return { change: null, trend: "--" };
+  const change =
     Number(rows.at(-1).pressure_hpa) -
     Number(rows[0].pressure_hpa);
-
-return {
-change,
-@@ -528,26 +317,15 @@ function pressureStats() {
+  return {
+    change,
+    trend: change > 0.5 ? "Rising" : change < -0.5 ? "Falling" : "Steady"
+  };
 }
 
-
-function closestReadingTo(
-  targetTime
-) {
-
-  if (
-    !history24.length
-  ) {
 function closestReadingTo(targetTime) {
-  if (!history24.length) {
-return null;
+  if (!history24.length) return null;
+  return history24.reduce((best, row) => {
+    const t = readingTime(row);
+    if (!t) return best;
+    if (!best) return row;
+    return Math.abs(t - targetTime) < Math.abs(readingTime(best) - targetTime)
+      ? row
+      : best;
+  }, null);
 }
 
-return history24.reduce(
-    (
-      best,
-      row
-    ) => {
-
-    (best, row) => {
-const t =
-        readingTime(
-          row
-        );
-        readingTime(row);
-
-if (!t) {
-return best;
-@@ -559,13 +337,10 @@ function closestReadingTo(
-
-return (
-Math.abs(
-          t -
-          targetTime
-          t - targetTime
-) <
-Math.abs(
-          readingTime(
-            best
-          ) -
-          readingTime(best) -
-targetTime
-)
-? row
-@@ -584,35 +359,20 @@ function updateTrend(
-unit,
-digits = 1
-) {
-
-  const element =
-    $(id);
+function updateTrend(id, currentValue, oldValue, unit, digits = 1) {
   const element = $(id);
-
-if (
-!element ||
-    !usable(
-      currentValue
-    ) ||
-    !usable(
-      oldValue
-    )
-    !usable(currentValue) ||
-    !usable(oldValue)
-) {
-
-    set(
-      id,
-      "--"
-    );
-
+  if (!element || !usable(currentValue) || !usable(oldValue)) {
     set(id, "--");
-return;
+    return;
+  }
+
+  const delta = Number(currentValue) - Number(oldValue);
+  const arrow = delta > 0.05 ? "↑" : delta < -0.05 ? "↓" : "→";
+  const sign = delta > 0 ? "+" : "";
+  element.textContent = `${arrow} ${sign}${delta.toFixed(digits)} ${unit}`;
+  element.classList.remove("trend-up", "trend-down", "trend-flat");
+  element.classList.add(delta > 0.05 ? "trend-up" : delta < -0.05 ? "trend-down" : "trend-flat");
 }
-
-const delta =
-    Number(
-      currentValue
-    ) -
-    Number(
-      oldValue
-    );
-    Number(currentValue) -
-    Number(oldValue);
-
-const arrow =
-delta > 0.05
-@@ -645,12 +405,11 @@ function updateTrend(
-}
-
-
-/* ---------------------------------------------------------
-   Wind
---------------------------------------------------------- */
-/* =========================================================
-   WIND
-========================================================= */
 
 function prevailingWind() {
+  const rows = history24.filter(row => usable(row.wind_direction_deg));
+  if (!rows.length) return { deg: null, text: "--" };
 
-const rows =
-history24.filter(
-row =>
-@@ -659,205 +418,132 @@ function prevailingWind() {
-)
-);
+  let x = 0;
+  let y = 0;
 
-  if (
-    !rows.length
-  ) {
-
-  if (!rows.length) {
-return {
-      deg:
-        null,
-
-      text:
-        "--"
-      deg: null,
-      text: "--"
-};
-}
-
-let x = 0;
-let y = 0;
-
-  rows.forEach(
-    row => {
-
-      const weight =
-        usable(
-          row.wind_speed_kmh
-        )
-          ? Math.max(
-              Number(
-                row.wind_speed_kmh
-              ),
-              1
-            )
-          : 1;
   rows.forEach(row => {
-    const weight =
-      usable(row.wind_speed_kmh)
-        ? Math.max(
-            Number(row.wind_speed_kmh),
-            1
-          )
-        : 1;
-
-      const radians =
-        Number(
-          row.wind_direction_deg
-        ) *
-        Math.PI /
-        180;
-    const radians =
-      Number(
-        row.wind_direction_deg
-      ) *
-      Math.PI /
-      180;
-
-      x +=
-        Math.cos(
-          radians
-        ) *
-        weight;
-    x +=
-      Math.cos(radians) *
-      weight;
-
-      y +=
-        Math.sin(
-          radians
-        ) *
-        weight;
-    }
-  );
-    y +=
-      Math.sin(radians) *
-      weight;
+    const weight = usable(row.wind_speed_kmh)
+      ? Math.max(Number(row.wind_speed_kmh), 1)
+      : 1;
+    const radians = Number(row.wind_direction_deg) * Math.PI / 180;
+    x += Math.cos(radians) * weight;
+    y += Math.sin(radians) * weight;
   });
 
-const degrees =
-(
-      Math.atan2(
-        y,
-        x
-      ) *
-      Math.atan2(y, x) *
-180 /
-Math.PI +
-360
-) %
-360;
-
-return {
-    deg:
-      degrees,
-
-    text:
-      compass(
-        degrees
-      )
-    deg: degrees,
-    text: compass(degrees)
-};
+  const degrees = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  return { deg: degrees, text: compass(degrees) };
 }
-
-
-/* ---------------------------------------------------------
-   Current weather description
---------------------------------------------------------- */
-
-function conditionInfo(
-  current,
-  isNight
-) {
-/* =========================================================
-   CONDITION DESCRIPTION
-========================================================= */
 
 function conditionInfo(current, isNight) {
-const rain =
-Number(
-      current.rain_rate_mm_h ||
-      0
-      current.rain_rate_mm_h || 0
-);
-
-const wind =
-Number(
-      current.wind_speed_kmh ||
-      0
-      current.wind_speed_kmh || 0
-);
-
-const solar =
-Number(
-      current.solar_w_m2 ||
-      0
-      current.solar_w_m2 || 0
-);
-
-const uv =
-Number(
-      current.uv_index ||
-      0
-      current.uv_index || 0
-);
-
-  if (
-    rain >= 2.5
-  ) {
+  const rain = Number(current.rain_rate_mm_h || 0);
+  const wind = Number(current.wind_speed_kmh || 0);
+  const solar = Number(current.solar_w_m2 || 0);
+  const uv = Number(current.uv_index || 0);
 
   if (rain >= 2.5) {
-return {
-      tag:
-        "Rainy",
-
-      icon:
-        "🌧️",
-
-      tag: "Rainy",
-      icon: "🌧️",
-story:
-`Rain is falling at ${n(rain)} mm/h.`,
-
-className:
-"weather-rain"
-};
-}
-
-  if (
-    rain > 0
-  ) {
-
+    return { tag: "Rainy", icon: "🌧️", story: `Rain is falling at ${n(rain)} mm/h.`, className: "weather-rain" };
+  }
   if (rain > 0) {
-return {
-      tag:
-        "Light rain",
-
-      icon:
-        "🌦️",
-
-      tag: "Light rain",
-      icon: "🌦️",
-story:
-`Light rain is falling at ${n(rain)} mm/h.`,
-
-className:
-"weather-rain"
-};
-}
-
-  if (
-    wind >= 35
-  ) {
-
+    return { tag: "Light rain", icon: "🌦️", story: `Light rain is falling at ${n(rain)} mm/h.`, className: "weather-rain" };
+  }
   if (wind >= 35) {
-return {
-      tag:
-        "Very windy",
-
-      icon:
-        "💨",
-
-      tag: "Very windy",
-      icon: "💨",
-story:
-`A lively Wexford breeze is blowing at ${n(wind)} km/h.`,
-
-className:
-"weather-windy"
-};
-}
-
-  if (
-    wind >= 20
-  ) {
-
+    return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy" };
+  }
   if (wind >= 20) {
-return {
-      tag:
-        "Breezy",
-
-      icon:
-        "🌬️",
-
-      tag: "Breezy",
-      icon: "🌬️",
-story:
-`Breezy conditions with wind around ${n(wind)} km/h.`,
-
-className:
-"weather-windy"
-};
-}
-
-  if (
-    isNight
-  ) {
-
+    return { tag: "Breezy", icon: "🌬️", story: `Breezy conditions with wind around ${n(wind)} km/h.`, className: "weather-windy" };
+  }
   if (isNight) {
-return {
-      tag:
-        "Night",
-
-      icon:
-        "🌙",
-
-      tag: "Night",
-      icon: "🌙",
-story:
-"Night-time conditions at Parknacross.",
-
-className:
-"weather-neutral"
-};
-@@ -867,63 +553,43 @@ function conditionInfo(
-uv >= 5 ||
-solar >= 400
-) {
-
-return {
-      tag:
-        "Bright",
-
-      icon:
-        "☀️",
-
-      tag: "Bright",
-      icon: "☀️",
-story:
-"Bright conditions over Parknacross right now.",
-
-className:
-"weather-bright"
-};
-}
-
-  if (
-    solar >= 100
-  ) {
-
+    return { tag: "Night", icon: "🌙", story: "Night-time conditions at Parknacross.", className: "weather-neutral" };
+  }
+  if (uv >= 5 || solar >= 400) {
+    return { tag: "Bright", icon: "☀️", story: "Bright conditions over Parknacross right now.", className: "weather-bright" };
+  }
   if (solar >= 100) {
-return {
-      tag:
-        "Some brightness",
-
-      icon:
-        "⛅",
-
-      tag: "Some brightness",
-      icon: "⛅",
-story:
-"Some brightness breaking through at Parknacross.",
-
-className:
-"weather-bright"
-};
+    return { tag: "Some brightness", icon: "⛅", story: "Some brightness breaking through at Parknacross.", className: "weather-bright" };
+  }
+  return { tag: "Calm & local", icon: "☁️", story: "Quiet local conditions at Parknacross.", className: "weather-neutral" };
 }
 
-return {
-    tag:
-      "Calm & local",
-
-    icon:
-      "☁️",
-
-    tag: "Calm & local",
-    icon: "☁️",
-story:
-"Quiet local conditions at Parknacross.",
-
-className:
-"weather-neutral"
-};
-}
-
-
-/* ---------------------------------------------------------
-   Sunrise / sunset
---------------------------------------------------------- */
-/* =========================================================
-   SUNRISE / SUNSET
-========================================================= */
-
+/* NOAA-style sunrise/sunset calculation using the public Ardamine area centre. */
 function dayOfYear(date) {
-
-const start =
-new Date(
-date.getFullYear(),
-@@ -932,25 +598,17 @@ function dayOfYear(date) {
-);
-
-return Math.floor(
-    (
-      date -
-      start
-    ) /
-    (date - start) /
-86400000
-);
+  const start = new Date(date.getFullYear(), 0, 0);
+  return Math.floor((date - start) / 86400000);
 }
-
 
 function normalize360(value) {
-
-return (
-    (
-      value %
-      360
-    ) +
-    (value % 360) +
-360
-  ) %
-  360;
-  ) % 360;
+  return ((value % 360) + 360) % 360;
 }
 
-
-@@ -960,36 +618,24 @@ function sunEvent(
-longitude,
-sunrise
-) {
-
-  const zenith =
-    90.833;
+function sunEvent(date, latitude, longitude, sunrise) {
   const zenith = 90.833;
+  const N = dayOfYear(date);
+  const lngHour = longitude / 15;
+  const t = N + ((sunrise ? 6 : 18) - lngHour) / 24;
+  const M = (0.9856 * t) - 3.289;
+  let L = M + 1.916 * Math.sin(M * Math.PI / 180) +
+    0.020 * Math.sin(2 * M * Math.PI / 180) + 282.634;
+  L = normalize360(L);
 
-const N =
-    dayOfYear(
-      date
-    );
-    dayOfYear(date);
+  let RA = Math.atan(0.91764 * Math.tan(L * Math.PI / 180)) * 180 / Math.PI;
+  RA = normalize360(RA);
+  const Lquadrant = Math.floor(L / 90) * 90;
+  const RAquadrant = Math.floor(RA / 90) * 90;
+  RA = (RA + (Lquadrant - RAquadrant)) / 15;
 
-const lngHour =
-    longitude /
-    15;
-    longitude / 15;
+  const sinDec = 0.39782 * Math.sin(L * Math.PI / 180);
+  const cosDec = Math.cos(Math.asin(sinDec));
 
-const t =
-N +
-(
-      (
-        sunrise
-          ? 6
-          : 18
-      ) -
-      (sunrise ? 6 : 18) -
-lngHour
-) /
-24;
+  const cosH =
+    (Math.cos(zenith * Math.PI / 180) -
+      (sinDec * Math.sin(latitude * Math.PI / 180))) /
+    (cosDec * Math.cos(latitude * Math.PI / 180));
 
-const M =
-    (
-      0.9856 *
-      t
-    ) -
-    (0.9856 * t) -
-3.289;
+  if (cosH > 1 || cosH < -1) return null;
 
-let L =
-@@ -1010,9 +656,7 @@ function sunEvent(
-282.634;
-
-L =
-    normalize360(
-      L
-    );
-    normalize360(L);
-
-let RA =
-Math.atan(
-@@ -1027,21 +671,17 @@ function sunEvent(
-Math.PI;
-
-RA =
-    normalize360(
-      RA
-    );
-    normalize360(RA);
-
-const Lquadrant =
-Math.floor(
-      L /
-      90
-      L / 90
-) *
-90;
-
-const RAquadrant =
-Math.floor(
-      RA /
-      90
-      RA / 90
-) *
-90;
-
-@@ -1116,16 +756,12 @@ function sunEvent(
-180 /
-Math.PI;
-
-  H /=
-    15;
+  let H = sunrise
+    ? 360 - Math.acos(cosH) * 180 / Math.PI
+    : Math.acos(cosH) * 180 / Math.PI;
   H /= 15;
 
-const T =
-H +
-RA -
-    (
-      0.06571 *
-      t
-    ) -
-    (0.06571 * t) -
-6.622;
+  const T = H + RA - (0.06571 * t) - 6.622;
+  const UT = normalize360((T - lngHour) * 15) / 15;
 
-const UT =
-@@ -1154,7 +790,6 @@ function sunEvent(
-
+  return new Date(Date.UTC(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    0, 0, 0
+  ) + UT * 3600000);
+}
 
 function updateSunInfo() {
+  const now = new Date();
+  const rise = sunEvent(now, ARDAMINE_LAT, ARDAMINE_LON, true);
+  const setTime = sunEvent(now, ARDAMINE_LAT, ARDAMINE_LON, false);
 
-const now =
-new Date();
+  const fmt = date => date
+    ? date.toLocaleTimeString("en-IE", { hour: "2-digit", minute: "2-digit" })
+    : "--";
 
-@@ -1182,7 +817,6 @@ function updateSunInfo() {
-{
-hour:
-"2-digit",
+  set("sunrise", fmt(rise));
+  set("sunset", fmt(setTime));
 
-minute:
-"2-digit"
+  const isNight = !!(rise && setTime && (now < rise || now >= setTime));
+
+  if (rise && setTime) {
+    if (now >= rise && now < setTime) {
+      const mins = Math.max(0, Math.floor((setTime - now) / 60000));
+      set("daylightRemaining", `${Math.floor(mins / 60)}h ${mins % 60}m`);
+    } else {
+      set("daylightRemaining", "Night");
+    }
+  }
+
+  document.body.classList.toggle("is-night", isNight);
+  return isNight;
 }
-@@ -1191,16 +825,12 @@ function updateSunInfo() {
-
-set(
-"sunrise",
-    fmt(
-      rise
-    )
-    fmt(rise)
-);
-
-set(
-"sunset",
-    fmt(
-      setTime
-    )
-    fmt(setTime)
-);
-
-const isNight =
-@@ -1217,12 +847,10 @@ function updateSunInfo() {
-rise &&
-setTime
-) {
-
-if (
-now >= rise &&
-now < setTime
-) {
-
-const mins =
-Math.max(
-0,
-@@ -1238,13 +866,11 @@ function updateSunInfo() {
-set(
-"daylightRemaining",
-`${Math.floor(
-          mins /
-          60
-          mins / 60
-       )}h ${mins % 60}m`
-);
-
-} else {
-
-set(
-"daylightRemaining",
-"Night"
-@@ -1261,22 +887,18 @@ function updateSunInfo() {
-}
-
-
-/* ---------------------------------------------------------
-   Rainfall chart
---------------------------------------------------------- */
-/* =========================================================
-   RAINFALL HISTORY
-========================================================= */
 
 function dailyRainTotals() {
+  const days = new Map();
 
-const days =
-new Map();
+  history7d.forEach(reading => {
+    const time = readingTime(reading);
+    const correctedRain = correctedDailyRain(reading);
+    if (!time || !usable(correctedRain)) return;
 
-history7d.forEach(
-reading => {
+    const date = new Date(time);
+    const key = [
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    ].join("-");
 
-const time =
-        readingTime(
-          reading
-        );
-        readingTime(reading);
+    const rain = Number(correctedRain);
+    const existing = days.get(key);
+    if (!existing || rain > existing.rain) {
+      days.set(key, { time, rain });
+    }
+  });
 
-const correctedRain =
-correctedDailyRain(
-@@ -1293,9 +915,7 @@ function dailyRainTotals() {
+  return [...days.values()].sort((a, b) => a.time - b.time).slice(-7);
 }
-
-const date =
-        new Date(
-          time
-        );
-        new Date(time);
-
-const key =
-[
-@@ -1310,16 +930,13 @@ function dailyRainTotals() {
-);
-
-const existing =
-        days.get(
-          key
-        );
-        days.get(key);
-
-if (
-!existing ||
-rain >
-existing.rain
-) {
-
-days.set(
-key,
-{
-@@ -1335,27 +952,21 @@ function dailyRainTotals() {
-...days.values()
-]
-.sort(
-      (
-        a,
-        b
-      ) =>
-      (a, b) =>
-a.time -
-b.time
-)
-.slice(-7);
-}
-
-
-/* ---------------------------------------------------------
-   Live feed status
---------------------------------------------------------- */
-/* =========================================================
-   DATA FRESHNESS
-========================================================= */
 
 function updateFreshness(current) {
+  const time = readingTime(current);
+  const pill = $("livePill");
+  if (!time || !pill) return;
 
-const time =
-    readingTime(
-      current
-    );
-    readingTime(current);
+  const age = Date.now() - time;
+  pill.classList.remove("delayed", "offline");
 
-const pill =
-$("livePill");
-@@ -1380,7 +991,6 @@ function updateFreshness(current) {
-age >=
-OFFLINE_AFTER_MS
-) {
-
-pill.classList.add(
-"offline"
-);
-@@ -1404,15 +1014,12 @@ function updateFreshness(current) {
-
-$("cloudStatus")
-?.classList
-      .add(
-        "bad"
-      );
-      .add("bad");
-
-} else if (
-age >=
-STALE_AFTER_MS
-) {
-
-pill.classList.add(
-"delayed"
-);
-@@ -1436,12 +1043,9 @@ function updateFreshness(current) {
-
-$("cloudStatus")
-?.classList
-      .add(
-        "warn"
-      );
-      .add("warn");
-
-} else {
-
-set(
-"liveText",
-"LIVE FROM PARKNACROSS"
-@@ -1461,19 +1065,16 @@ function updateFreshness(current) {
-
-$("cloudStatus")
-?.classList
-      .add(
-        "ok"
-      );
-      .add("ok");
+  if (age >= OFFLINE_AFTER_MS) {
+    pill.classList.add("offline");
+    set("liveText", "STATION DATA OFFLINE");
+    set("cloudStatus", "Offline");
+    $("cloudStatus")?.classList.add("bad");
+  } else if (age >= STALE_AFTER_MS) {
+    pill.classList.add("delayed");
+    set("liveText", "STATION DATA DELAYED");
+    set("cloudStatus", "Delayed");
+    $("cloudStatus")?.classList.add("warn");
+  } else {
+    set("liveText", "LIVE FROM PARKNACROSS");
+    set("cloudStatus", "Connected");
+    $("cloudStatus")?.classList.remove("bad", "warn");
+    $("cloudStatus")?.classList.add("ok");
+  }
 }
-}
-
-
-/* ---------------------------------------------------------
-   Station stats
---------------------------------------------------------- */
-/* =========================================================
-   STATISTICS
-========================================================= */
 
 function updateStatsPanel() {
+  if (!stats) return;
 
-if (!stats) {
-return;
+  set("monthRain", `${n(stats.month_rain_mm)} mm`);
+  set("monthRainDays", `${stats.month_rain_days ?? 0} rain day${stats.month_rain_days === 1 ? "" : "s"} this month`);
+  set("yearRain", `${n(stats.year_rain_mm)} mm`);
+  set("stationSince", dateLabel(stats.first_epoch));
+
+  if (stats.wettest_day) {
+    set("wettestDay", `${n(stats.wettest_day.rain_mm)} mm`);
+    set("wettestDate", dateLabel(`${stats.wettest_day.day}T12:00:00`));
+  }
+
+  const records = stats.records || {};
+  if (records.high_temperature) {
+    set("allHigh", `${n(records.high_temperature.value)} °C`);
+    set("allHighDate", dateLabel(records.high_temperature.epoch));
+  }
+  if (records.low_temperature) {
+    set("allLow", `${n(records.low_temperature.value)} °C`);
+    set("allLowDate", dateLabel(records.low_temperature.epoch));
+  }
+  if (records.peak_gust) {
+    set("allGust", `${n(records.peak_gust.value)} km/h`);
+    set("allGustDate", dateLabel(records.peak_gust.epoch));
+  }
+  if (records.high_pressure) {
+    set("allPressure", `${n(records.high_pressure.value)} hPa`);
+    set("allPressureDate", dateLabel(records.high_pressure.epoch));
+  }
 }
-@@ -1514,7 +1115,6 @@ function updateStatsPanel() {
-if (
-stats.wettest_day
-) {
-
-set(
-"wettestDay",
-`${n(
-@@ -1533,13 +1133,11 @@ function updateStatsPanel() {
-}
-
-const records =
-    stats.records ||
-    {};
-    stats.records || {};
-
-if (
-records.high_temperature
-) {
-
-set(
-"allHigh",
-`${n(
-@@ -1558,7 +1156,6 @@ function updateStatsPanel() {
-if (
-records.low_temperature
-) {
-
-set(
-"allLow",
-`${n(
-@@ -1577,7 +1174,6 @@ function updateStatsPanel() {
-if (
-records.peak_gust
-) {
-
-set(
-"allGust",
-`${n(
-@@ -1596,7 +1192,6 @@ function updateStatsPanel() {
-if (
-records.high_pressure
-) {
-
-set(
-"allPressure",
-`${n(
-@@ -1614,19 +1209,17 @@ function updateStatsPanel() {
-}
-
-
-/* ---------------------------------------------------------
-   Main dashboard
---------------------------------------------------------- */
-/* =========================================================
-   MAIN DASHBOARD
-========================================================= */
 
 function updateDashboard(current) {
+  const now = new Date();
+  const today = history24.filter(reading => {
+    const time = readingTime(reading);
+    return time && sameDay(time, now);
+  });
 
-const now =
-new Date();
+  const highReading = recordReading(today, "temperature_c", "max");
+  const lowReading = recordReading(today, "temperature_c", "min");
+  const gustReading = recordReading(today, "wind_gust_kmh", "max");
+  const solarReading = recordReading(today, "solar_w_m2", "max");
 
-const today =
-history24.filter(
-reading => {
-
-const time =
-readingTime(
-reading
-@@ -1698,12 +1291,7 @@ function updateDashboard(current) {
-);
-
-
-  /* Last updated */
-
-  if (
-    currentTime
-  ) {
+  const pressure = pressureStats();
+  const direction = compass(current.wind_direction_deg);
+  const rainToday = correctedDailyRain(current);
+  const currentTime = readingTime(current);
+  const isNight = updateSunInfo();
+  const condition = conditionInfo(current, isNight);
 
   if (currentTime) {
-const date =
-new Date(
-currentTime
-@@ -1717,7 +1305,6 @@ function updateDashboard(current) {
-         {
-           hour:
-             "2-digit",
+    const date = new Date(currentTime);
+    set(
+      "lastUpdated",
+      `Updated ${date.toLocaleTimeString("en-IE", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })} · ${date.toLocaleDateString("en-IE", {
+        day: "2-digit",
+        month: "short"
+      })}`
+    );
+  }
 
-           minute:
-             "2-digit"
-         }
-@@ -1728,7 +1315,6 @@ function updateDashboard(current) {
-         {
-           day:
-             "2-digit",
+  set("heroTemp", n(current.temperature_c));
+  set("heroFeels", `${n(current.feels_like_c)}°C`);
+  set("heroHumidity", `${n(current.humidity, 0)}%`);
+  set("heroDew", `${n(current.dew_point_c)}°C`);
+  set("heroWind", `${n(current.wind_speed_kmh)} km/h`);
+  set("heroRain", `${n(rainToday)} mm`);
+  set("heroPressure", `${n(current.pressure_hpa)} hPa`);
+  set("heroTrend", pressure.trend === "--" ? "--" : `${pressure.trend} pressure`);
+  set("weatherStory", condition.story);
+  set("conditionsTag", condition.tag);
+  set("weatherIcon", condition.icon);
 
-           month:
-             "short"
-         }
-@@ -1813,8 +1399,6 @@ function updateDashboard(current) {
-);
+  document.body.classList.remove(
+    "weather-neutral",
+    "weather-rain",
+    "weather-bright",
+    "weather-windy"
+  );
+  document.body.classList.add(condition.className);
 
+  set("todayLow", n(lowReading?.temperature_c));
+  set("todayHigh", n(highReading?.temperature_c));
+  set("peakGust", n(gustReading?.wind_gust_kmh));
+  set("summaryRain", n(rainToday));
+  set("solarPeak", n(solarReading?.solar_w_m2, 0));
 
-  /* Weather theme */
+  set("tempVal", n(current.temperature_c));
+  set("feelsVal", `${n(current.feels_like_c)}°C`);
+  set("tempMin", n(lowReading?.temperature_c));
+  set("tempMax", n(highReading?.temperature_c));
+  set("humVal", n(current.humidity, 0));
+  set("dewVal", `${n(current.dew_point_c)}°C`);
+  set("comfortVal", comfort(current.humidity));
+  set("windVal", n(current.wind_speed_kmh));
+  set("gustVal", `${n(current.wind_gust_kmh)} km/h`);
+  set(
+    "dirVal",
+    usable(current.wind_direction_deg)
+      ? `${direction} (${Math.round(Number(current.wind_direction_deg))}°)`
+      : direction
+  );
+  set("rainVal", n(rainToday));
+  set("rainRateVal", `${n(current.rain_rate_mm_h)} mm/h`);
+  set("pressureVal", n(current.pressure_hpa));
+  set("pressureTrend", pressure.trend);
+  set(
+    "pressureChange",
+    usable(pressure.change)
+      ? `${pressure.change >= 0 ? "+" : ""}${n(pressure.change)} hPa`
+      : "--"
+  );
+  set("solarVal", n(current.solar_w_m2, 0));
+  set("uvVal", n(current.uv_index, 0));
+  set("battery", usable(current.battery_v) ? `${n(current.battery_v, 2)} V` : "--");
 
-document.body.classList.remove(
-"weather-neutral",
-"weather-rain",
-@@ -1943,11 +1527,15 @@ function updateDashboard(current) {
-usable(
-current.wind_direction_deg
-)
-      ? `${direction} (${Math.round(
-          Number(
-            current.wind_direction_deg
-      ? `${
-          direction
-        } (${
-          Math.round(
-            Number(
-              current.wind_direction_deg
-            )
-         )
-        )}°)`
-        }°)`
-: direction
-);
+  const threeHoursAgo = closestReadingTo(Date.now() - 3 * 60 * 60 * 1000);
+  updateTrend("temp3h", current.temperature_c, threeHoursAgo?.temperature_c, "°C");
+  updateTrend("pressure3h", current.pressure_hpa, threeHoursAgo?.pressure_hpa, "hPa");
 
-@@ -2070,21 +1658,26 @@ function updateDashboard(current) {
-) &&
-$("needle")
-) {
+  const prevailing = prevailingWind();
+  set("prevailing", prevailing.text);
+  if (usable(prevailing.deg) && $("needle")) {
+    $("needle").style.transform = `rotate(${prevailing.deg}deg)`;
+  }
+  set(
+    "currentDirection",
+    usable(current.wind_direction_deg)
+      ? `${direction} · ${Math.round(Number(current.wind_direction_deg))}°`
+      : direction
+  );
+  set("currentWind", `${n(current.wind_speed_kmh)} km/h`);
+  set("currentGust", `${n(current.wind_gust_kmh)} km/h`);
 
-    $("needle").style.transform =
-      `rotate(${prevailing.deg}deg)`;
-    $("needle")
-      .style
-      .transform =
-        `rotate(${prevailing.deg}deg)`;
+  set("recordHigh", `${n(highReading?.temperature_c)} °C`);
+  set("recordHighTime", highReading ? `at ${timeLabel(highReading)}` : "--");
+  set("recordLow", `${n(lowReading?.temperature_c)} °C`);
+  set("recordLowTime", lowReading ? `at ${timeLabel(lowReading)}` : "--");
+  set("recordGust", `${n(gustReading?.wind_gust_kmh)} km/h`);
+  set("recordGustTime", gustReading ? `at ${timeLabel(gustReading)}` : "--");
+  set("recordRain", `${n(rainToday)} mm`);
+
+  updateFreshness(current);
+  updateStatsPanel();
+  set("year", new Date().getFullYear());
 }
-
-set(
-"currentDirection",
-usable(
-current.wind_direction_deg
-)
-      ? `${direction} · ${Math.round(
-          Number(
-            current.wind_direction_deg
-      ? `${
-          direction
-        } · ${
-          Math.round(
-            Number(
-              current.wind_direction_deg
-            )
-         )
-        )}°`
-        }°`
-: direction
-);
-
-@@ -2175,16 +1768,13 @@ function updateDashboard(current) {
-}
-
-
-/* ---------------------------------------------------------
-   Charts
---------------------------------------------------------- */
-/* =========================================================
-   CHART HELPERS
-========================================================= */
 
 function scales(title) {
-
-return {
-
-x: {
-
-grid: {
-color:
-"transparent"
-@@ -2200,7 +1790,6 @@ function scales(title) {
-},
-
-y: {
-
-grid: {
-color:
-"rgba(163,209,255,.10)"
-@@ -2212,7 +1801,6 @@ function scales(title) {
-},
-
-title: {
-
-display:
-true,
-
-@@ -2232,9 +1820,7 @@ function line(
-colour,
-axis = "y"
-) {
-
-return {
-
-label,
-
-data:
-@@ -2267,32 +1853,30 @@ function line(
+  return {
+    x: {
+      grid: { color: "transparent" },
+      ticks: { color: "#a8bfd4", maxTicksLimit: 8 }
+    },
+    y: {
+      grid: { color: "rgba(163,209,255,.10)" },
+      ticks: { color: "#a8bfd4" },
+      title: { display: true, text: title, color: "#a8bfd4" }
+    }
+  };
 }
 
+function line(label, colour, axis = "y") {
+  return {
+    label,
+    data: [],
+    borderColor: colour,
+    backgroundColor: colour,
+    borderWidth: 2.2,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    tension: 0.3,
+    fill: false,
+    yAxisID: axis
+  };
+}
 
 function createCharts() {
-/* =========================================================
-   CREATE CHARTS
-========================================================= */
+  Chart.defaults.color = "#bfd0e3";
+  Chart.defaults.font.family = "Inter,system-ui,sans-serif";
 
-function createCharts() {
-Chart.defaults.color =
-"#bfd0e3";
+  charts.temperature = new Chart($("temperatureChart"), {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        line("Temperature °C", "#ff8d8d"),
+        line("Dew point °C", "#6ef1cb")
+      ]
+    },
+    options: {
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      scales: scales("°C"),
+      plugins: { legend: { position: "bottom" } }
+    }
+  });
 
-Chart.defaults.font.family =
-"Inter,system-ui,sans-serif";
+  charts.wind = new Chart($("windChart"), {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        line("Wind km/h", "#74ddff"),
+        line("Gust km/h", "#ffad66")
+      ]
+    },
+    options: {
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      scales: scales("km/h"),
+      plugins: { legend: { position: "bottom" } }
+    }
+  });
 
+  charts.pressure = new Chart($("pressureChart"), {
+    type: "line",
+    data: { labels: [], datasets: [line("Pressure hPa", "#b594ff")] },
+    options: {
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      scales: scales("hPa"),
+      plugins: { legend: { display: false } }
+    }
+  });
 
-  /* Temperature */
+  charts.rain = new Chart($("rainChart"), {
+    type: "bar",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Rainfall mm",
+        data: [],
+        backgroundColor: "#7ca9ff",
+        borderRadius: 8
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      scales: scales("mm"),
+      plugins: { legend: { display: false } }
+    }
+  });
 
-charts.temperature =
-new Chart(
-$("temperatureChart"),
-{
-
-type:
-"line",
-
-data: {
-
-labels:
-[],
-
-datasets: [
-
-line(
-"Temperature °C",
-"#ff8d8d"
-@@ -2306,12 +1890,10 @@ function createCharts() {
-},
-
-options: {
-
-maintainAspectRatio:
-false,
-
-interaction: {
-
-mode:
-"index",
-
-@@ -2320,14 +1902,10 @@ function createCharts() {
-},
-
-scales:
-            scales(
-              "°C"
-            ),
-            scales("°C"),
-
-plugins: {
-
-legend: {
-
-position:
-"bottom"
+  charts.solar = new Chart($("solarChart"), {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        line("Solar W/m²", "#ffd77a", "y"),
+        line("UV index", "#b594ff", "y1")
+      ]
+    },
+    options: {
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      scales: {
+        x: {
+          grid: { color: "transparent" },
+          ticks: { color: "#a8bfd4", maxTicksLimit: 8 }
+        },
+        y: {
+          position: "left",
+          beginAtZero: true,
+          grid: { color: "rgba(163,209,255,.10)" },
+          ticks: { color: "#a8bfd4" },
+          title: { display: true, text: "W/m²", color: "#a8bfd4" }
+        },
+        y1: {
+          position: "right",
+          beginAtZero: true,
+          grid: { drawOnChartArea: false },
+          ticks: { color: "#a8bfd4" },
+          title: { display: true, text: "UV", color: "#a8bfd4" }
+        }
+      },
+      plugins: { legend: { position: "bottom" } }
+    }
+  });
 }
-@@ -2337,23 +1915,18 @@ function createCharts() {
-);
-
-
-  /* Wind */
-
-charts.wind =
-new Chart(
-$("windChart"),
-{
-
-type:
-"line",
-
-data: {
-
-labels:
-[],
-
-datasets: [
-
-line(
-"Wind km/h",
-"#74ddff"
-@@ -2367,12 +1940,10 @@ function createCharts() {
-},
-
-options: {
-
-maintainAspectRatio:
-false,
-
-interaction: {
-
-mode:
-"index",
-
-@@ -2381,14 +1952,10 @@ function createCharts() {
-},
-
-scales:
-            scales(
-              "km/h"
-            ),
-            scales("km/h"),
-
-plugins: {
-
-legend: {
-
-position:
-"bottom"
-}
-@@ -2398,23 +1965,18 @@ function createCharts() {
-);
-
-
-  /* Pressure */
-
-charts.pressure =
-new Chart(
-$("pressureChart"),
-{
-
-type:
-"line",
-
-data: {
-
-labels:
-[],
-
-datasets: [
-
-line(
-"Pressure hPa",
-"#b594ff"
-@@ -2423,12 +1985,10 @@ function createCharts() {
-},
-
-options: {
-
-maintainAspectRatio:
-false,
-
-interaction: {
-
-mode:
-"index",
-
-@@ -2437,14 +1997,10 @@ function createCharts() {
-},
-
-scales:
-            scales(
-              "hPa"
-            ),
-            scales("hPa"),
-
-plugins: {
-
-legend: {
-
-display:
-false
-}
-@@ -2454,23 +2010,18 @@ function createCharts() {
-);
-
-
-  /* Rain */
-
-charts.rain =
-new Chart(
-$("rainChart"),
-{
-
-type:
-"bar",
-
-data: {
-
-labels:
-[],
-
-datasets: [
-
-{
-label:
-"Rainfall mm",
-@@ -2488,19 +2039,14 @@ function createCharts() {
-},
-
-options: {
-
-maintainAspectRatio:
-false,
-
-scales:
-            scales(
-              "mm"
-            ),
-            scales("mm"),
-
-plugins: {
-
-legend: {
-
-display:
-false
-}
-@@ -2510,23 +2056,18 @@ function createCharts() {
-);
-
-
-  /* Solar */
-
-charts.solar =
-new Chart(
-$("solarChart"),
-{
-
-type:
-"line",
-
-data: {
-
-labels:
-[],
-
-datasets: [
-
-line(
-"Solar W/m²",
-"#ffd77a",
-@@ -2542,12 +2083,10 @@ function createCharts() {
-},
-
-options: {
-
-maintainAspectRatio:
-false,
-
-interaction: {
-
-mode:
-"index",
-
-@@ -2556,16 +2095,13 @@ function createCharts() {
-},
-
-scales: {
-
-x: {
-
-grid: {
-color:
-"transparent"
-},
-
-ticks: {
-
-color:
-"#a8bfd4",
-
-@@ -2575,27 +2111,23 @@ function createCharts() {
-},
-
-y: {
-
-position:
-"left",
-
-beginAtZero:
-true,
-
-grid: {
-
-color:
-"rgba(163,209,255,.10)"
-},
-
-ticks: {
-
-color:
-"#a8bfd4"
-},
-
-title: {
-
-display:
-true,
-
-@@ -2608,27 +2140,23 @@ function createCharts() {
-},
-
-y1: {
-
-position:
-"right",
-
-beginAtZero:
-true,
-
-grid: {
-
-drawOnChartArea:
-false
-},
-
-ticks: {
-
-color:
-"#a8bfd4"
-},
-
-title: {
-
-display:
-true,
-
-@@ -2642,9 +2170,7 @@ function createCharts() {
-},
-
-plugins: {
-
-legend: {
-
-position:
-"bottom"
-}
-@@ -2655,8 +2181,11 @@ function createCharts() {
-}
-
 
 function updateCharts() {
-/* =========================================================
-   UPDATE CHARTS
-========================================================= */
+  const rows = history24.filter(reading => readingTime(reading));
+  const labels = rows.map(reading =>
+    new Date(readingTime(reading)).toLocaleTimeString("en-IE", {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  );
 
-function updateCharts() {
-const rows =
-history24.filter(
-reading =>
-@@ -2669,9 +2198,7 @@ function updateCharts() {
-rows.map(
-reading =>
-new Date(
-          readingTime(
-            reading
-          )
-          readingTime(reading)
-).toLocaleTimeString(
-"en-IE",
-{
-@@ -2685,8 +2212,6 @@ function updateCharts() {
-);
+  charts.temperature.data.labels = labels;
+  charts.temperature.data.datasets[0].data = rows.map(row => row.temperature_c);
+  charts.temperature.data.datasets[1].data = rows.map(row => row.dew_point_c);
+  charts.temperature.update();
 
+  charts.wind.data.labels = labels;
+  charts.wind.data.datasets[0].data = rows.map(row => row.wind_speed_kmh);
+  charts.wind.data.datasets[1].data = rows.map(row => row.wind_gust_kmh);
+  charts.wind.update();
 
-  /* Temperature */
+  charts.pressure.data.labels = labels;
+  charts.pressure.data.datasets[0].data = rows.map(row => row.pressure_hpa);
+  charts.pressure.update();
 
-charts.temperature
-.data
-.labels =
-@@ -2714,8 +2239,6 @@ function updateCharts() {
-.update();
+  charts.solar.data.labels = labels;
+  charts.solar.data.datasets[0].data = rows.map(row => row.solar_w_m2);
+  charts.solar.data.datasets[1].data = rows.map(row => row.uv_index);
+  charts.solar.update();
 
-
-  /* Wind */
-
-charts.wind
-.data
-.labels =
-@@ -2743,8 +2266,6 @@ function updateCharts() {
-.update();
-
-
-  /* Pressure */
-
-charts.pressure
-.data
-.labels =
-@@ -2763,8 +2284,6 @@ function updateCharts() {
-.update();
-
-
-  /* Solar */
-
-charts.solar
-.data
-.labels =
-@@ -2792,8 +2311,6 @@ function updateCharts() {
-.update();
-
-
-  /* Rain */
-
-const rainfall =
-dailyRainTotals();
-
-@@ -2827,12 +2344,11 @@ function updateCharts() {
+  const rainfall = dailyRainTotals();
+  charts.rain.data.labels = rainfall.map(day =>
+    new Date(day.time).toLocaleDateString("en-IE", { weekday: "short" })
+  );
+  charts.rain.data.datasets[0].data = rainfall.map(day => day.rain);
+  charts.rain.update();
 }
-
-
-/* ---------------------------------------------------------
-   Fetch JSON
---------------------------------------------------------- */
-/* =========================================================
-   JSON FETCH
-========================================================= */
 
 async function getJSON(url) {
-
-const response =
-await fetch(
-url,
-@@ -2842,10 +2358,7 @@ async function getJSON(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+  if (data?.error) throw new Error(data.error);
+  return data;
 }
-);
-
-  if (
-    !response.ok
-  ) {
-
-  if (!response.ok) {
-throw new Error(
-`HTTP ${response.status}`
-);
-@@ -2854,10 +2367,7 @@ async function getJSON(url) {
-const data =
-await response.json();
-
-  if (
-    data?.error
-  ) {
-
-  if (data?.error) {
-throw new Error(
-data.error
-);
-@@ -2867,14 +2377,12 @@ async function getJSON(url) {
-}
-
-
-/* ---------------------------------------------------------
-   Met Éireann forecast
---------------------------------------------------------- */
-/* =========================================================
-   FORECAST
-========================================================= */
 
 async function loadForecast() {
-
-try {
-
-const forecast =
-await getJSON(
-FORECAST_URL
-@@ -2899,7 +2407,6 @@ async function loadForecast() {
-);
-
-} catch (error) {
-
-console.warn(
-"Met Éireann forecast:",
-error
-@@ -2913,14 +2420,12 @@ async function loadForecast() {
+  try {
+    const forecast = await getJSON(FORECAST_URL);
+    set("forecastToday", forecast.today || "Forecast unavailable.");
+    set("forecastTonight", forecast.tonight || "--");
+    set("forecastTomorrow", forecast.tomorrow || "--");
+  } catch (error) {
+    console.warn("Met Éireann forecast:", error);
+    set("forecastToday", "Official forecast temporarily unavailable.");
+  }
 }
-
-
-/* ---------------------------------------------------------
-   Met Éireann warnings
---------------------------------------------------------- */
-/* =========================================================
-   WARNINGS
-========================================================= */
 
 async function loadWarnings() {
+  try {
+    const warnings = await getJSON(WARNINGS_URL);
+    const list = Array.isArray(warnings.warnings) ? warnings.warnings : [];
+    const banner = $("warningBanner");
 
-try {
+    if (!banner || !list.length) {
+      if (banner) banner.hidden = true;
+      return;
+    }
 
-const warnings =
-await getJSON(
-WARNINGS_URL
-@@ -2940,7 +2445,6 @@ async function loadWarnings() {
-!banner ||
-!list.length
-) {
+    const warning = list[0];
+    banner.hidden = false;
+    banner.classList.remove("level-orange", "level-red");
+    if (String(warning.level).toLowerCase() === "orange") banner.classList.add("level-orange");
+    if (String(warning.level).toLowerCase() === "red") banner.classList.add("level-red");
 
-if (banner) {
-banner.hidden =
-true;
-@@ -2966,7 +2470,6 @@ async function loadWarnings() {
-).toLowerCase() ===
-"orange"
-) {
+    set(
+      "warningTitle",
+      `${String(warning.level || "Weather").toUpperCase()} warning for Wexford${warning.type ? ` · ${warning.type}` : ""}`
+    );
 
-banner.classList.add(
-"level-orange"
-);
-@@ -2978,7 +2481,6 @@ async function loadWarnings() {
-).toLowerCase() ===
-"red"
-) {
+    const onset = warning.onset ? new Date(warning.onset) : null;
+    const expires = warning.expires ? new Date(warning.expires) : null;
+    const timing =
+      onset && expires
+        ? `Valid ${onset.toLocaleString("en-IE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} to ${expires.toLocaleString("en-IE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}. `
+        : "";
 
-banner.classList.add(
-"level-red"
-);
-@@ -3060,7 +2562,6 @@ async function loadWarnings() {
-);
-
-} catch (error) {
-
-console.warn(
-"Met Éireann warnings:",
-error
-@@ -3069,19 +2570,12 @@ async function loadWarnings() {
+    set("warningText", `${timing}${warning.description || warning.headline || ""}`);
+  } catch (error) {
+    console.warn("Met Éireann warnings:", error);
+  }
 }
-
-
-/* ---------------------------------------------------------
-   Load dashboard
---------------------------------------------------------- */
-/* =========================================================
-   LOAD EVERYTHING
-========================================================= */
 
 async function loadEverything() {
-
-try {
-
+  try {
     /*
-     * Current conditions and 24-hour history
-     * are the essential feeds.
+     * Current conditions and 24h history are the essential feeds.
+     * The longer-range history and new stats endpoint are optional so
+     * the main dashboard still works while the upgraded Worker is being deployed.
      */
+    const [current, history24Response] = await Promise.all([
+      getJSON(CURRENT_URL),
+      getJSON(HISTORY_24_URL)
+    ]);
 
-const [
-current,
-history24Response
-@@ -3098,6 +2592,7 @@ async function loadEverything() {
-]
-);
+    history24 = Array.isArray(history24Response.readings)
+      ? history24Response.readings
+      : [];
 
+    try {
+      const history7Response = await getJSON(HISTORY_7D_URL);
+      history7d = Array.isArray(history7Response.readings)
+        ? history7Response.readings
+        : [];
+    } catch (error) {
+      console.warn("7-day history unavailable:", error);
+      history7d = [];
+    }
 
-history24 =
-Array.isArray(
-history24Response.readings
-@@ -3106,12 +2601,7 @@ async function loadEverything() {
-: [];
+    try {
+      stats = await getJSON(STATS_URL);
+    } catch (error) {
+      console.warn("Extended station stats unavailable:", error);
+      stats = null;
+    }
 
-
-    /*
-     * 7-day history is optional.
-     */
-
-try {
-
-const history7Response =
-await getJSON(
-HISTORY_7D_URL
-@@ -3125,7 +2615,6 @@ async function loadEverything() {
-: [];
-
-} catch (error) {
-
-console.warn(
-"7-day history unavailable:",
-error
-@@ -3136,19 +2625,13 @@ async function loadEverything() {
+    updateDashboard(current);
+    updateCharts();
+  } catch (error) {
+    console.error("Parknacross Weather:", error);
+    set("cloudStatus", "Error");
+    $("cloudStatus")?.classList.remove("ok", "warn");
+    $("cloudStatus")?.classList.add("bad");
+    set("conditionsTag", "Feed unavailable");
+    set("lastUpdated", "Unable to load live weather");
+    $("livePill")?.classList.add("offline");
+    set("liveText", "STATION DATA UNAVAILABLE");
+  }
 }
-
-
-    /*
-     * Extended stats are optional.
-     */
-
-try {
-
-stats =
-await getJSON(
-STATS_URL
-);
-
-} catch (error) {
-
-console.warn(
-"Extended station stats unavailable:",
-error
-@@ -3166,7 +2649,6 @@ async function loadEverything() {
-updateCharts();
-
-} catch (error) {
-
-console.error(
-"Parknacross Weather:",
-error
-@@ -3186,9 +2668,7 @@ async function loadEverything() {
-
-$("cloudStatus")
-?.classList
-      .add(
-        "bad"
-      );
-      .add("bad");
-
-set(
-"conditionsTag",
-@@ -3214,14 +2694,12 @@ async function loadEverything() {
-}
-
-
-/* ---------------------------------------------------------
-   Refresh current reading
---------------------------------------------------------- */
-/* =========================================================
-   CURRENT REFRESH
-========================================================= */
 
 async function refreshCurrent() {
-
-try {
-
-const current =
-await getJSON(
-CURRENT_URL
-@@ -3232,7 +2710,6 @@ async function refreshCurrent() {
-);
-
-} catch (error) {
-
-console.error(
-"Current refresh:",
-error
-@@ -3241,17 +2718,15 @@ async function refreshCurrent() {
+  try {
+    const current = await getJSON(CURRENT_URL);
+    updateDashboard(current);
+  } catch (error) {
+    console.error("Current refresh:", error);
+  }
 }
-
-
-/* ---------------------------------------------------------
-/* =========================================================
-  PWA
---------------------------------------------------------- */
-========================================================= */
 
 function setupPWA() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js").catch(error =>
+      console.warn("Service worker:", error)
+    );
+  }
 
-if (
-"serviceWorker" in
-navigator
-) {
+  window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    const button = $("installButton");
+    if (button) button.hidden = false;
+  });
 
-navigator
-.serviceWorker
-.register(
-@@ -3266,10 +2741,10 @@ function setupPWA() {
-);
+  $("installButton")?.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    $("installButton").hidden = true;
+  });
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  createCharts();
+  updateSunInfo();
+  loadEverything();
+  loadForecast();
+  loadWarnings();
+  setupPWA();
 
-window.addEventListener(
-"beforeinstallprompt",
-event => {
-
-event.preventDefault();
-
-deferredInstallPrompt =
-@@ -3279,18 +2754,17 @@ function setupPWA() {
-$("installButton");
-
-if (button) {
-
-button.hidden =
-false;
-}
-}
-);
-
-
-$("installButton")
-?.addEventListener(
-"click",
-async () => {
-
-if (
-!deferredInstallPrompt
-) {
-@@ -3306,21 +2780,21 @@ function setupPWA() {
-deferredInstallPrompt =
-null;
-
-        $("installButton").hidden =
-          true;
-        $("installButton")
-          .hidden =
-            true;
-}
-);
-}
-
-
-/* ---------------------------------------------------------
-   Start
---------------------------------------------------------- */
-/* =========================================================
-   START
-========================================================= */
-
-document.addEventListener(
-"DOMContentLoaded",
-() => {
-
-createCharts();
-
-updateSunInfo();
-@@ -3334,22 +2808,12 @@ document.addEventListener(
-setupPWA();
-
-
-    /*
-     * Current conditions:
-     * every 60 seconds.
-     */
-
-setInterval(
-refreshCurrent,
-60 * 1000
-);
-
-
-    /*
-     * Full charts/stats:
-     * every 5 minutes.
-     */
-
-setInterval(
-loadEverything,
-5 *
-@@ -3358,22 +2822,12 @@ document.addEventListener(
-);
-
-
-    /*
-     * Sunrise / daylight:
-     * every minute.
-     */
-
-setInterval(
-updateSunInfo,
-60 * 1000
-);
-
-
-    /*
-     * Warnings:
-     * every 5 minutes.
-     */
-
-setInterval(
-loadWarnings,
-5 *
-@@ -3382,11 +2836,6 @@ document.addEventListener(
-);
-
-
-    /*
-     * Forecast:
-     * every 30 minutes.
-     */
-
-setInterval(
-loadForecast,
-30 *
+  setInterval(refreshCurrent, 60 * 1000);
+  setInterval(loadEverything, 5 * 60 * 1000);
+  setInterval(updateSunInfo, 60 * 1000);
+  setInterval(loadWarnings, 5 * 60 * 1000);
+  setInterval(loadForecast, 30 * 60 * 1000);
+});
