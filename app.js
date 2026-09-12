@@ -26,8 +26,10 @@ const n = (value, digits = 1) =>
   usable(value) ? Number(value).toFixed(digits) : "--";
 
 function batteryStatus(voltage) {
-  if (!usable(voltage)) return "--";
+  if (!usable(voltage)) return "Unavailable";
+
   const v = Number(voltage);
+
   if (v >= 3.0) return `Normal · ${v.toFixed(2)} V`;
   if (v >= 2.7) return `Check · ${v.toFixed(2)} V`;
   return `Low · ${v.toFixed(2)} V`;
@@ -38,6 +40,7 @@ let history7d = [];
 let stats = null;
 let charts = {};
 let deferredInstallPrompt = null;
+let latestObservationTime = null;
 
 /* 0.1 mm on commissioning day was a test, not real rainfall. */
 const RAIN_CORRECTIONS_MM = {
@@ -116,6 +119,38 @@ function timeLabel(reading) {
     hour: "2-digit",
     minute: "2-digit"
   });
+}
+
+function relativeObservationAge(time) {
+  if (!Number.isFinite(Number(time))) return "Connecting…";
+
+  const seconds = Math.max(
+    0,
+    Math.floor((Date.now() - Number(time)) / 1000)
+  );
+
+  if (seconds < 15) return "Just now";
+  if (seconds < 60) return `${seconds}s ago`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours < 24) {
+    return remainingMinutes
+      ? `${hours}h ${remainingMinutes}m ago`
+      : `${hours}h ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+function updateRelativeObservation() {
+  if (!latestObservationTime) return;
+  set("lastUpdatedRelative", relativeObservationAge(latestObservationTime));
 }
 
 function dateLabel(value) {
@@ -400,7 +435,11 @@ function updateDashboard(current) {
   const condition = conditionInfo(current, isNight);
 
   if (currentTime) {
+    latestObservationTime = currentTime;
     const date = new Date(currentTime);
+
+    set("lastUpdatedRelative", relativeObservationAge(currentTime));
+
     set(
       "lastUpdated",
       `Updated ${date.toLocaleTimeString("en-IE", {
@@ -411,6 +450,9 @@ function updateDashboard(current) {
         month: "short"
       })}`
     );
+  } else {
+    set("lastUpdatedRelative", "Unavailable");
+    set("lastUpdated", "No observation timestamp");
   }
 
   set("heroTemp", n(current.temperature_c));
@@ -467,6 +509,16 @@ function updateDashboard(current) {
   set("solarVal", n(current.solar_w_m2, 0));
   set("uvVal", n(current.uv_index, 0));
   set("battery", batteryStatus(current.battery_v));
+  const batteryElement = $("battery");
+  if (batteryElement) {
+    batteryElement.classList.remove("ok", "warn", "bad");
+    if (usable(current.battery_v)) {
+      const batteryV = Number(current.battery_v);
+      batteryElement.classList.add(
+        batteryV >= 3.0 ? "ok" : batteryV >= 2.7 ? "warn" : "bad"
+      );
+    }
+  }
 
   const threeHoursAgo = closestReadingTo(Date.now() - 3 * 60 * 60 * 1000);
   updateTrend("temp3h", current.temperature_c, threeHoursAgo?.temperature_c, "°C");
@@ -797,6 +849,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadWarnings();
   setupPWA();
 
+  setInterval(updateRelativeObservation, 15 * 1000);
   setInterval(refreshCurrent, 60 * 1000);
   setInterval(loadEverything, 5 * 60 * 1000);
   setInterval(updateSunInfo, 60 * 1000);
