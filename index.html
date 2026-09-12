@@ -1,1573 +1,350 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#06111f">
+  <meta name="description" content="Parknacross Weather — a personal hyperlocal weather station in Ardamine, north County Wexford.">
+  <meta property="og:title" content="Parknacross Weather">
+  <meta property="og:description" content="Live hyperlocal weather from a personal Ecowitt station in Parknacross, Ardamine, Co. Wexford.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://parknacrossweather.ie/">
+  <meta property="og:image" content="https://parknacrossweather.ie/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  >
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
 
-  <meta
-    name="theme-color"
-    content="#06111f"
-  >
-
-  <meta
-    name="description"
-    content="Parknacross Weather — a personal hyperlocal weather station in Ardamine, north County Wexford."
-  >
-
-  <meta
-    property="og:title"
-    content="Parknacross Weather"
-  >
-
-  <meta
-    property="og:description"
-    content="Live hyperlocal weather from a personal Ecowitt station in Parknacross, Ardamine, Co. Wexford."
-  >
-
-  <meta
-    property="og:type"
-    content="website"
-  >
-
-  <meta
-    property="og:url"
-    content="https://parknacrossweather.ie/"
-  >
-
-  <meta
-    property="og:image"
-    content="https://parknacrossweather.ie/og-image.png"
-  >
-
-  <meta
-    name="twitter:card"
-    content="summary_large_image"
-  >
-
-  <link
-    rel="manifest"
-    href="manifest.webmanifest"
-  >
-
-  <link
-    rel="icon"
-    href="favicon.svg"
-    type="image/svg+xml"
-  >
-
-  <link
-    rel="apple-touch-icon"
-    href="apple-touch-icon.png"
-  >
-
-  <link
-    rel="stylesheet"
-    href="styles.css?v=20260912-4"
-  >
-
-  <title>
-    Parknacross Weather
-  </title>
+  <title>Parknacross Weather</title>
 </head>
 
-
 <body class="weather-neutral">
-
-
-<div
-  id="warningBanner"
-  class="warning-banner"
-  hidden
->
-
+<div id="warningBanner" class="warning-banner" hidden>
   <div class="warning-inner">
-
-    <span class="warning-icon">
-      ⚠️
-    </span>
-
+    <span class="warning-icon">⚠️</span>
     <div>
-
-      <strong id="warningTitle">
-        Weather warning for Wexford
-      </strong>
-
+      <strong id="warningTitle">Weather warning for Wexford</strong>
       <p id="warningText"></p>
-
     </div>
-
-    <a
-      href="https://www.met.ie/warnings"
-      target="_blank"
-      rel="noopener"
-    >
-      Met Éireann
-    </a>
-
+    <a href="https://www.met.ie/warnings" target="_blank" rel="noopener">Met Éireann</a>
   </div>
-
 </div>
-
 
 <div class="shell">
-
-
-<header class="topbar">
-
-  <a
-    class="brand"
-    href="index.html"
-    aria-label="Parknacross Weather home"
-  >
-
-    <div class="brand-badge">
-      🌤️
-    </div>
-
-    <div>
-
-      <h1>
-        PARKNACROSS WEATHER
-      </h1>
-
-      <p>
-        Ardamine, Co. Wexford · Personal weather station
-      </p>
-
-    </div>
-
-  </a>
-
-
-  <nav
-    class="nav"
-    aria-label="Main navigation"
-  >
-
-    <a
-      class="active"
-      href="#dashboard"
-    >
-      Dashboard
-    </a>
-
-    <a href="#graphs">
-      Graphs
-    </a>
-
-    <a href="station.html">
-      Station
-    </a>
-
-    <a href="#records">
-      Records
-    </a>
-
-    <a href="history.html">
-      History
-    </a>
-
-  </nav>
-
-</header>
-
-
-<main id="dashboard">
-
-
-<section class="glass intro-card">
-
-  <div class="intro-icon">
-    🌦️
-  </div>
-
-  <div>
-
-    <h2>
-      Welcome to Parknacross Weather
-    </h2>
-
-    <p>
-      This is a personal weather station based in Parknacross,
-      near Ardamine in north County Wexford.
-      It provides live, hyperlocal readings from an Ecowitt WS90
-      and GW3001, including temperature, humidity, wind,
-      rainfall, barometric pressure, solar radiation and UV.
-    </p>
-
-    <p>
-      The aim is to give an accurate picture of the
-      weather right here in Parknacross.
-      This is a personal project rather than an official
-      forecasting service, but it provides a useful real-time
-      view of local conditions and recent weather trends.
-    </p>
-
-  </div>
-
-</section>
-
-
-<section class="hero">
-
-
-  <article class="glass hero-main-card">
-
-    <div class="hero-top">
-
-      <div
-        id="livePill"
-        class="live-pill"
-      >
-
-        <span class="live-dot"></span>
-
-        <span id="liveText">
-          LIVE FROM PARKNACROSS
-        </span>
-
-      </div>
-
-
-      <div
-        class="last-updated"
-        id="lastUpdated"
-      >
-        Connecting…
-      </div>
-
-    </div>
-
-
-    <div class="hero-core">
-
-
-      <div
-        class="weather-orb"
-        id="weatherIcon"
-      >
-        ⛅
-      </div>
-
-
-      <div class="hero-reading">
-
-        <div class="eyebrow">
-          Current conditions
-        </div>
-
-
-        <div class="temp-row">
-
-          <span
-            class="temp"
-            id="heroTemp"
-          >
-            --
-          </span>
-
-          <span class="temp-unit">
-            °C
-          </span>
-
-        </div>
-
-
-        <div class="summary-line">
-
-          Feels like
-          <strong id="heroFeels">
-            --
-          </strong>
-
-          · Humidity
-          <strong id="heroHumidity">
-            --
-          </strong>
-
-          · Dew point
-          <strong id="heroDew">
-            --
-          </strong>
-
-        </div>
-
-
-        <div
-          class="story"
-          id="weatherStory"
-        >
-          Loading your Parknacross station…
-        </div>
-
-      </div>
-
-
-      <div class="hero-side">
-
-        <div class="hero-stat">
-
-          <span>
-            Wind
-          </span>
-
-          <strong id="heroWind">
-            --
-          </strong>
-
-        </div>
-
-
-        <div class="hero-stat">
-
-          <span>
-            Rain today
-          </span>
-
-          <strong id="heroRain">
-            --
-          </strong>
-
-        </div>
-
-
-        <div class="hero-stat">
-
-          <span>
-            Pressure
-          </span>
-
-          <strong id="heroPressure">
-            --
-          </strong>
-
-        </div>
-
-
-        <div class="hero-stat">
-
-          <span>
-            Trend
-          </span>
-
-          <strong id="heroTrend">
-            --
-          </strong>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </article>
-
-
-  <aside class="glass vibe-card">
-
-    <div class="vibe-head">
-
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Parknacross Weather home">
+      <div class="brand-badge">🌤️</div>
       <div>
+        <h1>PARKNACROSS WEATHER</h1>
+        <p>Ardamine, Co. Wexford · Personal weather station</p>
+      </div>
+    </a>
 
-        <h2>
-          Today at a glance
-        </h2>
+    <nav class="nav" aria-label="Main navigation">
+      <a class="active" href="#dashboard">Dashboard</a>
+      <a href="#graphs">Graphs</a>
+      <a href="station.html">Station</a>
+      <a href="#records">Records</a>
+      <a href="history.html">History</a>
+    </nav>
+  </header>
 
+  <main id="dashboard">
+    <section class="glass intro-card">
+      <div class="intro-icon">🌦️</div>
+      <div>
+        <h2>Welcome to Parknacross Weather</h2>
         <p>
-          Built from your station readings
+          This is a personal weather station based in Parknacross, near Ardamine in north County Wexford.
+          It provides live, hyperlocal readings from an Ecowitt WS90 and GW3001, including temperature,
+          humidity, wind, rainfall, barometric pressure, solar radiation and UV.
         </p>
+        <p>
+          The aim is simple: to give an accurate picture of the weather right here in Parknacross.
+          This is a personal project rather than an official forecasting service, but it provides a useful
+          real-time view of local conditions and recent weather trends.
+        </p>
+      </div>
+    </section>
 
+    <section class="hero">
+      <article class="glass hero-main-card">
+        <div class="hero-top">
+          <div id="livePill" class="live-pill">
+            <span class="live-dot"></span>
+            <span id="liveText">LIVE FROM PARKNACROSS</span>
+          </div>
+          <div class="last-updated" id="lastUpdated">Connecting…</div>
+        </div>
+
+        <div class="hero-core">
+          <div class="weather-orb" id="weatherIcon">⛅</div>
+
+          <div class="hero-reading">
+            <div class="eyebrow">Current conditions</div>
+            <div class="temp-row">
+              <span class="temp" id="heroTemp">--</span>
+              <span class="temp-unit">°C</span>
+            </div>
+            <div class="summary-line">
+              Feels like <strong id="heroFeels">--</strong>
+              · Humidity <strong id="heroHumidity">--</strong>
+              · Dew point <strong id="heroDew">--</strong>
+            </div>
+            <div class="story" id="weatherStory">Loading your Parknacross station…</div>
+          </div>
+
+          <div class="hero-side">
+            <div class="hero-stat"><span>Wind</span><strong id="heroWind">--</strong></div>
+            <div class="hero-stat"><span>Rain today</span><strong id="heroRain">--</strong></div>
+            <div class="hero-stat"><span>Pressure</span><strong id="heroPressure">--</strong></div>
+            <div class="hero-stat"><span>Trend</span><strong id="heroTrend">--</strong></div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="glass vibe-card">
+        <div class="vibe-head">
+          <div>
+            <h2>Today at a glance</h2>
+            <p>Built from your station readings</p>
+          </div>
+          <div class="tag" id="conditionsTag">Loading…</div>
+        </div>
+
+        <div class="vibe-grid">
+          <div class="vibe-item">
+            <span>Temperature range</span>
+            <strong><span id="todayLow">--</span>°C → <span id="todayHigh">--</span>°C</strong>
+          </div>
+          <div class="vibe-item">
+            <span>Peak gust</span>
+            <strong><span id="peakGust">--</span> km/h</strong>
+          </div>
+          <div class="vibe-item">
+            <span>Rain today</span>
+            <strong><span id="summaryRain">--</span> mm</strong>
+          </div>
+          <div class="vibe-item">
+            <span>Solar peak</span>
+            <strong><span id="solarPeak">--</span> W/m²</strong>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="status-strip">
+      <div class="status-box">
+        <div class="ico">🌅</div>
+        <div><span>Sunrise</span><strong id="sunrise">--</strong></div>
+      </div>
+      <div class="status-box">
+        <div class="ico">🌇</div>
+        <div><span>Sunset</span><strong id="sunset">--</strong></div>
+      </div>
+      <div class="status-box">
+        <div class="ico">☀️</div>
+        <div><span>Daylight remaining</span><strong id="daylightRemaining">--</strong></div>
+      </div>
+      <div class="status-box">
+        <div class="ico">🔋</div>
+        <div><span>WS90 battery</span><strong id="battery">--</strong></div>
+      </div>
+    </section>
+
+    <section class="trend-strip">
+      <div class="trend-card glass">
+        <span>Temperature · 3h</span>
+        <strong id="temp3h">--</strong>
+      </div>
+      <div class="trend-card glass">
+        <span>Pressure · 3h</span>
+        <strong id="pressure3h">--</strong>
+      </div>
+      <div class="trend-card glass">
+        <span>Cloud feed</span>
+        <strong id="cloudStatus">Connecting</strong>
+      </div>
+    </section>
+
+    <section class="metric-grid">
+      <article class="glass metric">
+        <div class="metric-label">🌡️ Outdoor temperature</div>
+        <div class="metric-value"><span class="v" id="tempVal">--</span><span class="u">°C</span></div>
+        <div class="metric-sub">Feels like <strong id="feelsVal">--</strong><br>Today <span id="tempMin">--</span>° → <span id="tempMax">--</span>°</div>
+      </article>
+
+      <article class="glass metric">
+        <div class="metric-label">💧 Humidity</div>
+        <div class="metric-value"><span class="v" id="humVal">--</span><span class="u">%</span></div>
+        <div class="metric-sub">Dew point <strong id="dewVal">--</strong><br>Comfort: <span id="comfortVal">--</span></div>
+      </article>
+
+      <article class="glass metric">
+        <div class="metric-label">💨 Wind</div>
+        <div class="metric-value"><span class="v" id="windVal">--</span><span class="u">km/h</span></div>
+        <div class="metric-sub">Gust <strong id="gustVal">--</strong><br><span id="dirVal">--</span></div>
+      </article>
+
+      <article class="glass metric">
+        <div class="metric-label">🌧️ Rain today</div>
+        <div class="metric-value"><span class="v" id="rainVal">--</span><span class="u">mm</span></div>
+        <div class="metric-sub">Current rate <strong id="rainRateVal">--</strong></div>
+      </article>
+
+      <article class="glass metric">
+        <div class="metric-label">🧭 Pressure</div>
+        <div class="metric-value"><span class="v" id="pressureVal">--</span><span class="u">hPa</span></div>
+        <div class="metric-sub"><span id="pressureTrend">--</span><br>24h change <strong id="pressureChange">--</strong></div>
+      </article>
+
+      <article class="glass metric">
+        <div class="metric-label">☀️ Solar / UV</div>
+        <div class="metric-value"><span class="v" id="solarVal">--</span><span class="u">W/m²</span></div>
+        <div class="metric-sub">UV index <strong id="uvVal">--</strong></div>
+      </article>
+    </section>
+
+    <section class="glass forecast-card" id="forecast">
+      <div class="section-head">
+        <div>
+          <h2>Met Éireann forecast</h2>
+          <p>Official Leinster forecast · separate from the Parknacross station observations</p>
+        </div>
+        <a class="mini-link" href="https://www.met.ie/forecasts/leinster" target="_blank" rel="noopener">met.ie ↗</a>
       </div>
 
-
-      <div
-        class="tag"
-        id="conditionsTag"
-      >
-        Loading…
+      <div class="forecast-grid">
+        <article>
+          <span>Today</span>
+          <p id="forecastToday">Loading official forecast…</p>
+        </article>
+        <article>
+          <span>Tonight</span>
+          <p id="forecastTonight">--</p>
+        </article>
+        <article>
+          <span>Tomorrow</span>
+          <p id="forecastTomorrow">--</p>
+        </article>
       </div>
+      <div class="forecast-credit">Forecast text: Met Éireann open data.</div>
+    </section>
 
-    </div>
+    <section class="climate-grid">
+      <article class="glass climate-card">
+        <span>Rain this month</span>
+        <strong id="monthRain">--</strong>
+        <small id="monthRainDays">--</small>
+      </article>
+      <article class="glass climate-card">
+        <span>Rain this year</span>
+        <strong id="yearRain">--</strong>
+        <small>Since station records began</small>
+      </article>
+      <article class="glass climate-card">
+        <span>Station running since</span>
+        <strong id="stationSince">--</strong>
+        <small>First saved observation</small>
+      </article>
+      <article class="glass climate-card">
+        <span>All-time wettest day</span>
+        <strong id="wettestDay">--</strong>
+        <small id="wettestDate">--</small>
+      </article>
+    </section>
 
-
-    <div class="vibe-grid">
-
-
-      <div class="vibe-item">
-
-        <span>
-          Temperature range
-        </span>
-
-        <strong>
-
-          <span id="todayLow">
-            --
-          </span>°C
-
-          →
-
-          <span id="todayHigh">
-            --
-          </span>°C
-
-        </strong>
-
+    <div class="section-head" id="graphs">
+      <div>
+        <h2>Weather trends</h2>
+        <p>Recent readings from your Parknacross station</p>
       </div>
+      <a class="tag link-tag" href="history.html">Open full history →</a>
+    </div>
 
+    <section class="chart-grid">
+      <article class="glass chart-card">
+        <div class="section-head"><div><h2>Temperature & dew point</h2><p>Last 24 hours</p></div><div class="tag">°C</div></div>
+        <div class="chart-wrap"><canvas id="temperatureChart"></canvas></div>
+      </article>
 
-      <div class="vibe-item">
+      <article class="glass chart-card">
+        <div class="section-head"><div><h2>Wind & gusts</h2><p>Last 24 hours</p></div><div class="tag">km/h</div></div>
+        <div class="chart-wrap"><canvas id="windChart"></canvas></div>
+      </article>
 
-        <span>
-          Peak gust
-        </span>
+      <article class="glass chart-card">
+        <div class="section-head"><div><h2>Barometric pressure</h2><p>Last 24 hours</p></div><div class="tag">hPa</div></div>
+        <div class="chart-wrap"><canvas id="pressureChart"></canvas></div>
+      </article>
 
-        <strong>
+      <article class="glass chart-card">
+        <div class="section-head"><div><h2>Solar radiation & UV</h2><p>Last 24 hours</p></div><div class="tag">W/m²</div></div>
+        <div class="chart-wrap"><canvas id="solarChart"></canvas></div>
+      </article>
 
-          <span id="peakGust">
-            --
-          </span>
+      <article class="glass chart-card">
+        <div class="section-head"><div><h2>Recent rainfall</h2><p>Up to 7 days</p></div><div class="tag">mm</div></div>
+        <div class="chart-wrap"><canvas id="rainChart"></canvas></div>
+      </article>
 
-          km/h
+      <article class="glass chart-card">
+        <div class="section-head"><div><h2>Wind direction</h2><p>Prevailing direction from recent readings</p></div><div class="tag">Compass</div></div>
+        <div class="wind-grid">
+          <div class="compass">
+            <span class="dir n">N</span><span class="dir e">E</span><span class="dir s">S</span><span class="dir w">W</span>
+            <div class="needle" id="needle"></div>
+            <div class="centre">Prevailing<strong id="prevailing">--</strong></div>
+          </div>
+          <div class="wind-readout">
+            <div><span>Current direction</span><strong id="currentDirection">--</strong></div>
+            <div><span>Current wind</span><strong id="currentWind">--</strong></div>
+            <div><span>Current gust</span><strong id="currentGust">--</strong></div>
+          </div>
+        </div>
+      </article>
+    </section>
 
-        </strong>
+    <section class="bottom-grid" id="records">
+      <article class="glass info-card">
+        <div class="section-head"><div><h2>Today's records</h2><p>Values and the times they occurred</p></div></div>
+        <div class="info-grid">
+          <div class="info-item"><span>High temperature</span><strong id="recordHigh">--</strong><small id="recordHighTime">--</small></div>
+          <div class="info-item"><span>Low temperature</span><strong id="recordLow">--</strong><small id="recordLowTime">--</small></div>
+          <div class="info-item"><span>Peak gust</span><strong id="recordGust">--</strong><small id="recordGustTime">--</small></div>
+          <div class="info-item"><span>Rain today</span><strong id="recordRain">--</strong><small>Corrected for the commissioning test reading</small></div>
+        </div>
+      </article>
 
+      <article class="glass info-card">
+        <div class="section-head"><div><h2>All-time station records</h2><p>Since saved observations began</p></div></div>
+        <div class="info-grid">
+          <div class="info-item"><span>Highest temperature</span><strong id="allHigh">--</strong><small id="allHighDate">--</small></div>
+          <div class="info-item"><span>Lowest temperature</span><strong id="allLow">--</strong><small id="allLowDate">--</small></div>
+          <div class="info-item"><span>Strongest gust</span><strong id="allGust">--</strong><small id="allGustDate">--</small></div>
+          <div class="info-item"><span>Highest pressure</span><strong id="allPressure">--</strong><small id="allPressureDate">--</small></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="app-cta glass">
+      <div>
+        <h2>Use Parknacross Weather like an app</h2>
+        <p>Add it to your phone's Home Screen for a cleaner full-screen weather dashboard.</p>
       </div>
-
-
-      <div class="vibe-item">
-
-        <span>
-          Rain today
-        </span>
-
-        <strong>
-
-          <span id="summaryRain">
-            --
-          </span>
-
-          mm
-
-        </strong>
-
-      </div>
-
-
-      <div class="vibe-item">
-
-        <span>
-          Solar peak
-        </span>
-
-        <strong>
-
-          <span id="solarPeak">
-            --
-          </span>
-
-          W/m²
-
-        </strong>
-
-      </div>
-
-    </div>
-
-  </aside>
-
-</section>
-
-
-<section class="status-strip">
-
-
-  <div class="status-box">
-
-    <div class="ico">
-      🌅
-    </div>
-
-    <div>
-
-      <span>
-        Sunrise
-      </span>
-
-      <strong id="sunrise">
-        --
-      </strong>
-
-    </div>
-
-  </div>
-
-
-  <div class="status-box">
-
-    <div class="ico">
-      🌇
-    </div>
-
-    <div>
-
-      <span>
-        Sunset
-      </span>
-
-      <strong id="sunset">
-        --
-      </strong>
-
-    </div>
-
-  </div>
-
-
-  <div class="status-box">
-
-    <div class="ico">
-      ☀️
-    </div>
-
-    <div>
-
-      <span>
-        Daylight remaining
-      </span>
-
-      <strong id="daylightRemaining">
-        --
-      </strong>
-
-    </div>
-
-  </div>
-
-
-  <div class="status-box">
-
-    <div class="ico">
-      🔋
-    </div>
-
-    <div>
-
-      <span>
-        WS90 battery
-      </span>
-
-      <strong id="battery">
-        --
-      </strong>
-
-    </div>
-
-  </div>
-
-</section>
-
-
-<section class="trend-strip">
-
-
-  <div class="trend-card glass">
-
-    <span>
-      Temperature · 3h
-    </span>
-
-    <strong id="temp3h">
-      --
-    </strong>
-
-  </div>
-
-
-  <div class="trend-card glass">
-
-    <span>
-      Pressure · 3h
-    </span>
-
-    <strong id="pressure3h">
-      --
-    </strong>
-
-  </div>
-
-
-  <div class="trend-card glass">
-
-    <span>
-      Cloud feed
-    </span>
-
-    <strong id="cloudStatus">
-      Connecting
-    </strong>
-
-  </div>
-
-</section>
-
-
-<section class="metric-grid">
-
-
-<article class="glass metric">
-
-  <div class="metric-label">
-    🌡️ Outdoor temperature
-  </div>
-
-  <div class="metric-value">
-
-    <span
-      class="v"
-      id="tempVal"
-    >
-      --
-    </span>
-
-    <span class="u">
-      °C
-    </span>
-
-  </div>
-
-  <div class="metric-sub">
-
-    Feels like
-
-    <strong id="feelsVal">
-      --
-    </strong>
-
-    <br>
-
-    Today
-
-    <span id="tempMin">
-      --
-    </span>°
-
-    →
-
-    <span id="tempMax">
-      --
-    </span>°
-
-  </div>
-
-</article>
-
-
-<article class="glass metric">
-
-  <div class="metric-label">
-    💧 Humidity
-  </div>
-
-  <div class="metric-value">
-
-    <span
-      class="v"
-      id="humVal"
-    >
-      --
-    </span>
-
-    <span class="u">
-      %
-    </span>
-
-  </div>
-
-  <div class="metric-sub">
-
-    Dew point
-
-    <strong id="dewVal">
-      --
-    </strong>
-
-    <br>
-
-    Comfort:
-
-    <span id="comfortVal">
-      --
-    </span>
-
-  </div>
-
-</article>
-
-
-<article class="glass metric">
-
-  <div class="metric-label">
-    💨 Wind
-  </div>
-
-  <div class="metric-value">
-
-    <span
-      class="v"
-      id="windVal"
-    >
-      --
-    </span>
-
-    <span class="u">
-      km/h
-    </span>
-
-  </div>
-
-  <div class="metric-sub">
-
-    Gust
-
-    <strong id="gustVal">
-      --
-    </strong>
-
-    <br>
-
-    <span id="dirVal">
-      --
-    </span>
-
-  </div>
-
-</article>
-
-
-<article class="glass metric">
-
-  <div class="metric-label">
-    🌧️ Rain today
-  </div>
-
-  <div class="metric-value">
-
-    <span
-      class="v"
-      id="rainVal"
-    >
-      --
-    </span>
-
-    <span class="u">
-      mm
-    </span>
-
-  </div>
-
-  <div class="metric-sub">
-
-    Current rate
-
-    <strong id="rainRateVal">
-      --
-    </strong>
-
-  </div>
-
-</article>
-
-
-<article class="glass metric">
-
-  <div class="metric-label">
-    🧭 Pressure
-  </div>
-
-  <div class="metric-value">
-
-    <span
-      class="v"
-      id="pressureVal"
-    >
-      --
-    </span>
-
-    <span class="u">
-      hPa
-    </span>
-
-  </div>
-
-  <div class="metric-sub">
-
-    <span id="pressureTrend">
-      --
-    </span>
-
-    <br>
-
-    24h change
-
-    <strong id="pressureChange">
-      --
-    </strong>
-
-  </div>
-
-</article>
-
-
-<article class="glass metric">
-
-  <div class="metric-label">
-    ☀️ Solar / UV
-  </div>
-
-  <div class="metric-value">
-
-    <span
-      class="v"
-      id="solarVal"
-    >
-      --
-    </span>
-
-    <span class="u">
-      W/m²
-    </span>
-
-  </div>
-
-  <div class="metric-sub">
-
-    UV index
-
-    <strong id="uvVal">
-      --
-    </strong>
-
-  </div>
-
-</article>
-
-</section>
-
-
-<section
-  class="glass forecast-card"
-  id="forecast"
->
-
-  <div class="section-head">
-
-    <div>
-
-      <h2>
-        Met Éireann forecast
-      </h2>
-
-      <p>
-        Official Leinster forecast · separate from the
-        Parknacross station observations
-      </p>
-
-    </div>
-
-
-    <a
-      class="mini-link"
-      href="https://www.met.ie/forecasts/leinster"
-      target="_blank"
-      rel="noopener"
-    >
-      met.ie ↗
-    </a>
-
-  </div>
-
-
-  <div class="forecast-grid">
-
-
-    <article>
-
-      <span>
-        Today
-      </span>
-
-      <p id="forecastToday">
-        Loading official forecast…
-      </p>
-
-    </article>
-
-
-    <article>
-
-      <span>
-        Tonight
-      </span>
-
-      <p id="forecastTonight">
-        --
-      </p>
-
-    </article>
-
-
-    <article>
-
-      <span>
-        Tomorrow
-      </span>
-
-      <p id="forecastTomorrow">
-        --
-      </p>
-
-    </article>
-
-  </div>
-
-
-  <div class="forecast-credit">
-    Forecast text: Met Éireann open data.
-  </div>
-
-</section>
-
-
-<section class="climate-grid">
-
-
-  <article class="glass climate-card">
-
-    <span>
-      Rain this month
-    </span>
-
-    <strong id="monthRain">
-      --
-    </strong>
-
-    <small id="monthRainDays">
-      --
-    </small>
-
-  </article>
-
-
-  <article class="glass climate-card">
-
-    <span>
-      Rain this year
-    </span>
-
-    <strong id="yearRain">
-      --
-    </strong>
-
-    <small>
-      Since station records began
-    </small>
-
-  </article>
-
-
-  <article class="glass climate-card">
-
-    <span>
-      Station running since
-    </span>
-
-    <strong id="stationSince">
-      --
-    </strong>
-
-    <small>
-      First saved observation
-    </small>
-
-  </article>
-
-
-  <article class="glass climate-card">
-
-    <span>
-      All-time wettest day
-    </span>
-
-    <strong id="wettestDay">
-      --
-    </strong>
-
-    <small id="wettestDate">
-      --
-    </small>
-
-  </article>
-
-</section>
-
-
-<div
-  class="section-head"
-  id="graphs"
->
-
-  <div>
-
-    <h2>
-      Weather trends
-    </h2>
-
-    <p>
-      Recent readings from your Parknacross station
-    </p>
-
-  </div>
-
-
-  <a
-    class="tag link-tag"
-    href="history.html"
-  >
-    Open full history →
-  </a>
-
+      <button id="installButton" type="button" hidden>Install app</button>
+    </section>
+  </main>
+
+  <footer>
+    <span>© <span id="year"></span> Parknacross Weather</span>
+    <span>Personal weather station · not an official forecasting service</span>
+  </footer>
 </div>
 
-
-<section class="chart-grid">
-
-
-<article class="glass chart-card">
-
-  <div class="section-head">
-
-    <div>
-
-      <h2>
-        Temperature &amp; dew point
-      </h2>
-
-      <p>
-        Last 24 hours
-      </p>
-
-    </div>
-
-    <div class="tag">
-      °C
-    </div>
-
-  </div>
-
-  <div class="chart-wrap">
-
-    <canvas id="temperatureChart"></canvas>
-
-  </div>
-
-</article>
-
-
-<article class="glass chart-card">
-
-  <div class="section-head">
-
-    <div>
-
-      <h2>
-        Wind &amp; gusts
-      </h2>
-
-      <p>
-        Last 24 hours
-      </p>
-
-    </div>
-
-    <div class="tag">
-      km/h
-    </div>
-
-  </div>
-
-  <div class="chart-wrap">
-
-    <canvas id="windChart"></canvas>
-
-  </div>
-
-</article>
-
-
-<article class="glass chart-card">
-
-  <div class="section-head">
-
-    <div>
-
-      <h2>
-        Barometric pressure
-      </h2>
-
-      <p>
-        Last 24 hours
-      </p>
-
-    </div>
-
-    <div class="tag">
-      hPa
-    </div>
-
-  </div>
-
-  <div class="chart-wrap">
-
-    <canvas id="pressureChart"></canvas>
-
-  </div>
-
-</article>
-
-
-<article class="glass chart-card">
-
-  <div class="section-head">
-
-    <div>
-
-      <h2>
-        Solar radiation &amp; UV
-      </h2>
-
-      <p>
-        Last 24 hours
-      </p>
-
-    </div>
-
-    <div class="tag">
-      W/m²
-    </div>
-
-  </div>
-
-  <div class="chart-wrap">
-
-    <canvas id="solarChart"></canvas>
-
-  </div>
-
-</article>
-
-
-<article class="glass chart-card">
-
-  <div class="section-head">
-
-    <div>
-
-      <h2>
-        Recent rainfall
-      </h2>
-
-      <p>
-        Up to 7 days
-      </p>
-
-    </div>
-
-    <div class="tag">
-      mm
-    </div>
-
-  </div>
-
-  <div class="chart-wrap">
-
-    <canvas id="rainChart"></canvas>
-
-  </div>
-
-</article>
-
-
-<article class="glass chart-card">
-
-  <div class="section-head">
-
-    <div>
-
-      <h2>
-        Wind direction
-      </h2>
-
-      <p>
-        Prevailing direction from recent readings
-      </p>
-
-    </div>
-
-    <div class="tag">
-      Compass
-    </div>
-
-  </div>
-
-
-  <div class="wind-grid">
-
-
-    <div class="compass">
-
-      <span class="dir n">
-        N
-      </span>
-
-      <span class="dir e">
-        E
-      </span>
-
-      <span class="dir s">
-        S
-      </span>
-
-      <span class="dir w">
-        W
-      </span>
-
-      <div
-        class="needle"
-        id="needle"
-      ></div>
-
-      <div class="centre">
-
-        Prevailing
-
-        <strong id="prevailing">
-          --
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <div class="wind-readout">
-
-
-      <div>
-
-        <span>
-          Current direction
-        </span>
-
-        <strong id="currentDirection">
-          --
-        </strong>
-
-      </div>
-
-
-      <div>
-
-        <span>
-          Current wind
-        </span>
-
-        <strong id="currentWind">
-          --
-        </strong>
-
-      </div>
-
-
-      <div>
-
-        <span>
-          Current gust
-        </span>
-
-        <strong id="currentGust">
-          --
-        </strong>
-
-      </div>
-
-
-    </div>
-
-  </div>
-
-</article>
-
-</section>
-
-
-<section
-  class="bottom-grid"
-  id="records"
->
-
-
-<article class="glass info-card">
-
-  <div class="section-head">
-
-    <div>
-
-      <h2>
-        Today's records
-      </h2>
-
-      <p>
-        Values and the times they occurred
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <div class="info-grid">
-
-
-    <div class="info-item">
-
-      <span>
-        High temperature
-      </span>
-
-      <strong id="recordHigh">
-        --
-      </strong>
-
-      <small id="recordHighTime">
-        --
-      </small>
-
-    </div>
-
-
-    <div class="info-item">
-
-      <span>
-        Low temperature
-      </span>
-
-      <strong id="recordLow">
-        --
-      </strong>
-
-      <small id="recordLowTime">
-        --
-      </small>
-
-    </div>
-
-
-    <div class="info-item">
-
-      <span>
-        Peak gust
-      </span>
-
-      <strong id="recordGust">
-        --
-      </strong>
-
-      <small id="recordGustTime">
-        --
-      </small>
-
-    </div>
-
-
-    <div class="info-item">
-
-      <span>
-        Rain today
-      </span>
-
-      <strong id="recordRain">
-        --
-      </strong>
-
-      <small>
-        Corrected for the commissioning test reading
-      </small>
-
-    </div>
-
-
-  </div>
-
-</article>
-
-
-<article class="glass info-card">
-
-  <div class="section-head">
-
-    <div>
-
-      <h2>
-        All-time station records
-      </h2>
-
-      <p>
-        Since saved observations began
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <div class="info-grid">
-
-
-    <div class="info-item">
-
-      <span>
-        Highest temperature
-      </span>
-
-      <strong id="allHigh">
-        --
-      </strong>
-
-      <small id="allHighDate">
-        --
-      </small>
-
-    </div>
-
-
-    <div class="info-item">
-
-      <span>
-        Lowest temperature
-      </span>
-
-      <strong id="allLow">
-        --
-      </strong>
-
-      <small id="allLowDate">
-        --
-      </small>
-
-    </div>
-
-
-    <div class="info-item">
-
-      <span>
-        Strongest gust
-      </span>
-
-      <strong id="allGust">
-        --
-      </strong>
-
-      <small id="allGustDate">
-        --
-      </small>
-
-    </div>
-
-
-    <div class="info-item">
-
-      <span>
-        Highest pressure
-      </span>
-
-      <strong id="allPressure">
-        --
-      </strong>
-
-      <small id="allPressureDate">
-        --
-      </small>
-
-    </div>
-
-
-  </div>
-
-</article>
-
-</section>
-
-
-<section class="app-cta glass">
-
-  <div>
-
-    <h2>
-      Use Parknacross Weather like an app
-    </h2>
-
-    <p>
-      Add it to your phone's Home Screen for a cleaner
-      full-screen weather dashboard.
-    </p>
-
-  </div>
-
-
-  <button
-    id="installButton"
-    type="button"
-    hidden
-  >
-    Install app
-  </button>
-
-</section>
-
-
-</main>
-
-
-<footer>
-
-  <span>
-    ©
-    <span id="year"></span>
-    Parknacross Weather
-  </span>
-
-  <span>
-    Personal weather station · not an official forecasting service
-  </span>
-
-</footer>
-
-
-</div>
-
-
-<script
-  src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
-></script>
-
-<script src="app.js?v=20260912-5"></script>
-
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="app.js?v=20260912-battery"></script>
 </body>
 </html>
