@@ -5,6 +5,7 @@ const HISTORY_7D_URL = `${API_BASE}/history?hours=168`;
 const STATS_URL = `${API_BASE}/stats`;
 const FORECAST_URL = `${API_BASE}/met/forecast`;
 const WARNINGS_URL = `${API_BASE}/met/warnings`;
+const BATTERY_DEBUG_URL = `${API_BASE}/battery-debug`;
 
 const ARDAMINE_LAT = 52.6247;
 const ARDAMINE_LON = -6.25;
@@ -859,11 +860,35 @@ async function loadWarnings() {
   }
 }
 
+
+async function restoreBatteryIfMissing(current) {
+  if (!current || usable(current.battery_v)) return current;
+
+  try {
+    const debug = await getJSON(BATTERY_DEBUG_URL);
+    const fallback =
+      debug?.effective_battery_v ??
+      debug?.explicit_realtime_battery_v ??
+      debug?.history_battery_v ??
+      debug?.recovered_from_saved_raw_json ??
+      debug?.stored_battery_v;
+
+    if (usable(fallback)) {
+      current.battery_v = Number(fallback);
+    }
+  } catch (error) {
+    console.warn("Battery fallback:", error);
+  }
+
+  return current;
+}
+
 async function loadEverything() {
   let current = null;
 
   try {
     current = await getJSON(CURRENT_URL);
+    current = await restoreBatteryIfMissing(current);
     updateDashboard(current);
   } catch (error) {
     console.error("Current conditions:", error);
@@ -895,7 +920,8 @@ async function loadEverything() {
 
 async function refreshCurrent() {
   try {
-    const current = await getJSON(CURRENT_URL);
+    let current = await getJSON(CURRENT_URL);
+    current = await restoreBatteryIfMissing(current);
     updateDashboard(current);
   } catch (error) {
     console.error("Current refresh:", error);

@@ -366,6 +366,30 @@ function renderStorage(storage) {
   if (meter) meter.setAttribute("aria-valuenow", usedPercent.toFixed(2));
 }
 
+
+async function restoreStationBatteryIfMissing(current) {
+  if (!current || usable(current.battery_v)) return current;
+
+  try {
+    const response = await fetch(`${API_BASE}/battery-debug`, { cache: "no-store" });
+    if (!response.ok) return current;
+
+    const debug = await response.json();
+    const fallback =
+      debug?.effective_battery_v ??
+      debug?.explicit_realtime_battery_v ??
+      debug?.history_battery_v ??
+      debug?.recovered_from_saved_raw_json ??
+      debug?.stored_battery_v;
+
+    if (usable(fallback)) current.battery_v = Number(fallback);
+  } catch (error) {
+    console.warn("Station battery fallback:", error);
+  }
+
+  return current;
+}
+
 async function loadStationStatus() {
   try {
     const [statsResponse, currentResponse, storageResponse] = await Promise.all([
@@ -396,7 +420,8 @@ async function loadStationStatus() {
     }
 
     if (currentResponse.ok) {
-      const current = await currentResponse.json();
+      let current = await currentResponse.json();
+      current = await restoreStationBatteryIfMissing(current);
       set("stationFeed", "Connected");
 
       const time = current.received_at
@@ -440,6 +465,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
-<script src="site-config.js?v=20260912-mobile2"></script><script src="station-v2.js?v=20260912-mobile2"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="site-config.js?v=20260912-batteryrestore1"></script><script src="station-v2.js?v=20260912-batteryrestore1"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
