@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260912-finish2">
+  <link rel="stylesheet" href="styles.css?v=20260912-v2">
   <title>Station · Parknacross Weather</title>
 </head>
 <body>
@@ -20,9 +20,11 @@
     </a>
     <nav class="nav" aria-label="Main navigation">
       <a href="index.html">Dashboard</a>
-      <a href="index.html#graphs">Trends</a>
+      <a href="radar.html">Radar</a>
+      <a href="graphs.html">Graphs</a>
+      <a href="rain.html">Rain</a>
+      <a href="climate.html">Climate</a>
       <a class="active" href="station.html">Station</a>
-      <a href="index.html#records">Records</a>
       <a href="history.html">History</a>
     </nav>
   </header>
@@ -111,6 +113,25 @@
         </p>
       </article>
     </section>
+
+    <section class="page-section">
+      <div class="section-heading"><div><span class="section-eyebrow">Station quality</span><h2>Archive & feed health</h2><p>Transparent quality indicators calculated from the actual saved observations.</p></div></div>
+      <div class="quality-grid">
+        <article class="climate-card"><span>Feed status</span><strong id="qualityFeed">--</strong><small id="qualityAge">Latest observation</small></article>
+        <article class="climate-card"><span>Samples last 24h</span><strong id="quality24">--</strong><small>Saved observations</small></article>
+        <article class="climate-card"><span>Median interval</span><strong id="qualityInterval">--</strong><small>Recent archive</small></article>
+        <article class="climate-card"><span>Largest recent gap</span><strong id="qualityGap">--</strong><small>Last 24 hours</small></article>
+        <article class="climate-card"><span>Total samples</span><strong id="qualityTotal">--</strong><small>D1 archive</small></article>
+        <article class="climate-card"><span>WS90 battery</span><strong id="qualityBattery">--</strong><small>Voltage status</small></article>
+      </div>
+      <div class="feature-links">
+        <a href="coast.html"><strong>Coastal conditions</strong><span>Marine outlook & tides →</span></a>
+        <a href="sky.html"><strong>Sky camera</strong><span>Camera-ready page →</span></a>
+        <a href="radar.html"><strong>Rain radar</strong><span>North Wexford radar →</span></a>
+        <a href="history.html"><strong>Data archive</strong><span>History & CSV export →</span></a>
+      </div>
+    </section>
+
   </main>
 
   <footer>
@@ -233,5 +254,5 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
-</body>
+<script src="site-config.js?v=20260912-v2"></script><script src="station-v2.js?v=20260912-v2"></script></body>
 </html>

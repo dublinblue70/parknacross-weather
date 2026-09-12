@@ -1,0 +1,19 @@
+(() => {
+ const cfg=window.PARKNACROSS_CONFIG||{},API=cfg.apiBase,$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};let charts={},hours=24;
+ const line=(label,color,axis="y")=>({label,data:[],borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.25,yAxisID:axis});
+ const scales=unit=>({x:{grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:9}},y:{grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:unit,color:"#9fb3c1"}}});
+ function make(){const common={maintainAspectRatio:false,interaction:{mode:"index",intersect:false}};
+ charts.t=new Chart($("gTemp"),{type:"line",data:{labels:[],datasets:[line("Temperature","#ff8d8d"),line("Dew point","#6ef1cb")]},options:{...common,scales:scales("°C"),plugins:{legend:{position:"bottom"}}}});
+ charts.w=new Chart($("gWind"),{type:"line",data:{labels:[],datasets:[line("Wind","#74ddff"),line("Gust","#ffad66")]},options:{...common,scales:scales("km/h"),plugins:{legend:{position:"bottom"}}}});
+ charts.p=new Chart($("gPressure"),{type:"line",data:{labels:[],datasets:[line("Pressure","#b594ff")]},options:{...common,scales:scales("hPa"),plugins:{legend:{display:false}}}});
+ charts.r=new Chart($("gRain"),{type:"bar",data:{labels:[],datasets:[{data:[],backgroundColor:"#7ca9ff",borderRadius:3}]},options:{...common,scales:scales("mm/h"),plugins:{legend:{display:false}}}});
+ charts.s=new Chart($("gSolar"),{type:"line",data:{labels:[],datasets:[line("Solar","#ffd77a","y"),line("UV","#b594ff","y1")]},options:{...common,scales:{x:{grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:9}},y:{position:"left",beginAtZero:true,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:"W/m²",color:"#9fb3c1"}},y1:{position:"right",beginAtZero:true,grid:{drawOnChartArea:false},ticks:{color:"#9fb3c1"}}},plugins:{legend:{position:"bottom"}}}});}
+ function thin(r,max=900){if(r.length<=max)return r;const out=[],step=r.length/max;for(let i=0;i<max;i++)out.push(r[Math.floor(i*step)]);return out}
+ function label(x){const d=new Date(x.received_at||x.epoch*1000);return hours<=48?d.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString("en-IE",{day:"numeric",month:"short"})+" "+d.toLocaleTimeString("en-IE",{hour:"2-digit"});}
+ async function load(h){hours=h;set("graphRangeTitle",({6:"Last 6 hours",24:"Last 24 hours",48:"Last 48 hours",168:"Last 7 days",720:"Last 30 days"})[h]);set("graphCount","Loading…");
+ try{const d=await fetch(`${API}/history?hours=${h}`,{cache:"no-store"}).then(r=>r.json()),rows=d.readings||[],r=thin(rows),labs=r.map(label);
+ Object.values(charts).forEach(c=>c.data.labels=labs);charts.t.data.datasets[0].data=r.map(x=>x.temperature_c);charts.t.data.datasets[1].data=r.map(x=>x.dew_point_c);
+ charts.w.data.datasets[0].data=r.map(x=>x.wind_speed_kmh);charts.w.data.datasets[1].data=r.map(x=>x.wind_gust_kmh);charts.p.data.datasets[0].data=r.map(x=>x.pressure_hpa);
+ charts.r.data.datasets[0].data=r.map(x=>x.rain_rate_mm_h);charts.s.data.datasets[0].data=r.map(x=>x.solar_w_m2);charts.s.data.datasets[1].data=r.map(x=>x.uv_index);
+ Object.values(charts).forEach(c=>c.update());set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.length.toLocaleString("en-IE")} plotted`);}catch(e){set("graphCount","Archive temporarily unavailable.");}}
+ document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());make();document.querySelectorAll("[data-hours]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-hours]").forEach(x=>x.classList.toggle("active",x===b));load(Number(b.dataset.hours))}));load(24);if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});})();

@@ -1,37 +1,24 @@
-const CACHE_NAME = "parknacross-weather-v4-finish2";
-
+const CACHE_NAME = "parknacross-weather-v2-20260912";
 const STATIC_ASSETS = [
-  "./index.html",
-  "./styles.css",
-  "./app.js",
-  "./history.html",
-  "./history.js",
-  "./station.html",
-  "./manifest.webmanifest",
-  "./favicon.svg",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./apple-touch-icon.png",
-  "./og-image.png"
+  "./", "./index.html", "./styles.css", "./app.js", "./site-config.js", "./platform.js",
+  "./radar.html", "./radar.js", "./graphs.html", "./graphs.js", "./rain.html", "./rain.js",
+  "./climate.html", "./climate.js", "./coast.html", "./coast.js", "./sky.html", "./sky.js",
+  "./station.html", "./station-v2.js", "./history.html", "./history.js",
+  "./manifest.webmanifest", "./favicon.svg", "./icon-192.png", "./icon-512.png",
+  "./apple-touch-icon.png", "./og-image.png"
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then(cache =>
+    Promise.all(STATIC_ASSETS.map(asset => cache.add(asset).catch(() => null)))
+  ));
   self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
-    )
-  );
+  event.waitUntil(caches.keys().then(keys =>
+    Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
+  ));
   self.clients.claim();
 });
 
@@ -39,32 +26,25 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Weather APIs and third-party libraries should always use the network.
   if (
     url.hostname.includes("workers.dev") ||
     url.hostname.includes("cdn.jsdelivr.net") ||
-    url.hostname.includes("met.ie")
-  ) {
-    return;
-  }
+    url.hostname.includes("rainviewer.com") ||
+    url.hostname.includes("openstreetmap.org") ||
+    url.hostname.includes("met.ie") ||
+    url.hostname.includes("marine.ie")
+  ) return;
 
-  // Always request page navigations from the network first.
-  // This prevents "/" and "/index.html" becoming different stale cached pages.
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).catch(() => caches.match("./index.html"))
-    );
+    event.respondWith(fetch(request).catch(() => caches.match(request).then(r => r || caches.match("./index.html"))));
     return;
   }
 
-  // Static files: network first, cached fallback.
   event.respondWith(
-    fetch(request)
-      .then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        return response;
-      })
-      .catch(() => caches.match(request))
+    fetch(request).then(response => {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+      return response;
+    }).catch(() => caches.match(request))
   );
 });

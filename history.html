@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260912-finish2">
+  <link rel="stylesheet" href="styles.css?v=20260912-v2">
   <title>History · Parknacross Weather</title>
 </head>
 <body>
@@ -20,9 +20,11 @@
     </a>
     <nav class="nav" aria-label="Main navigation">
       <a href="index.html">Dashboard</a>
-      <a href="index.html#graphs">Trends</a>
+      <a href="radar.html">Radar</a>
+      <a href="graphs.html">Graphs</a>
+      <a href="rain.html">Rain</a>
+      <a href="climate.html">Climate</a>
       <a href="station.html">Station</a>
-      <a href="index.html#records">Records</a>
       <a class="active" href="history.html">History</a>
     </nav>
   </header>
@@ -44,12 +46,12 @@
     <section class="page-section">
       <div class="section-heading">
         <div><span class="section-eyebrow">Daily archive</span><h2>Temperature & rainfall</h2><p>Choose the period you want to inspect.</p></div>
-        <div class="range-controls">
+        <div class="history-actions"><a class="secondary-button" href="https://parknacross-weather.dave-s-carter.workers.dev/export.csv?days=365" download>Download CSV</a><div class="range-controls">
           <button data-days="7">7 days</button>
           <button data-days="30" class="active">30 days</button>
           <button data-days="90">90 days</button>
           <button data-days="365">1 year</button>
-        </div>
+        </div></div>
       </div>
 
       <div class="chart-grid">
@@ -84,6 +86,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="history.js?v=20260912-finish"></script>
-</body>
+<script src="history.js?v=20260912-v2"></script>
+<script src="site-config.js?v=20260912-v2"></script></body>
 </html>

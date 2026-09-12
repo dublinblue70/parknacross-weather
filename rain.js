@@ -1,0 +1,13 @@
+(() => {
+ const cfg=window.PARKNACROSS_CONFIG||{},API=cfg.apiBase,$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v},n=(v,d=1)=>Number.isFinite(Number(v))?Number(v).toFixed(d):"--";
+ const dt=v=>v?new Date(v).toLocaleString("en-IE",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"--";
+ async function get(p){const r=await fetch(`${API}${p}`,{cache:"no-store"});if(!r.ok)throw new Error();return r.json()}
+ document.addEventListener("DOMContentLoaded",async()=>{set("year",new Date().getFullYear());try{const [s,d]=await Promise.all([get("/rain-summary"),get("/daily?days=30")]);
+ set("rainNow",`${n(s.current_rate_mm_h)} mm/h`);set("rainToday",`${n(s.today_mm)} mm`);set("rainYesterday",`${n(s.yesterday_mm)} mm`);set("rain7",`${n(s.last_7_days_mm)} mm`);
+ set("rainMonth",`${n(s.month_mm)} mm`);set("rainMonthDays",`${s.month_rain_days||0} rain days`);set("rainYear",`${n(s.year_mm)} mm`);set("dryDays",String(s.consecutive_dry_days??"--"));
+ set("rainWettest",s.wettest_day?`${n(s.wettest_day.rain_mm)} mm`:"--");set("rainWettestDate",s.wettest_day?.day||"--");
+ set("lastRain",s.last_measurable_rain?"Rain detected":"No rain yet");set("lastRainDate",dt(s.last_measurable_rain?.received_at));
+ if(s.current_event){set("rainEventTotal",`${n(s.current_event.total_mm)} mm`);set("rainEventStart",`Since ${dt(s.current_event.started_at)}`);set("rainEventText",`Active rain event · ${n(s.current_event.total_mm)} mm accumulated.`)}
+ else{set("rainEventTotal","No active event");set("rainEventStart","Station currently dry");set("rainEventText","No measurable rain is falling at Parknacross right now.");}
+ const rows=d.days||[];new Chart($("rainDailyChart"),{type:"bar",data:{labels:rows.map(x=>new Date(x.day+"T12:00:00").toLocaleDateString("en-IE",{day:"numeric",month:"short"})),datasets:[{data:rows.map(x=>x.rain_mm),backgroundColor:"#7ca9ff",borderRadius:5}]},options:{maintainAspectRatio:false,scales:{x:{grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:12}},y:{beginAtZero:true,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:"mm",color:"#9fb3c1"}}},plugins:{legend:{display:false}}}});}catch(e){set("rainEventText","Rainfall summary temporarily unavailable.");}
+ if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});})();

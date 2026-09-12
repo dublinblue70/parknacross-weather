@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07131f">
+  <meta name="description" content="North Wexford marine outlook and Arklow tide predictions.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css?v=20260912-v2">
+  
+  <title>Coastal Conditions · Parknacross Weather</title>
+</head>
+<body><div class="shell">
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Parknacross Weather home">
+      <div class="brand-badge">PW</div>
+      <div>
+        <h1>PARKNACROSS WEATHER</h1>
+        <p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p>
+      </div>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="index.html">Dashboard</a>
+      <a href="radar.html">Radar</a>
+      <a href="graphs.html">Graphs</a>
+      <a href="rain.html">Rain</a>
+      <a href="climate.html">Climate</a>
+      <a href="station.html">Station</a>
+      <a href="history.html">History</a>
+    </nav>
+  </header><main>
+<section class="page-hero"><span class="section-eyebrow">North Wexford coast</span><h2>Coastal conditions</h2><p>Parknacross wind, Met Éireann's sea-area forecast and Marine Institute tide predictions for Arklow.</p></section>
+<section class="page-section coastal-grid"><article class="climate-card"><span>Parknacross wind</span><strong id="coastWind">--</strong><small id="coastDir">--</small></article>
+<article class="climate-card"><span>Parknacross gust</span><strong id="coastGust">--</strong><small>WS90 observation</small></article>
+<article class="climate-card"><span>Sea-area warning</span><strong id="coastWarn">--</strong><small id="coastIssued">Met Éireann</small></article>
+<article class="climate-card"><span>Next tide</span><strong id="nextTide">--</strong><small id="nextTideTime">Arklow</small></article></section>
+<section class="page-section two-column-cards"><article class="info-card"><span class="section-eyebrow">Met Éireann</span><h2 id="marineArea">South Irish Sea</h2>
+<p><strong>Wind:</strong> <span id="marineWind">Loading…</span></p><p><strong>Weather:</strong> <span id="marineWeather">--</span></p><p><strong>Visibility:</strong> <span id="marineVis">--</span></p></article>
+<article class="info-card"><span class="section-eyebrow">Outlook</span><h2>Further 24 hours</h2><p id="marineOutlook" class="info-note">Loading…</p></article></section>
+<section class="page-section"><div class="section-heading"><div><span class="section-eyebrow">Tides</span><h2>Arklow high & low water</h2><p>Nearest Marine Institute prediction station.</p></div></div><div id="tideList" class="tide-list"><div class="empty-state">Loading tide predictions…</div></div>
+<div class="source-note">Tide predictions © Marine Institute, CC BY 4.0. Predictions exclude storm surge and should not be the sole source for navigation or water-safety decisions.</div></section>
+</main>  <footer>
+    <span>© <span id="year"></span> Parknacross Weather</span>
+    <span>Independent personal weather station · Ardamine, Co. Wexford, Ireland</span>
+  </footer>
+</div><script src="site-config.js?v=20260912-v2"></script><script src="coast.js?v=20260912-v2"></script></body></html>

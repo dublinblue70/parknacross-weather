@@ -15,7 +15,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260912-finish2">
+  <link rel="stylesheet" href="styles.css?v=20260912-v2">
 
   <title>Parknacross Weather · Ardamine, Co. Wexford</title>
 </head>
@@ -43,10 +43,12 @@
     </a>
 
     <nav class="nav" aria-label="Main navigation">
-      <a class="active" href="#dashboard">Dashboard</a>
-      <a href="#graphs">Trends</a>
+      <a class="active" href="index.html">Dashboard</a>
+      <a href="radar.html">Radar</a>
+      <a href="graphs.html">Graphs</a>
+      <a href="rain.html">Rain</a>
+      <a href="climate.html">Climate</a>
       <a href="station.html">Station</a>
-      <a href="#records">Records</a>
       <a href="history.html">History</a>
     </nav>
   </header>
@@ -249,6 +251,48 @@
       </div>
     </section>
 
+    
+    <section class="page-section signature-section" aria-labelledby="signatureHeading">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">North Wexford context</span>
+          <h2 id="signatureHeading">More than a sensor reading</h2>
+          <p>Official observations, climate context and station milestones alongside the live Parknacross feed.</p>
+        </div>
+        <button class="primary-button" id="shareTodayButton" type="button">Share today</button>
+      </div>
+
+      <div class="context-grid">
+        <article class="context-card">
+          <span>Parknacross vs Johnstown Castle</span>
+          <strong id="contextTempDelta">Loading…</strong>
+          <small id="contextJohnstownTemp">Official Met Éireann comparison</small>
+        </article>
+        <article class="context-card">
+          <span>September rainfall context</span>
+          <strong id="contextRainLta">Loading…</strong>
+          <small>Compared with Johnstown Castle's 1991–2020 September average</small>
+        </article>
+        <article class="context-card">
+          <span>Station milestone</span>
+          <strong id="contextMilestone">Archive building…</strong>
+          <small id="contextMilestoneDetail">Records and thresholds update automatically.</small>
+        </article>
+        <article class="context-card">
+          <span>Forecast verification</span>
+          <strong id="contextForecastVerification">Building archive…</strong>
+          <small>Tomorrow's Met Éireann point forecast vs actual Parknacross weather.</small>
+        </article>
+      </div>
+
+      <div class="feature-links">
+        <a href="radar.html"><strong>Live radar</strong><span>Animated North Wexford rainfall →</span></a>
+        <a href="rain.html"><strong>Rain Centre</strong><span>Events, dry spells and totals →</span></a>
+        <a href="climate.html"><strong>Climate Almanac</strong><span>Context, records and milestones →</span></a>
+        <a href="coast.html"><strong>Coastal conditions</strong><span>Marine outlook and Arklow tides →</span></a>
+      </div>
+    </section>
+
     <section class="trends-section" id="graphs" aria-labelledby="trendsHeading">
       <div class="section-heading">
         <div>
@@ -346,70 +390,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="app.js?v=20260912-finish"></script>
+<script src="app.js?v=20260912-v2"></script>
 
-<script>
-(() => {
-  const API = "https://parknacross-weather.dave-s-carter.workers.dev/current";
-  let lastObservationTime = null;
-
-  function relativeAge(date) {
-    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "--";
-
-    const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-
-    if (seconds < 15) return "Just now";
-    if (seconds < 60) return `${seconds}s ago`;
-
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} min ago`;
-
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (hours < 24) {
-      return remainingMinutes
-        ? `${hours}h ${remainingMinutes}m ago`
-        : `${hours}h ago`;
-    }
-
-    const days = Math.floor(hours / 24);
-    return `${days} day${days === 1 ? "" : "s"} ago`;
-  }
-
-  function updateRelativeLabel() {
-    const element = document.getElementById("lastUpdatedRelative");
-    if (element && lastObservationTime) {
-      element.textContent = relativeAge(lastObservationTime);
-    }
-  }
-
-  async function refreshObservationAge() {
-    try {
-      const response = await fetch(API, { cache: "no-store" });
-      if (!response.ok) return;
-
-      const current = await response.json();
-      const time = current.received_at
-        ? new Date(current.received_at)
-        : current.epoch
-        ? new Date(Number(current.epoch) * 1000)
-        : null;
-
-      if (time && !Number.isNaN(time.getTime())) {
-        lastObservationTime = time;
-        updateRelativeLabel();
-      }
-    } catch (_) {
-      // The main app handles connection errors.
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    refreshObservationAge();
-    setInterval(updateRelativeLabel, 15000);
-    setInterval(refreshObservationAge, 60000);
-  });
-})();
-</script>
+<script src="site-config.js?v=20260912-v2"></script>
+<script src="platform.js?v=20260912-v2"></script>
 </body>
 </html>
