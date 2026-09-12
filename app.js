@@ -935,19 +935,56 @@ function setupPWA() {
     );
   }
 
+  const button = $("installButton");
+  const userAgent = navigator.userAgent || "";
+  const isIOS =
+    /iPhone|iPad|iPod/i.test(userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isSafari =
+    /Safari/i.test(userAgent) &&
+    !/CriOS|FxiOS|EdgiOS|OPiOS|Chrome|Chromium|Android/i.test(userAgent);
+  const isStandalone =
+    window.matchMedia?.("(display-mode: standalone)")?.matches ||
+    window.navigator.standalone === true;
+
+  /*
+   * Apple Safari does not provide the Chromium beforeinstallprompt event.
+   * On iPhone/iPad Safari, keep the same Install app button available and
+   * guide the user through Safari's native Add to Home Screen flow.
+   */
+  if (button && isIOS && isSafari && !isStandalone) {
+    button.hidden = false;
+  }
+
   window.addEventListener("beforeinstallprompt", event => {
     event.preventDefault();
     deferredInstallPrompt = event;
-    const button = $("installButton");
-    if (button) button.hidden = false;
+    if (button && !isStandalone) button.hidden = false;
   });
 
-  $("installButton")?.addEventListener("click", async () => {
-    if (!deferredInstallPrompt) return;
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
+  button?.addEventListener("click", async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      button.hidden = true;
+      return;
+    }
+
+    if (isIOS && isSafari && !isStandalone) {
+      alert(
+        "To install Parknacross Weather on your iPhone or iPad:\n\n" +
+        "1. Tap the Share button in Safari (the square with the upward arrow).\n" +
+        "2. Scroll down and tap Add to Home Screen.\n" +
+        "3. Tap Add.\n\n" +
+        "Parknacross Weather will then open from your Home Screen like an app."
+      );
+    }
+  });
+
+  window.addEventListener("appinstalled", () => {
     deferredInstallPrompt = null;
-    $("installButton").hidden = true;
+    if (button) button.hidden = true;
   });
 }
 
