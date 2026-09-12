@@ -1557,3 +1557,37 @@ canvas {
   }
 }
 
+
+/* ============================================================
+   MOBILE LIVE STATUS DOT FIX
+   Keep the status dot in its own reserved space on phones.
+   ============================================================ */
+@media (max-width: 600px) {
+  .station-status.live-pill {
+    position: relative;
+    padding-left: 42px;
+  }
+
+  .station-status.live-pill .live-dot {
+    left: 15px;
+    top: 50%;
+    margin-top: -4.5px;
+  }
+
+  .station-status.live-pill #liveText {
+    display: block;
+    min-width: 0;
+    line-height: 1.25;
+  }
+}
+
+@media (max-width: 390px) {
+  .station-status.live-pill {
+    padding-left: 40px;
+  }
+
+  .station-status.live-pill .live-dot {
+    left: 14px;
+  }
+}
+
