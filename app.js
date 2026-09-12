@@ -465,7 +465,11 @@ function updateDashboard(current) {
   set("heroTrend", pressure.trend === "--" ? "--" : `${pressure.trend} pressure`);
   set("weatherStory", condition.story);
   set("conditionsTag", condition.tag);
-  set("weatherIcon", condition.icon);
+  /*
+   * The visual weather icon is supplied by CSS via .weather-orb::before.
+   * Do not inject an emoji here as well; on mobile that created two icons.
+   */
+  set("weatherIcon", "");
 
   document.body.classList.remove(
     "weather-neutral",

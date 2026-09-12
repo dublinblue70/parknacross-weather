@@ -1661,3 +1661,28 @@ canvas {
   }
 }
 
+
+/* ============================================================
+   SINGLE WEATHER ICON — desktop and mobile
+   The icon is drawn only by .weather-orb::before.
+   Prevent any emoji/text fallback from becoming visible.
+   ============================================================ */
+.weather-orb {
+  font-size: 0 !important;
+  line-height: 0;
+}
+
+@media (max-width: 600px) {
+  .weather-orb {
+    font-size: 0 !important;
+    line-height: 0;
+  }
+}
+
+@media (max-width: 390px) {
+  .weather-orb {
+    font-size: 0 !important;
+    line-height: 0;
+  }
+}
+
