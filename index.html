@@ -346,5 +346,85 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="app.js?v=20260912-1"></script>
+  <script>
+(() => {
+  const BATTERY_URL =
+    "https://parknacross-weather.dave-s-carter.workers.dev/current";
+
+  let latestBatteryText = null;
+
+  function batteryDescription(voltage) {
+    if (voltage >= 3.0) return "Excellent";
+    if (voltage >= 2.8) return "Good";
+    if (voltage >= 2.5) return "Fair";
+    if (voltage >= 2.3) return "Low";
+    return "Replace";
+  }
+
+  async function updateBatteryDisplay() {
+    try {
+      const response = await fetch(
+        `${BATTERY_URL}?t=${Date.now()}`,
+        { cache: "no-store" }
+      );
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const voltage = Number(data.battery_v);
+
+      if (!Number.isFinite(voltage)) return;
+
+      latestBatteryText =
+        `${voltage.toFixed(2)} V · ${batteryDescription(voltage)}`;
+
+      const battery = document.getElementById("battery");
+
+      if (
+        battery &&
+        battery.textContent !== latestBatteryText
+      ) {
+        battery.textContent = latestBatteryText;
+      }
+
+    } catch (error) {
+      console.warn("Battery status update failed:", error);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const battery = document.getElementById("battery");
+
+    if (!battery) return;
+
+    /*
+     * If the main app.js tries to replace the battery
+     * with just the voltage, immediately restore
+     * the voltage + description.
+     */
+    const observer = new MutationObserver(() => {
+      if (
+        latestBatteryText &&
+        battery.textContent !== latestBatteryText
+      ) {
+        battery.textContent = latestBatteryText;
+      }
+    });
+
+    observer.observe(battery, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+
+    updateBatteryDisplay();
+
+    setInterval(
+      updateBatteryDisplay,
+      60 * 1000
+    );
+  });
+})();
+</script>
 </body>
 </html>
