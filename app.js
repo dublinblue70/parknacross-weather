@@ -752,24 +752,104 @@ async function loadWarnings() {
     }
 
     const warning = list[0];
+    const rawLevel = String(
+      warning.level ||
+      warning.severity ||
+      "yellow"
+    ).trim();
+
+    const level = rawLevel.toLowerCase();
+
     banner.hidden = false;
-    banner.classList.remove("level-orange", "level-red");
-    if (String(warning.level).toLowerCase() === "orange") banner.classList.add("level-orange");
-    if (String(warning.level).toLowerCase() === "red") banner.classList.add("level-red");
+    banner.classList.remove(
+      "level-yellow",
+      "level-orange",
+      "level-red"
+    );
+
+    if (level.includes("red")) {
+      banner.classList.add("level-red");
+    } else if (level.includes("orange")) {
+      banner.classList.add("level-orange");
+    } else {
+      banner.classList.add("level-yellow");
+    }
+
+    const displayLevel =
+      level.includes("red")
+        ? "Red"
+        : level.includes("orange")
+          ? "Orange"
+          : "Yellow";
+
+    set(
+      "warningLevel",
+      `${displayLevel} warning`
+    );
+
+    const warningType =
+      String(
+        warning.type ||
+        warning.event ||
+        "Weather"
+      ).trim();
 
     set(
       "warningTitle",
-      `${String(warning.level || "Weather").toUpperCase()} warning for Wexford${warning.type ? ` · ${warning.type}` : ""}`
+      `${warningType} warning for Wexford`
     );
 
-    const onset = warning.onset ? new Date(warning.onset) : null;
-    const expires = warning.expires ? new Date(warning.expires) : null;
-    const timing =
-      onset && expires
-        ? `Valid ${onset.toLocaleString("en-IE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} to ${expires.toLocaleString("en-IE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}. `
-        : "";
+    const onset =
+      warning.onset
+        ? new Date(warning.onset)
+        : null;
 
-    set("warningText", `${timing}${warning.description || warning.headline || ""}`);
+    const expires =
+      warning.expires
+        ? new Date(warning.expires)
+        : null;
+
+    const formatWarningTime =
+      date =>
+        date.toLocaleString(
+          "en-IE",
+          {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit"
+          }
+        );
+
+    let timing = "";
+
+    if (
+      onset &&
+      !Number.isNaN(onset.getTime()) &&
+      expires &&
+      !Number.isNaN(expires.getTime())
+    ) {
+      timing =
+        `Valid ${formatWarningTime(onset)} – ${formatWarningTime(expires)}`;
+    } else if (
+      expires &&
+      !Number.isNaN(expires.getTime())
+    ) {
+      timing =
+        `Valid until ${formatWarningTime(expires)}`;
+    }
+
+    set(
+      "warningTiming",
+      timing
+    );
+
+    set(
+      "warningText",
+      warning.description ||
+      warning.headline ||
+      "See Met Éireann for full warning details."
+    );
   } catch (error) {
     console.warn("Met Éireann warnings:", error);
   }

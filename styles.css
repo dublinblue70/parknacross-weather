@@ -111,34 +111,6 @@ button, input { font: inherit; }
 
 main { padding: 30px; }
 
-.warning-banner {
-  background: #612d20;
-  border-bottom: 1px solid rgba(255,255,255,.18);
-  color: #fff;
-}
-.warning-banner.level-orange { background: #7a471b; }
-.warning-banner.level-red { background: #7b2327; }
-.warning-inner {
-  width: min(1400px, calc(100% - 36px));
-  min-height: 64px;
-  margin: auto;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 0;
-}
-.warning-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,.45);
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-}
-.warning-copy { flex: 1; }
-.warning-copy p { margin: 3px 0 0; opacity: .88; }
-.warning-inner a { font-weight: 700; white-space: nowrap; }
 
 .hero-main-card {
   position: relative;
@@ -992,16 +964,6 @@ canvas {
     padding: 16px 12px 26px;
   }
 
-  .warning-inner {
-    width: 100%;
-    padding: 12px 14px;
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .warning-inner a {
-    white-space: normal;
-  }
 
   .hero-main-card {
     padding: 20px 16px;
@@ -1348,6 +1310,250 @@ canvas {
   .station-health-item {
     padding-left: 14px;
     padding-right: 14px;
+  }
+}
+
+
+/* ============================================================
+   MET ÉIREANN WARNING BANNER — v2.2
+   Final authoritative rules; intentionally last in stylesheet.
+   ============================================================ */
+.warning-banner {
+  --warning-bg: #f3c84b;
+  --warning-fg: #1b2430;
+  --warning-soft: rgba(27, 36, 48, .10);
+  --warning-line: rgba(27, 36, 48, .24);
+
+  position: relative;
+  z-index: 50;
+  width: 100%;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border-bottom: 1px solid var(--warning-line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+}
+
+.warning-banner.level-yellow {
+  --warning-bg: #f3c84b;
+  --warning-fg: #1b2430;
+  --warning-soft: rgba(27, 36, 48, .10);
+  --warning-line: rgba(27, 36, 48, .24);
+}
+
+.warning-banner.level-orange {
+  --warning-bg: #ee8b32;
+  --warning-fg: #24170c;
+  --warning-soft: rgba(36, 23, 12, .10);
+  --warning-line: rgba(36, 23, 12, .24);
+}
+
+.warning-banner.level-red {
+  --warning-bg: #b4232d;
+  --warning-fg: #ffffff;
+  --warning-soft: rgba(255, 255, 255, .12);
+  --warning-line: rgba(255, 255, 255, .28);
+}
+
+.warning-inner {
+  width: min(1400px, calc(100% - 36px));
+  min-height: 76px;
+  margin: 0 auto;
+  padding: 13px 0;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.warning-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  align-self: start;
+  margin-top: 1px;
+  border: 1px solid var(--warning-line);
+  border-radius: 11px;
+  background: var(--warning-soft);
+  color: currentColor;
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.warning-copy {
+  min-width: 0;
+}
+
+.warning-heading-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 9px;
+  margin-bottom: 4px;
+}
+
+.warning-level-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 21px;
+  padding: 3px 8px;
+  border: 1px solid var(--warning-line);
+  border-radius: 999px;
+  background: var(--warning-soft);
+  color: currentColor;
+  font-size: .66rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.warning-source {
+  font-size: .70rem;
+  font-weight: 750;
+  opacity: .70;
+  letter-spacing: .02em;
+}
+
+.warning-copy strong {
+  display: block;
+  color: currentColor;
+  font-size: .98rem;
+  font-weight: 850;
+  line-height: 1.28;
+  letter-spacing: -.01em;
+}
+
+.warning-timing,
+.warning-description {
+  max-width: 1000px;
+  margin: 0;
+  color: currentColor;
+  overflow-wrap: anywhere;
+}
+
+.warning-timing {
+  margin-top: 4px;
+  font-size: .76rem;
+  font-weight: 750;
+  line-height: 1.35;
+  opacity: .80;
+}
+
+.warning-description {
+  margin-top: 3px;
+  font-size: .82rem;
+  font-weight: 550;
+  line-height: 1.42;
+  opacity: .92;
+}
+
+.warning-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--warning-line);
+  border-radius: 10px;
+  background: var(--warning-soft);
+  color: currentColor;
+  font-size: .76rem;
+  font-weight: 850;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background .16s ease,
+    transform .16s ease;
+}
+
+.warning-link:hover {
+  background: rgba(255, 255, 255, .18);
+  transform: translateY(-1px);
+}
+
+.warning-banner.level-yellow .warning-link:hover,
+.warning-banner.level-orange .warning-link:hover {
+  background: rgba(27, 36, 48, .16);
+}
+
+@media (max-width: 700px) {
+  .warning-inner {
+    width: 100%;
+    padding: 12px 14px 13px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px 11px;
+  }
+
+  .warning-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .warning-heading-row {
+    gap: 6px 8px;
+    margin-bottom: 5px;
+  }
+
+  .warning-copy strong {
+    font-size: .92rem;
+  }
+
+  .warning-timing {
+    font-size: .73rem;
+  }
+
+  .warning-description {
+    font-size: .79rem;
+    line-height: 1.45;
+  }
+
+  .warning-link {
+    grid-column: 2;
+    justify-self: start;
+    min-height: 34px;
+    margin-top: 1px;
+    padding: 7px 10px;
+    font-size: .73rem;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 390px) {
+  .warning-inner {
+    padding-left: 11px;
+    padding-right: 11px;
+    grid-template-columns: 31px minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .warning-icon {
+    width: 31px;
+    height: 31px;
+    border-radius: 9px;
+    font-size: .95rem;
+  }
+
+  .warning-level-badge {
+    font-size: .61rem;
+  }
+
+  .warning-source {
+    font-size: .65rem;
+  }
+
+  .warning-copy strong {
+    font-size: .88rem;
+  }
+
+  .warning-description {
+    font-size: .76rem;
   }
 }
 

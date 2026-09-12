@@ -15,20 +15,30 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260912-mobile2">
+  <link rel="stylesheet" href="styles.css?v=20260912-warning1">
 
   <title>Parknacross Weather · Ardamine, Co. Wexford</title>
 </head>
 
 <body class="weather-neutral">
-<div id="warningBanner" class="warning-banner" hidden>
+<div id="warningBanner" class="warning-banner level-yellow" role="alert" aria-live="polite" hidden>
   <div class="warning-inner">
     <span class="warning-icon" aria-hidden="true">!</span>
+
     <div class="warning-copy">
+      <div class="warning-heading-row">
+        <span id="warningLevel" class="warning-level-badge">Yellow warning</span>
+        <span class="warning-source">Met Éireann</span>
+      </div>
+
       <strong id="warningTitle">Weather warning for Wexford</strong>
-      <p id="warningText"></p>
+      <p id="warningTiming" class="warning-timing"></p>
+      <p id="warningText" class="warning-description"></p>
     </div>
-    <a href="https://www.met.ie/warnings" target="_blank" rel="noopener">View on Met Éireann</a>
+
+    <a class="warning-link" href="https://www.met.ie/warnings" target="_blank" rel="noopener">
+      Full warning <span aria-hidden="true">↗</span>
+    </a>
   </div>
 </div>
 
@@ -390,7 +400,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="app.js?v=20260912-statusfix"></script>
+<script src="app.js?v=20260912-warning1"></script>
 
 <script src="site-config.js?v=20260912-mobile2"></script>
 <script src="platform.js?v=20260912-mobile2"></script>
