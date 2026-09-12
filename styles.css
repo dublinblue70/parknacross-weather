@@ -1591,3 +1591,73 @@ canvas {
   }
 }
 
+
+/* ============================================================
+   MOBILE CURRENT-WEATHER ICON FIX
+   Clean alignment beside the large temperature on phones.
+   Desktop styling remains unchanged.
+   ============================================================ */
+@media (max-width: 600px) {
+  .hero-condition {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 10px;
+  }
+
+  .weather-orb {
+    width: 46px;
+    height: 54px;
+    min-width: 46px;
+    margin: 3px 0 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .weather-orb::before {
+    width: 36px;
+    height: 36px;
+    margin-top: 3px;
+    flex: 0 0 36px;
+  }
+
+  .temp-row {
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  .temp {
+    line-height: .9;
+  }
+
+  .temp-unit {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 390px) {
+  .hero-condition {
+    grid-template-columns: 40px minmax(0, 1fr);
+    column-gap: 8px;
+  }
+
+  .weather-orb {
+    width: 40px;
+    min-width: 40px;
+    height: 48px;
+    margin-top: 2px;
+  }
+
+  .weather-orb::before {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+    margin-top: 2px;
+  }
+}
+
