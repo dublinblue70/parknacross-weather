@@ -1,0 +1,42 @@
+PARKNACROSS WEATHER — MOBILE FORMATTING FIX
+
+This is a GitHub-only update.
+DO NOT change Cloudflare worker.js for this mobile formatting fix.
+
+Replace the website files in your GitHub repository root with the files in this package.
+
+At minimum replace:
+- styles.css
+- index.html
+- radar.html
+- graphs.html
+- rain.html
+- climate.html
+- coast.html
+- sky.html
+- station.html
+- history.html
+- service-worker.js
+
+The package also contains the corresponding JS files so you can upload the full set safely.
+
+What was fixed:
+- v2 mobile rules now run AFTER all desktop/v2 rules
+- no horizontal page overflow
+- consistent mobile header/logo across all pages
+- navigation scrolls cleanly horizontally instead of breaking onto odd rows
+- current-conditions hero resized/reflowed for phones
+- status bar, today cards and station panels reflow correctly
+- all new v2 context/rain/climate/coastal grids become single-column on phones
+- Chart.js canvases constrained to phone width
+- chart controls and range buttons no longer force the page wider than the screen
+- radar controls/map resized for phones
+- History download/range controls corrected
+- Station specification/quality cards corrected
+- long text and source attribution wrap correctly
+- extra narrow-phone rules added for ~320–390 px screens
+
+After committing the files:
+1. Open parknacrossweather.ie on the phone.
+2. Close and reopen the browser tab, or refresh once.
+3. The new service-worker cache name will retire the old cached CSS.
