@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v3";
+const CACHE_NAME = "parknacross-weather-v2";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
