@@ -44,10 +44,6 @@ let deferredInstallPrompt = null;
    RAIN CORRECTION
    ========================================================= */
 
-/*
- * 0.1 mm on commissioning day was a test reading rather
- * than genuine rainfall.
- */
 const RAIN_CORRECTIONS_MM = {
   "2026-09-11": 0.1
 };
@@ -58,15 +54,12 @@ const RAIN_CORRECTIONS_MM = {
    ========================================================= */
 
 function readingTime(reading) {
-
   if (reading?.received_at) {
-
     const time = new Date(reading.received_at).getTime();
 
     if (Number.isFinite(time)) {
       return time;
     }
-
   }
 
   if (usable(reading?.epoch)) {
@@ -78,7 +71,6 @@ function readingTime(reading) {
 
 
 function localDateKey(reading) {
-
   const time = readingTime(reading);
 
   if (!time) {
@@ -96,7 +88,6 @@ function localDateKey(reading) {
 
 
 function correctedDailyRain(reading) {
-
   const raw = Number(reading?.rain_daily_mm);
 
   if (!Number.isFinite(raw)) {
@@ -113,7 +104,6 @@ function correctedDailyRain(reading) {
 
 
 function sameDay(time, reference = new Date()) {
-
   const date = new Date(time);
 
   return (
@@ -125,7 +115,6 @@ function sameDay(time, reference = new Date()) {
 
 
 function compass(degrees) {
-
   if (!usable(degrees)) {
     return "--";
   }
@@ -159,7 +148,6 @@ function compass(degrees) {
 
 
 function comfort(humidity) {
-
   const value = Number(humidity);
 
   if (!Number.isFinite(value)) {
@@ -182,8 +170,26 @@ function comfort(humidity) {
 }
 
 
-function recordReading(rows, field, mode = "max") {
+function batteryStatus(voltage) {
+  if (!usable(voltage)) {
+    return "--";
+  }
 
+  const v = Number(voltage);
+
+  if (v >= 3.0) {
+    return `Normal · ${v.toFixed(2)} V`;
+  }
+
+  if (v >= 2.7) {
+    return `Check · ${v.toFixed(2)} V`;
+  }
+
+  return `Low · ${v.toFixed(2)} V`;
+}
+
+
+function recordReading(rows, field, mode = "max") {
   const valid = rows.filter(
     row => usable(row[field])
   );
@@ -193,7 +199,6 @@ function recordReading(rows, field, mode = "max") {
   }
 
   return valid.reduce((best, row) => {
-
     if (!best) {
       return row;
     }
@@ -216,7 +221,6 @@ function recordReading(rows, field, mode = "max") {
 
 
 function timeLabel(reading) {
-
   const time = readingTime(reading);
 
   if (!time) {
@@ -234,7 +238,6 @@ function timeLabel(reading) {
 
 
 function dateLabel(value) {
-
   if (!value) {
     return "--";
   }
@@ -264,18 +267,15 @@ function dateLabel(value) {
    ========================================================= */
 
 function pressureStats() {
-
   const rows = history24.filter(
     row => usable(row.pressure_hpa)
   );
 
   if (rows.length < 2) {
-
     return {
       change: null,
       trend: "--"
     };
-
   }
 
   const change =
@@ -295,14 +295,12 @@ function pressureStats() {
 
 
 function closestReadingTo(targetTime) {
-
   if (!history24.length) {
     return null;
   }
 
   return history24.reduce(
     (best, row) => {
-
       const time = readingTime(row);
 
       if (!time) {
@@ -315,10 +313,7 @@ function closestReadingTo(targetTime) {
 
       return (
         Math.abs(time - targetTime) <
-        Math.abs(
-          readingTime(best) -
-          targetTime
-        )
+        Math.abs(readingTime(best) - targetTime)
       )
         ? row
         : best;
@@ -336,7 +331,6 @@ function updateTrend(
   unit,
   digits = 1
 ) {
-
   const element = $(id);
 
   if (
@@ -344,7 +338,6 @@ function updateTrend(
     !usable(currentValue) ||
     !usable(oldValue)
   ) {
-
     set(id, "--");
     return;
   }
@@ -389,25 +382,21 @@ function updateTrend(
    ========================================================= */
 
 function prevailingWind() {
-
   const rows = history24.filter(
     row => usable(row.wind_direction_deg)
   );
 
   if (!rows.length) {
-
     return {
       deg: null,
       text: "--"
     };
-
   }
 
   let x = 0;
   let y = 0;
 
   rows.forEach(row => {
-
     const weight =
       usable(row.wind_speed_kmh)
         ? Math.max(
@@ -428,7 +417,6 @@ function prevailingWind() {
     y +=
       Math.sin(radians) *
       weight;
-
   });
 
   const degrees =
@@ -451,7 +439,6 @@ function prevailingWind() {
    ========================================================= */
 
 function conditionInfo(current, isNight) {
-
   const rain =
     Number(
       current.rain_rate_mm_h || 0
@@ -472,9 +459,7 @@ function conditionInfo(current, isNight) {
       current.uv_index || 0
     );
 
-
   if (rain >= 2.5) {
-
     return {
       tag: "Rainy",
       icon: "🌧️",
@@ -482,12 +467,9 @@ function conditionInfo(current, isNight) {
         `Rain is falling at ${n(rain)} mm/h.`,
       className: "weather-rain"
     };
-
   }
 
-
   if (rain > 0) {
-
     return {
       tag: "Light rain",
       icon: "🌦️",
@@ -495,12 +477,9 @@ function conditionInfo(current, isNight) {
         `Light rain is falling at ${n(rain)} mm/h.`,
       className: "weather-rain"
     };
-
   }
 
-
   if (wind >= 35) {
-
     return {
       tag: "Very windy",
       icon: "💨",
@@ -508,12 +487,9 @@ function conditionInfo(current, isNight) {
         `A lively Wexford breeze is blowing at ${n(wind)} km/h.`,
       className: "weather-windy"
     };
-
   }
 
-
   if (wind >= 20) {
-
     return {
       tag: "Breezy",
       icon: "🌬️",
@@ -521,12 +497,9 @@ function conditionInfo(current, isNight) {
         `Breezy conditions with wind around ${n(wind)} km/h.`,
       className: "weather-windy"
     };
-
   }
 
-
   if (isNight) {
-
     return {
       tag: "Night",
       icon: "🌙",
@@ -534,15 +507,12 @@ function conditionInfo(current, isNight) {
         "Night-time conditions at Parknacross.",
       className: "weather-neutral"
     };
-
   }
-
 
   if (
     uv >= 5 ||
     solar >= 400
   ) {
-
     return {
       tag: "Bright",
       icon: "☀️",
@@ -550,12 +520,9 @@ function conditionInfo(current, isNight) {
         "Bright conditions over Parknacross right now.",
       className: "weather-bright"
     };
-
   }
 
-
   if (solar >= 100) {
-
     return {
       tag: "Some brightness",
       icon: "⛅",
@@ -563,9 +530,7 @@ function conditionInfo(current, isNight) {
         "Some brightness breaking through at Parknacross.",
       className: "weather-bright"
     };
-
   }
-
 
   return {
     tag: "Calm & local",
@@ -582,7 +547,6 @@ function conditionInfo(current, isNight) {
    ========================================================= */
 
 function dayOfYear(date) {
-
   const start =
     new Date(
       date.getFullYear(),
@@ -598,7 +562,6 @@ function dayOfYear(date) {
 
 
 function normalize360(value) {
-
   return (
     (value % 360) +
     360
@@ -612,7 +575,6 @@ function sunEvent(
   longitude,
   sunrise
 ) {
-
   const zenith = 90.833;
 
   const N =
@@ -633,11 +595,9 @@ function sunEvent(
     ) /
     24;
 
-
   const M =
     (0.9856 * t) -
     3.289;
-
 
   let L =
     M +
@@ -659,7 +619,6 @@ function sunEvent(
   L =
     normalize360(L);
 
-
   let RA =
     Math.atan(
       0.91764 *
@@ -672,10 +631,8 @@ function sunEvent(
     180 /
     Math.PI;
 
-
   RA =
     normalize360(RA);
-
 
   const Lquadrant =
     Math.floor(
@@ -683,13 +640,11 @@ function sunEvent(
     ) *
     90;
 
-
   const RAquadrant =
     Math.floor(
       RA / 90
     ) *
     90;
-
 
   RA =
     (
@@ -701,7 +656,6 @@ function sunEvent(
     ) /
     15;
 
-
   const sinDec =
     0.39782 *
     Math.sin(
@@ -710,14 +664,12 @@ function sunEvent(
       180
     );
 
-
   const cosDec =
     Math.cos(
       Math.asin(
         sinDec
       )
     );
-
 
   const cosH =
     (
@@ -744,14 +696,12 @@ function sunEvent(
       )
     );
 
-
   if (
     cosH > 1 ||
     cosH < -1
   ) {
     return null;
   }
-
 
   let H =
     sunrise
@@ -763,16 +713,13 @@ function sunEvent(
         180 /
         Math.PI;
 
-
   H /= 15;
-
 
   const T =
     H +
     RA -
     (0.06571 * t) -
     6.622;
-
 
   const UT =
     normalize360(
@@ -783,7 +730,6 @@ function sunEvent(
       15
     ) /
     15;
-
 
   return new Date(
     Date.UTC(
@@ -801,10 +747,8 @@ function sunEvent(
 
 
 function updateSunInfo() {
-
   const now =
     new Date();
-
 
   const rise =
     sunEvent(
@@ -814,7 +758,6 @@ function updateSunInfo() {
       true
     );
 
-
   const setTime =
     sunEvent(
       now,
@@ -822,7 +765,6 @@ function updateSunInfo() {
       ARDAMINE_LON,
       false
     );
-
 
   const formatTime = date =>
     date
@@ -835,18 +777,15 @@ function updateSunInfo() {
         )
       : "--";
 
-
   set(
     "sunrise",
     formatTime(rise)
   );
 
-
   set(
     "sunset",
     formatTime(setTime)
   );
-
 
   const isNight =
     !!(
@@ -858,17 +797,14 @@ function updateSunInfo() {
       )
     );
 
-
   if (
     rise &&
     setTime
   ) {
-
     if (
       now >= rise &&
       now < setTime
     ) {
-
       const mins =
         Math.max(
           0,
@@ -881,29 +817,22 @@ function updateSunInfo() {
           )
         );
 
-
       set(
         "daylightRemaining",
         `${Math.floor(mins / 60)}h ${mins % 60}m`
       );
-
     } else {
-
       set(
         "daylightRemaining",
         "Night"
       );
-
     }
-
   }
-
 
   document.body.classList.toggle(
     "is-night",
     isNight
   );
-
 
   return isNight;
 }
@@ -914,25 +843,20 @@ function updateSunInfo() {
    ========================================================= */
 
 function dailyRainTotals() {
-
   const days =
     new Map();
 
-
   history7d.forEach(
     reading => {
-
       const time =
         readingTime(
           reading
         );
 
-
       const correctedRain =
         correctedDailyRain(
           reading
         );
-
 
       if (
         !time ||
@@ -943,10 +867,8 @@ function dailyRainTotals() {
         return;
       }
 
-
       const date =
         new Date(time);
-
 
       const key = [
         date.getFullYear(),
@@ -954,23 +876,19 @@ function dailyRainTotals() {
         date.getDate()
       ].join("-");
 
-
       const rain =
         Number(
           correctedRain
         );
 
-
       const existing =
         days.get(key);
-
 
       if (
         !existing ||
         rain >
           existing.rain
       ) {
-
         days.set(
           key,
           {
@@ -978,12 +896,9 @@ function dailyRainTotals() {
             rain
           }
         );
-
       }
-
     }
   );
-
 
   return [
     ...days.values()
@@ -1002,57 +917,44 @@ function dailyRainTotals() {
    ========================================================= */
 
 function updateFreshness(current) {
-
   const time =
     readingTime(
       current
     );
 
-
   const pill =
     $("livePill");
-
 
   if (!time) {
     return;
   }
 
-
   const age =
     Date.now() -
     time;
 
-
   if (pill) {
-
     pill.classList.remove(
       "delayed",
       "offline"
     );
-
   }
-
 
   const cloudStatus =
     $("cloudStatus");
 
-
   if (cloudStatus) {
-
     cloudStatus.classList.remove(
       "ok",
       "warn",
       "bad"
     );
-
   }
-
 
   if (
     age >=
     OFFLINE_AFTER_MS
   ) {
-
     if (pill) {
       pill.classList.add(
         "offline"
@@ -1076,12 +978,10 @@ function updateFreshness(current) {
     return;
   }
 
-
   if (
     age >=
     STALE_AFTER_MS
   ) {
-
     if (pill) {
       pill.classList.add(
         "delayed"
@@ -1105,18 +1005,15 @@ function updateFreshness(current) {
     return;
   }
 
-
   set(
     "liveText",
     "LIVE FROM PARKNACROSS"
   );
 
-
   set(
     "cloudStatus",
     "Connected"
   );
-
 
   cloudStatus?.classList.add(
     "ok"
@@ -1129,17 +1026,14 @@ function updateFreshness(current) {
    ========================================================= */
 
 function updateStatsPanel() {
-
   if (!stats) {
     return;
   }
-
 
   set(
     "monthRain",
     `${n(stats.month_rain_mm)} mm`
   );
-
 
   set(
     "monthRainDays",
@@ -1150,12 +1044,10 @@ function updateStatsPanel() {
     } this month`
   );
 
-
   set(
     "yearRain",
     `${n(stats.year_rain_mm)} mm`
   );
-
 
   set(
     "stationSince",
@@ -1164,16 +1056,13 @@ function updateStatsPanel() {
     )
   );
 
-
   if (
     stats.wettest_day
   ) {
-
     set(
       "wettestDay",
       `${n(stats.wettest_day.rain_mm)} mm`
     );
-
 
     set(
       "wettestDate",
@@ -1181,23 +1070,18 @@ function updateStatsPanel() {
         `${stats.wettest_day.day}T12:00:00`
       )
     );
-
   }
-
 
   const records =
     stats.records || {};
 
-
   if (
     records.high_temperature
   ) {
-
     set(
       "allHigh",
       `${n(records.high_temperature.value)} °C`
     );
-
 
     set(
       "allHighDate",
@@ -1205,19 +1089,15 @@ function updateStatsPanel() {
         records.high_temperature.epoch
       )
     );
-
   }
-
 
   if (
     records.low_temperature
   ) {
-
     set(
       "allLow",
       `${n(records.low_temperature.value)} °C`
     );
-
 
     set(
       "allLowDate",
@@ -1225,19 +1105,15 @@ function updateStatsPanel() {
         records.low_temperature.epoch
       )
     );
-
   }
-
 
   if (
     records.peak_gust
   ) {
-
     set(
       "allGust",
       `${n(records.peak_gust.value)} km/h`
     );
-
 
     set(
       "allGustDate",
@@ -1245,19 +1121,15 @@ function updateStatsPanel() {
         records.peak_gust.epoch
       )
     );
-
   }
-
 
   if (
     records.high_pressure
   ) {
-
     set(
       "allPressure",
       `${n(records.high_pressure.value)} hPa`
     );
-
 
     set(
       "allPressureDate",
@@ -1265,9 +1137,7 @@ function updateStatsPanel() {
         records.high_pressure.epoch
       )
     );
-
   }
-
 }
 
 
@@ -1276,20 +1146,16 @@ function updateStatsPanel() {
    ========================================================= */
 
 function updateDashboard(current) {
-
   if (!current) {
     return;
   }
 
-
   const now =
     new Date();
-
 
   const today =
     history24.filter(
       reading => {
-
         const time =
           readingTime(
             reading
@@ -1302,10 +1168,8 @@ function updateDashboard(current) {
             now
           )
         );
-
       }
     );
-
 
   const highReading =
     recordReading(
@@ -1314,14 +1178,12 @@ function updateDashboard(current) {
       "max"
     );
 
-
   const lowReading =
     recordReading(
       today,
       "temperature_c",
       "min"
     );
-
 
   const gustReading =
     recordReading(
@@ -1330,7 +1192,6 @@ function updateDashboard(current) {
       "max"
     );
 
-
   const solarReading =
     recordReading(
       today,
@@ -1338,32 +1199,26 @@ function updateDashboard(current) {
       "max"
     );
 
-
   const pressure =
     pressureStats();
-
 
   const direction =
     compass(
       current.wind_direction_deg
     );
 
-
   const rainToday =
     correctedDailyRain(
       current
     );
-
 
   const currentTime =
     readingTime(
       current
     );
 
-
   const isNight =
     updateSunInfo();
-
 
   const condition =
     conditionInfo(
@@ -1371,14 +1226,11 @@ function updateDashboard(current) {
       isNight
     );
 
-
   if (currentTime) {
-
     const date =
       new Date(
         currentTime
       );
-
 
     set(
       "lastUpdated",
@@ -1396,7 +1248,6 @@ function updateDashboard(current) {
         }
       )}`
     );
-
   }
 
 
@@ -1407,42 +1258,35 @@ function updateDashboard(current) {
     n(current.temperature_c)
   );
 
-
   set(
     "heroFeels",
     `${n(current.feels_like_c)}°C`
   );
-
 
   set(
     "heroHumidity",
     `${n(current.humidity, 0)}%`
   );
 
-
   set(
     "heroDew",
     `${n(current.dew_point_c)}°C`
   );
-
 
   set(
     "heroWind",
     `${n(current.wind_speed_kmh)} km/h`
   );
 
-
   set(
     "heroRain",
     `${n(rainToday)} mm`
   );
 
-
   set(
     "heroPressure",
     `${n(current.pressure_hpa)} hPa`
   );
-
 
   set(
     "heroTrend",
@@ -1451,24 +1295,20 @@ function updateDashboard(current) {
       : `${pressure.trend} pressure`
   );
 
-
   set(
     "weatherStory",
     condition.story
   );
-
 
   set(
     "conditionsTag",
     condition.tag
   );
 
-
   set(
     "weatherIcon",
     condition.icon
   );
-
 
   document.body.classList.remove(
     "weather-neutral",
@@ -1476,7 +1316,6 @@ function updateDashboard(current) {
     "weather-bright",
     "weather-windy"
   );
-
 
   document.body.classList.add(
     condition.className
@@ -1492,14 +1331,12 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "todayHigh",
     n(
       highReading?.temperature_c
     )
   );
-
 
   set(
     "peakGust",
@@ -1508,14 +1345,12 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "summaryRain",
     n(
       rainToday
     )
   );
-
 
   set(
     "solarPeak",
@@ -1535,12 +1370,10 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "feelsVal",
     `${n(current.feels_like_c)}°C`
   );
-
 
   set(
     "tempMin",
@@ -1549,14 +1382,12 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "tempMax",
     n(
       highReading?.temperature_c
     )
   );
-
 
   set(
     "humVal",
@@ -1566,12 +1397,10 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "dewVal",
     `${n(current.dew_point_c)}°C`
   );
-
 
   set(
     "comfortVal",
@@ -1580,7 +1409,6 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "windVal",
     n(
@@ -1588,12 +1416,10 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "gustVal",
     `${n(current.wind_gust_kmh)} km/h`
   );
-
 
   set(
     "dirVal",
@@ -1608,7 +1434,6 @@ function updateDashboard(current) {
       : direction
   );
 
-
   set(
     "rainVal",
     n(
@@ -1616,12 +1441,10 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "rainRateVal",
     `${n(current.rain_rate_mm_h)} mm/h`
   );
-
 
   set(
     "pressureVal",
@@ -1630,12 +1453,10 @@ function updateDashboard(current) {
     )
   );
 
-
   set(
     "pressureTrend",
     pressure.trend
   );
-
 
   set(
     "pressureChange",
@@ -1650,7 +1471,6 @@ function updateDashboard(current) {
       : "--"
   );
 
-
   set(
     "solarVal",
     n(
@@ -1658,7 +1478,6 @@ function updateDashboard(current) {
       0
     )
   );
-
 
   set(
     "uvVal",
@@ -1668,16 +1487,14 @@ function updateDashboard(current) {
     )
   );
 
+  /* CORRECTED WS90 BATTERY STATUS */
 
   set(
     "battery",
-    usable(
+    batteryStatus(
       current.battery_v
     )
-      ? `${n(current.battery_v, 2)} V`
-      : "--"
   );
-
 
   set(
     "sampleCount",
@@ -1696,14 +1513,12 @@ function updateDashboard(current) {
       1000
     );
 
-
   updateTrend(
     "temp3h",
     current.temperature_c,
     threeHoursAgo?.temperature_c,
     "°C"
   );
-
 
   updateTrend(
     "pressure3h",
@@ -1718,12 +1533,10 @@ function updateDashboard(current) {
   const prevailing =
     prevailingWind();
 
-
   set(
     "prevailing",
     prevailing.text
   );
-
 
   if (
     usable(
@@ -1731,12 +1544,9 @@ function updateDashboard(current) {
     ) &&
     $("needle")
   ) {
-
     $("needle").style.transform =
       `rotate(${prevailing.deg}deg)`;
-
   }
-
 
   set(
     "currentDirection",
@@ -1751,12 +1561,10 @@ function updateDashboard(current) {
       : direction
   );
 
-
   set(
     "currentWind",
     `${n(current.wind_speed_kmh)} km/h`
   );
-
 
   set(
     "currentGust",
@@ -1771,7 +1579,6 @@ function updateDashboard(current) {
     `${n(highReading?.temperature_c)} °C`
   );
 
-
   set(
     "recordHighTime",
     highReading
@@ -1779,12 +1586,10 @@ function updateDashboard(current) {
       : "--"
   );
 
-
   set(
     "recordLow",
     `${n(lowReading?.temperature_c)} °C`
   );
-
 
   set(
     "recordLowTime",
@@ -1793,12 +1598,10 @@ function updateDashboard(current) {
       : "--"
   );
 
-
   set(
     "recordGust",
     `${n(gustReading?.wind_gust_kmh)} km/h`
   );
-
 
   set(
     "recordGustTime",
@@ -1807,20 +1610,16 @@ function updateDashboard(current) {
       : "--"
   );
 
-
   set(
     "recordRain",
     `${n(rainToday)} mm`
   );
 
-
   updateFreshness(
     current
   );
 
-
   updateStatsPanel();
-
 
   set(
     "year",
@@ -1834,11 +1633,8 @@ function updateDashboard(current) {
    ========================================================= */
 
 function scales(title) {
-
   return {
-
     x: {
-
       grid: {
         color: "transparent"
       },
@@ -1847,11 +1643,9 @@ function scales(title) {
         color: "#a8bfd4",
         maxTicksLimit: 8
       }
-
     },
 
     y: {
-
       grid: {
         color: "rgba(163,209,255,.10)"
       },
@@ -1865,9 +1659,7 @@ function scales(title) {
         text: title,
         color: "#a8bfd4"
       }
-
     }
-
   };
 }
 
@@ -1877,9 +1669,7 @@ function line(
   colour,
   axis = "y"
 ) {
-
   return {
-
     label,
 
     data: [],
@@ -1899,17 +1689,14 @@ function line(
     fill: false,
 
     yAxisID: axis
-
   };
 }
 
 
 function createCharts() {
-
   if (
     typeof Chart === "undefined"
   ) {
-
     console.warn(
       "Chart.js is not available."
     );
@@ -1917,50 +1704,39 @@ function createCharts() {
     return;
   }
 
-
   Chart.defaults.color =
     "#bfd0e3";
-
 
   Chart.defaults.font.family =
     "Inter,system-ui,sans-serif";
 
-
   const temperatureCanvas =
     $("temperatureChart");
-
 
   const windCanvas =
     $("windChart");
 
-
   const pressureCanvas =
     $("pressureChart");
 
-
   const rainCanvas =
     $("rainChart");
-
 
   const solarCanvas =
     $("solarChart");
 
 
   if (temperatureCanvas) {
-
     charts.temperature =
       new Chart(
         temperatureCanvas,
         {
-
           type: "line",
 
           data: {
-
             labels: [],
 
             datasets: [
-
               line(
                 "Temperature °C",
                 "#ff8d8d"
@@ -1970,13 +1746,10 @@ function createCharts() {
                 "Dew point °C",
                 "#6ef1cb"
               )
-
             ]
-
           },
 
           options: {
-
             maintainAspectRatio: false,
 
             interaction: {
@@ -1988,36 +1761,27 @@ function createCharts() {
               scales("°C"),
 
             plugins: {
-
               legend: {
                 position: "bottom"
               }
-
             }
-
           }
-
         }
       );
-
   }
 
 
   if (windCanvas) {
-
     charts.wind =
       new Chart(
         windCanvas,
         {
-
           type: "line",
 
           data: {
-
             labels: [],
 
             datasets: [
-
               line(
                 "Wind km/h",
                 "#74ddff"
@@ -2027,13 +1791,10 @@ function createCharts() {
                 "Gust km/h",
                 "#ffad66"
               )
-
             ]
-
           },
 
           options: {
-
             maintainAspectRatio: false,
 
             interaction: {
@@ -2045,47 +1806,35 @@ function createCharts() {
               scales("km/h"),
 
             plugins: {
-
               legend: {
                 position: "bottom"
               }
-
             }
-
           }
-
         }
       );
-
   }
 
 
   if (pressureCanvas) {
-
     charts.pressure =
       new Chart(
         pressureCanvas,
         {
-
           type: "line",
 
           data: {
-
             labels: [],
 
             datasets: [
-
               line(
                 "Pressure hPa",
                 "#b594ff"
               )
-
             ]
-
           },
 
           options: {
-
             maintainAspectRatio: false,
 
             interaction: {
@@ -2097,38 +1846,28 @@ function createCharts() {
               scales("hPa"),
 
             plugins: {
-
               legend: {
                 display: false
               }
-
             }
-
           }
-
         }
       );
-
   }
 
 
   if (rainCanvas) {
-
     charts.rain =
       new Chart(
         rainCanvas,
         {
-
           type: "bar",
 
           data: {
-
             labels: [],
 
             datasets: [
-
               {
-
                 label:
                   "Rainfall mm",
 
@@ -2139,15 +1878,11 @@ function createCharts() {
 
                 borderRadius:
                   8
-
               }
-
             ]
-
           },
 
           options: {
-
             maintainAspectRatio:
               false,
 
@@ -2155,36 +1890,27 @@ function createCharts() {
               scales("mm"),
 
             plugins: {
-
               legend: {
                 display: false
               }
-
             }
-
           }
-
         }
       );
-
   }
 
 
   if (solarCanvas) {
-
     charts.solar =
       new Chart(
         solarCanvas,
         {
-
           type: "line",
 
           data: {
-
             labels: [],
 
             datasets: [
-
               line(
                 "Solar W/m²",
                 "#ffd77a",
@@ -2196,13 +1922,10 @@ function createCharts() {
                 "#b594ff",
                 "y1"
               )
-
             ]
-
           },
 
           options: {
-
             maintainAspectRatio:
               false,
 
@@ -2212,9 +1935,7 @@ function createCharts() {
             },
 
             scales: {
-
               x: {
-
                 grid: {
                   color:
                     "transparent"
@@ -2226,11 +1947,9 @@ function createCharts() {
                   maxTicksLimit:
                     8
                 }
-
               },
 
               y: {
-
                 position:
                   "left",
 
@@ -2255,11 +1974,9 @@ function createCharts() {
                   color:
                     "#a8bfd4"
                 }
-
               },
 
               y1: {
-
                 position:
                   "right",
 
@@ -2284,32 +2001,23 @@ function createCharts() {
                   color:
                     "#a8bfd4"
                 }
-
               }
-
             },
 
             plugins: {
-
               legend: {
                 position:
                   "bottom"
               }
-
             }
-
           }
-
         }
       );
-
   }
-
 }
 
 
 function updateCharts() {
-
   const rows =
     history24.filter(
       reading =>
@@ -2317,7 +2025,6 @@ function updateCharts() {
           reading
         )
     );
-
 
   const labels =
     rows.map(
@@ -2341,10 +2048,8 @@ function updateCharts() {
   if (
     charts.temperature
   ) {
-
     charts.temperature.data.labels =
       labels;
-
 
     charts.temperature.data.datasets[0].data =
       rows.map(
@@ -2352,26 +2057,21 @@ function updateCharts() {
           row.temperature_c
       );
 
-
     charts.temperature.data.datasets[1].data =
       rows.map(
         row =>
           row.dew_point_c
       );
 
-
     charts.temperature.update();
-
   }
 
 
   if (
     charts.wind
   ) {
-
     charts.wind.data.labels =
       labels;
-
 
     charts.wind.data.datasets[0].data =
       rows.map(
@@ -2379,26 +2079,21 @@ function updateCharts() {
           row.wind_speed_kmh
       );
 
-
     charts.wind.data.datasets[1].data =
       rows.map(
         row =>
           row.wind_gust_kmh
       );
 
-
     charts.wind.update();
-
   }
 
 
   if (
     charts.pressure
   ) {
-
     charts.pressure.data.labels =
       labels;
-
 
     charts.pressure.data.datasets[0].data =
       rows.map(
@@ -2406,19 +2101,15 @@ function updateCharts() {
           row.pressure_hpa
       );
 
-
     charts.pressure.update();
-
   }
 
 
   if (
     charts.solar
   ) {
-
     charts.solar.data.labels =
       labels;
-
 
     charts.solar.data.datasets[0].data =
       rows.map(
@@ -2426,26 +2117,21 @@ function updateCharts() {
           row.solar_w_m2
       );
 
-
     charts.solar.data.datasets[1].data =
       rows.map(
         row =>
           row.uv_index
       );
 
-
     charts.solar.update();
-
   }
 
 
   if (
     charts.rain
   ) {
-
     const rainfall =
       dailyRainTotals();
-
 
     charts.rain.data.labels =
       rainfall.map(
@@ -2461,18 +2147,14 @@ function updateCharts() {
           )
       );
 
-
     charts.rain.data.datasets[0].data =
       rainfall.map(
         day =>
           day.rain
       );
 
-
     charts.rain.update();
-
   }
-
 }
 
 
@@ -2481,7 +2163,6 @@ function updateCharts() {
    ========================================================= */
 
 async function getJSON(url) {
-
   const response =
     await fetch(
       url,
@@ -2490,28 +2171,20 @@ async function getJSON(url) {
       }
     );
 
-
   if (!response.ok) {
-
     throw new Error(
       `HTTP ${response.status}`
     );
-
   }
-
 
   const data =
     await response.json();
 
-
   if (data?.error) {
-
     throw new Error(
       data.error
     );
-
   }
-
 
   return data;
 }
@@ -2522,14 +2195,11 @@ async function getJSON(url) {
    ========================================================= */
 
 async function loadForecast() {
-
   try {
-
     const forecast =
       await getJSON(
         FORECAST_URL
       );
-
 
     set(
       "forecastToday",
@@ -2537,13 +2207,11 @@ async function loadForecast() {
       "Forecast unavailable."
     );
 
-
     set(
       "forecastTonight",
       forecast.tonight ||
       "--"
     );
-
 
     set(
       "forecastTomorrow",
@@ -2552,20 +2220,16 @@ async function loadForecast() {
     );
 
   } catch (error) {
-
     console.warn(
       "Met Éireann forecast:",
       error
     );
 
-
     set(
       "forecastToday",
       "Official forecast temporarily unavailable."
     );
-
   }
-
 }
 
 
@@ -2574,14 +2238,11 @@ async function loadForecast() {
    ========================================================= */
 
 async function loadWarnings() {
-
   try {
-
     const warnings =
       await getJSON(
         WARNINGS_URL
       );
-
 
     const list =
       Array.isArray(
@@ -2590,16 +2251,13 @@ async function loadWarnings() {
         ? warnings.warnings
         : [];
 
-
     const banner =
       $("warningBanner");
-
 
     if (
       !banner ||
       !list.length
     ) {
-
       if (banner) {
         banner.hidden = true;
       }
@@ -2607,20 +2265,16 @@ async function loadWarnings() {
       return;
     }
 
-
     const warning =
       list[0];
 
-
     banner.hidden =
       false;
-
 
     banner.classList.remove(
       "level-orange",
       "level-red"
     );
-
 
     if (
       String(
@@ -2628,13 +2282,10 @@ async function loadWarnings() {
       ).toLowerCase() ===
       "orange"
     ) {
-
       banner.classList.add(
         "level-orange"
       );
-
     }
-
 
     if (
       String(
@@ -2642,13 +2293,10 @@ async function loadWarnings() {
       ).toLowerCase() ===
       "red"
     ) {
-
       banner.classList.add(
         "level-red"
       );
-
     }
-
 
     set(
       "warningTitle",
@@ -2662,7 +2310,6 @@ async function loadWarnings() {
       }`
     );
 
-
     const onset =
       warning.onset
         ? new Date(
@@ -2670,14 +2317,12 @@ async function loadWarnings() {
           )
         : null;
 
-
     const expires =
       warning.expires
         ? new Date(
             warning.expires
           )
         : null;
-
 
     const timing =
       onset &&
@@ -2709,7 +2354,6 @@ async function loadWarnings() {
           )}. `
         : "";
 
-
     set(
       "warningText",
       `${timing}${
@@ -2720,14 +2364,11 @@ async function loadWarnings() {
     );
 
   } catch (error) {
-
     console.warn(
       "Met Éireann warnings:",
       error
     );
-
   }
-
 }
 
 
@@ -2735,50 +2376,30 @@ async function loadWarnings() {
    MAIN WEATHER LOADING
    ========================================================= */
 
-/*
- * IMPORTANT:
- *
- * Current weather is deliberately loaded separately.
- *
- * A failure of:
- * - history
- * - stats
- * - charts
- * - forecast
- * - warnings
- *
- * will NOT prevent current weather from displaying.
- */
-
 async function loadEverything() {
-
   let current;
 
-
-  /* -----------------------------------------
-     CURRENT DATA - ESSENTIAL
-     ----------------------------------------- */
+  /*
+   * CURRENT DATA FIRST.
+   * History/stats failures must never stop live weather.
+   */
 
   try {
-
     current =
       await getJSON(
         CURRENT_URL
       );
 
   } catch (error) {
-
     console.error(
       "Current weather unavailable:",
       error
     );
 
-
     set(
       "cloudStatus",
       "Error"
     );
-
 
     $("cloudStatus")
       ?.classList
@@ -2787,25 +2408,21 @@ async function loadEverything() {
         "warn"
       );
 
-
     $("cloudStatus")
       ?.classList
       .add(
         "bad"
       );
 
-
     set(
       "conditionsTag",
       "Feed unavailable"
     );
 
-
     set(
       "lastUpdated",
       "Unable to load live weather"
     );
-
 
     $("livePill")
       ?.classList
@@ -2813,46 +2430,36 @@ async function loadEverything() {
         "offline"
       );
 
-
     set(
       "liveText",
       "STATION DATA UNAVAILABLE"
     );
 
-
     return;
   }
 
 
-  /*
-   * Display current weather IMMEDIATELY.
-   *
-   * Do not wait for history or statistics.
-   */
+  /* Display current weather immediately */
 
   try {
-
     updateDashboard(
       current
     );
 
   } catch (error) {
-
     console.error(
       "Dashboard rendering error:",
       error
     );
-
   }
 
 
-  /* -----------------------------------------
-     OPTIONAL DATA
-     ----------------------------------------- */
+  /*
+   * History and stats are optional.
+   */
 
   const results =
     await Promise.allSettled([
-
       getJSON(
         HISTORY_24_URL
       ),
@@ -2864,7 +2471,6 @@ async function loadEverything() {
       getJSON(
         STATS_URL
       )
-
     ]);
 
 
@@ -2874,10 +2480,8 @@ async function loadEverything() {
     results[0].status ===
     "fulfilled"
   ) {
-
     const response =
       results[0].value;
-
 
     history24 =
       Array.isArray(
@@ -2887,15 +2491,12 @@ async function loadEverything() {
         : [];
 
   } else {
-
     console.warn(
       "24-hour history unavailable:",
       results[0].reason
     );
 
-
     history24 = [];
-
   }
 
 
@@ -2905,10 +2506,8 @@ async function loadEverything() {
     results[1].status ===
     "fulfilled"
   ) {
-
     const response =
       results[1].value;
-
 
     history7d =
       Array.isArray(
@@ -2918,15 +2517,12 @@ async function loadEverything() {
         : [];
 
   } else {
-
     console.warn(
       "7-day history unavailable:",
       results[1].reason
     );
 
-
     history7d = [];
-
   }
 
 
@@ -2936,61 +2532,45 @@ async function loadEverything() {
     results[2].status ===
     "fulfilled"
   ) {
-
     stats =
       results[2].value;
 
   } else {
-
     console.warn(
       "Station stats unavailable:",
       results[2].reason
     );
 
-
     stats = null;
-
   }
 
 
-  /*
-   * Re-render after history arrives so today's
-   * high/low/gust/trends etc are populated.
-   */
+  /* Re-render with history data */
 
   try {
-
     updateDashboard(
       current
     );
 
   } catch (error) {
-
     console.warn(
       "Dashboard history refresh failed:",
       error
     );
-
   }
 
 
-  /*
-   * Charts are deliberately non-essential.
-   */
+  /* Charts are optional */
 
   try {
-
     updateCharts();
 
   } catch (error) {
-
     console.warn(
       "Charts could not be updated:",
       error
     );
-
   }
-
 }
 
 
@@ -2999,34 +2579,27 @@ async function loadEverything() {
    ========================================================= */
 
 async function refreshCurrent() {
-
   try {
-
     const current =
       await getJSON(
         CURRENT_URL
       );
-
 
     updateDashboard(
       current
     );
 
   } catch (error) {
-
     console.error(
       "Current refresh failed:",
       error
     );
 
-
     set(
       "cloudStatus",
       "Delayed"
     );
-
   }
-
 }
 
 
@@ -3035,18 +2608,11 @@ async function refreshCurrent() {
    ========================================================= */
 
 function setupPWA() {
-
-  /*
-   * Service worker failure must never affect weather data.
-   */
-
   try {
-
     if (
       "serviceWorker" in
       navigator
     ) {
-
       navigator.serviceWorker
         .register(
           "service-worker.js"
@@ -3058,38 +2624,30 @@ function setupPWA() {
               error
             )
         );
-
     }
 
   } catch (error) {
-
     console.warn(
       "Service worker unavailable:",
       error
     );
-
   }
 
 
   window.addEventListener(
     "beforeinstallprompt",
     event => {
-
       event.preventDefault();
-
 
       deferredInstallPrompt =
         event;
 
-
       const button =
         $("installButton");
-
 
       if (button) {
         button.hidden = false;
       }
-
     }
   );
 
@@ -3097,49 +2655,36 @@ function setupPWA() {
   const installButton =
     $("installButton");
 
-
   if (installButton) {
-
     installButton.addEventListener(
       "click",
       async () => {
-
         if (
           !deferredInstallPrompt
         ) {
           return;
         }
 
-
         try {
-
           deferredInstallPrompt.prompt();
-
 
           await deferredInstallPrompt.userChoice;
 
         } catch (error) {
-
           console.warn(
             "Install prompt:",
             error
           );
-
         }
-
 
         deferredInstallPrompt =
           null;
 
-
         installButton.hidden =
           true;
-
       }
     );
-
   }
-
 }
 
 
@@ -3150,11 +2695,6 @@ function setupPWA() {
 document.addEventListener(
   "DOMContentLoaded",
   () => {
-
-    /*
-     * Set simple page values first.
-     */
-
     set(
       "year",
       new Date().getFullYear()
@@ -3162,49 +2702,38 @@ document.addEventListener(
 
 
     try {
-
       updateSunInfo();
 
     } catch (error) {
-
       console.warn(
         "Sunrise/sunset calculation:",
         error
       );
-
     }
 
 
     /*
      * Charts are optional.
-     *
-     * A chart error must NOT stop weather data.
+     * Failure here must not affect live weather.
      */
 
     try {
-
       createCharts();
 
     } catch (error) {
-
       console.warn(
         "Chart creation failed:",
         error
       );
-
     }
 
 
-    /*
-     * LOAD THE WEATHER.
-     */
+    /* Load weather */
 
     loadEverything();
 
 
-    /*
-     * These are all optional extras.
-     */
+    /* Optional extras */
 
     loadForecast();
 
@@ -3213,9 +2742,7 @@ document.addEventListener(
     setupPWA();
 
 
-    /*
-     * Current weather refresh every minute.
-     */
+    /* Current weather every minute */
 
     setInterval(
       refreshCurrent,
@@ -3223,9 +2750,7 @@ document.addEventListener(
     );
 
 
-    /*
-     * Full history/stat refresh every five minutes.
-     */
+    /* History/stats every five minutes */
 
     setInterval(
       loadEverything,
@@ -3233,34 +2758,25 @@ document.addEventListener(
     );
 
 
-    /*
-     * Refresh sunrise/night state every minute.
-     */
+    /* Sunrise/night state */
 
     setInterval(
       () => {
-
         try {
-
           updateSunInfo();
 
         } catch (error) {
-
           console.warn(
             "Sun update:",
             error
           );
-
         }
-
       },
       60 * 1000
     );
 
 
-    /*
-     * Weather warning refresh.
-     */
+    /* Warning refresh */
 
     setInterval(
       loadWarnings,
@@ -3268,14 +2784,11 @@ document.addEventListener(
     );
 
 
-    /*
-     * Forecast refresh.
-     */
+    /* Forecast refresh */
 
     setInterval(
       loadForecast,
       30 * 60 * 1000
     );
-
   }
 );
