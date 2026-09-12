@@ -2723,23 +2723,77 @@ async function refreshCurrent() {
 ========================================================= */
 
 function setupPWA() {
-  if (
-    "serviceWorker" in
-    navigator
-  ) {
-    navigator
-      .serviceWorker
-      .register(
-        "service-worker.js"
-      )
-      .catch(
-        error =>
-          console.warn(
-            "Service worker:",
-            error
-          )
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker
+      .register("service-worker.js")
+      .catch(error =>
+        console.warn("Service worker:", error)
       );
   }
+
+  const button = $("installButton");
+
+  if (!button) return;
+
+  const isIOS =
+    /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (
+      navigator.platform === "MacIntel" &&
+      navigator.maxTouchPoints > 1
+    );
+
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+
+  if (isStandalone) {
+    button.hidden = true;
+    return;
+  }
+
+  /* iPhone / iPad */
+  if (isIOS) {
+    button.hidden = false;
+    button.textContent = "Add to Home Screen";
+
+    button.addEventListener("click", () => {
+      alert(
+        "To add Parknacross Weather to your iPhone:\n\n" +
+        "1. Open this page in Safari.\n" +
+        "2. Tap the Share button.\n" +
+        "3. Choose “Add to Home Screen”.\n" +
+        "4. Tap “Add”."
+      );
+    });
+
+    return;
+  }
+
+  /* Android / Chrome */
+  window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+
+    deferredInstallPrompt = event;
+
+    button.hidden = false;
+    button.textContent = "Install app";
+  });
+
+  button.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+
+    deferredInstallPrompt = null;
+    button.hidden = true;
+  });
+
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    button.hidden = true;
+  });
+}
 
 
   window.addEventListener(
