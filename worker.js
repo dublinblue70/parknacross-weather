@@ -46,44 +46,75 @@ export default {
           service: "Parknacross Weather",
           readings: Number(countRow?.count || 0),
           ecowitt_secrets: {
-            application_key: Boolean(await readSecret(env.ECOWITT_APPLICATION_KEY)),
-            api_key: Boolean(await readSecret(env.ECOWITT_API_KEY)),
-            mac: Boolean(await readSecret(env.ECOWITT_MAC))
+            application_key: Boolean(
+              await readSecret(env.ECOWITT_APPLICATION_KEY)
+            ),
+            api_key: Boolean(
+              await readSecret(env.ECOWITT_API_KEY)
+            ),
+            mac: Boolean(
+              await readSecret(env.ECOWITT_MAC)
+            )
           }
         });
       }
 
       if (url.pathname === "/sync") {
-        return json(await syncEcowitt(env));
+        return json(
+          await syncEcowitt(env)
+        );
       }
 
       if (url.pathname === "/current") {
-        let latest = await getLatest(env);
-        const nowEpoch = Math.floor(Date.now() / 1000);
+        let latest =
+          await getLatest(env);
 
-        if (!latest || nowEpoch - Number(latest.epoch || 0) > 120) {
+        const nowEpoch =
+          Math.floor(
+            Date.now() / 1000
+          );
+
+        if (
+          !latest ||
+          nowEpoch -
+            Number(
+              latest.epoch || 0
+            ) >
+            120
+        ) {
           try {
             await syncEcowitt(env);
-            latest = await getLatest(env);
+            latest =
+              await getLatest(env);
           } catch (error) {
-            console.warn("Auto-sync failed:", error);
+            console.warn(
+              "Auto-sync failed:",
+              error
+            );
           }
         }
 
         if (!latest) {
           return json(
-            { error: "No weather readings available" },
+            {
+              error:
+                "No weather readings available"
+            },
             503
           );
         }
 
-        return json(formatRow(latest));
+        return json(
+          formatRow(latest)
+        );
       }
 
       if (url.pathname === "/history") {
         const requested =
           Number(
-            url.searchParams.get("hours") || 24
+            url.searchParams.get(
+              "hours"
+            ) || 24
           );
 
         const hours =
@@ -91,7 +122,9 @@ export default {
             1,
             Math.min(
               8784,
-              Number.isFinite(requested)
+              Number.isFinite(
+                requested
+              )
                 ? requested
                 : 24
             )
@@ -105,10 +138,22 @@ export default {
 
         const result =
           await env.DB.prepare(
-            `SELECT epoch, received_at, temperature_c, feels_like_c, humidity,
-                    dew_point_c, wind_speed_kmh, wind_gust_kmh, wind_direction_deg,
-                    pressure_hpa, rain_rate_mm_h, rain_daily_mm, solar_w_m2,
-                    uv_index, battery_v
+            `SELECT
+                epoch,
+                received_at,
+                temperature_c,
+                feels_like_c,
+                humidity,
+                dew_point_c,
+                wind_speed_kmh,
+                wind_gust_kmh,
+                wind_direction_deg,
+                pressure_hpa,
+                rain_rate_mm_h,
+                rain_daily_mm,
+                solar_w_m2,
+                uv_index,
+                battery_v
              FROM ${TABLE}
              WHERE epoch >= ?
              ORDER BY epoch ASC`
@@ -119,16 +164,25 @@ export default {
         return json({
           hours,
           count:
-            result.results?.length || 0,
+            result.results
+              ?.length || 0,
+
           readings:
-            (result.results || []).map(formatRow)
+            (
+              result.results ||
+              []
+            ).map(
+              formatRow
+            )
         });
       }
 
       if (url.pathname === "/daily") {
         const requested =
           Number(
-            url.searchParams.get("days") || 30
+            url.searchParams.get(
+              "days"
+            ) || 30
           );
 
         const days =
@@ -136,7 +190,9 @@ export default {
             1,
             Math.min(
               3660,
-              Number.isFinite(requested)
+              Number.isFinite(
+                requested
+              )
                 ? requested
                 : 30
             )
@@ -150,41 +206,80 @@ export default {
 
         const result =
           await env.DB.prepare(
-            `SELECT date(epoch, 'unixepoch') AS day,
-                    MAX(temperature_c) AS high_c,
-                    MIN(temperature_c) AS low_c,
-                    MAX(wind_gust_kmh) AS peak_gust_kmh,
-                    MAX(rain_daily_mm) AS rain_mm,
-                    AVG(pressure_hpa) AS avg_pressure_hpa,
-                    MAX(solar_w_m2) AS solar_peak_w_m2
+            `SELECT
+                date(
+                  epoch,
+                  'unixepoch'
+                ) AS day,
+                MAX(
+                  temperature_c
+                ) AS high_c,
+                MIN(
+                  temperature_c
+                ) AS low_c,
+                MAX(
+                  wind_gust_kmh
+                ) AS peak_gust_kmh,
+                MAX(
+                  rain_daily_mm
+                ) AS rain_mm,
+                AVG(
+                  pressure_hpa
+                ) AS avg_pressure_hpa,
+                MAX(
+                  solar_w_m2
+                ) AS solar_peak_w_m2
              FROM ${TABLE}
              WHERE epoch >= ?
-             GROUP BY date(epoch, 'unixepoch')
+             GROUP BY
+               date(
+                 epoch,
+                 'unixepoch'
+               )
              ORDER BY day ASC`
           )
           .bind(cutoff)
           .all();
 
         const rows =
-          (result.results || []).map(
+          (
+            result.results ||
+            []
+          ).map(
             row => ({
               day:
                 row.day,
+
               high_c:
-                nullableNumber(row.high_c),
+                nullableNumber(
+                  row.high_c
+                ),
+
               low_c:
-                nullableNumber(row.low_c),
+                nullableNumber(
+                  row.low_c
+                ),
+
               peak_gust_kmh:
-                nullableNumber(row.peak_gust_kmh),
+                nullableNumber(
+                  row.peak_gust_kmh
+                ),
+
               rain_mm:
                 correctedRainForDay(
                   row.day,
                   row.rain_mm
                 ),
+
               avg_pressure_hpa:
-                nullableNumber(row.avg_pressure_hpa),
+                nullableNumber(
+                  row.avg_pressure_hpa
+                ),
+
               solar_peak_w_m2:
-                nullableNumber(row.solar_peak_w_m2)
+                nullableNumber(
+                  row.solar_peak_w_m2
+                )
             })
           );
 
@@ -199,7 +294,10 @@ export default {
         );
       }
 
-      if (url.pathname === "/met/forecast") {
+      if (
+        url.pathname ===
+        "/met/forecast"
+      ) {
         return json(
           await getMetForecast(),
           200,
@@ -210,7 +308,10 @@ export default {
         );
       }
 
-      if (url.pathname === "/met/warnings") {
+      if (
+        url.pathname ===
+        "/met/warnings"
+      ) {
         return json(
           await getMetWarnings(),
           200,
@@ -222,7 +323,10 @@ export default {
       }
 
       return json(
-        { error: "Not found" },
+        {
+          error:
+            "Not found"
+        },
         404
       );
 
@@ -240,7 +344,11 @@ export default {
     }
   },
 
-  async scheduled(event, env, ctx) {
+  async scheduled(
+    event,
+    env,
+    ctx
+  ) {
     ctx.waitUntil(
       syncEcowitt(env)
     );
@@ -248,14 +356,20 @@ export default {
 };
 
 
-async function readSecret(binding) {
-  if (typeof binding === "string") {
+async function readSecret(
+  binding
+) {
+  if (
+    typeof binding ===
+    "string"
+  ) {
     return binding.trim();
   }
 
   if (
     binding &&
-    typeof binding.get === "function"
+    typeof binding.get ===
+      "function"
   ) {
     const value =
       await binding.get();
@@ -509,9 +623,7 @@ async function syncEcowitt(env) {
 
 
     /*
-     * WS90 uses piezoelectric rainfall.
-     * Prefer rainfall_piezo first.
-     * Standard rainfall remains as fallback.
+     * WS90 PIEZOELECTRIC RAIN
      */
 
     rain_rate_mm_h:
@@ -561,11 +673,7 @@ async function syncEcowitt(env) {
 
 
     /*
-     * Ecowitt commonly identifies the WS90
-     * outdoor array as WH90 in battery data.
-     *
-     * Prefer wh90batt, but retain WS90 naming
-     * variants as fallbacks.
+     * WS90 / WH90 BATTERY
      */
 
     battery_v:
@@ -595,7 +703,8 @@ async function syncEcowitt(env) {
 
 
   if (
-    reading.feels_like_c === null
+    reading.feels_like_c ===
+    null
   ) {
     reading.feels_like_c =
       reading.temperature_c;
@@ -702,6 +811,13 @@ async function syncEcowitt(env) {
   .run();
 
 
+  /*
+   * TEMPORARY DIAGNOSTIC OUTPUT
+   *
+   * This lets us see exactly what battery
+   * information Ecowitt is returning.
+   */
+
   return {
     status:
       "ok",
@@ -714,7 +830,23 @@ async function syncEcowitt(env) {
     received_at:
       receivedAt,
 
-    reading
+    reading,
+
+    debug_battery:
+      data.battery ||
+      null,
+
+    debug_battery_keys:
+      data.battery &&
+      typeof data.battery ===
+        "object"
+        ? Object.keys(
+            data.battery
+          )
+        : [],
+
+    debug_top_level_keys:
+      Object.keys(data)
   };
 }
 
@@ -926,7 +1058,6 @@ async function buildStats(env) {
         best,
         row
       ) => {
-
         if (
           !best ||
           Number(
@@ -1102,8 +1233,8 @@ async function getMetForecast() {
     await response.json();
 
   const parts =
-    raw?.forecasts?.[0]?.regions ||
-    [];
+    raw?.forecasts?.[0]
+      ?.regions || [];
 
   const merged =
     Object.assign(
