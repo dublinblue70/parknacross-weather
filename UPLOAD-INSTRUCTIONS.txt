@@ -1,24 +1,25 @@
-PARKNACROSS WEATHER - PROFESSIONAL REDESIGN
+PARKNACROSS WEATHER — FINISHING RELEASE
 
-Replace these files in the ROOT of your existing GitHub repository:
-
+Replace these files in the ROOT of your GitHub repository:
 1. index.html
 2. styles.css
 3. station.html
 4. history.html
 5. service-worker.js
 
-IMPORTANT:
-- KEEP your current working app.js exactly as it is.
-- KEEP history.js exactly as it is.
-- KEEP CNAME unchanged.
-- KEEP manifest.webmanifest and all icon/image files unchanged.
-- Do not change worker.js in Cloudflare.
+DO NOT replace or edit:
+- app.js
+- history.js
+- worker.js
+- CNAME
+- manifest.webmanifest
 
-The new HTML uses versioned references such as:
-  styles.css?v=20260912-pro
-  app.js?v=20260912-pro
+What this release changes:
+- Cloud renamed to Data feed
+- Last observation now shows relative freshness (e.g. "1 min ago") plus exact time
+- Remaining condition emoji replaced visually with a consistent professional weather icon
+- Station page polished with live feed, latest observation, battery and archive status
+- Service worker cache bumped and page navigations made network-first to reduce stale "/" vs "/index.html" behaviour
+- Existing live-data logic remains untouched
 
-This helps force browsers to load the refreshed front end.
-
-After committing all five files to GitHub, open parknacrossweather.ie and hard-refresh once.
+After committing all five files, refresh the site. The new service worker will remove older Parknacross Weather caches when it activates.

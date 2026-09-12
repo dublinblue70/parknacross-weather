@@ -1,7 +1,6 @@
-const CACHE_NAME = "parknacross-weather-v2-professional";
+const CACHE_NAME = "parknacross-weather-v3-finish";
 
 const STATIC_ASSETS = [
-  "./",
   "./index.html",
   "./styles.css",
   "./app.js",
@@ -40,6 +39,7 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
 
+  // Weather APIs and third-party libraries should always use the network.
   if (
     url.hostname.includes("workers.dev") ||
     url.hostname.includes("cdn.jsdelivr.net") ||
@@ -48,6 +48,16 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  // Always request page navigations from the network first.
+  // This prevents "/" and "/index.html" becoming different stale cached pages.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request).catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+
+  // Static files: network first, cached fallback.
   event.respondWith(
     fetch(request)
       .then(response => {

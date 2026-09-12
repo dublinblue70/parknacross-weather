@@ -15,7 +15,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260912-pro">
+  <link rel="stylesheet" href="styles.css?v=20260912-finish">
 
   <title>Parknacross Weather · Ardamine, Co. Wexford</title>
 </head>
@@ -94,9 +94,13 @@
         <span class="live-dot"></span>
         <strong id="liveText">LIVE FROM PARKNACROSS</strong>
       </div>
-      <div class="station-status"><span class="status-label">Last observation</span><strong id="lastUpdated">Connecting…</strong></div>
+      <div class="station-status observation-status">
+        <span class="status-label">Last observation</span>
+        <strong id="lastUpdatedRelative">Connecting…</strong>
+        <small id="lastUpdated">--</small>
+      </div>
       <div class="station-status"><span class="status-label">WS90 battery</span><strong id="battery">--</strong></div>
-      <div class="station-status"><span class="status-label">Cloud</span><strong id="cloudStatus">Connecting</strong></div>
+      <div class="station-status"><span class="status-label">Data feed</span><strong id="cloudStatus">Connecting</strong></div>
     </section>
 
     <section class="today-section" aria-labelledby="todayHeading">
@@ -342,6 +346,70 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="app.js?v=20260912-pro"></script>
+<script src="app.js?v=20260912-finish"></script>
+
+<script>
+(() => {
+  const API = "https://parknacross-weather.dave-s-carter.workers.dev/current";
+  let lastObservationTime = null;
+
+  function relativeAge(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "--";
+
+    const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+
+    if (seconds < 15) return "Just now";
+    if (seconds < 60) return `${seconds}s ago`;
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min ago`;
+
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (hours < 24) {
+      return remainingMinutes
+        ? `${hours}h ${remainingMinutes}m ago`
+        : `${hours}h ago`;
+    }
+
+    const days = Math.floor(hours / 24);
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+  }
+
+  function updateRelativeLabel() {
+    const element = document.getElementById("lastUpdatedRelative");
+    if (element && lastObservationTime) {
+      element.textContent = relativeAge(lastObservationTime);
+    }
+  }
+
+  async function refreshObservationAge() {
+    try {
+      const response = await fetch(API, { cache: "no-store" });
+      if (!response.ok) return;
+
+      const current = await response.json();
+      const time = current.received_at
+        ? new Date(current.received_at)
+        : current.epoch
+        ? new Date(Number(current.epoch) * 1000)
+        : null;
+
+      if (time && !Number.isNaN(time.getTime())) {
+        lastObservationTime = time;
+        updateRelativeLabel();
+      }
+    } catch (_) {
+      // The main app handles connection errors.
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    refreshObservationAge();
+    setInterval(updateRelativeLabel, 15000);
+    setInterval(refreshObservationAge, 60000);
+  });
+})();
+</script>
 </body>
 </html>

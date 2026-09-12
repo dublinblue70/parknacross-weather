@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260912-pro">
+  <link rel="stylesheet" href="styles.css?v=20260912-finish">
   <title>Station · Parknacross Weather</title>
 </head>
 <body>
@@ -38,6 +38,26 @@
       </p>
     </section>
 
+    <section class="station-health-bar" aria-label="Station health">
+      <div class="station-health-item">
+        <span>Data feed</span>
+        <strong id="stationFeed" class="ok">Connecting…</strong>
+      </div>
+      <div class="station-health-item">
+        <span>Latest observation</span>
+        <strong id="stationLastUpdatedRelative">--</strong>
+        <small id="stationLastUpdated">--</small>
+      </div>
+      <div class="station-health-item">
+        <span>WS90 battery</span>
+        <strong id="stationBattery">--</strong>
+      </div>
+      <div class="station-health-item">
+        <span>Archive since</span>
+        <strong id="stationStarted">--</strong>
+      </div>
+    </section>
+
     <section class="station-story">
       <h2>Station specification</h2>
       <p>
@@ -53,9 +73,6 @@
         <div class="station-spec"><span>Approx. coordinates</span><strong>52.6°N · 6.3°W</strong></div>
         <div class="station-spec"><span>Mounting</span><strong>Roof-mounted ultrasonic array</strong></div>
         <div class="station-spec"><span>Update interval</span><strong>Approximately 60 seconds</strong></div>
-        <div class="station-spec"><span>Archive started</span><strong id="stationStarted">--</strong></div>
-        <div class="station-spec"><span>Latest observation</span><strong id="stationLastUpdated">--</strong></div>
-        <div class="station-spec"><span>WS90 battery</span><strong id="stationBattery">--</strong></div>
       </div>
     </section>
 
@@ -104,8 +121,18 @@
 
 <script>
 const API_BASE = "https://parknacross-weather.dave-s-carter.workers.dev";
-const set = (id, value) => { const e = document.getElementById(id); if (e) e.textContent = value; };
-const usable = value => value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+const set = (id, value) => {
+  const element = document.getElementById(id);
+  if (element) element.textContent = value;
+};
+const usable = value =>
+  value !== null &&
+  value !== undefined &&
+  value !== "" &&
+  Number.isFinite(Number(value));
+
+let latestObservationTime = null;
+
 function batteryStatus(voltage) {
   if (!usable(voltage)) return "--";
   const v = Number(voltage);
@@ -113,33 +140,97 @@ function batteryStatus(voltage) {
   if (v >= 2.7) return `Check · ${v.toFixed(2)} V`;
   return `Low · ${v.toFixed(2)} V`;
 }
-document.addEventListener("DOMContentLoaded", async () => {
-  set("year", new Date().getFullYear());
+
+function relativeAge(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "--";
+
+  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (seconds < 15) return "Just now";
+  if (seconds < 60) return `${seconds}s ago`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours < 24) {
+    return remainingMinutes ? `${hours}h ${remainingMinutes}m ago` : `${hours}h ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+function refreshRelativeAge() {
+  if (latestObservationTime) {
+    set("stationLastUpdatedRelative", relativeAge(latestObservationTime));
+  }
+}
+
+async function loadStationStatus() {
   try {
     const [statsResponse, currentResponse] = await Promise.all([
       fetch(`${API_BASE}/stats`, { cache: "no-store" }),
       fetch(`${API_BASE}/current`, { cache: "no-store" })
     ]);
+
     if (statsResponse.ok) {
       const stats = await statsResponse.json();
       if (stats.first_epoch) {
-        set("stationStarted", new Date(stats.first_epoch * 1000).toLocaleDateString("en-IE", {
-          day: "numeric", month: "long", year: "numeric"
-        }));
+        set(
+          "stationStarted",
+          new Date(stats.first_epoch * 1000).toLocaleDateString("en-IE", {
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+          })
+        );
       }
     }
+
     if (currentResponse.ok) {
       const current = await currentResponse.json();
-      const time = current.received_at ? new Date(current.received_at) : (current.epoch ? new Date(current.epoch * 1000) : null);
+      set("stationFeed", "Connected");
+
+      const time = current.received_at
+        ? new Date(current.received_at)
+        : current.epoch
+        ? new Date(Number(current.epoch) * 1000)
+        : null;
+
       if (time && !Number.isNaN(time.getTime())) {
-        set("stationLastUpdated", time.toLocaleString("en-IE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }));
+        latestObservationTime = time;
+        refreshRelativeAge();
+        set(
+          "stationLastUpdated",
+          time.toLocaleString("en-IE", {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit"
+          })
+        );
       }
+
       set("stationBattery", batteryStatus(current.battery_v));
+    } else {
+      set("stationFeed", "Unavailable");
     }
   } catch (error) {
     console.warn("Station page data:", error);
+    set("stationFeed", "Unavailable");
   }
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js").catch(() => {});
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  set("year", new Date().getFullYear());
+  loadStationStatus();
+  setInterval(refreshRelativeAge, 15000);
+  setInterval(loadStationStatus, 60000);
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js").catch(() => {});
+  }
 });
 </script>
 </body>
