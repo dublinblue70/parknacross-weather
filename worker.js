@@ -293,11 +293,19 @@ async function syncEcowitt(env) {
       "uvi.value"
     ]),
     battery_v: valueAt(data, [
-      "battery.ws90batt.value",
-      "battery.ws90batt",
-      "battery.ws90.value",
-      "battery.ws90"
-    ])
+  "battery.wh90batt.value",
+  "battery.wh90batt",
+  "battery.ws90batt.value",
+  "battery.ws90batt",
+  "battery.wh90_batt.value",
+  "battery.wh90_batt",
+  "battery.ws90_batt.value",
+  "battery.ws90_batt",
+  "wh90batt.value",
+  "wh90batt",
+  "ws90batt.value",
+  "ws90batt"
+])
   };
 
   if (reading.feels_like_c === null) {
