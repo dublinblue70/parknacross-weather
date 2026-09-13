@@ -1,10 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
   <url>
     <loc>https://parknacrossweather.ie/</loc>
-    <changefreq>hourly</changefreq>
-    <priority>1.0</priority>
   </url>
-
+  <url>
+    <loc>https://parknacrossweather.ie/radar.html</loc>
+  </url>
+  <url>
+    <loc>https://parknacrossweather.ie/graphs.html</loc>
+  </url>
+  <url>
+    <loc>https://parknacrossweather.ie/rain.html</loc>
+  </url>
+  <url>
+    <loc>https://parknacrossweather.ie/climate.html</loc>
+  </url>
+  <url>
+    <loc>https://parknacrossweather.ie/coast.html</loc>
+  </url>
+  <url>
+    <loc>https://parknacrossweather.ie/station.html</loc>
+  </url>
+  <url>
+    <loc>https://parknacrossweather.ie/history.html</loc>
+  </url>
 </urlset>
