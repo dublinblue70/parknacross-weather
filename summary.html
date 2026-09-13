@@ -11,6 +11,14 @@
   <link rel="stylesheet" href="styles.css?v=20260912-analytics1">
   <title>Today's Ardamine Weather Summary | Parknacross Weather</title>
   <link rel="canonical" href="https://parknacrossweather.ie/summary.html">
+
+  <style>
+    .summary-download { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:18px; }
+    .summary-download button { appearance:none; border:1px solid rgba(168,197,216,.32); border-radius:10px; padding:10px 14px; background:rgba(18,42,58,.55); color:inherit; font:inherit; font-weight:600; cursor:pointer; }
+    .summary-download button:hover:not(:disabled) { background:rgba(28,58,78,.72); }
+    .summary-download button:disabled { opacity:.45; cursor:not-allowed; }
+    .summary-download small { color:#aebac3; }
+  </style>
 </head>
 <body>
 <div class="shell">
@@ -36,6 +44,10 @@
       <span class="section-eyebrow">Daily weather summary</span>
       <h2 id="summaryTitle">Today in Parknacross</h2>
       <p id="summarySubtitle">Building today's summary from live station observations…</p>
+      <div class="summary-download">
+        <button id="downloadCsvButton" type="button" disabled>Download today’s CSV</button>
+        <small id="csvStatus">Preparing today’s observations…</small>
+      </div>
     </section>
 
     <section class="page-section">
@@ -116,7 +128,7 @@
   </footer>
 </div>
 
-<script src="summary.js?v=20260913-1"></script>
+<script src="summary.js?v=20260913-csv1"></script>
 <script src="site-config.js?v=20260912-mobile2"></script>
 <!-- Cloudflare Web Analytics -->
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script>

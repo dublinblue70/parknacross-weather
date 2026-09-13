@@ -4,6 +4,8 @@ const set = (id, value) => { const el = $(id); if (el) el.textContent = value; }
 const usable = value => value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
 const num = (value, digits = 1) => usable(value) ? Number(value).toFixed(digits) : "--";
 const TIME_ZONE = "Europe/Dublin";
+let currentTodayRows = [];
+let currentTodayKey = null;
 
 function readingDate(row) {
   if (row?.received_at) {
@@ -195,6 +197,72 @@ function renderYesterday(rows, key) {
   set("yesterdayGust", usable(m.gust?.wind_gust_kmh) ? `${num(m.gust.wind_gust_kmh)} km/h` : "--");
 }
 
+
+function localTimestamp(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(date);
+  const part = type => parts.find(p => p.type === type)?.value || "";
+  return `${part("year")}-${part("month")}-${part("day")} ${part("hour")}:${part("minute")}:${part("second")}`;
+}
+
+function csvCell(value) {
+  if (value === null || value === undefined) return "";
+  const text = String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function downloadTodayCsv() {
+  if (!currentTodayRows.length || !currentTodayKey) return;
+
+  const columns = [
+    ["timestamp_local", row => localTimestamp(readingDate(row))],
+    ["timestamp_utc", row => readingDate(row)?.toISOString() || ""],
+    ["temperature_c", row => row.temperature_c],
+    ["feels_like_c", row => row.feels_like_c],
+    ["humidity_pct", row => row.humidity],
+    ["dew_point_c", row => row.dew_point_c],
+    ["wind_speed_kmh", row => row.wind_speed_kmh],
+    ["wind_gust_kmh", row => row.wind_gust_kmh],
+    ["wind_direction_deg", row => row.wind_direction_deg],
+    ["pressure_hpa", row => row.pressure_hpa],
+    ["rain_rate_mm_h", row => row.rain_rate_mm_h],
+    ["rain_daily_mm", row => row.rain_daily_mm],
+    ["solar_w_m2", row => row.solar_w_m2],
+    ["uv_index", row => row.uv_index],
+    ["battery_v", row => row.battery_v]
+  ];
+
+  const rows = [...currentTodayRows].sort((a, b) => {
+    const ad = readingDate(a)?.getTime() || 0;
+    const bd = readingDate(b)?.getTime() || 0;
+    return ad - bd;
+  });
+
+  const lines = [
+    columns.map(([name]) => csvCell(name)).join(","),
+    ...rows.map(row => columns.map(([, getter]) => csvCell(getter(row))).join(","))
+  ];
+
+  const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `parknacross-weather-${currentTodayKey}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 async function loadSummary() {
   try {
     const history = await getJSON("/history?hours=48");
@@ -211,6 +279,14 @@ async function loadSummary() {
     });
 
     const todayRows = grouped.get(todayKey) || [];
+    currentTodayRows = todayRows;
+    currentTodayKey = todayKey;
+    const downloadButton = $("downloadCsvButton");
+    if (downloadButton) downloadButton.disabled = !todayRows.length;
+    set("csvStatus", todayRows.length
+      ? `${todayRows.length.toLocaleString("en-IE")} observations ready to download.`
+      : "No observations are available to download yet.");
+
     const olderKeys = [...grouped.keys()].filter(key => key < todayKey).sort();
     const yesterdayKey = olderKeys.at(-1);
     const yesterdayRows = yesterdayKey ? grouped.get(yesterdayKey) || [] : [];
@@ -226,11 +302,17 @@ async function loadSummary() {
     console.error("Daily summary:", error);
     set("summarySubtitle", "The daily summary is temporarily unavailable.");
     set("dayStory", "Live station observations could not be loaded. Please try again shortly.");
+    currentTodayRows = [];
+    currentTodayKey = null;
+    const downloadButton = $("downloadCsvButton");
+    if (downloadButton) downloadButton.disabled = true;
+    set("csvStatus", "CSV download is temporarily unavailable.");
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   set("year", new Date().getFullYear());
+  $("downloadCsvButton")?.addEventListener("click", downloadTodayCsv);
   loadSummary();
   setInterval(loadSummary, 5 * 60 * 1000);
 
