@@ -353,15 +353,15 @@
           <div class="chart-wrap"><canvas id="rainChart"></canvas></div>
         </article>
         <article class="chart-card wind-card">
-          <div class="chart-title"><div><h3>Wind direction</h3><p>Prevailing direction from recent readings</p></div><span>Compass</span></div>
+          <div class="chart-title"><div><h3>Wind direction</h3><p>Current and prevailing wind</p></div><span>Compass</span></div>
           <div class="wind-grid">
             <div class="compass">
               <span class="dir n">N</span><span class="dir e">E</span><span class="dir s">S</span><span class="dir w">W</span>
               <div class="needle" id="needle"></div>
-              <div class="centre">Prevailing<strong id="prevailing">--</strong></div>
+              <div class="centre">Prevailing · last 24h<strong id="prevailing">--</strong></div>
             </div>
             <div class="wind-readout">
-              <div><span>Current direction</span><strong id="currentDirection">--</strong></div>
+              <div><span>Current wind direction</span><strong id="currentDirection">--</strong></div>
               <div><span>Current wind</span><strong id="currentWind">--</strong></div>
               <div><span>Current gust</span><strong id="currentGust">--</strong></div>
             </div>
@@ -418,7 +418,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="app.js?v=20260912-applesafarifix1"></script>
+<script src="app.js?v=20260913-windfix1"></script>
 
 <script src="site-config.js?v=20260912-mobile2"></script>
 <script src="platform.js?v=20260912-mobile2"></script>

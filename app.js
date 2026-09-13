@@ -205,16 +205,25 @@ function updateTrend(id, currentValue, oldValue, unit, digits = 1) {
 }
 
 function prevailingWind() {
-  const rows = history24.filter(row => usable(row.wind_direction_deg));
-  if (!rows.length) return { deg: null, text: "--" };
+  const directionalRows = history24.filter(row => usable(row.wind_direction_deg));
+  if (!directionalRows.length) return { deg: null, text: "--" };
+
+  // Very light winds can make direction readings wander and distort the
+  // 24-hour prevailing direction. Only include readings at 2 km/h or above.
+  const rows = directionalRows.filter(row =>
+    usable(row.wind_speed_kmh) && Number(row.wind_speed_kmh) >= 2
+  );
+
+  if (!rows.length) {
+    const hasWindSpeeds = directionalRows.some(row => usable(row.wind_speed_kmh));
+    return { deg: null, text: hasWindSpeeds ? "Calm" : "--" };
+  }
 
   let x = 0;
   let y = 0;
 
   rows.forEach(row => {
-    const weight = usable(row.wind_speed_kmh)
-      ? Math.max(Number(row.wind_speed_kmh), 1)
-      : 1;
+    const weight = Number(row.wind_speed_kmh);
     const radians = Number(row.wind_direction_deg) * Math.PI / 180;
     x += Math.cos(radians) * weight;
     y += Math.sin(radians) * weight;
