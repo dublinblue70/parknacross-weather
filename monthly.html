@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07131f">
+  <meta name="description" content="Month-to-date weather report for Parknacross, Ardamine, Co. Wexford, with rainfall, temperatures, wind and station statistics.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css?v=20260912-analytics1">
+  <title>Monthly Weather Report | Parknacross Weather</title>
+  <link rel="canonical" href="https://parknacrossweather.ie/monthly.html">
+  <style>
+    .monthly-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.monthly-note{margin-top:12px;color:var(--muted);font-size:.82rem;line-height:1.55}.back-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}.back-links a{color:inherit;text-decoration:none;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:rgba(255,255,255,.025)}
+    @media(max-width:950px){.monthly-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.monthly-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar"><a class="brand" href="index.html" aria-label="Parknacross Weather home"><img class="brand-mark" src="favicon.svg" alt=""><div class="brand-copy"><h1>PARKNACROSS WEATHER</h1><p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p></div></a><nav class="nav" aria-label="Main navigation"><a href="index.html">Dashboard</a><a href="summary.html">Summary</a><a href="history.html">History</a><a href="rain.html">Rain</a><a href="records.html">Records</a></nav></header>
+  <main>
+    <section class="page-hero"><span class="section-eyebrow">Monthly weather report</span><h2 id="monthTitle">Current month</h2><p id="monthSubtitle">Building the month-to-date report from archived station data…</p></section>
+
+    <section class="page-section"><article class="info-card"><div class="section-heading compact-heading"><div><span class="section-eyebrow">Month so far</span><h2>In brief</h2></div></div><p class="info-note" id="monthStory">Loading monthly weather data…</p></article></section>
+
+    <section class="page-section"><div class="section-heading"><div><span class="section-eyebrow">Temperature & rainfall</span><h2>Month at a glance</h2></div></div><div class="monthly-grid">
+      <article class="climate-card"><span>Mean temperature</span><strong id="meanTemp">--</strong><small>Average of archived observations</small></article>
+      <article class="climate-card"><span>Highest temperature</span><strong id="monthHigh">--</strong><small id="monthHighDate">--</small></article>
+      <article class="climate-card"><span>Lowest temperature</span><strong id="monthLow">--</strong><small id="monthLowDate">--</small></article>
+      <article class="climate-card"><span>Total rainfall</span><strong id="monthRain">--</strong><small>Sum of daily totals</small></article>
+      <article class="climate-card"><span>Wettest day</span><strong id="wettestDay">--</strong><small id="wettestDayDate">--</small></article>
+      <article class="climate-card"><span>Wet days</span><strong id="wetDays">--</strong><small>Days with measurable rain</small></article>
+      <article class="climate-card"><span>Dry days</span><strong id="dryDays">--</strong><small>Days with no measurable rain</small></article>
+      <article class="climate-card"><span>Days in archive</span><strong id="daysCaptured">--</strong><small id="capturePeriod">--</small></article>
+    </div></section>
+
+    <section class="page-section"><div class="section-heading"><div><span class="section-eyebrow">Wind, pressure & sunshine</span><h2>Other monthly highlights</h2></div></div><div class="monthly-grid">
+      <article class="climate-card"><span>Strongest gust</span><strong id="monthGust">--</strong><small id="monthGustDate">--</small></article>
+      <article class="climate-card"><span>Average daily pressure</span><strong id="monthPressure">--</strong><small>From daily averages</small></article>
+      <article class="climate-card"><span>Peak solar radiation</span><strong id="monthSolar">--</strong><small id="monthSolarDate">--</small></article>
+      <article class="climate-card"><span>Average daily high</span><strong id="avgHigh">--</strong><small>Across captured days</small></article>
+    </div><p class="monthly-note" id="partialNote">This is a month-to-date report and may cover only part of the month if the station archive began recently.</p></section>
+
+    <section class="page-section"><article class="info-card"><div class="section-heading compact-heading"><div><span class="section-eyebrow">Explore more</span><h2>Reports & history</h2></div></div><div class="back-links"><a href="summary.html">Today’s summary →</a><a href="records.html">Weather records →</a><a href="history.html">Weather history →</a><a href="rain.html">Rain Centre →</a></div></article></section>
+  </main>
+  <footer><span>© <span id="year"></span> Parknacross Weather</span><span>Hyperlocal weather observations · Ardamine, Co. Wexford, Ireland</span></footer>
+</div>
+<script src="monthly.js?v=20260913-1"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script>
+</body>
+</html>

@@ -13,11 +13,20 @@
   <link rel="canonical" href="https://parknacrossweather.ie/summary.html">
 
   <style>
-    .summary-download { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:18px; }
-    .summary-download button { appearance:none; border:1px solid rgba(168,197,216,.32); border-radius:10px; padding:10px 14px; background:rgba(18,42,58,.55); color:inherit; font:inherit; font-weight:600; cursor:pointer; }
-    .summary-download button:hover:not(:disabled) { background:rgba(28,58,78,.72); }
-    .summary-download button:disabled { opacity:.45; cursor:not-allowed; }
-    .summary-download small { color:#aebac3; }
+    .summary-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+    .summary-actions button,.summary-actions a{appearance:none;border:1px solid rgba(168,197,216,.32);border-radius:10px;padding:10px 14px;background:rgba(18,42,58,.55);color:inherit;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+    .summary-actions button:hover:not(:disabled),.summary-actions a:hover{background:rgba(28,58,78,.72)}
+    .summary-actions button:disabled{opacity:.45;cursor:not-allowed}
+    .summary-actions small{color:#aebac3;flex-basis:100%}
+    .compare-grid,.rain-detail-grid,.report-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .compare-card,.report-link{padding:18px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.018)}
+    .compare-card span,.compare-card small{display:block;color:var(--muted);font-size:.76rem}
+    .compare-card strong{display:block;margin:8px 0 5px;font-size:1.18rem}
+    .report-link{text-decoration:none;color:inherit}
+    .report-link strong{display:block;margin-bottom:5px}.report-link span{color:var(--muted);font-size:.84rem;line-height:1.45}
+    .share-status{min-height:1.2em}
+    @media(max-width:900px){.compare-grid,.rain-detail-grid,.report-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:600px){.compare-grid,.rain-detail-grid,.report-links{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -44,19 +53,17 @@
       <span class="section-eyebrow">Daily weather summary</span>
       <h2 id="summaryTitle">Today in Parknacross</h2>
       <p id="summarySubtitle">Building today's summary from live station observations…</p>
-      <div class="summary-download">
+      <div class="summary-actions">
         <button id="downloadCsvButton" type="button" disabled>Download today’s CSV</button>
-        <small id="csvStatus">Preparing today’s observations…</small>
+        <button id="shareWeatherButton" type="button" disabled>Share current weather</button>
+        <small id="actionStatus">Preparing today’s observations…</small>
       </div>
     </section>
 
     <section class="page-section">
       <article class="info-card">
         <div class="section-heading compact-heading">
-          <div>
-            <span class="section-eyebrow">Day so far</span>
-            <h2>Today in brief</h2>
-          </div>
+          <div><span class="section-eyebrow">Day so far</span><h2>Today in brief</h2></div>
         </div>
         <p class="info-note" id="dayStory">Loading live observations…</p>
       </article>
@@ -64,11 +71,7 @@
 
     <section class="page-section">
       <div class="section-heading">
-        <div>
-          <span class="section-eyebrow">Today's observations</span>
-          <h2>At a glance</h2>
-          <p>Automatically calculated from Parknacross Weather station readings since midnight.</p>
-        </div>
+        <div><span class="section-eyebrow">Today's observations</span><h2>At a glance</h2><p>Automatically calculated from Parknacross Weather station readings since midnight.</p></div>
       </div>
       <div class="rain-stat-grid">
         <article class="climate-card"><span>Highest temperature</span><strong id="todayHigh">--</strong><small id="todayHighTime">--</small></article>
@@ -77,6 +80,30 @@
         <article class="climate-card"><span>Strongest gust</span><strong id="todayGust">--</strong><small id="todayGustTime">--</small></article>
         <article class="climate-card"><span>Average humidity</span><strong id="todayHumidity">--</strong><small>From today's stored observations</small></article>
         <article class="climate-card"><span>Highest UV index</span><strong id="todayUv">--</strong><small id="todayUvTime">--</small></article>
+      </div>
+    </section>
+
+    <section class="page-section">
+      <div class="section-heading">
+        <div><span class="section-eyebrow">Compared with yesterday</span><h2>Today vs yesterday</h2><p>Today is still in progress; yesterday is a completed day.</p></div>
+      </div>
+      <div class="compare-grid">
+        <article class="compare-card"><span>High temperature</span><strong id="compareHigh">--</strong><small id="compareHighNote">Waiting for data</small></article>
+        <article class="compare-card"><span>Low temperature</span><strong id="compareLow">--</strong><small id="compareLowNote">Waiting for data</small></article>
+        <article class="compare-card"><span>Rainfall</span><strong id="compareRain">--</strong><small id="compareRainNote">Waiting for data</small></article>
+        <article class="compare-card"><span>Peak gust</span><strong id="compareGust">--</strong><small id="compareGustNote">Waiting for data</small></article>
+      </div>
+    </section>
+
+    <section class="page-section">
+      <div class="section-heading">
+        <div><span class="section-eyebrow">Rain status</span><h2>Last rain</h2><p>Latest measurable rainfall information from the Parknacross archive.</p></div>
+      </div>
+      <div class="rain-detail-grid">
+        <article class="climate-card"><span>Last measurable rain</span><strong id="lastRainWhen">--</strong><small id="lastRainExact">--</small></article>
+        <article class="climate-card"><span>Current rain rate</span><strong id="currentRainRate">--</strong><small id="rainNowNote">--</small></article>
+        <article class="climate-card"><span>Rain today</span><strong id="rainTodayPanel">--</strong><small>Station daily total</small></article>
+        <article class="climate-card"><span>Dry spell</span><strong id="drySpell">--</strong><small>Consecutive rain-free calendar days</small></article>
       </div>
     </section>
 
@@ -98,11 +125,7 @@
 
     <section class="page-section">
       <div class="section-heading">
-        <div>
-          <span class="section-eyebrow">Previous day</span>
-          <h2>Yesterday at a glance</h2>
-          <p id="yesterdayLabel">Completed station observations from the previous local day.</p>
-        </div>
+        <div><span class="section-eyebrow">Previous day</span><h2>Yesterday at a glance</h2><p id="yesterdayLabel">Completed station observations from the previous local day.</p></div>
       </div>
       <div class="climate-grid">
         <article class="climate-card"><span>High</span><strong id="yesterdayHigh">--</strong><small>Temperature</small></article>
@@ -113,12 +136,13 @@
     </section>
 
     <section class="page-section">
-      <article class="info-card">
-        <div class="section-heading compact-heading">
-          <div><span class="section-eyebrow">Archive</span><h2>Explore more weather history</h2></div>
-        </div>
-        <p class="info-note">For longer-term trends, rainfall totals and station records, visit the <a href="history.html">weather history</a>, <a href="rain.html">Rain Centre</a> or <a href="graphs.html">weather graphs</a>.</p>
-      </article>
+      <div class="section-heading"><div><span class="section-eyebrow">Reports & records</span><h2>Explore the archive</h2></div></div>
+      <div class="report-links">
+        <a class="report-link" href="monthly.html"><strong>Monthly weather report →</strong><span>Month-to-date temperatures, rainfall, wind and notable weather.</span></a>
+        <a class="report-link" href="records.html"><strong>Weather records →</strong><span>Hottest, coldest, wettest and windiest readings in the archive.</span></a>
+        <a class="report-link" href="history.html"><strong>Weather history →</strong><span>Browse longer-term station observations and trends.</span></a>
+        <a class="report-link" href="rain.html"><strong>Rain Centre →</strong><span>Rainfall totals, events and recent rain information.</span></a>
+      </div>
     </section>
   </main>
 
@@ -128,10 +152,8 @@
   </footer>
 </div>
 
-<script src="summary.js?v=20260913-csv1"></script>
+<script src="summary.js?v=20260913-enhancements1"></script>
 <script src="site-config.js?v=20260912-mobile2"></script>
-<!-- Cloudflare Web Analytics -->
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script>
-<!-- End Cloudflare Web Analytics -->
 </body>
 </html>
