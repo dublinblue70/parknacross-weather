@@ -14,8 +14,8 @@
   }
 
   async function loadContext() {
-    const [currentR, officialR, climateR, eventR, verifyR] = await Promise.allSettled([
-      get("/current"), get("/met/johnstown"), get("/climate-summary"),
+    const [currentR, officialR, climateR, statsR, eventR, verifyR] = await Promise.allSettled([
+      get("/current"), get("/met/johnstown"), get("/climate-summary"), get("/stats"),
       get("/events"), get("/forecast-verification")
     ]);
 
@@ -29,8 +29,14 @@
       }
     } else set("contextTempDelta", "Comparison unavailable");
 
-    if (climateR.status === "fulfilled" && Number.isFinite(Number(climateR.value.rain_percent_of_lta_month))) {
-      set("contextRainLta", `${Math.round(climateR.value.rain_percent_of_lta_month)}% of LTA`);
+    if (climateR.status === "fulfilled") {
+      const stationMonthRain = statsR.status === "fulfilled" ? Number(statsR.value?.month_rain_mm) : Number(climateR.value.station_month_rain_mm);
+      const ltaMonthRain = Number(climateR.value.johnstown_lta_month_rain_mm);
+      const rainPct = Number.isFinite(stationMonthRain) && Number.isFinite(ltaMonthRain) && ltaMonthRain > 0
+        ? (stationMonthRain / ltaMonthRain) * 100
+        : Number(climateR.value.rain_percent_of_lta_month);
+      if (Number.isFinite(rainPct)) set("contextRainLta", `${Math.round(rainPct)}% of LTA`);
+      else set("contextRainLta", "Building context");
     } else set("contextRainLta", "Building context");
 
     if (eventR.status === "fulfilled" && eventR.value.events?.length) {
