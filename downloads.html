@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07131f">
+  <meta name="description" content="Download historical Parknacross Weather observations as CSV files.">
+  <link rel="canonical" href="https://parknacrossweather.ie/downloads.html">
+  <title>Weather Data Downloads · Parknacross Weather</title>
+  <style>
+    :root{--bg:#07131f;--panel:#0d1d2b;--panel2:#112638;--line:rgba(190,220,238,.14);--text:#f2f7fa;--muted:#9fb2c1;--accent:#76c9ee;--good:#71d59a;--bad:#f27f7f}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#06111b,#0a1724);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}.shell{width:min(1040px,calc(100% - 24px));margin:12px auto;border:1px solid var(--line);border-radius:24px;overflow:hidden;background:rgba(7,19,31,.94);box-shadow:0 24px 70px rgba(0,0,0,.28)}
+    header{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap}.brand strong{display:block;font-size:1.08rem;letter-spacing:.05em}.brand span{color:var(--muted);font-size:.82rem}.nav{display:flex;gap:8px;flex-wrap:wrap}.nav a{padding:7px 10px;text-decoration:none;border:1px solid var(--line);border-radius:10px;color:var(--muted)}.nav a:hover{color:var(--text)}
+    main{padding:24px}.hero h1{font-size:clamp(1.65rem,4vw,2.35rem);margin:0 0 6px}.hero p{color:var(--muted);margin:0;max-width:720px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:20px}.card{border:1px solid var(--line);border-radius:15px;background:var(--panel);padding:18px}.card h2{margin:0 0 6px;font-size:1rem}.card p{margin:0 0 15px;color:var(--muted);font-size:.84rem}.button{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(118,201,238,.38);background:var(--panel2);color:var(--text);padding:10px 13px;border-radius:10px;cursor:pointer;font-weight:700}.button:hover{border-color:var(--accent)}.button:disabled{opacity:.6;cursor:wait}.custom{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.custom input{width:120px;padding:10px 11px;border-radius:10px;border:1px solid var(--line);background:#081725;color:var(--text);font:inherit}.status{min-height:24px;margin-top:18px;color:var(--muted)}.status.good{color:var(--good)}.status.bad{color:var(--bad)}.note{margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-radius:13px;background:rgba(17,38,56,.42);color:var(--muted);font-size:.84rem}footer{border-top:1px solid var(--line);padding:16px 24px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.78rem}
+    @media(max-width:640px){main{padding:18px 13px}.grid{grid-template-columns:1fr}header{padding:16px 14px}.button{width:100%}.custom input{width:100%}}
+  </style>
+</head>
+<body>
+<div class="shell">
+<header><div class="brand"><strong>PARKNACROSS WEATHER</strong><span>Historical observation archive</span></div><nav class="nav"><a href="/">Dashboard</a><a href="history.html">History</a><a href="summary.html">Daily summary</a><a href="status.html">System health</a></nav></header>
+<main>
+  <section class="hero"><h1>Download weather data</h1><p>Export stored Parknacross observations as CSV. Downloads are generated from the existing archive and do not change or delete any data.</p></section>
+  <section class="grid">
+    <article class="card"><h2>Last 7 days</h2><p>A compact export for recent analysis.</p><button class="button export" data-days="7" data-name="7-days">Download CSV</button></article>
+    <article class="card"><h2>Last 30 days</h2><p>Useful for monthly charts and comparisons.</p><button class="button export" data-days="30" data-name="30-days">Download CSV</button></article>
+    <article class="card"><h2>Last 90 days</h2><p>A broader seasonal view of the station archive.</p><button class="button export" data-days="90" data-name="90-days">Download CSV</button></article>
+    <article class="card"><h2>Last 365 days</h2><p>Up to one year of observations.</p><button class="button export" data-days="365" data-name="365-days">Download CSV</button></article>
+    <article class="card"><h2>All available data</h2><p>Requests up to ten years, which currently covers the full Parknacross archive.</p><button class="button export" data-days="3660" data-name="all-data">Download CSV</button></article>
+    <article class="card"><h2>Custom period</h2><p>Choose any number of days from 1 to 3660.</p><div class="custom"><input id="customDays" type="number" min="1" max="3660" value="14" inputmode="numeric" aria-label="Number of days"><button id="customButton" class="button" type="button">Download CSV</button></div></article>
+  </section>
+  <div id="downloadStatus" class="status" aria-live="polite"></div>
+  <div class="note">CSV columns include timestamps, temperature, feels-like temperature, humidity, dew point, wind, gusts, wind direction, pressure, rainfall, solar radiation, UV and WS90 battery voltage.</div>
+</main>
+<footer><span>© 2026 Parknacross Weather</span><span>Read-only archive export</span></footer>
+</div>
+<script src="downloads.js?v=20260913-csv1"></script>
+</body>
+</html>

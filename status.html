@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07131f">
+  <meta name="description" content="Live service health and data-quality checks for Parknacross Weather in Ardamine, Co. Wexford.">
+  <link rel="canonical" href="https://parknacrossweather.ie/status.html">
+  <title>System Health · Parknacross Weather</title>
+  <style>
+    :root{--bg:#07131f;--panel:#0d1d2b;--panel2:#112638;--line:rgba(190,220,238,.14);--text:#f2f7fa;--muted:#9fb2c1;--good:#71d59a;--warn:#f3c969;--bad:#f27f7f;--accent:#76c9ee}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#06111b,#0a1724);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+    a{color:inherit}.shell{width:min(1180px,calc(100% - 24px));margin:12px auto;border:1px solid var(--line);border-radius:24px;overflow:hidden;background:rgba(7,19,31,.94);box-shadow:0 24px 70px rgba(0,0,0,.28)}
+    header{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap}.brand strong{display:block;font-size:1.08rem;letter-spacing:.05em}.brand span{color:var(--muted);font-size:.82rem}.nav{display:flex;gap:8px;flex-wrap:wrap}.nav a{padding:7px 10px;text-decoration:none;border:1px solid var(--line);border-radius:10px;color:var(--muted)}.nav a:hover{color:var(--text);border-color:rgba(118,201,238,.45)}
+    main{padding:24px}.hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}.hero h1{font-size:clamp(1.65rem,4vw,2.4rem);margin:0 0 5px}.hero p{margin:0;color:var(--muted);max-width:700px}.refresh{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:11px;cursor:pointer}.refresh:disabled{opacity:.6;cursor:wait}
+    .overall{display:flex;align-items:center;gap:12px;padding:17px 18px;border:1px solid var(--line);border-radius:15px;background:var(--panel);margin-bottom:18px}.dot{width:12px;height:12px;border-radius:50%;background:#71808a;box-shadow:0 0 0 5px rgba(255,255,255,.04)}.overall.good .dot,.badge.good{background:var(--good)}.overall.warn .dot,.badge.warn{background:var(--warn)}.overall.bad .dot,.badge.bad{background:var(--bad)}.overall strong{font-size:1.05rem}.overall small{display:block;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{border:1px solid var(--line);background:var(--panel);border-radius:15px;padding:17px;min-height:138px}.card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.card h2{font-size:.98rem;margin:0}.badge{display:inline-flex;align-items:center;justify-content:center;min-width:58px;padding:4px 8px;border-radius:999px;background:#71808a;color:#07131f;font-size:.72rem;font-weight:800;text-transform:uppercase}.metric{font-size:1.55rem;font-weight:700;margin-top:18px}.sub{color:var(--muted);font-size:.8rem;margin-top:4px;word-break:break-word}
+    .wide{grid-column:1/-1}.checks{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px}.checks li{display:grid;grid-template-columns:11px 1fr;gap:9px;align-items:start;color:var(--muted)}.checks i{width:8px;height:8px;border-radius:50%;margin-top:7px;background:#71808a}.checks .good i{background:var(--good)}.checks .warn i{background:var(--warn)}.checks .bad i{background:var(--bad)}.checks strong{color:var(--text);font-weight:600}.note{margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-radius:13px;color:var(--muted);background:rgba(17,38,56,.42);font-size:.84rem}
+    footer{border-top:1px solid var(--line);padding:16px 24px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.78rem}
+    @media(max-width:850px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){main{padding:17px 13px}.grid{grid-template-columns:1fr}.wide{grid-column:auto}header{padding:16px 14px}.hero{align-items:flex-start}.refresh{width:100%}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="brand"><strong>PARKNACROSS WEATHER</strong><span>Ardamine · North Wexford</span></div>
+    <nav class="nav" aria-label="Site links">
+      <a href="/">Dashboard</a><a href="summary.html">Daily summary</a><a href="records.html">Records</a><a href="downloads.html">Downloads</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <div><h1>System health</h1><p>A read-only check of the website, live station feed, archive health and recent data quality. This page never alters station data.</p></div>
+      <button class="refresh" id="refreshButton" type="button">Run checks now</button>
+    </section>
+
+    <section class="overall" id="overall"><span class="dot" aria-hidden="true"></span><div><strong id="overallTitle">Checking systems…</strong><small id="overallText">Please wait while the live endpoints are tested.</small></div></section>
+
+    <section class="grid">
+      <article class="card"><div class="card-head"><h2>Website</h2><span class="badge" id="siteBadge">CHECK</span></div><div class="metric" id="siteValue">--</div><div class="sub" id="siteDetail">parknacrossweather.ie</div></article>
+      <article class="card"><div class="card-head"><h2>Weather API</h2><span class="badge" id="apiBadge">CHECK</span></div><div class="metric" id="apiValue">--</div><div class="sub" id="apiDetail">Cloudflare Worker</div></article>
+      <article class="card"><div class="card-head"><h2>Latest observation</h2><span class="badge" id="feedBadge">CHECK</span></div><div class="metric" id="feedValue">--</div><div class="sub" id="feedDetail">Waiting for current reading</div></article>
+      <article class="card"><div class="card-head"><h2>Samples · 24h</h2><span class="badge" id="samplesBadge">CHECK</span></div><div class="metric" id="samplesValue">--</div><div class="sub" id="samplesDetail">Recent archive coverage</div></article>
+      <article class="card"><div class="card-head"><h2>Largest recent gap</h2><span class="badge" id="gapBadge">CHECK</span></div><div class="metric" id="gapValue">--</div><div class="sub" id="gapDetail">From the existing quality endpoint</div></article>
+      <article class="card"><div class="card-head"><h2>WS90 battery</h2><span class="badge" id="batteryBadge">CHECK</span></div><div class="metric" id="batteryValue">--</div><div class="sub" id="batteryDetail">Latest battery status</div></article>
+
+      <article class="card wide">
+        <div class="card-head"><h2>Data-quality checks</h2><span class="badge" id="qualityBadge">CHECK</span></div>
+        <div class="sub">Broad plausibility checks only. Suspicious values are flagged for review; nothing is deleted, corrected or hidden.</div>
+        <ul class="checks" id="qualityChecks"><li><i></i><span>Loading the latest 24 hours…</span></li></ul>
+      </article>
+    </section>
+
+    <div class="note"><strong>Thresholds are intentionally conservative.</strong> A warning means “worth checking”, not necessarily “wrong”. The page refreshes automatically every five minutes.</div>
+  </main>
+  <footer><span>© 2026 Parknacross Weather</span><span id="lastRun">Health check not yet completed</span></footer>
+</div>
+<script src="status.js?v=20260913-health1"></script>
+</body>
+</html>
