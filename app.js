@@ -601,6 +601,7 @@ function line(label, colour, axis = "y") {
     pointHoverRadius: 4,
     tension: 0.3,
     fill: false,
+    spanGaps: false,
     yAxisID: axis
   };
 }
@@ -709,33 +710,63 @@ function createCharts() {
   });
 }
 
+function chartRowsWithGaps(rows, gapMinutes = 20) {
+  const clean = rows.filter(reading => readingTime(reading));
+  if (clean.length < 2) return clean;
+
+  const out = [clean[0]];
+  const maxGapMs = gapMinutes * 60 * 1000;
+
+  for (let i = 1; i < clean.length; i++) {
+    const previousTime = readingTime(clean[i - 1]);
+    const currentTime = readingTime(clean[i]);
+
+    if (currentTime - previousTime > maxGapMs) {
+      out.push({
+        _archiveGap: true,
+        _gapTime: previousTime + (currentTime - previousTime) / 2
+      });
+    }
+
+    out.push(clean[i]);
+  }
+
+  return out;
+}
+
 function updateCharts() {
-  const rows = history24.filter(reading => readingTime(reading));
-  const labels = rows.map(reading =>
-    new Date(readingTime(reading)).toLocaleTimeString("en-IE", {
+  // Never draw a continuous weather line across a substantial D1 archive gap.
+  // A null data point makes Chart.js visibly break the line instead.
+  const rows = chartRowsWithGaps(history24, 20);
+  const timeForChartRow = row => row?._archiveGap ? row._gapTime : readingTime(row);
+  const valueForChartRow = (row, field) => row?._archiveGap ? null : row?.[field];
+
+  const labels = rows.map(reading => {
+    if (reading?._archiveGap) return "";
+    return new Date(timeForChartRow(reading)).toLocaleTimeString("en-IE", {
       timeZone: STATION_TIME_ZONE,
       hour: "2-digit",
       minute: "2-digit"
-    })
-  );
+    });
+  });
 
   charts.temperature.data.labels = labels;
-  charts.temperature.data.datasets[0].data = rows.map(row => row.temperature_c);
-  charts.temperature.data.datasets[1].data = rows.map(row => row.dew_point_c);
+  charts.temperature.data.datasets[0].data = rows.map(row => valueForChartRow(row, "temperature_c"));
+  charts.temperature.data.datasets[1].data = rows.map(row => valueForChartRow(row, "dew_point_c"));
   charts.temperature.update();
 
   charts.wind.data.labels = labels;
-  charts.wind.data.datasets[0].data = rows.map(row => row.wind_speed_kmh);
-  charts.wind.data.datasets[1].data = rows.map(row => row.wind_gust_kmh);
+  charts.wind.data.datasets[0].data = rows.map(row => valueForChartRow(row, "wind_speed_kmh"));
+  charts.wind.data.datasets[1].data = rows.map(row => valueForChartRow(row, "wind_gust_kmh"));
   charts.wind.update();
 
   charts.pressure.data.labels = labels;
-  charts.pressure.data.datasets[0].data = rows.map(row => row.pressure_hpa);
+  charts.pressure.data.datasets[0].data = rows.map(row => valueForChartRow(row, "pressure_hpa"));
   charts.pressure.update();
 
   charts.solar.data.labels = labels;
-  charts.solar.data.datasets[0].data = rows.map(row => row.solar_w_m2);
-  charts.solar.data.datasets[1].data = rows.map(row => row.uv_index);
+  charts.solar.data.datasets[0].data = rows.map(row => valueForChartRow(row, "solar_w_m2"));
+  charts.solar.data.datasets[1].data = rows.map(row => valueForChartRow(row, "uv_index"));
   charts.solar.update();
 
   const rainfall = dailyRainTotals();
