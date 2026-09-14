@@ -896,8 +896,14 @@ function renderMarineWarning(marine, weatherWarningVisible) {
   const banner = $("marineWarningBanner");
   if (!banner) return false;
 
-  const gale = marineFlagIsActive(marine?.gale_warning);
-  const smallCraft = marineFlagIsActive(marine?.small_craft_warning);
+  /*
+   * IMPORTANT:
+   * Do not use the national Sea Area Forecast flags here.
+   * The Worker filters marine warnings to EI811:
+   * Wicklow Head → Carnsore Point, the sector containing Parknacross/Ardamine.
+   */
+  const gale = marineFlagIsActive(marine?.local_gale_warning);
+  const smallCraft = marineFlagIsActive(marine?.local_small_craft_warning);
 
   if (!gale && !smallCraft) {
     banner.hidden = true;
@@ -910,41 +916,50 @@ function renderMarineWarning(marine, weatherWarningVisible) {
   banner.classList.remove("level-orange", "level-red");
   banner.classList.add("level-yellow");
 
-  set("marineWarningLevel", "Marine warning");
+  set("marineWarningLevel", "Local marine warning");
 
-  let title = "Marine warning in force";
+  let title = "Marine warning — North Wexford coast";
   if (gale && smallCraft) {
-    title = "Gale and Small Craft Warnings in force";
+    title = "Gale and Small Craft Warnings — North Wexford coast";
   } else if (gale) {
-    title = "Gale Warning in force";
+    title = "Gale Warning — North Wexford coast";
   } else if (smallCraft) {
-    title = "Small Craft Warning in force";
+    title = "Small Craft Warning — North Wexford coast";
   }
 
   set("marineWarningTitle", title);
 
-  const issued = warningDate(marine?.issued);
-  const until = warningDate(marine?.until);
   let timing = "";
+  if (marine?.local_warning_valid_text) {
+    timing = `Valid ${marine.local_warning_valid_text}`;
+  } else {
+    const issued = warningDate(marine?.issued);
+    const until = warningDate(marine?.until);
 
-  if (issued && until) {
-    timing = `Issued ${formatWarningTime(issued)} · valid until ${formatWarningTime(until)}`;
-  } else if (until) {
-    timing = `Valid until ${formatWarningTime(until)}`;
-  } else if (issued) {
-    timing = `Issued ${formatWarningTime(issued)}`;
+    if (issued && until) {
+      timing = `Issued ${formatWarningTime(issued)} · valid until ${formatWarningTime(until)}`;
+    } else if (until) {
+      timing = `Valid until ${formatWarningTime(until)}`;
+    } else if (issued) {
+      timing = `Issued ${formatWarningTime(issued)}`;
+    }
   }
 
   set("marineWarningTiming", timing);
 
-  const types = [];
-  if (gale) types.push("a Gale Warning");
-  if (smallCraft) types.push("a Small Craft Warning");
+  const sector = marine?.local_warning_sector || "Wicklow Head to Carnsore Point";
+  const localWind = String(marine?.local_area?.wind || "").trim();
+  const detail = localWind ? ` Current sector forecast: ${localWind}` : "";
 
   set(
     "marineWarningText",
-    `Met Éireann has ${types.join(" and ")} in force in the current Sea Area Forecast. Check the full marine warning for the affected coastal areas.`
+    `Met Éireann lists this warning for ${sector}, the coastal sector containing Ardamine/Parknacross.${detail}`
   );
+
+  const link = $("marineWarningLink");
+  if (link && marine?.local_warning_url) {
+    link.href = marine.local_warning_url;
+  }
 
   return true;
 }
