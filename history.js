@@ -12,12 +12,12 @@ function dateLabel(value) {
   if (!value) return "--";
   const date = typeof value === "number" ? new Date(value * 1000) : new Date(value);
   if (Number.isNaN(date.getTime())) return "--";
-  return date.toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" });
+  return date.toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "numeric", month: "short", year: "numeric" });
 }
 
 function shortDate(day) {
   const date = new Date(`${day}T12:00:00`);
-  return date.toLocaleDateString("en-IE", { day: "numeric", month: "short" });
+  return date.toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "numeric", month: "short" });
 }
 
 async function getJSON(url) {

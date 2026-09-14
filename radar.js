@@ -3,7 +3,7 @@
  const API=cfg.apiBase;let map,frames=[],layer=null,i=0,playing=true,timer;
  function show(n){if(!frames.length)return;i=Math.max(0,Math.min(frames.length-1,n));const f=frames[i];if(layer)map.removeLayer(layer);
   layer=L.tileLayer(`${f.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`,{opacity:.72,maxNativeZoom:7,maxZoom:12}).addTo(map);
-  $("radarSlider").value=i;set("radarTime",new Date(f.time*1000).toLocaleString("en-IE",{weekday:"short",hour:"2-digit",minute:"2-digit"}));
+  $("radarSlider").value=i;set("radarTime",new Date(f.time*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",weekday:"short",hour:"2-digit",minute:"2-digit"}));
   set("radarStatus",i===frames.length-1?"Latest available frame":"Recent radar frame");}
  async function loadRadar(){try{const r=await fetch("https://api.rainviewer.com/public/weather-maps.json",{cache:"no-store"});const d=await r.json();
    frames=(d.radar?.past||[]).map(x=>({...x,host:d.host}));$("radarSlider").max=Math.max(0,frames.length-1);show(frames.length-1);

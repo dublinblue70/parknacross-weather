@@ -9,6 +9,7 @@ const BATTERY_DEBUG_URL = `${API_BASE}/battery-debug`;
 
 const ARDAMINE_LAT = 52.6247;
 const ARDAMINE_LON = -6.25;
+const STATION_TIME_ZONE = "Europe/Dublin";
 const STALE_AFTER_MS = 10 * 60 * 1000;
 const OFFLINE_AFTER_MS = 30 * 60 * 1000;
 
@@ -56,15 +57,29 @@ function readingTime(reading) {
   return usable(reading?.epoch) ? Number(reading.epoch) * 1000 : null;
 }
 
+function stationDateKeyFromTime(time) {
+  const date = new Date(time);
+  if (Number.isNaN(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: STATION_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+  const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${map.year}-${map.month}-${map.day}`;
+}
+
 function localDateKey(reading) {
   const time = readingTime(reading);
-  if (!time) return null;
-  const date = new Date(time);
-  return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    String(date.getDate()).padStart(2, "0")
-  ].join("-");
+  return time ? stationDateKeyFromTime(time) : null;
+}
+
+function stationCalendarDate(value = new Date()) {
+  const key = stationDateKeyFromTime(value);
+  if (!key) return new Date(value);
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
 }
 
 function correctedDailyRain(reading) {
@@ -75,12 +90,7 @@ function correctedDailyRain(reading) {
 }
 
 function sameDay(time, reference = new Date()) {
-  const date = new Date(time);
-  return (
-    date.getFullYear() === reference.getFullYear() &&
-    date.getMonth() === reference.getMonth() &&
-    date.getDate() === reference.getDate()
-  );
+  return stationDateKeyFromTime(time) === stationDateKeyFromTime(reference);
 }
 
 function compass(degrees) {
@@ -117,6 +127,7 @@ function timeLabel(reading) {
   const time = readingTime(reading);
   if (!time) return "--";
   return new Date(time).toLocaleTimeString("en-IE", {
+    timeZone: STATION_TIME_ZONE,
     hour: "2-digit",
     minute: "2-digit"
   });
@@ -159,6 +170,7 @@ function dateLabel(value) {
   const date = typeof value === "number" ? new Date(value * 1000) : new Date(value);
   if (Number.isNaN(date.getTime())) return "--";
   return date.toLocaleDateString("en-IE", {
+    timeZone: STATION_TIME_ZONE,
     day: "numeric",
     month: "short",
     year: "numeric"
@@ -317,11 +329,12 @@ function sunEvent(date, latitude, longitude, sunrise) {
 
 function updateSunInfo() {
   const now = new Date();
-  const rise = sunEvent(now, ARDAMINE_LAT, ARDAMINE_LON, true);
-  const setTime = sunEvent(now, ARDAMINE_LAT, ARDAMINE_LON, false);
+  const stationDate = stationCalendarDate(now);
+  const rise = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, true);
+  const setTime = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, false);
 
   const fmt = date => date
-    ? date.toLocaleTimeString("en-IE", { hour: "2-digit", minute: "2-digit" })
+    ? date.toLocaleTimeString("en-IE", { timeZone: STATION_TIME_ZONE, hour: "2-digit", minute: "2-digit" })
     : "--";
 
   set("sunrise", fmt(rise));
@@ -350,12 +363,7 @@ function dailyRainTotals() {
     const correctedRain = correctedDailyRain(reading);
     if (!time || !usable(correctedRain)) return;
 
-    const date = new Date(time);
-    const key = [
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate()
-    ].join("-");
+    const key = stationDateKeyFromTime(time);
 
     const rain = Number(correctedRain);
     const existing = days.get(key);
@@ -403,7 +411,7 @@ function updateStatsPanel() {
 
   if (stats.wettest_day) {
     set("wettestDay", `${n(stats.wettest_day.rain_mm)} mm`);
-    set("wettestDate", dateLabel(`${stats.wettest_day.day}T12:00:00`));
+    set("wettestDate", dateLabel(`${stats.wettest_day.day}T12:00:00Z`));
   }
 
   const records = stats.records || {};
@@ -453,9 +461,11 @@ function updateDashboard(current) {
     set(
       "lastUpdated",
       `Updated ${date.toLocaleTimeString("en-IE", {
+        timeZone: STATION_TIME_ZONE,
         hour: "2-digit",
         minute: "2-digit"
       })} · ${date.toLocaleDateString("en-IE", {
+        timeZone: STATION_TIME_ZONE,
         day: "2-digit",
         month: "short"
       })}`
@@ -562,7 +572,7 @@ function updateDashboard(current) {
 
   updateFreshness(current);
   updateStatsPanel();
-  set("year", new Date().getFullYear());
+  set("year", stationDateKeyFromTime(new Date())?.slice(0,4) || new Date().getFullYear());
 }
 
 function scales(title) {
@@ -702,6 +712,7 @@ function updateCharts() {
   const rows = history24.filter(reading => readingTime(reading));
   const labels = rows.map(reading =>
     new Date(readingTime(reading)).toLocaleTimeString("en-IE", {
+      timeZone: STATION_TIME_ZONE,
       hour: "2-digit",
       minute: "2-digit"
     })
@@ -728,7 +739,7 @@ function updateCharts() {
 
   const rainfall = dailyRainTotals();
   charts.rain.data.labels = rainfall.map(day =>
-    new Date(day.time).toLocaleDateString("en-IE", { weekday: "short" })
+    new Date(day.time).toLocaleDateString("en-IE", { timeZone: STATION_TIME_ZONE, weekday: "short" })
   );
   charts.rain.data.datasets[0].data = rainfall.map(day => day.rain);
   charts.rain.update();
@@ -828,6 +839,7 @@ async function loadWarnings() {
         date.toLocaleString(
           "en-IE",
           {
+            timeZone: STATION_TIME_ZONE,
             day: "numeric",
             month: "short",
             hour: "2-digit",

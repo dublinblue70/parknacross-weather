@@ -22,7 +22,7 @@
       return;
     }
     e.innerHTML = items.map(x =>
-      `<article class="event-item"><time>${new Date(x.received_at).toLocaleDateString("en-IE", {day:"numeric",month:"short",year:"numeric"})}</time><div><strong>${esc(x.title)}</strong><p>${esc(x.detail || "")}</p></div></article>`
+      `<article class="event-item"><time>${new Date(x.received_at).toLocaleDateString("en-IE", {timeZone:"Europe/Dublin",day:"numeric",month:"short",year:"numeric"})}</time><div><strong>${esc(x.title)}</strong><p>${esc(x.detail || "")}</p></div></article>`
     ).join("");
   }
 
@@ -84,7 +84,7 @@
       new Chart($("climateMonthlyChart"), {
         type: "bar",
         data: {
-          labels: rows.map(([k]) => new Date(k + "-15T12:00:00").toLocaleDateString("en-IE", {month:"short",year:"2-digit"})),
+          labels: rows.map(([k]) => new Date(k + "-15T12:00:00").toLocaleDateString("en-IE", {timeZone:"Europe/Dublin",month:"short",year:"2-digit"})),
           datasets: [{data: rows.map(x => Number(x[1].toFixed(1))), backgroundColor: "#7ca9ff", borderRadius: 6}]
         },
         options: {

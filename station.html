@@ -341,7 +341,7 @@ function renderStorage(storage) {
     if (!Number.isNaN(date.getTime())) {
       set(
         "d1StorageProjection",
-        `80% capacity projected around ${date.toLocaleDateString("en-IE", { month: "short", year: "numeric" })}`
+        `80% capacity projected around ${date.toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", month: "short", year: "numeric" })}`
       );
     }
   } else {
@@ -431,6 +431,7 @@ async function loadStationStatus() {
         set(
           "stationLastUpdated",
           time.toLocaleString("en-IE", {
+            timeZone: "Europe/Dublin",
             day: "numeric",
             month: "short",
             hour: "2-digit",

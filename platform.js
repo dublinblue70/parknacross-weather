@@ -4,6 +4,14 @@
   const $ = id => document.getElementById(id);
   const set = (id, value) => { const e = $(id); if (e) e.textContent = value; };
   const n = (v, d = 1) => Number.isFinite(Number(v)) ? Number(v).toFixed(d) : "--";
+  const STATION_TIME_ZONE = "Europe/Dublin";
+  const stationDayKey = value => {
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    const parts = new Intl.DateTimeFormat("en-GB", {timeZone:STATION_TIME_ZONE,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d);
+    const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    return `${map.year}-${map.month}-${map.day}`;
+  };
 
   async function get(path) {
     const r = await fetch(`${API}${path}`, { cache: "no-store" });
@@ -63,11 +71,10 @@
     try {
       const [c, h] = await Promise.all([get("/current"), get("/history?hours=24")]);
       const rows = h.readings || [];
-      const today = rows.filter(r => {
-        const d = new Date(r.received_at || r.epoch * 1000);
-        const x = new Date();
-        return d.toDateString() === x.toDateString();
-      });
+      const todayKey = stationDayKey(new Date());
+      const today = rows.filter(r =>
+        stationDayKey(new Date(r.received_at || r.epoch * 1000)) === todayKey
+      );
       const vals = (field) => today.map(x => Number(x[field])).filter(Number.isFinite);
       const temps = vals("temperature_c"), gusts = vals("wind_gust_kmh");
       const high = temps.length ? Math.max(...temps) : null;
@@ -83,7 +90,7 @@
 
       ctx.fillStyle="#7bd7ef"; ctx.font="700 30px system-ui"; ctx.fillText("PARKNACROSS WEATHER",70,80);
       ctx.fillStyle="#9fb3c1"; ctx.font="400 24px system-ui";
-      ctx.fillText(new Date().toLocaleDateString("en-IE",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+" · Ardamine, Co. Wexford",70,122);
+      ctx.fillText(new Date().toLocaleDateString("en-IE",{timeZone:STATION_TIME_ZONE,weekday:"long",day:"numeric",month:"long",year:"numeric"})+" · Ardamine, Co. Wexford",70,122);
       ctx.fillStyle="#f3f8fb"; ctx.font="300 128px system-ui"; ctx.fillText(`${n(c.temperature_c)}°`,65,315);
       ctx.fillStyle="#b9ccd8"; ctx.font="500 28px system-ui"; ctx.fillText("Current temperature",75,355);
 
