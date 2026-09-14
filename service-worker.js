@@ -1,9 +1,9 @@
-const CACHE_NAME = "parknacross-weather-v2-d1-optimized-20260914";
+const CACHE_NAME = "parknacross-weather-v2-archive-gap-20260914";
 const STATIC_ASSETS = [
   "./", "./index.html", "./styles.css", "./app.js", "./site-config.js", "./platform.js",
   "./radar.html", "./radar.js", "./graphs.html", "./graphs.js", "./rain.html", "./rain.js",
   "./climate.html", "./climate.js", "./coast.html", "./coast.js", "./sky.html", "./sky.js",
-  "./station.html", "./station-v2.js", "./history.html", "./history.js",
+  "./station.html", "./station-v2.js", "./status.html", "./status.js", "./history.html", "./history.js",
   "./manifest.webmanifest", "./favicon.svg", "./icon-192.png", "./icon-512.png",
   "./apple-touch-icon.png", "./og-image.png", "./north-wexford-coast.jpg"
 ];

@@ -22,6 +22,13 @@ function fmtAge(seconds) {
 function fmtNum(value, digits=1) {
   const n=Number(value); return Number.isFinite(n) ? n.toFixed(digits).replace(/\.0$/,"" ) : "--";
 }
+function fmtDurationMinutes(minutes) {
+  const n=Number(minutes);
+  if(!Number.isFinite(n)) return "--";
+  if(n<60) return `${fmtNum(n,1)} min`;
+  const total=Math.round(n), h=Math.floor(total/60), m=total%60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
 async function fetchJSON(url, timeout=12000) {
   const controller = new AbortController();
   const timer = setTimeout(()=>controller.abort(), timeout);
@@ -152,8 +159,13 @@ async function runChecks() {
   } else {
     const samples=Number(quality.samples_last_24h||0); const sampleState=samples>=100?"good":samples>=24?"warn":"bad";
     setBadge("samplesBadge",sampleState,sampleState==="good"?"OK":sampleState==="warn"?"LOW":"POOR"); setText("samplesValue",samples.toLocaleString("en-IE")); setText("samplesDetail",quality.median_interval_minutes!=null?`Median interval ${fmtNum(quality.median_interval_minutes,1)} min`:"Median interval unavailable"); states.push(sampleState);
-    const gap=Number(quality.largest_recent_gap_minutes); const gapState=!Number.isFinite(gap)?"warn":gap<=15?"good":gap<=60?"warn":"bad";
-    setBadge("gapBadge",gapState,gapState==="good"?"OK":gapState==="warn"?"GAP":"LARGE"); setText("gapValue",Number.isFinite(gap)?`${fmtNum(gap,1)} min`:"--"); setText("gapDetail",`Feed status: ${quality.feed_status||"unknown"}`); states.push(gapState);
+    const gap=Number(quality.largest_recent_gap_minutes);
+    const gapState=!Number.isFinite(gap)?"warn":gap<=15?"good":"warn";
+    const gapLabel=!Number.isFinite(gap)?"CHECK":gap<=15?"OK":gap<=60?"GAP":"LARGE";
+    setBadge("gapBadge",gapState,gapLabel);
+    setText("gapValue",fmtDurationMinutes(gap));
+    setText("gapDetail",`Historical archive continuity · feed now: ${quality.feed_status||"unknown"}`);
+    states.push(gapState);
     const batt=String(quality.battery_status||"--"); const battState=/^Normal/i.test(batt)?"good":/^Check/i.test(batt)?"warn":/^Low/i.test(batt)?"bad":"warn";
     setBadge("batteryBadge",battState,battState==="good"?"OK":battState==="warn"?"CHECK":"LOW"); setText("batteryValue",batt.replace(/^\w+\s*·\s*/,"")||"--"); setText("batteryDetail",batt); states.push(battState);
   }

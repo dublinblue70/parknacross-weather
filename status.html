@@ -41,7 +41,7 @@
       <article class="card"><div class="card-head"><h2>Weather API</h2><span class="badge" id="apiBadge">CHECK</span></div><div class="metric" id="apiValue">--</div><div class="sub" id="apiDetail">Cloudflare Worker</div></article>
       <article class="card"><div class="card-head"><h2>Latest observation</h2><span class="badge" id="feedBadge">CHECK</span></div><div class="metric" id="feedValue">--</div><div class="sub" id="feedDetail">Waiting for current reading</div></article>
       <article class="card"><div class="card-head"><h2>Samples · 24h</h2><span class="badge" id="samplesBadge">CHECK</span></div><div class="metric" id="samplesValue">--</div><div class="sub" id="samplesDetail">Recent archive coverage</div></article>
-      <article class="card"><div class="card-head"><h2>Largest recent gap</h2><span class="badge" id="gapBadge">CHECK</span></div><div class="metric" id="gapValue">--</div><div class="sub" id="gapDetail">From the existing quality endpoint</div></article>
+      <article class="card"><div class="card-head"><h2>Longest archive gap</h2><span class="badge" id="gapBadge">CHECK</span></div><div class="metric" id="gapValue">--</div><div class="sub" id="gapDetail">Longest interval between saved readings in the last 24 hours</div></article>
       <article class="card"><div class="card-head"><h2>WS90 battery</h2><span class="badge" id="batteryBadge">CHECK</span></div><div class="metric" id="batteryValue">--</div><div class="sub" id="batteryDetail">Latest battery status</div></article>
 
       <article class="card wide">
@@ -55,6 +55,6 @@
   </main>
   <footer><span>© 2026 Parknacross Weather</span><span id="lastRun">Health check not yet completed</span></footer>
 </div>
-<script src="status.js?v=20260913-health1"></script>
+<script src="status.js?v=20260914-gapfix1"></script>
 </body>
 </html>
