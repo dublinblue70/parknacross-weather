@@ -4,9 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#07131f">
-  <meta name="description" content="Download historical Parknacross Weather observations as CSV files.">
+  <meta name="description" content="Download historical weather observations from Parknacross in Ardamine, Co. Wexford as CSV, including temperature, rain, wind, pressure, humidity, UV and solar data.">
+  <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://parknacrossweather.ie/downloads.html">
-  <title>Weather Data Downloads · Parknacross Weather</title>
+  <title>Ardamine Weather Data Archive &amp; CSV Downloads | Parknacross</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Parknacross Weather Observation Archive",
+    "description": "Historical personal weather station observations from Parknacross in Ardamine, Co. Wexford, including temperature, humidity, dew point, wind, gusts, direction, pressure, rainfall, solar radiation, UV and station battery data.",
+    "url": "https://parknacrossweather.ie/downloads.html",
+    "isAccessibleForFree": true,
+    "creator": {"@type": "Organization", "name": "Parknacross Weather", "url": "https://parknacrossweather.ie/"},
+    "spatialCoverage": {"@type": "Place", "name": "Ardamine, Co. Wexford, Ireland"},
+    "variableMeasured": ["Air temperature", "Feels-like temperature", "Relative humidity", "Dew point", "Wind speed", "Wind gust", "Wind direction", "Barometric pressure", "Rainfall", "Solar radiation", "UV index", "WS90 battery voltage"],
+    "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": "https://parknacrossweather.ie/downloads.html"}]
+  }
+  </script>
   <style>
     :root{--bg:#07131f;--panel:#0d1d2b;--panel2:#112638;--line:rgba(190,220,238,.14);--text:#f2f7fa;--muted:#9fb2c1;--accent:#76c9ee;--good:#71d59a;--bad:#f27f7f}
     *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#06111b,#0a1724);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}.shell{width:min(1040px,calc(100% - 24px));margin:12px auto;border:1px solid var(--line);border-radius:24px;overflow:hidden;background:rgba(7,19,31,.94);box-shadow:0 24px 70px rgba(0,0,0,.28)}
@@ -19,7 +34,7 @@
 <div class="shell">
 <header><div class="brand"><strong>PARKNACROSS WEATHER</strong><span>Historical observation archive</span></div><nav class="nav"><a href="/">Dashboard</a><a href="history.html">History</a><a href="summary.html">Daily summary</a><a href="status.html">System health</a></nav></header>
 <main>
-  <section class="hero"><h1>Download weather data</h1><p>Export stored Parknacross observations as CSV. Downloads are generated from the existing archive and do not change or delete any data.</p></section>
+  <section class="hero"><h1>Ardamine weather data archive</h1><p>Download historical observations from the Parknacross weather station in Ardamine, Co. Wexford as CSV. The archive includes temperature, humidity, wind, pressure, rainfall, solar radiation and UV measurements and grows as new station observations are stored.</p></section>
   <section class="grid">
     <article class="card"><h2>Last 7 days</h2><p>A compact export for recent analysis.</p><button class="button export" data-days="7" data-name="7-days">Download CSV</button></article>
     <article class="card"><h2>Last 30 days</h2><p>Useful for monthly charts and comparisons.</p><button class="button export" data-days="30" data-name="30-days">Download CSV</button></article>

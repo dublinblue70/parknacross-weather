@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#07131f">
-  <meta name="description" content="Live weather from Parknacross, Ardamine, Co. Wexford. Current temperature, wind, rainfall, humidity, pressure, UV, radar, coastal conditions and local weather history.">
-  <meta property="og:title" content="Parknacross Weather">
-  <meta property="og:description" content="Live local weather from Parknacross on the north Wexford coast.">
+  <meta name="description" content="Live Ardamine weather from the Parknacross station near Courtown, Co. Wexford. Local temperature, wind, rain, pressure, UV, radar, coastal conditions and weather history.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta property="og:title" content="Ardamine Weather | Parknacross Weather">
+  <meta property="og:description" content="Live weather observations from Ardamine near Courtown on the North Wexford coast, with rain, wind, radar, coastal conditions and local weather history.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://parknacrossweather.ie/">
   <meta property="og:image" content="https://parknacrossweather.ie/og-image.png">
@@ -17,18 +18,39 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css?v=20260914-marinewarn1">
 
-  <title>Ardamine Weather | Live Parknacross Weather Station, Co. Wexford</title>
+  <title>Ardamine Weather | Live Weather for Courtown &amp; North Wexford</title>
   <link rel="canonical" href="https://parknacrossweather.ie/">
 
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Parknacross Weather",
-    "alternateName": "ParknacrossWeather.ie",
-    "url": "https://parknacrossweather.ie/"
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://parknacrossweather.ie/#website",
+        "name": "Parknacross Weather",
+        "alternateName": "ParknacrossWeather.ie",
+        "url": "https://parknacrossweather.ie/",
+        "description": "Independent hyperlocal weather observations from Ardamine near Courtown on the North Wexford coast."
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://parknacrossweather.ie/#webpage",
+        "url": "https://parknacrossweather.ie/",
+        "name": "Ardamine Weather | Live Weather for Courtown & North Wexford",
+        "isPartOf": {"@id": "https://parknacrossweather.ie/#website"},
+        "about": {
+          "@type": "Place",
+          "name": "Ardamine, Co. Wexford, Ireland"
+        }
+      }
+    ]
   }
   </script>
+  <style>
+    .local-search-intro{margin:14px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:var(--radius-sm);background:rgba(255,255,255,.012);color:var(--muted);font-size:.84rem;line-height:1.6}
+    .local-search-intro strong{color:var(--text);font-weight:650}.local-area-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.local-area-links a{color:var(--accent);text-decoration:none}.local-area-links a:hover{text-decoration:underline}
+  </style>
 </head>
 
 <body class="weather-neutral">
@@ -137,6 +159,17 @@
           <div class="hero-stat"><span>Trend</span><strong id="heroTrend">--</strong></div>
         </div>
       </div>
+    </section>
+
+    <section class="local-search-intro" aria-label="Local weather coverage">
+      <strong>Live weather in Ardamine, Courtown and North Wexford.</strong>
+      Parknacross Weather is an independent personal weather station in Ardamine, providing local temperature, rainfall, wind, pressure, humidity, UV and solar observations, plus radar, coastal conditions and a growing weather archive.
+      <nav class="local-area-links" aria-label="Local weather guides">
+        <a href="ardamine-weather.html">Ardamine weather</a>
+        <a href="courtown-weather.html">Courtown weather</a>
+        <a href="north-wexford-weather.html">North Wexford weather</a>
+        <a href="north-wexford-coastal-weather.html">North Wexford coastal weather</a>
+      </nav>
     </section>
 
     <section class="station-bar" aria-label="Station status">
@@ -439,7 +472,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="app.js?v=20260914-localmarine1"></script>
+<script src="app.js?v=20260914-warningfix2"></script>
 
 <script src="site-config.js?v=20260912-mobile2"></script>
 <script src="platform.js?v=20260914-dublintime1"></script>
