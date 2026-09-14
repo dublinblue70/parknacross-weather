@@ -46,6 +46,13 @@ let deferredInstallPrompt = null;
 let latestObservationTime = null;
 let latestCurrent = null;
 
+const RAIN_ACTIVE_WINDOW_MS = 5 * 60 * 1000;
+const RAIN_RECENT_WINDOW_MS = 15 * 60 * 1000;
+const RAIN_INCREMENT_EPSILON_MM = 0.05;
+let lastObservedRainTotal = null;
+let lastObservedRainDay = null;
+let lastRainIncreaseTime = null;
+
 /* 0.1 mm on commissioning day was a test, not real rainfall. */
 const RAIN_CORRECTIONS_MM = {
   "2026-09-11": 0.1
@@ -247,17 +254,85 @@ function prevailingWind() {
   return { deg: degrees, text: compass(degrees) };
 }
 
+function rainActivity(current) {
+  const rainRate = Number(current?.rain_rate_mm_h || 0);
+  const currentTime = readingTime(current) || Date.now();
+  const currentDay = stationDateKeyFromTime(currentTime);
+  const currentTotal = correctedDailyRain(current);
+
+  // Track live cumulative-rain changes between /current refreshes. This catches
+  // light/intermittent WS90 piezo rain even when the instantaneous rate is 0.0.
+  if (usable(currentTotal)) {
+    if (lastObservedRainDay !== currentDay) {
+      lastObservedRainDay = currentDay;
+      lastObservedRainTotal = Number(currentTotal);
+      lastRainIncreaseTime = null;
+    } else if (usable(lastObservedRainTotal) && Number(currentTotal) >= Number(lastObservedRainTotal) + RAIN_INCREMENT_EPSILON_MM) {
+      lastRainIncreaseTime = currentTime;
+      lastObservedRainTotal = Number(currentTotal);
+    } else if (!usable(lastObservedRainTotal) || Number(currentTotal) > Number(lastObservedRainTotal)) {
+      lastObservedRainTotal = Number(currentTotal);
+    }
+  }
+
+  // Seed/refresh the detection from archived observations. Also compare the
+  // latest archived total with /current because /history is cached for 5 min.
+  const rows = [...history24]
+    .filter(row => readingTime(row) && localDateKey(row) === currentDay && usable(correctedDailyRain(row)))
+    .sort((a, b) => readingTime(a) - readingTime(b));
+
+  let previous = null;
+  for (const row of rows) {
+    if (previous) {
+      const previousTotal = correctedDailyRain(previous);
+      const rowTotal = correctedDailyRain(row);
+      if (usable(previousTotal) && usable(rowTotal) && Number(rowTotal) >= Number(previousTotal) + RAIN_INCREMENT_EPSILON_MM) {
+        const increaseTime = readingTime(row);
+        if (!lastRainIncreaseTime || increaseTime > lastRainIncreaseTime) lastRainIncreaseTime = increaseTime;
+      }
+    }
+    previous = row;
+  }
+
+  const latestHistory = rows.length ? rows[rows.length - 1] : null;
+  if (latestHistory && usable(currentTotal)) {
+    const historyTotal = correctedDailyRain(latestHistory);
+    if (usable(historyTotal) && Number(currentTotal) >= Number(historyTotal) + RAIN_INCREMENT_EPSILON_MM) {
+      // The increase happened after the latest cached history sample. Treat the
+      // current observation as the best available detection time.
+      lastRainIncreaseTime = Math.max(lastRainIncreaseTime || 0, currentTime);
+    }
+  }
+
+  if (rainRate > 0) lastRainIncreaseTime = currentTime;
+
+  const age = lastRainIncreaseTime ? Math.max(0, currentTime - lastRainIncreaseTime) : Infinity;
+  return {
+    rainRate,
+    isRaining: rainRate > 0 || age <= RAIN_ACTIVE_WINDOW_MS,
+    rainRecently: rainRate <= 0 && age > RAIN_ACTIVE_WINDOW_MS && age <= RAIN_RECENT_WINDOW_MS,
+    lastIncreaseTime: Number.isFinite(age) ? lastRainIncreaseTime : null
+  };
+}
+
 function conditionInfo(current, isNight) {
-  const rain = Number(current.rain_rate_mm_h || 0);
+  const rainState = rainActivity(current);
+  const rain = rainState.rainRate;
   const wind = Number(current.wind_speed_kmh || 0);
   const solar = Number(current.solar_w_m2 || 0);
   const uv = Number(current.uv_index || 0);
 
   if (rain >= 2.5) {
-    return { tag: "Rainy", icon: "🌧️", story: `Rain is falling at ${n(rain)} mm/h.`, className: "weather-rain" };
+    return { tag: "Rainy", icon: "🌧️", story: `Rain is falling at ${n(rain)} mm/h.`, className: "weather-rain", rainState };
   }
   if (rain > 0) {
-    return { tag: "Light rain", icon: "🌦️", story: `Light rain is falling at ${n(rain)} mm/h.`, className: "weather-rain" };
+    return { tag: "Light rain", icon: "🌦️", story: `Light rain is falling at ${n(rain)} mm/h.`, className: "weather-rain", rainState };
+  }
+  if (rainState.isRaining) {
+    return { tag: "Raining", icon: "🌧️", story: "Rain has been detected within the last few minutes.", className: "weather-rain", rainState };
+  }
+  if (rainState.rainRecently) {
+    return { tag: "Rain recently", icon: "🌦️", story: "Rain was detected recently at Parknacross.", className: "weather-rain", rainState };
   }
   if (wind >= 35) {
     return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy" };
@@ -523,7 +598,12 @@ function updateDashboard(current) {
       : direction
   );
   set("rainVal", n(rainToday));
-  set("rainRateVal", `${n(current.rain_rate_mm_h)} mm/h`);
+  set(
+    "rainRateVal",
+    condition.rainState?.isRaining && Number(current.rain_rate_mm_h || 0) <= 0
+      ? `${n(current.rain_rate_mm_h)} mm/h · rain detected`
+      : `${n(current.rain_rate_mm_h)} mm/h`
+  );
   set("pressureVal", n(current.pressure_hpa));
   set("pressureTrend", pressure.trend);
   set(
@@ -819,15 +899,36 @@ function marineFlagIsActive(value) {
   return flag === "yes" || flag === "true" || flag === "1" || flag === "in force";
 }
 
+function isDashboardWeatherWarning(warning) {
+  const text = [
+    warning?.type,
+    warning?.event,
+    warning?.status,
+    warning?.headline,
+    warning?.description
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  // Environmental/agricultural advisories (for example potato blight)
+  // are not local public weather warnings for Parknacross.
+  if (/potato|blight|farming|agricultur|environmental advisory/.test(text)) {
+    return false;
+  }
+
+  return true;
+}
+
 function renderWeatherWarning(list) {
   const banner = $("warningBanner");
+  const relevant = Array.isArray(list)
+    ? list.filter(isDashboardWeatherWarning)
+    : [];
 
-  if (!banner || !list.length) {
+  if (!banner || !relevant.length) {
     if (banner) banner.hidden = true;
     return false;
   }
 
-  const warning = list[0];
+  const warning = relevant[0];
   const rawLevel = String(
     warning.level ||
     warning.severity ||
@@ -916,7 +1017,7 @@ function renderMarineWarning(marine, weatherWarningVisible) {
   banner.classList.remove("level-orange", "level-red");
   banner.classList.add("level-yellow");
 
-  set("marineWarningLevel", "Local marine warning");
+  set("marineWarningLevel", "North Wexford marine warning");
 
   let title = "Marine warning — North Wexford coast";
   if (gale && smallCraft) {
@@ -953,7 +1054,7 @@ function renderMarineWarning(marine, weatherWarningVisible) {
 
   set(
     "marineWarningText",
-    `Met Éireann lists this warning for ${sector}, the coastal sector containing Ardamine/Parknacross.${detail}`
+    `Met Éireann has a marine warning affecting ${sector}, which includes the coast off Ardamine/Parknacross.${detail}`
   );
 
   const link = $("marineWarningLink");
