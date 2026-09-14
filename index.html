@@ -15,7 +15,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260912-dashboardphoto1">
+  <link rel="stylesheet" href="styles.css?v=20260914-marinewarn1">
 
   <title>Ardamine Weather | Live Parknacross Weather Station, Co. Wexford</title>
   <link rel="canonical" href="https://parknacrossweather.ie/">
@@ -49,6 +49,27 @@
 
     <a class="warning-link" href="https://www.met.ie/warnings" target="_blank" rel="noopener">
       Full warning <span aria-hidden="true">↗</span>
+    </a>
+  </div>
+</div>
+
+<div id="marineWarningBanner" class="warning-banner marine-warning-banner level-yellow" role="alert" aria-live="polite" hidden>
+  <div class="warning-inner">
+    <span class="warning-icon" aria-hidden="true">!</span>
+
+    <div class="warning-copy">
+      <div class="warning-heading-row">
+        <span id="marineWarningLevel" class="warning-level-badge">Marine warning</span>
+        <span class="warning-source">Met Éireann Marine</span>
+      </div>
+
+      <strong id="marineWarningTitle">Marine warning in force</strong>
+      <p id="marineWarningTiming" class="warning-timing"></p>
+      <p id="marineWarningText" class="warning-description"></p>
+    </div>
+
+    <a class="warning-link" href="https://www.met.ie/forecasts/marine-inland-lakes" target="_blank" rel="noopener">
+      Full marine warning <span aria-hidden="true">↗</span>
     </a>
   </div>
 </div>
@@ -418,7 +439,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="app.js?v=20260914-dashboard-gapbreak1"></script>
+<script src="app.js?v=20260914-marinewarn1"></script>
 
 <script src="site-config.js?v=20260912-mobile2"></script>
 <script src="platform.js?v=20260914-dublintime1"></script>

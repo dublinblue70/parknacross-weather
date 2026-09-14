@@ -5,6 +5,7 @@ const HISTORY_7D_URL = `${API_BASE}/history?hours=168`;
 const STATS_URL = `${API_BASE}/stats`;
 const FORECAST_URL = `${API_BASE}/met/forecast`;
 const WARNINGS_URL = `${API_BASE}/met/warnings`;
+const MARINE_URL = `${API_BASE}/met/marine`;
 const BATTERY_DEBUG_URL = `${API_BASE}/battery-debug`;
 
 const ARDAMINE_LAT = 52.6247;
@@ -797,119 +798,182 @@ async function loadForecast() {
   }
 }
 
-async function loadWarnings() {
-  try {
-    const warnings = await getJSON(WARNINGS_URL);
-    const list = Array.isArray(warnings.warnings) ? warnings.warnings : [];
-    const banner = $("warningBanner");
+function warningDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
-    if (!banner || !list.length) {
-      if (banner) banner.hidden = true;
-      return;
-    }
+function formatWarningTime(date) {
+  return date.toLocaleString("en-IE", {
+    timeZone: STATION_TIME_ZONE,
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
 
-    const warning = list[0];
-    const rawLevel = String(
-      warning.level ||
-      warning.severity ||
-      "yellow"
+function marineFlagIsActive(value) {
+  const flag = String(value ?? "").trim().toLowerCase();
+  return flag === "yes" || flag === "true" || flag === "1" || flag === "in force";
+}
+
+function renderWeatherWarning(list) {
+  const banner = $("warningBanner");
+
+  if (!banner || !list.length) {
+    if (banner) banner.hidden = true;
+    return false;
+  }
+
+  const warning = list[0];
+  const rawLevel = String(
+    warning.level ||
+    warning.severity ||
+    "yellow"
+  ).trim();
+
+  const level = rawLevel.toLowerCase();
+
+  banner.hidden = false;
+  banner.classList.remove(
+    "level-yellow",
+    "level-orange",
+    "level-red"
+  );
+
+  if (level.includes("red")) {
+    banner.classList.add("level-red");
+  } else if (level.includes("orange")) {
+    banner.classList.add("level-orange");
+  } else {
+    banner.classList.add("level-yellow");
+  }
+
+  const displayLevel =
+    level.includes("red")
+      ? "Red"
+      : level.includes("orange")
+        ? "Orange"
+        : "Yellow";
+
+  set("warningLevel", `${displayLevel} warning`);
+
+  const warningType =
+    String(
+      warning.type ||
+      warning.event ||
+      "Weather"
     ).trim();
 
-    const level = rawLevel.toLowerCase();
+  set("warningTitle", `${warningType} warning for Wexford`);
 
-    banner.hidden = false;
-    banner.classList.remove(
-      "level-yellow",
-      "level-orange",
-      "level-red"
-    );
+  const onset = warningDate(warning.onset);
+  const expires = warningDate(warning.expires);
 
-    if (level.includes("red")) {
-      banner.classList.add("level-red");
-    } else if (level.includes("orange")) {
-      banner.classList.add("level-orange");
-    } else {
-      banner.classList.add("level-yellow");
-    }
+  let timing = "";
 
-    const displayLevel =
-      level.includes("red")
-        ? "Red"
-        : level.includes("orange")
-          ? "Orange"
-          : "Yellow";
+  if (onset && expires) {
+    timing = `Valid ${formatWarningTime(onset)} – ${formatWarningTime(expires)}`;
+  } else if (expires) {
+    timing = `Valid until ${formatWarningTime(expires)}`;
+  }
 
-    set(
-      "warningLevel",
-      `${displayLevel} warning`
-    );
+  set("warningTiming", timing);
 
-    const warningType =
-      String(
-        warning.type ||
-        warning.event ||
-        "Weather"
-      ).trim();
+  set(
+    "warningText",
+    warning.description ||
+    warning.headline ||
+    "See Met Éireann for full warning details."
+  );
 
-    set(
-      "warningTitle",
-      `${warningType} warning for Wexford`
-    );
+  return true;
+}
 
-    const onset =
-      warning.onset
-        ? new Date(warning.onset)
-        : null;
+function renderMarineWarning(marine, weatherWarningVisible) {
+  const banner = $("marineWarningBanner");
+  if (!banner) return false;
 
-    const expires =
-      warning.expires
-        ? new Date(warning.expires)
-        : null;
+  const gale = marineFlagIsActive(marine?.gale_warning);
+  const smallCraft = marineFlagIsActive(marine?.small_craft_warning);
 
-    const formatWarningTime =
-      date =>
-        date.toLocaleString(
-          "en-IE",
-          {
-            timeZone: STATION_TIME_ZONE,
-            day: "numeric",
-            month: "short",
-            hour: "2-digit",
-            minute: "2-digit"
-          }
-        );
+  if (!gale && !smallCraft) {
+    banner.hidden = true;
+    banner.classList.remove("stacked-warning");
+    return false;
+  }
 
-    let timing = "";
+  banner.hidden = false;
+  banner.classList.toggle("stacked-warning", weatherWarningVisible);
+  banner.classList.remove("level-orange", "level-red");
+  banner.classList.add("level-yellow");
 
-    if (
-      onset &&
-      !Number.isNaN(onset.getTime()) &&
-      expires &&
-      !Number.isNaN(expires.getTime())
-    ) {
-      timing =
-        `Valid ${formatWarningTime(onset)} – ${formatWarningTime(expires)}`;
-    } else if (
-      expires &&
-      !Number.isNaN(expires.getTime())
-    ) {
-      timing =
-        `Valid until ${formatWarningTime(expires)}`;
-    }
+  set("marineWarningLevel", "Marine warning");
 
-    set(
-      "warningTiming",
-      timing
-    );
+  let title = "Marine warning in force";
+  if (gale && smallCraft) {
+    title = "Gale and Small Craft Warnings in force";
+  } else if (gale) {
+    title = "Gale Warning in force";
+  } else if (smallCraft) {
+    title = "Small Craft Warning in force";
+  }
 
-    set(
-      "warningText",
-      warning.description ||
-      warning.headline ||
-      "See Met Éireann for full warning details."
-    );
-  } catch (error) {
-    console.warn("Met Éireann warnings:", error);
+  set("marineWarningTitle", title);
+
+  const issued = warningDate(marine?.issued);
+  const until = warningDate(marine?.until);
+  let timing = "";
+
+  if (issued && until) {
+    timing = `Issued ${formatWarningTime(issued)} · valid until ${formatWarningTime(until)}`;
+  } else if (until) {
+    timing = `Valid until ${formatWarningTime(until)}`;
+  } else if (issued) {
+    timing = `Issued ${formatWarningTime(issued)}`;
+  }
+
+  set("marineWarningTiming", timing);
+
+  const types = [];
+  if (gale) types.push("a Gale Warning");
+  if (smallCraft) types.push("a Small Craft Warning");
+
+  set(
+    "marineWarningText",
+    `Met Éireann has ${types.join(" and ")} in force in the current Sea Area Forecast. Check the full marine warning for the affected coastal areas.`
+  );
+
+  return true;
+}
+
+async function loadWarnings() {
+  const [weatherResult, marineResult] = await Promise.allSettled([
+    getJSON(WARNINGS_URL),
+    getJSON(MARINE_URL)
+  ]);
+
+  let weatherWarningVisible = false;
+
+  if (weatherResult.status === "fulfilled") {
+    const list = Array.isArray(weatherResult.value?.warnings)
+      ? weatherResult.value.warnings
+      : [];
+    weatherWarningVisible = renderWeatherWarning(list);
+  } else {
+    console.warn("Met Éireann weather warnings:", weatherResult.reason);
+    const banner = $("warningBanner");
+    if (banner) banner.hidden = true;
+  }
+
+  if (marineResult.status === "fulfilled") {
+    renderMarineWarning(marineResult.value, weatherWarningVisible);
+  } else {
+    console.warn("Met Éireann marine warnings:", marineResult.reason);
+    const banner = $("marineWarningBanner");
+    if (banner) banner.hidden = true;
   }
 }
 

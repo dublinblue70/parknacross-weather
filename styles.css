@@ -1481,6 +1481,15 @@ canvas {
   background: rgba(27, 36, 48, .16);
 }
 
+
+/* A marine banner can sit immediately below a county weather warning.
+   Only the first visible banner should consume the device safe-area inset. */
+.marine-warning-banner.stacked-warning {
+  padding-top: 0;
+  box-shadow: none;
+  border-top: 1px solid var(--warning-line);
+}
+
 @media (max-width: 700px) {
   .warning-inner {
     width: 100%;
