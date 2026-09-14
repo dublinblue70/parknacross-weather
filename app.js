@@ -43,6 +43,7 @@ let stats = null;
 let charts = {};
 let deferredInstallPrompt = null;
 let latestObservationTime = null;
+let latestCurrent = null;
 
 /* 0.1 mm on commissioning day was a test, not real rainfall. */
 const RAIN_CORRECTIONS_MM = {
@@ -745,8 +746,8 @@ function updateCharts() {
   charts.rain.update();
 }
 
-async function getJSON(url) {
-  const response = await fetch(url, { cache: "no-store" });
+async function getJSON(url, cacheMode = "default") {
+  const response = await fetch(url, { cache: cacheMode });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const data = await response.json();
   if (data?.error) throw new Error(data.error);
@@ -886,7 +887,7 @@ async function restoreBatteryIfMissing(current) {
   if (!current || usable(current.battery_v)) return current;
 
   try {
-    const debug = await getJSON(BATTERY_DEBUG_URL);
+    const debug = await getJSON(BATTERY_DEBUG_URL, "no-store");
     const fallback =
       debug?.effective_battery_v ??
       debug?.explicit_realtime_battery_v ??
@@ -908,8 +909,9 @@ async function loadEverything() {
   let current = null;
 
   try {
-    current = await getJSON(CURRENT_URL);
+    current = await getJSON(CURRENT_URL, "no-store");
     current = await restoreBatteryIfMissing(current);
+    latestCurrent = current;
     updateDashboard(current);
   } catch (error) {
     console.error("Current conditions:", error);
@@ -941,11 +943,42 @@ async function loadEverything() {
 
 async function refreshCurrent() {
   try {
-    let current = await getJSON(CURRENT_URL);
+    let current = await getJSON(CURRENT_URL, "no-store");
     current = await restoreBatteryIfMissing(current);
+    latestCurrent = current;
     updateDashboard(current);
   } catch (error) {
     console.error("Current refresh:", error);
+  }
+}
+
+async function refreshHistory24() {
+  try {
+    const data = await getJSON(HISTORY_24_URL);
+    history24 = Array.isArray(data.readings) ? data.readings : history24;
+    if (latestCurrent) updateDashboard(latestCurrent);
+    updateCharts();
+  } catch (error) {
+    console.warn("24-hour history refresh:", error);
+  }
+}
+
+async function refreshHistory7d() {
+  try {
+    const data = await getJSON(HISTORY_7D_URL);
+    history7d = Array.isArray(data.readings) ? data.readings : history7d;
+    updateCharts();
+  } catch (error) {
+    console.warn("7-day history refresh:", error);
+  }
+}
+
+async function refreshStats() {
+  try {
+    stats = await getJSON(STATS_URL);
+    if (latestCurrent) updateDashboard(latestCurrent);
+  } catch (error) {
+    console.warn("Stats refresh:", error);
   }
 }
 
@@ -1019,7 +1052,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setInterval(updateRelativeObservation, 15 * 1000);
   setInterval(refreshCurrent, 60 * 1000);
-  setInterval(loadEverything, 5 * 60 * 1000);
+  setInterval(refreshHistory24, 10 * 60 * 1000);
+  setInterval(refreshHistory7d, 30 * 60 * 1000);
+  setInterval(refreshStats, 30 * 60 * 1000);
   setInterval(updateSunInfo, 60 * 1000);
   setInterval(loadWarnings, 5 * 60 * 1000);
   setInterval(loadForecast, 30 * 60 * 1000);

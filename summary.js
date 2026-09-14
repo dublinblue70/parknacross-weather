@@ -36,7 +36,7 @@ function exactDateTime(date) {
 }
 
 async function getJSON(path) {
-  const response = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+  const response = await fetch(`${API_BASE}${path}`, { cache: "default" });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const data = await response.json();
   if (data?.error) throw new Error(data.error);
@@ -178,4 +178,4 @@ async function loadSummary(){
   }catch(error){console.error("Daily summary:",error);set("summarySubtitle","The daily summary is temporarily unavailable.");set("dayStory","Live station observations could not be loaded. Please try again shortly.");currentTodayRows=[];currentTodayKey=null;latestShareRow=null;$("downloadCsvButton").disabled=true;$("shareWeatherButton").disabled=true;set("actionStatus","Summary tools are temporarily unavailable.");}
 }
 
-document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("downloadCsvButton")?.addEventListener("click",downloadTodayCsv);$("shareWeatherButton")?.addEventListener("click",shareCurrentWeather);loadSummary();setInterval(loadSummary,5*60*1000);if("serviceWorker" in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
+document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("downloadCsvButton")?.addEventListener("click",downloadTodayCsv);$("shareWeatherButton")?.addEventListener("click",shareCurrentWeather);loadSummary();setInterval(loadSummary,10*60*1000);if("serviceWorker" in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
