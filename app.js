@@ -653,12 +653,18 @@ function updateDashboard(current) {
     return mode === "min" ? Math.min(...candidates) : Math.max(...candidates);
   };
 
-  const todayHigh = usable(dailyToday?.high_c)
-    ? Number(dailyToday.high_c)
-    : usable(highReading?.temperature_c) ? Number(highReading.temperature_c) : null;
-  const todayLow = usable(dailyToday?.low_c)
-    ? Number(dailyToday.low_c)
-    : usable(lowReading?.temperature_c) ? Number(lowReading.temperature_c) : null;
+  /*
+   * Prefer the validated raw observations for today's temperature extrema.
+   * The daily summary is only a fallback if today's history is unavailable.
+   * This prevents a previously stored bad daily maximum from overriding the
+   * corrected observation stream.
+   */
+  const todayHigh = usable(highReading?.temperature_c)
+    ? Number(highReading.temperature_c)
+    : usable(dailyToday?.high_c) ? Number(dailyToday.high_c) : null;
+  const todayLow = usable(lowReading?.temperature_c)
+    ? Number(lowReading.temperature_c)
+    : usable(dailyToday?.low_c) ? Number(dailyToday.low_c) : null;
   const peakGust = extrema(dailyToday?.peak_gust_kmh, gustReading?.wind_gust_kmh, current.wind_gust_kmh, "max");
   const solarPeak = extrema(dailyToday?.solar_peak_w_m2, solarReading?.solar_w_m2, current.solar_w_m2, "max");
   const todayHighReading = highReading && usable(todayHigh) && Math.abs(Number(highReading.temperature_c) - todayHigh) < 0.05 ? highReading : null;

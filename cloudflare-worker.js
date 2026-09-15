@@ -16,7 +16,7 @@ const TEMP_OUTLIER_DELTA_C = 2.5;
 const TEMP_OUTLIER_BASELINE_C = 1.0;
 const TEMP_OUTLIER_WINDOW_SECONDS = 30 * 60;
 const TEMP_OUTLIER_MIN_NEIGHBORS = 3;
-const EDGE_CACHE_VERSION = "v30-at-a-glance-quality";
+const EDGE_CACHE_VERSION = "v31-today-extrema";
 let schemaReadyPromise = null;
 
 /*
@@ -137,7 +137,7 @@ async function temperatureRecordIsOutlier(env, candidate) {
 async function repairRecentDailyTemperatureSummaries(env) {
   const repaired = await env.DB.prepare(
     `SELECT value FROM ${META_TABLE}
-     WHERE key = 'temperature_quality_v30'
+     WHERE key = 'temperature_quality_v31'
      LIMIT 1`
   ).first();
   if (repaired) return;
@@ -173,8 +173,31 @@ async function repairRecentDailyTemperatureSummaries(env) {
 
   await env.DB.prepare(
     `INSERT OR REPLACE INTO ${META_TABLE} (key, value)
-     VALUES ('temperature_quality_v30', ?)`
+     VALUES ('temperature_quality_v31', ?)`
   ).bind(new Date().toISOString()).run();
+}
+
+async function validatedTemperatureExtremaForDay(env, day) {
+  const result = await env.DB.prepare(
+    `SELECT epoch, temperature_c
+     FROM ${TABLE}
+     WHERE ${DUBLIN_DAY_SQL} = ?
+       AND temperature_c IS NOT NULL
+     ORDER BY epoch ASC`
+  ).bind(day).all();
+
+  const rows = result.results || [];
+  const outliers = temperatureOutlierRows(rows);
+  const valid = rows
+    .filter(row => !outliers.has(row) && usableNumber(row.temperature_c))
+    .map(row => Number(row.temperature_c));
+
+  return {
+    high_c: valid.length ? Math.max(...valid) : null,
+    low_c: valid.length ? Math.min(...valid) : null,
+    valid_count: valid.length,
+    rejected_count: outliers.size
+  };
 }
 
 export default {
@@ -356,6 +379,23 @@ export default {
             avg_pressure_hpa: nullableNumber(row.avg_pressure_hpa),
             solar_peak_w_m2: nullableNumber(row.solar_peak_w_m2)
           }));
+
+          /*
+           * Recalculate today's temperature extrema from the raw observation
+           * stream every time the short daily feed is requested. This makes
+           * the current-day API self-healing even if a bad maximum/minimum was
+           * previously persisted in the compact daily summary table.
+           */
+          const todayRow = rows.find(row => row.day === today);
+          if (todayRow) {
+            const validated = await validatedTemperatureExtremaForDay(env, today);
+            if (usableNumber(validated.high_c)) todayRow.high_c = Number(validated.high_c);
+            if (usableNumber(validated.low_c)) todayRow.low_c = Number(validated.low_c);
+            todayRow.temperature_quality = {
+              valid_count: validated.valid_count,
+              rejected_count: validated.rejected_count
+            };
+          }
 
           return { days: rows };
         });
