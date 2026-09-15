@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v27-audit-fixes-20260915";
+const CACHE_NAME = "parknacross-weather-v28-mobile-footer-20260915";
 const STATIC_ASSETS = [
   "./", "./index.html", "./styles.css", "./app.js", "./site-config.js", "./platform.js",
   "./radar.html", "./radar.js", "./graphs.html", "./graphs.js", "./rain.html", "./rain.js",

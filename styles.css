@@ -694,7 +694,18 @@ body.is-night .weather-orb::before {
   .bottom-grid { grid-template-columns: 1fr; }
   .station-specs { grid-template-columns: 1fr; }
   .records-grid-page { grid-template-columns: 1fr 1fr; }
-  footer { flex-direction: column; align-items: flex-start; padding: 18px; }
+  footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+    gap: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: center;
+  }
+  footer > span { display: inline-flex; align-items: center; white-space: nowrap; }
+  footer > span + span::before { content: " · "; margin: 0 .4em; }
 }
 
 @media (max-width: 480px) {
@@ -1240,16 +1251,30 @@ canvas {
   }
 
   footer {
-    padding: 16px 14px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 7px;
-    font-size: .76rem;
+    padding: 14px 8px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    font-size: .68rem;
+    white-space: nowrap;
+    overflow: hidden;
   }
+
+  /* Compact mobile wording keeps the footer readable on one line. */
+  footer > span:nth-child(2) { font-size: 0; }
+  footer > span:nth-child(2)::before { font-size: .68rem; }
+  footer > span:nth-child(2)::after { content: "Ardamine, Co. Wexford"; font-size: .68rem; }
+  footer > span:nth-child(3) a { font-size: 0; }
+  footer > span:nth-child(3) a::after { content: "Email"; font-size: .68rem; }
 }
 
 /* Narrow phones */
 @media (max-width: 390px) {
+  footer { padding-left: 6px; padding-right: 6px; font-size: .62rem; }
+  footer > span:nth-child(2)::before { font-size: .62rem; }
+  footer > span:nth-child(2)::after { content: "Ardamine"; font-size: .62rem; }
+  footer > span:nth-child(3) a::after { font-size: .62rem; }
   main {
     padding-left: 10px;
     padding-right: 10px;

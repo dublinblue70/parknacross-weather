@@ -1,0 +1,9 @@
+Parknacross Weather v28 – mobile footer polish
+
+- Desktop footer is unchanged.
+- Tablet/phone footer stays on one horizontal line.
+- On phones the middle description is shortened to “Ardamine, Co. Wexford” and the email address is shown as “Email”.
+- On very narrow phones the location shortens to “Ardamine”.
+- Downloads and System Health use matching compact one-line footers.
+- styles.css is cache-busted and the service-worker cache name is bumped so installed/PWA clients receive the change.
+- No weather-data, Cloudflare Worker, API, analytics or station logic changed.
