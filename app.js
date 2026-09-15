@@ -521,6 +521,12 @@ function updateDashboard(current) {
   const lowReading = recordReading(today, "temperature_c", "min");
   const gustReading = recordReading(today, "wind_gust_kmh", "max");
   const solarReading = recordReading(today, "solar_w_m2", "max");
+  // The live reading can arrive before the newest observation is present in history24.
+  // Include it in today's peak so Solar peak can never be lower than Solar / UV.
+  const solarPeakCandidates = [solarReading?.solar_w_m2, current.solar_w_m2]
+    .filter(usable)
+    .map(Number);
+  const solarPeak = solarPeakCandidates.length ? Math.max(...solarPeakCandidates) : null;
 
   const pressure = pressureStats();
   const direction = compass(current.wind_direction_deg);
@@ -580,7 +586,7 @@ function updateDashboard(current) {
   set("todayHigh", n(highReading?.temperature_c));
   set("peakGust", n(gustReading?.wind_gust_kmh));
   set("summaryRain", n(rainToday));
-  set("solarPeak", n(solarReading?.solar_w_m2, 0));
+  set("solarPeak", n(solarPeak, 0));
 
   set("tempVal", n(current.temperature_c));
   set("feelsVal", `${n(current.feels_like_c)}°C`);
