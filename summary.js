@@ -35,8 +35,8 @@ function exactDateTime(date) {
   return new Intl.DateTimeFormat("en-IE", { timeZone: TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(date);
 }
 
-async function getJSON(path) {
-  const response = await fetch(`${API_BASE}${path}`, { cache: "default" });
+async function getJSON(path, cache = "default") {
+  const response = await fetch(`${API_BASE}${path}`, { cache });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const data = await response.json();
   if (data?.error) throw new Error(data.error);
@@ -45,8 +45,21 @@ async function getJSON(path) {
 
 function maxReading(rows, field) { return rows.reduce((best, row) => !usable(row[field]) ? best : (!best || Number(row[field]) > Number(best[field]) ? row : best), null); }
 function minReading(rows, field) { return rows.reduce((best, row) => !usable(row[field]) ? best : (!best || Number(row[field]) < Number(best[field]) ? row : best), null); }
-function average(rows, field) { const values = rows.map(row => Number(row[field])).filter(Number.isFinite); return values.length ? values.reduce((a,b)=>a+b,0)/values.length : null; }
-function rainTotal(rows) { const values = rows.map(row => Number(row.rain_daily_mm)).filter(Number.isFinite); return values.length ? Math.max(...values) : null; }
+function average(rows, field) { const values = rows.filter(row => usable(row[field])).map(row => Number(row[field])); return values.length ? values.reduce((a,b)=>a+b,0)/values.length : null; }
+const RAIN_CORRECTIONS_MM = { "2026-09-11": 0.1 };
+function correctedRain(row) {
+  if (!usable(row?.rain_daily_mm)) return null;
+  const day = localDayKey(readingDate(row));
+  const correction = Number(RAIN_CORRECTIONS_MM[day] || 0);
+  return Math.round(Math.max(0, Number(row.rain_daily_mm) - correction) * 10) / 10;
+}
+function rainTotal(rows) { const values = rows.map(correctedRain).filter(usable).map(Number); return values.length ? Math.max(...values) : null; }
+function mergeCurrent(rows, current, todayKey) {
+  if (!current || localDayKey(readingDate(current)) !== todayKey) return [...rows];
+  const currentEpoch = usable(current.epoch) ? Number(current.epoch) : null;
+  const filtered = currentEpoch === null ? [...rows] : rows.filter(row => Number(row.epoch) !== currentEpoch);
+  return [...filtered, current].sort((a,b)=>(readingDate(a)?.getTime()||0)-(readingDate(b)?.getTime()||0));
+}
 
 function metrics(rows) {
   return {
@@ -118,14 +131,14 @@ function relativeTime(date) {
   if(hours<24)return `${hours}h ${minutes%60}m ago`; const days=Math.floor(hours/24); return `${days} day${days===1?"":"s"} ago`;
 }
 
-function renderRainSummary(rain) {
-  const rate=Number(rain?.current_rate_mm_h||0), last=rain?.last_measurable_rain?.received_at?new Date(rain.last_measurable_rain.received_at):null;
-  if(rate>0){set("lastRainWhen","Raining now"); set("lastRainExact",last?`Latest wet reading ${exactDateTime(last)}`:"Measurable rain is being recorded");}
+function renderRainSummary(rain, todayRain) {
+  const rate=usable(rain?.current_rate_mm_h)?Number(rain.current_rate_mm_h):null, last=rain?.last_measurable_rain?.received_at?new Date(rain.last_measurable_rain.received_at):null;
+  if(rate !== null && rate>0){set("lastRainWhen","Raining now"); set("lastRainExact",last?`Latest wet reading ${exactDateTime(last)}`:"Measurable rain is being recorded");}
   else if(last&&!Number.isNaN(last.getTime())){set("lastRainWhen",relativeTime(last));set("lastRainExact",exactDateTime(last));}
   else{set("lastRainWhen","None recorded yet");set("lastRainExact","No measurable rain is in the archive");}
-  set("currentRainRate",usable(rain?.current_rate_mm_h)?`${num(rain.current_rate_mm_h)} mm/h`:"--");
-  set("rainNowNote",rate>0?"Rain is currently being detected":"No measurable rain right now");
-  set("rainTodayPanel",usable(rain?.today_mm)?`${num(rain.today_mm)} mm`:"--");
+  set("currentRainRate",rate !== null?`${num(rate)} mm/h`:"--");
+  set("rainNowNote",rate === null?"Current rain rate unavailable":rate>0?"Rain is currently being detected":"No measurable rain right now");
+  set("rainTodayPanel",usable(todayRain)?`${num(todayRain)} mm`:"--");
   const dry=Number(rain?.consecutive_dry_days); set("drySpell",Number.isFinite(dry)?`${dry} day${dry===1?"":"s"}`:"--");
 }
 
@@ -137,7 +150,7 @@ function localTimestamp(date) {
 function csvCell(value){if(value===null||value===undefined)return"";const text=String(value);return /[",\r\n]/.test(text)?`"${text.replace(/"/g,'""')}"`:text;}
 function downloadTodayCsv(){
   if(!currentTodayRows.length||!currentTodayKey)return;
-  const columns=[["timestamp_local",r=>localTimestamp(readingDate(r))],["timestamp_utc",r=>readingDate(r)?.toISOString()||""],["temperature_c",r=>r.temperature_c],["feels_like_c",r=>r.feels_like_c],["humidity_pct",r=>r.humidity],["dew_point_c",r=>r.dew_point_c],["wind_speed_kmh",r=>r.wind_speed_kmh],["wind_gust_kmh",r=>r.wind_gust_kmh],["wind_direction_deg",r=>r.wind_direction_deg],["pressure_hpa",r=>r.pressure_hpa],["rain_rate_mm_h",r=>r.rain_rate_mm_h],["rain_daily_mm",r=>r.rain_daily_mm],["solar_w_m2",r=>r.solar_w_m2],["uv_index",r=>r.uv_index],["battery_v",r=>r.battery_v]];
+  const columns=[["timestamp_local",r=>localTimestamp(readingDate(r))],["timestamp_utc",r=>readingDate(r)?.toISOString()||""],["temperature_c",r=>r.temperature_c],["feels_like_c",r=>r.feels_like_c],["humidity_pct",r=>r.humidity],["dew_point_c",r=>r.dew_point_c],["wind_speed_kmh",r=>r.wind_speed_kmh],["wind_gust_kmh",r=>r.wind_gust_kmh],["wind_direction_deg",r=>r.wind_direction_deg],["pressure_hpa",r=>r.pressure_hpa],["rain_rate_mm_h",r=>r.rain_rate_mm_h],["rain_daily_mm",r=>correctedRain(r)],["solar_w_m2",r=>r.solar_w_m2],["uv_index",r=>r.uv_index],["battery_v",r=>r.battery_v]];
   const rows=[...currentTodayRows].sort((a,b)=>(readingDate(a)?.getTime()||0)-(readingDate(b)?.getTime()||0));
   const lines=[columns.map(([n])=>csvCell(n)).join(","),...rows.map(r=>columns.map(([,g])=>csvCell(g(r))).join(","))];
   const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"}); const url=URL.createObjectURL(blob); const link=document.createElement("a");
@@ -165,17 +178,20 @@ async function shareCurrentWeather(){
 
 async function loadSummary(){
   try{
-    const [history,rain]=await Promise.all([getJSON("/history?hours=48"),getJSON("/rain-summary")]);
+    const [history,rain,current]=await Promise.all([getJSON("/history?hours=48"),getJSON("/rain-summary","no-store"),getJSON("/current","no-store")]);
     const rows=Array.isArray(history.readings)?history.readings.filter(r=>readingDate(r)):[]; const now=new Date(),todayKey=localDayKey(now),grouped=new Map();
     rows.forEach(row=>{const key=localDayKey(readingDate(row));if(!key)return;if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(row);});
-    const todayRows=grouped.get(todayKey)||[];currentTodayRows=todayRows;currentTodayKey=todayKey;latestShareRow=todayRows.length?todayRows[todayRows.length-1]:null;
+    const todayRows=mergeCurrent(grouped.get(todayKey)||[],current,todayKey);currentTodayRows=todayRows;currentTodayKey=todayKey;latestShareRow=current&&localDayKey(readingDate(current))===todayKey?current:(todayRows.length?todayRows[todayRows.length-1]:null);
     const yesterdayKey=localDayKey(new Date(now.getTime()-24*60*60*1000));const yesterdayRows=yesterdayKey?(grouped.get(yesterdayKey)||[]):[];
     const todayMetrics=metrics(todayRows),yesterdayMetrics=renderYesterday(yesterdayRows);
+    if (usable(current?.rain_daily_mm) && localDayKey(readingDate(current)) === todayKey) todayMetrics.rain = correctedRain(current);
+    else if (usable(rain?.today_mm)) todayMetrics.rain = Number(rain.today_mm);
+    const rainDisplay = {...rain, current_rate_mm_h: usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : rain?.current_rate_mm_h};
     set("summaryTitle",`Today in Parknacross · ${longDate(now)}`);set("summarySubtitle",todayRows.length?`Live day-so-far summary from ${todayRows.length.toLocaleString("en-IE")} stored observations.`:"Waiting for today's stored station observations.");
-    renderToday(todayMetrics);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rain);
+    renderToday(todayMetrics);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);
     $("downloadCsvButton").disabled=!todayRows.length;$("shareWeatherButton").disabled=!latestShareRow;
     set("actionStatus",todayRows.length?`${todayRows.length.toLocaleString("en-IE")} observations ready. Download or share using the buttons above.`:"No observations are available yet.");
   }catch(error){console.error("Daily summary:",error);set("summarySubtitle","The daily summary is temporarily unavailable.");set("dayStory","Live station observations could not be loaded. Please try again shortly.");currentTodayRows=[];currentTodayKey=null;latestShareRow=null;$("downloadCsvButton").disabled=true;$("shareWeatherButton").disabled=true;set("actionStatus","Summary tools are temporarily unavailable.");}
 }
 
-document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("downloadCsvButton")?.addEventListener("click",downloadTodayCsv);$("shareWeatherButton")?.addEventListener("click",shareCurrentWeather);loadSummary();setInterval(loadSummary,10*60*1000);if("serviceWorker" in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
+document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("downloadCsvButton")?.addEventListener("click",downloadTodayCsv);$("shareWeatherButton")?.addEventListener("click",shareCurrentWeather);loadSummary();setInterval(loadSummary,60*1000);if("serviceWorker" in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});

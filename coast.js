@@ -1,34 +1,14 @@
 (() => {
- const cfg=window.PARKNACROSS_CONFIG||{},API=cfg.apiBase,$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v},n=(v,d=1)=>Number.isFinite(Number(v))?Number(v).toFixed(d):"--";
- const comp=d=>{if(!Number.isFinite(Number(d)))return"--";const a=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return a[Math.round((((Number(d)%360)+360)%360)/22.5)%16]};
+ const cfg=window.PARKNACROSS_CONFIG||{},API=cfg.apiBase,$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
+ const usable=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v));
+ const n=(v,d=1)=>usable(v)?Number(v).toFixed(d):"--";
+ const comp=d=>{if(!usable(d))return"--";const a=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return a[Math.round((((Number(d)%360)+360)%360)/22.5)%16]};
  const timeOpts={timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"};
  const dateOpts={timeZone:"Europe/Dublin",weekday:"short",day:"numeric",month:"short"};
- const dateTimeOpts={timeZone:"Europe/Dublin",weekday:"short",hour:"2-digit",minute:"2-digit"};
  const duration=ms=>{if(!Number.isFinite(ms)||ms<0)return"";const mins=Math.max(0,Math.round(ms/60000));const h=Math.floor(mins/60),m=mins%60;if(h&&m)return`${h}h ${m}m`;if(h)return`${h}h`;return`${m}m`};
  async function get(p){const r=await fetch(`${API}${p}`,{cache:"no-store"});if(!r.ok)throw new Error();return r.json()}
- document.addEventListener("DOMContentLoaded",async()=>{set("year",new Date().getFullYear());const [cR,mR,tR]=await Promise.allSettled([get("/current"),get("/met/marine"),get("/marine/tides?station=Arklow")]);
- if(cR.status==="fulfilled"){const c=cR.value;set("coastWind",`${n(c.wind_speed_kmh)} km/h`);set("coastGust",`${n(c.wind_gust_kmh)} km/h`);set("coastDir",`${comp(c.wind_direction_deg)} · ${Math.round(Number(c.wind_direction_deg)||0)}°`)}
- if(mR.status==="fulfilled"){const m=mR.value;set("coastWarn",m.gale_warning==="yes"||m.small_craft_warning==="yes"?"Warning in force":"No warning flagged");set("coastIssued",m.issued?`Issued ${new Date(m.issued).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}`:"Met Éireann");
- if(m.local_area){set("marineArea",m.local_area.area);set("marineWind",m.local_area.wind);set("marineWeather",m.local_area.weather);set("marineVis",m.local_area.visibility)}set("marineOutlook",m.outlook?.text||"--")}
- if(tR.status==="fulfilled"){
-   const a=(tR.value.events||[]).filter(x=>x&&x.time).sort((x,y)=>new Date(x.time)-new Date(y.time));
-   if(a.length){
-     const now=new Date();
-     const previous=[...a].reverse().find(x=>new Date(x.time)<=now)||null;
-     const next=a.find(x=>new Date(x.time)>now)||null;
-     let state="--";
-     if(previous) state=previous.type==="low"?"Rising ↑":"Falling ↓";
-     else if(next) state=next.type==="high"?"Rising ↑":"Falling ↓";
-     set("nextTide",state);
-     if(next){
-       const label=next.type==="high"?"High":"Low";
-       const until=duration(new Date(next.time)-now);
-       const height=Number.isFinite(Number(next.height_m))?` · ${n(next.height_m,2)} m OD Malin`:"";
-       set("nextTideTime",`${label} ${new Date(next.time).toLocaleTimeString("en-IE",timeOpts)} · in ${until}${height}`);
-     } else {
-       set("nextTideTime","Arklow prediction · next event unavailable");
-     }
-     $("tideList").innerHTML=a.filter(x=>new Date(x.time)>now-6*3600000).slice(0,8).map(x=>`<article class="tide-item"><span>${new Date(x.time).toLocaleDateString("en-IE",dateOpts)}</span><strong>${x.type==="high"?"High water":"Low water"}</strong><time>${new Date(x.time).toLocaleTimeString("en-IE",timeOpts)}</time><b>${n(x.height_m,2)} m OD Malin</b></article>`).join("");
-   }
- }
- if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});})();
+ async function loadCurrent(){try{const c=await get("/current");set("coastWind",usable(c.wind_speed_kmh)?`${n(c.wind_speed_kmh)} km/h`:"--");set("coastGust",usable(c.wind_gust_kmh)?`${n(c.wind_gust_kmh)} km/h`:"--");set("coastDir",usable(c.wind_direction_deg)?`${comp(c.wind_direction_deg)} · ${Math.round(Number(c.wind_direction_deg))}°`:"--");}catch{set("coastWind","--");set("coastGust","--");set("coastDir","--");}}
+ async function loadMarine(){try{const m=await get("/met/marine");set("coastWarn",m.gale_warning==="yes"||m.small_craft_warning==="yes"?"Warning in force":"No warning flagged");set("coastIssued",m.issued?`Issued ${new Date(m.issued).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}`:"Met Éireann");if(m.local_area){set("marineArea",m.local_area.area);set("marineWind",m.local_area.wind);set("marineWeather",m.local_area.weather);set("marineVis",m.local_area.visibility)}set("marineOutlook",m.outlook?.text||"--");}catch{set("coastWarn","Marine forecast unavailable");}}
+ async function loadTides(){try{const t=await get("/marine/tides?station=Arklow"),a=(t.events||[]).filter(x=>x&&x.time).sort((x,y)=>new Date(x.time)-new Date(y.time));if(!a.length)return;const now=new Date(),previous=[...a].reverse().find(x=>new Date(x.time)<=now)||null,next=a.find(x=>new Date(x.time)>now)||null;let state="--";if(previous)state=previous.type==="low"?"Rising ↑":"Falling ↓";else if(next)state=next.type==="high"?"Rising ↑":"Falling ↓";set("nextTide",state);if(next){const label=next.type==="high"?"High":"Low",until=duration(new Date(next.time)-now),height=usable(next.height_m)?` · ${n(next.height_m,2)} m OD Malin`:"";set("nextTideTime",`${label} ${new Date(next.time).toLocaleTimeString("en-IE",timeOpts)} · in ${until}${height}`);}else set("nextTideTime","Arklow prediction · next event unavailable");$("tideList").innerHTML=a.filter(x=>new Date(x.time)>now-6*3600000).slice(0,8).map(x=>`<article class="tide-item"><span>${new Date(x.time).toLocaleDateString("en-IE",dateOpts)}</span><strong>${x.type==="high"?"High water":"Low water"}</strong><time>${new Date(x.time).toLocaleTimeString("en-IE",timeOpts)}</time><b>${usable(x.height_m)?`${n(x.height_m,2)} m OD Malin`:"--"}</b></article>`).join("");}catch{set("nextTideTime","Arklow prediction temporarily unavailable");}}
+ document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());loadCurrent();loadMarine();loadTides();setInterval(loadCurrent,60*1000);setInterval(loadMarine,15*60*1000);setInterval(loadTides,30*60*1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
+})();

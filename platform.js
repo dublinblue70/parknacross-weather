@@ -3,7 +3,8 @@
   const API = cfg.apiBase;
   const $ = id => document.getElementById(id);
   const set = (id, value) => { const e = $(id); if (e) e.textContent = value; };
-  const n = (v, d = 1) => Number.isFinite(Number(v)) ? Number(v).toFixed(d) : "--";
+  const usable = v => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v));
+  const n = (v, d = 1) => usable(v) ? Number(v).toFixed(d) : "--";
   const STATION_TIME_ZONE = "Europe/Dublin";
   const stationDayKey = value => {
     const d = value instanceof Date ? value : new Date(value);
@@ -28,9 +29,9 @@
     ]);
 
     if (currentR.status === "fulfilled" && officialR.status === "fulfilled") {
-      const local = Number(currentR.value.temperature_c);
-      const official = Number(officialR.value.temperature_c);
-      if (Number.isFinite(local) && Number.isFinite(official)) {
+      const local = usable(currentR.value.temperature_c) ? Number(currentR.value.temperature_c) : null;
+      const official = usable(officialR.value.temperature_c) ? Number(officialR.value.temperature_c) : null;
+      if (local !== null && official !== null) {
         const d = local - official;
         set("contextTempDelta", `${d >= 0 ? "+" : ""}${d.toFixed(1)}°C`);
         set("contextJohnstownTemp", `Johnstown Castle ${official.toFixed(1)}°C · Parknacross ${local.toFixed(1)}°C`);
@@ -38,12 +39,12 @@
     } else set("contextTempDelta", "Comparison unavailable");
 
     if (climateR.status === "fulfilled") {
-      const stationMonthRain = statsR.status === "fulfilled" ? Number(statsR.value?.month_rain_mm) : Number(climateR.value.station_month_rain_mm);
-      const ltaMonthRain = Number(climateR.value.johnstown_lta_month_rain_mm);
-      const rainPct = Number.isFinite(stationMonthRain) && Number.isFinite(ltaMonthRain) && ltaMonthRain > 0
+      const stationMonthRain = statsR.status === "fulfilled" && usable(statsR.value?.month_rain_mm) ? Number(statsR.value.month_rain_mm) : usable(climateR.value.station_month_rain_mm) ? Number(climateR.value.station_month_rain_mm) : null;
+      const ltaMonthRain = usable(climateR.value.johnstown_lta_month_rain_mm) ? Number(climateR.value.johnstown_lta_month_rain_mm) : null;
+      const rainPct = stationMonthRain !== null && ltaMonthRain !== null && ltaMonthRain > 0
         ? (stationMonthRain / ltaMonthRain) * 100
-        : Number(climateR.value.rain_percent_of_lta_month);
-      if (Number.isFinite(rainPct)) set("contextRainLta", `${Math.round(rainPct)}% of LTA`);
+        : usable(climateR.value.rain_percent_of_lta_month) ? Number(climateR.value.rain_percent_of_lta_month) : null;
+      if (rainPct !== null) set("contextRainLta", `${Math.round(rainPct)}% of LTA`);
       else set("contextRainLta", "Building context");
     } else set("contextRainLta", "Building context");
 
@@ -55,7 +56,7 @@
 
     if (verifyR.status === "fulfilled" && verifyR.value.comparisons?.length) {
       const v = verifyR.value.comparisons[0];
-      if (Number.isFinite(Number(v.high_error_c))) {
+      if (usable(v.high_error_c)) {
         const d = Number(v.high_error_c);
         set("contextForecastVerification", `High ${d >= 0 ? "+" : ""}${d.toFixed(1)}°C error`);
       } else set("contextForecastVerification", "Comparison available");
@@ -75,7 +76,9 @@
       const today = rows.filter(r =>
         stationDayKey(new Date(r.received_at || r.epoch * 1000)) === todayKey
       );
-      const vals = (field) => today.map(x => Number(x[field])).filter(Number.isFinite);
+      const currentIsToday = stationDayKey(new Date(c.received_at || Number(c.epoch) * 1000)) === todayKey;
+      const mergedToday = currentIsToday ? [...today.filter(r => Number(r.epoch) !== Number(c.epoch)), c] : today;
+      const vals = (field) => mergedToday.filter(x => usable(x[field])).map(x => Number(x[field]));
       const temps = vals("temperature_c"), gusts = vals("wind_gust_kmh");
       const high = temps.length ? Math.max(...temps) : null;
       const low = temps.length ? Math.min(...temps) : null;
@@ -120,6 +123,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     loadContext();
+    setInterval(loadContext, 5 * 60 * 1000);
     $("shareTodayButton")?.addEventListener("click", shareToday);
   });
 })();

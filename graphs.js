@@ -2,7 +2,8 @@
  const cfg=window.PARKNACROSS_CONFIG||{},API=cfg.apiBase,$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};let charts={},hours=24;
  const line=(label,color,axis="y")=>({label,data:[],borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.25,yAxisID:axis});
  const scales=unit=>({x:{grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:9}},y:{grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:unit,color:"#9fb3c1"}}});
- const rainText=v=>{const n=Number(v||0);if(n<=0)return"Dry";if(n<1)return"Very light rain";if(n<2.5)return"Light rain";if(n<7.5)return"Moderate rain";return"Heavy rain"};
+ const usable=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v));
+ const rainText=v=>{if(!usable(v))return"Unavailable";const n=Number(v);if(n<=0)return"Dry";if(n<1)return"Very light rain";if(n<2.5)return"Light rain";if(n<7.5)return"Moderate rain";return"Heavy rain"};
  function make(){const common={maintainAspectRatio:false,interaction:{mode:"index",intersect:false}};
  charts.t=new Chart($("gTemp"),{type:"line",data:{labels:[],datasets:[line("Temperature","#ff8d8d"),line("Dew point","#6ef1cb")]},options:{...common,scales:scales("°C"),plugins:{legend:{position:"bottom"}}}});
  charts.w=new Chart($("gWind"),{type:"line",data:{labels:[],datasets:[line("Wind","#74ddff"),line("Gust","#ffad66")]},options:{...common,scales:scales("km/h"),plugins:{legend:{position:"bottom"}}}});
@@ -30,7 +31,7 @@
      },
      plugins:{
        legend:{display:false},
-       tooltip:{callbacks:{label:ctx=>`${rainText(ctx.parsed.y)} · ${Number(ctx.parsed.y||0).toFixed(1)} mm/h`}}
+       tooltip:{callbacks:{label:ctx=>usable(ctx.parsed.y)?`${rainText(ctx.parsed.y)} · ${Number(ctx.parsed.y).toFixed(1)} mm/h`:"Rain rate unavailable"}}
      }
    }
  });
@@ -78,7 +79,7 @@
    for(let i=0;i<max;i++)keep.add(Math.min(rows.length-1,Math.floor(i*step)));
    for(let i=0;i<rows.length;i++){
      if(rows[i]?._gap){keep.add(i);if(i>0)keep.add(i-1);if(i<rows.length-1)keep.add(i+1);continue;}
-     const wet=Number(rows[i]?.rain_rate_mm_h||0)>0;
+     const wet=usable(rows[i]?.rain_rate_mm_h)&&Number(rows[i].rain_rate_mm_h)>0;
      if(wet){keep.add(i);if(i>0)keep.add(i-1);if(i<rows.length-1)keep.add(i+1);}
    }
    return [...keep].sort((a,b)=>a-b).map(i=>rows[i]);
@@ -95,7 +96,7 @@
  charts.r.data.labels=rainLabs;
  charts.t.data.datasets[0].data=r.map(x=>value(x,"temperature_c"));charts.t.data.datasets[1].data=r.map(x=>value(x,"dew_point_c"));
  charts.w.data.datasets[0].data=r.map(x=>value(x,"wind_speed_kmh"));charts.w.data.datasets[1].data=r.map(x=>value(x,"wind_gust_kmh"));charts.p.data.datasets[0].data=r.map(x=>value(x,"pressure_hpa"));
- charts.r.data.datasets[0].data=rainRows.map(x=>x?._gap?null:Number(x.rain_rate_mm_h||0));charts.s.data.datasets[0].data=r.map(x=>value(x,"solar_w_m2"));charts.s.data.datasets[1].data=r.map(x=>value(x,"uv_index"));
+ charts.r.data.datasets[0].data=rainRows.map(x=>x?._gap?null:(usable(x.rain_rate_mm_h)?Number(x.rain_rate_mm_h):null));charts.s.data.datasets[0].data=r.map(x=>value(x,"solar_w_m2"));charts.s.data.datasets[1].data=r.map(x=>value(x,"uv_index"));
  Object.values(charts).forEach(c=>c.update());
  const gapText=gapData.gaps?` · ${gapData.gaps} archive gap${gapData.gaps===1?"":"s"} shown as breaks`:"";
  set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.filter(x=>!x?._gap).length.toLocaleString("en-IE")} plotted${gapText}`);}catch(e){set("graphCount","Archive temporarily unavailable.");}}

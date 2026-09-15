@@ -521,17 +521,30 @@ function updateDashboard(current) {
   const lowReading = recordReading(today, "temperature_c", "min");
   const gustReading = recordReading(today, "wind_gust_kmh", "max");
   const solarReading = recordReading(today, "solar_w_m2", "max");
-  // The live reading can arrive before the newest observation is present in history24.
-  // Include it in today's peak so Solar peak can never be lower than Solar / UV.
-  const solarPeakCandidates = [solarReading?.solar_w_m2, current.solar_w_m2]
-    .filter(usable)
-    .map(Number);
-  const solarPeak = solarPeakCandidates.length ? Math.max(...solarPeakCandidates) : null;
+  const currentTime = readingTime(current);
+  const currentIsToday = currentTime && sameDay(currentTime, now);
+
+  // /current can be newer than the cached history feed. Merge the live value into
+  // today's extrema so a current observation can never contradict the displayed
+  // high, low, peak gust or solar peak. Stale previous-day readings are excluded.
+  const extrema = (historyValue, currentValue, mode) => {
+    const candidates = [historyValue, currentIsToday ? currentValue : null]
+      .filter(usable)
+      .map(Number);
+    if (!candidates.length) return null;
+    return mode === "min" ? Math.min(...candidates) : Math.max(...candidates);
+  };
+  const todayHigh = extrema(highReading?.temperature_c, current.temperature_c, "max");
+  const todayLow = extrema(lowReading?.temperature_c, current.temperature_c, "min");
+  const peakGust = extrema(gustReading?.wind_gust_kmh, current.wind_gust_kmh, "max");
+  const solarPeak = extrema(solarReading?.solar_w_m2, current.solar_w_m2, "max");
+  const todayHighReading = currentIsToday && usable(current.temperature_c) && (!highReading || Number(current.temperature_c) > Number(highReading.temperature_c)) ? current : highReading;
+  const todayLowReading = currentIsToday && usable(current.temperature_c) && (!lowReading || Number(current.temperature_c) < Number(lowReading.temperature_c)) ? current : lowReading;
+  const peakGustReading = currentIsToday && usable(current.wind_gust_kmh) && (!gustReading || Number(current.wind_gust_kmh) > Number(gustReading.wind_gust_kmh)) ? current : gustReading;
 
   const pressure = pressureStats();
   const direction = compass(current.wind_direction_deg);
   const rainToday = correctedDailyRain(current);
-  const currentTime = readingTime(current);
   const isNight = updateSunInfo();
   const condition = conditionInfo(current, isNight);
 
@@ -582,16 +595,16 @@ function updateDashboard(current) {
   );
   document.body.classList.add(condition.className);
 
-  set("todayLow", n(lowReading?.temperature_c));
-  set("todayHigh", n(highReading?.temperature_c));
-  set("peakGust", n(gustReading?.wind_gust_kmh));
+  set("todayLow", n(todayLow));
+  set("todayHigh", n(todayHigh));
+  set("peakGust", n(peakGust));
   set("summaryRain", n(rainToday));
   set("solarPeak", n(solarPeak, 0));
 
   set("tempVal", n(current.temperature_c));
   set("feelsVal", `${n(current.feels_like_c)}°C`);
-  set("tempMin", n(lowReading?.temperature_c));
-  set("tempMax", n(highReading?.temperature_c));
+  set("tempMin", n(todayLow));
+  set("tempMax", n(todayHigh));
   set("humVal", n(current.humidity, 0));
   set("dewVal", `${n(current.dew_point_c)}°C`);
   set("comfortVal", comfort(current.humidity));
@@ -650,12 +663,12 @@ function updateDashboard(current) {
   set("currentWind", `${n(current.wind_speed_kmh)} km/h`);
   set("currentGust", `${n(current.wind_gust_kmh)} km/h`);
 
-  set("recordHigh", `${n(highReading?.temperature_c)} °C`);
-  set("recordHighTime", highReading ? `at ${timeLabel(highReading)}` : "--");
-  set("recordLow", `${n(lowReading?.temperature_c)} °C`);
-  set("recordLowTime", lowReading ? `at ${timeLabel(lowReading)}` : "--");
-  set("recordGust", `${n(gustReading?.wind_gust_kmh)} km/h`);
-  set("recordGustTime", gustReading ? `at ${timeLabel(gustReading)}` : "--");
+  set("recordHigh", `${n(todayHigh)} °C`);
+  set("recordHighTime", todayHighReading ? `at ${timeLabel(todayHighReading)}` : "--");
+  set("recordLow", `${n(todayLow)} °C`);
+  set("recordLowTime", todayLowReading ? `at ${timeLabel(todayLowReading)}` : "--");
+  set("recordGust", `${n(peakGust)} km/h`);
+  set("recordGustTime", peakGustReading ? `at ${timeLabel(peakGustReading)}` : "--");
   set("recordRain", `${n(rainToday)} mm`);
 
   updateFreshness(current);

@@ -11,8 +11,9 @@ function setBadge(id, state, text) {
   el.textContent = text;
 }
 function setText(id, value) { const el=$(id); if(el) el.textContent=value; }
+function usableNumber(value) { return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value)); }
 function fmtAge(seconds) {
-  if (!Number.isFinite(Number(seconds))) return "--";
+  if (!usableNumber(seconds)) return "--";
   const s = Math.max(0, Number(seconds));
   if (s < 60) return `${Math.round(s)} sec`;
   if (s < 3600) return `${Math.floor(s/60)} min`;
@@ -20,11 +21,12 @@ function fmtAge(seconds) {
   return m ? `${h}h ${m}m` : `${h}h`;
 }
 function fmtNum(value, digits=1) {
-  const n=Number(value); return Number.isFinite(n) ? n.toFixed(digits).replace(/\.0$/,"" ) : "--";
+  if (!usableNumber(value)) return "--";
+  const n=Number(value); return n.toFixed(digits).replace(/\.0$/,"" );
 }
 function fmtDurationMinutes(minutes) {
+  if(!usableNumber(minutes)) return "--";
   const n=Number(minutes);
-  if(!Number.isFinite(n)) return "--";
   if(n<60) return `${fmtNum(n,1)} min`;
   const total=Math.round(n), h=Math.floor(total/60), m=total%60;
   return m ? `${h}h ${m}m` : `${h}h`;
@@ -147,9 +149,9 @@ async function runChecks() {
   if(current.__error) {
     setBadge("feedBadge","bad","FAIL"); setText("feedValue","No reading"); setText("feedDetail",current.__error.message||"Current endpoint failed"); states.push("bad");
   } else {
-    const age=Math.max(0,Math.floor(Date.now()/1000)-Number(current.epoch||0));
-    const state=age<600?"good":age<1800?"warn":"bad";
-    setBadge("feedBadge",state,state==="good"?"LIVE":state==="warn"?"DELAY":"STALE"); setText("feedValue",fmtAge(age)); setText("feedDetail",`Latest reading age · ${current.received_at||"timestamp unavailable"}`); states.push(state);
+    const age=usableNumber(current.epoch)?Math.max(0,Math.floor(Date.now()/1000)-Number(current.epoch)):null;
+    const state=age===null?"warn":age<600?"good":age<1800?"warn":"bad";
+    setBadge("feedBadge",state,age===null?"CHECK":state==="good"?"LIVE":state==="warn"?"DELAY":"STALE"); setText("feedValue",fmtAge(age)); setText("feedDetail",`Latest reading age · ${current.received_at||"timestamp unavailable"}`); states.push(state);
   }
 
   if(quality.__error) {
@@ -157,11 +159,11 @@ async function runChecks() {
     setBadge("gapBadge","warn","CHECK"); setText("gapValue","--"); setText("gapDetail","Quality endpoint unavailable");
     setBadge("batteryBadge","warn","CHECK"); setText("batteryValue","--"); setText("batteryDetail","Quality endpoint unavailable"); states.push("warn");
   } else {
-    const samples=Number(quality.samples_last_24h||0); const sampleState=samples>=100?"good":samples>=24?"warn":"bad";
-    setBadge("samplesBadge",sampleState,sampleState==="good"?"OK":sampleState==="warn"?"LOW":"POOR"); setText("samplesValue",samples.toLocaleString("en-IE")); setText("samplesDetail",quality.median_interval_minutes!=null?`Median interval ${fmtNum(quality.median_interval_minutes,1)} min`:"Median interval unavailable"); states.push(sampleState);
-    const gap=Number(quality.largest_recent_gap_minutes);
-    const gapState=!Number.isFinite(gap)?"warn":gap<=15?"good":"warn";
-    const gapLabel=!Number.isFinite(gap)?"CHECK":gap<=15?"OK":gap<=60?"GAP":"LARGE";
+    const samples=usableNumber(quality.samples_last_24h)?Number(quality.samples_last_24h):null; const sampleState=samples===null?"warn":samples>=100?"good":samples>=24?"warn":"bad";
+    setBadge("samplesBadge",sampleState,samples===null?"CHECK":sampleState==="good"?"OK":sampleState==="warn"?"LOW":"POOR"); setText("samplesValue",samples===null?"--":samples.toLocaleString("en-IE")); setText("samplesDetail",usableNumber(quality.median_interval_minutes)?`Median interval ${fmtNum(quality.median_interval_minutes,1)} min`:"Median interval unavailable"); states.push(sampleState);
+    const gap=usableNumber(quality.largest_recent_gap_minutes)?Number(quality.largest_recent_gap_minutes):null;
+    const gapState=gap===null?"warn":gap<=15?"good":"warn";
+    const gapLabel=gap===null?"CHECK":gap<=15?"OK":gap<=60?"GAP":"LARGE";
     setBadge("gapBadge",gapState,gapLabel);
     setText("gapValue",fmtDurationMinutes(gap));
     setText("gapDetail",`Historical archive continuity · feed now: ${quality.feed_status||"unknown"}`);

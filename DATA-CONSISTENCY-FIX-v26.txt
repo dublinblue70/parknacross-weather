@@ -1,0 +1,13 @@
+Parknacross Weather v26 — Data consistency fixes
+Date: 15 September 2026
+
+Changes:
+1. Dashboard Today high/low, peak gust and solar peak now merge the newest /current reading with cached history.
+2. Today in brief merges /current into today's metrics and uses one corrected rainfall value consistently.
+3. Missing numeric sensor values display as unavailable/-- rather than false 0.0 on secondary pages.
+4. Rain detection aligns last measurable rain with cumulative WS90 rain-counter increases as well as rain rate.
+5. Rain, Coast, Radar and dashboard context/Johnstown comparison now refresh automatically.
+6. CSV exports apply the commissioning-day 0.1 mm rainfall correction used elsewhere on the site.
+7. Climate page month wording is dynamic and does not incorrectly label future months as September.
+8. cloudflare-worker.js is synchronised byte-for-byte with worker.js to eliminate accidental deployment of an older Worker.
+9. Service-worker cache name and modified script query versions were bumped to ensure browsers receive v26.

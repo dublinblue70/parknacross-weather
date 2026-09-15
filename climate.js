@@ -3,7 +3,8 @@
   const API = cfg.apiBase;
   const $ = id => document.getElementById(id);
   const set = (id, value) => { const e = $(id); if (e) e.textContent = value; };
-  const n = (v, d = 1) => Number.isFinite(Number(v)) ? Number(v).toFixed(d) : "--";
+  const usable = v => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v));
+  const n = (v, d = 1) => usable(v) ? Number(v).toFixed(d) : "--";
 
   async function get(path) {
     const r = await fetch(`${API}${path}`, { cache: "no-store" });
@@ -43,20 +44,24 @@
 
     if (cR.status === "fulfilled") {
       const c = cR.value;
-      const statsMonthRain = sR.status === "fulfilled" ? Number(sR.value?.month_rain_mm) : NaN;
-      const climateMonthRain = Number(c.station_month_rain_mm);
-      const stationMonthRain = Number.isFinite(statsMonthRain) ? statsMonthRain : climateMonthRain;
-      const ltaMonthRain = Number(c.johnstown_lta_month_rain_mm);
-      const rainPct = Number.isFinite(stationMonthRain) && Number.isFinite(ltaMonthRain) && ltaMonthRain > 0
+      const statsMonthRain = sR.status === "fulfilled" && usable(sR.value?.month_rain_mm) ? Number(sR.value.month_rain_mm) : null;
+      const climateMonthRain = usable(c.station_month_rain_mm) ? Number(c.station_month_rain_mm) : null;
+      const stationMonthRain = statsMonthRain !== null ? statsMonthRain : climateMonthRain;
+      const ltaMonthRain = usable(c.johnstown_lta_month_rain_mm) ? Number(c.johnstown_lta_month_rain_mm) : null;
+      const rainPct = stationMonthRain !== null && ltaMonthRain !== null && ltaMonthRain > 0
         ? (stationMonthRain / ltaMonthRain) * 100
-        : Number(c.rain_percent_of_lta_month);
+        : usable(c.rain_percent_of_lta_month) ? Number(c.rain_percent_of_lta_month) : null;
+      const monthName = new Intl.DateTimeFormat("en-IE", {timeZone:"Europe/Dublin",month:"long"}).format(new Date());
 
-      set("climateRainPct", Number.isFinite(rainPct) ? `${Math.round(rainPct)}%` : "--");
-      set("climateRainText", `${n(stationMonthRain)} mm at Parknacross so far; Johnstown Castle's 1991–2020 September average is ${n(ltaMonthRain)} mm.`);
+      set("climateRainHeading", `${monthName} rainfall`);
+      set("climateRainPct", rainPct !== null ? `${Math.round(rainPct)}%` : "--");
+      set("climateRainText", ltaMonthRain !== null
+        ? `${n(stationMonthRain)} mm at Parknacross so far; Johnstown Castle's 1991–2020 ${monthName} average is ${n(ltaMonthRain)} mm.`
+        : `${n(stationMonthRain)} mm at Parknacross so far. A Johnstown Castle long-term rainfall comparison is not configured for ${monthName} yet.`);
       set("climateLocalMean", `${n(c.station_month_mean_temperature_c)}°C`);
       set("climateOfficialTemp", `${n(c.johnstown_temperature_c)}°C`);
 
-      if (Number.isFinite(Number(c.current_temperature_delta_c))) {
+      if (usable(c.current_temperature_delta_c)) {
         const d = Number(c.current_temperature_delta_c);
         set("climateDelta", `${d >= 0 ? "+" : ""}${d.toFixed(1)}°C`);
       }
@@ -78,7 +83,7 @@
       const m = new Map();
       (dR.value.days || []).forEach(x => {
         const k = x.day.slice(0, 7);
-        m.set(k, (m.get(k) || 0) + (Number(x.rain_mm) || 0));
+        if (usable(x.rain_mm)) m.set(k, (m.get(k) || 0) + Number(x.rain_mm));
       });
       const rows = [...m].sort();
       new Chart($("climateMonthlyChart"), {
