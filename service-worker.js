@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v36-polish-20260915";
+const CACHE_NAME = "parknacross-weather-v37-analysis-navigation-20260915";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -39,6 +39,7 @@ const STATIC_ASSETS = [
   "./downloads.js",
   "./offline.js",
   "./accessibility.js",
+  "./navigation.js",
   "./alert-settings.js",
   "./pwa-update.js",
   "./manifest.webmanifest",

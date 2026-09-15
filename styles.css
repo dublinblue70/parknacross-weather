@@ -1998,3 +1998,88 @@ html.is-offline .live-pill{opacity:.78}
     scroll-behavior:auto!important;
   }
 }
+
+
+/* v37 — universal secondary navigation */
+.nav-more { position: relative; flex: 0 0 auto; }
+.nav-more-button {
+  appearance: none; border: 0; font: inherit; cursor: pointer;
+  color: #b9c9d3; background: transparent; font-size: .9rem;
+  padding: 9px 12px; border-radius: 9px;
+  transition: background .18s ease, color .18s ease;
+  white-space: nowrap;
+}
+.nav-more-button:hover,.nav-more-button:focus-visible,.nav-more-button.nav-more-active,
+.nav-more-button[aria-expanded="true"] { color:#fff; background:rgba(123,215,239,.09); }
+.nav-more-menu {
+  position: fixed; z-index: 10050; display: grid; gap: 3px;
+  padding: 8px; border: 1px solid var(--line-strong); border-radius: 13px;
+  background: #0a1b26; box-shadow: 0 18px 50px rgba(0,0,0,.42);
+}
+.nav-more-menu[hidden] { display:none !important; }
+.nav-more-menu a { display:block; padding:9px 11px; border-radius:8px; font-size:.84rem; }
+.nav-more-menu a.active { background:rgba(123,215,239,.12); color:#fff; }
+@media(max-width:900px){.nav-more-button{font-size:.82rem;padding:8px 10px}}
+@media(max-width:560px){.nav-more-button{font-size:.78rem;padding:7px 9px}}
+
+/* v37 — consistent provenance badges */
+.source-badge {
+  display:inline-flex; align-items:center; gap:5px; width:max-content;
+  padding:4px 8px; border:1px solid var(--line); border-radius:999px;
+  font-size:.64rem; line-height:1; font-weight:760; letter-spacing:.055em;
+  text-transform:uppercase; white-space:nowrap;
+}
+.source-badge::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.85; }
+.source-observed { color:#78e6c7; background:rgba(120,230,199,.055); }
+.source-official { color:#7ecfff; background:rgba(126,207,255,.055); }
+.source-modelled { color:#c7a6ff; background:rgba(199,166,255,.055); }
+.source-badge-row { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.card-source { margin-top:8px; }
+
+/* v37 — archive search + completeness heatmap */
+.archive-search { display:flex; align-items:end; gap:9px; flex-wrap:wrap; }
+.archive-search label { display:grid; gap:5px; color:var(--muted); font-size:.72rem; }
+.archive-search input {
+  min-height:38px; padding:8px 10px; border-radius:9px; border:1px solid var(--line);
+  background:#091a25; color:var(--text); color-scheme:dark;
+}
+.archive-search button { min-height:38px; }
+.archive-search-status { margin-top:8px; color:var(--muted); font-size:.76rem; }
+.archive-heatmap-wrap { overflow-x:auto; padding-bottom:6px; }
+.archive-heatmap {
+  display:grid; grid-auto-flow:column; grid-template-rows:repeat(7,12px);
+  grid-auto-columns:12px; gap:3px; width:max-content; min-width:100%; align-content:start;
+}
+.heatmap-day { width:12px; height:12px; border:0; border-radius:3px; background:rgba(255,255,255,.025); padding:0; cursor:default; }
+.heatmap-day.has-data { cursor:pointer; outline:1px solid rgba(255,255,255,.035); }
+.heatmap-day.level-1 { background:rgba(116,221,255,.18); }
+.heatmap-day.level-2 { background:rgba(116,221,255,.34); }
+.heatmap-day.level-3 { background:rgba(116,221,255,.56); }
+.heatmap-day.level-4 { background:rgba(110,241,203,.72); }
+.heatmap-day.current { box-shadow:0 0 0 1px #fff inset; }
+.heatmap-day.selected { box-shadow:0 0 0 2px #fff; }
+.heatmap-legend { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:10px; color:var(--muted); font-size:.7rem; }
+.heatmap-legend span { display:inline-flex; align-items:center; gap:5px; }
+.heatmap-legend i { width:10px; height:10px; border-radius:2px; display:inline-block; }
+
+/* v37 — rain event analytics */
+.rain-event-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.rain-events-list { display:grid; gap:8px; margin-top:12px; }
+.rain-event-row {
+  display:grid; grid-template-columns:minmax(145px,.8fr) 1fr 1fr 1fr; gap:12px;
+  align-items:center; padding:11px 13px; border:1px solid var(--line); border-radius:11px;
+  background:rgba(255,255,255,.014);
+}
+.rain-event-row span { color:var(--muted); font-size:.74rem; }
+.rain-event-row strong { font-size:.85rem; }
+
+/* v37 — historical wind rose */
+.wind-rose-wrap { height:330px; max-width:520px; margin:0 auto; }
+.wind-rose-meta { text-align:center; margin-top:8px; color:var(--muted); font-size:.75rem; }
+
+@media(max-width:780px){
+  .rain-event-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rain-event-row{grid-template-columns:1fr 1fr}.rain-event-row span:first-child{grid-column:1/-1}
+  .archive-search{align-items:stretch}.archive-search label{flex:1 1 180px}.archive-search input{width:100%}
+}
+@media(max-width:480px){.rain-event-summary{grid-template-columns:1fr}.rain-event-row{grid-template-columns:1fr}}

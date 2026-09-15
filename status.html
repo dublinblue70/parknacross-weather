@@ -19,14 +19,36 @@
     .wide{grid-column:1/-1}.checks{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px}.checks li{display:grid;grid-template-columns:11px 1fr;gap:9px;align-items:start;color:var(--muted)}.checks i{width:8px;height:8px;border-radius:50%;margin-top:7px;background:#71808a}.checks .good i{background:var(--good)}.checks .warn i{background:var(--warn)}.checks .bad i{background:var(--bad)}.checks strong{color:var(--text);font-weight:600}.note{margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-radius:13px;color:var(--muted);background:rgba(17,38,56,.42);font-size:.84rem}.uptime-targets{display:grid;gap:8px;margin-top:12px}.uptime-target{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02)}.uptime-target code{color:var(--muted);font-size:.76rem;overflow-wrap:anywhere}
     footer{border-top:1px solid var(--line);padding:16px 24px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.78rem}
     @media(max-width:850px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){main{padding:17px 13px}.grid{grid-template-columns:1fr}.wide{grid-column:auto}header{padding:16px 14px}.hero{align-items:flex-start}.refresh{width:100%}footer{padding:14px 8px;justify-content:center;gap:0;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;font-size:.68rem}footer>span{display:inline-flex;align-items:center;white-space:nowrap}footer>span+span::before{content:" · ";margin:0 .4em}footer>span:nth-child(2){font-size:0}footer>span:nth-child(2)::before{font-size:.68rem}footer>span:nth-child(2)::after{content:"Health";font-size:.68rem}footer>span:nth-child(3) a{font-size:0}footer>span:nth-child(3) a::after{content:"Email";font-size:.68rem}}@media(max-width:360px){footer{font-size:.62rem}footer>span:nth-child(2)::before,footer>span:nth-child(2)::after,footer>span:nth-child(3) a::after{font-size:.62rem}}
+  
+    .nav-more{position:relative;display:inline-flex}.nav-more-button{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:10px;color:var(--muted);background:transparent;cursor:pointer}.nav-more-button:hover,.nav-more-button:focus-visible,.nav-more-button.nav-more-active,.nav-more-button[aria-expanded="true"]{color:var(--text);border-color:rgba(118,201,238,.45)}.nav-more-menu{position:fixed;z-index:10050;display:grid;gap:3px;padding:8px;border:1px solid var(--line);border-radius:13px;background:#0d1d2b;box-shadow:0 18px 50px rgba(0,0,0,.42)}.nav-more-menu[hidden]{display:none!important}.nav-more-menu a{display:block;white-space:nowrap}.nav-more-menu a.active{color:var(--text);border-color:rgba(118,201,238,.45);background:rgba(118,201,238,.08)}
   </style>
 </head>
 <body>
 <div class="shell">
   <header>
     <div class="brand"><strong>PARKNACROSS WEATHER</strong><span>Ardamine · North Wexford</span></div>
-    <nav class="nav" aria-label="Site links">
-      <a href="/">Dashboard</a><a href="summary.html">Daily summary</a><a href="records.html">Records</a><a href="downloads.html">Downloads</a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="index.html">Dashboard</a>
+      <a href="summary.html">Summary</a>
+      <a href="radar.html">Radar</a>
+      <a href="graphs.html">Graphs</a>
+      <a href="rain.html">Rain</a>
+      <a href="climate.html">Climate</a>
+      <a href="station.html">Station</a>
+      <a href="history.html">History</a>
+      <div class="nav-more">
+        <button class="nav-more-button nav-more-active" type="button" aria-expanded="false" aria-haspopup="menu">More <span aria-hidden="true">▾</span></button>
+        <div class="nav-more-menu" role="menu" hidden>
+          <a role="menuitem" href="coast.html">Coastal</a>
+          <a role="menuitem" href="sky.html">Sky camera</a>
+          <a role="menuitem" href="records.html">Records</a>
+          <a role="menuitem" href="monthly.html">Monthly report</a>
+          <a role="menuitem" href="annual.html">Annual report</a>
+          <a role="menuitem" href="downloads.html">Downloads</a>
+          <a class="active" role="menuitem" href="status.html">System status</a>
+          <a role="menuitem" href="maintenance.html">Maintenance</a>
+        </div>
+      </div>
     </nav>
   </header>
   <main>
@@ -54,7 +76,6 @@
           <div class="uptime-target"><strong>Public website</strong><code>https://parknacrossweather.ie/</code></div>
           <div class="uptime-target"><strong>Weather API health</strong><code>https://parknacross-weather.dave-s-carter.workers.dev/health</code></div>
         </div>
-        <div class="sub" style="margin-top:10px"><a href="UPTIME-MONITOR-SETUP-v36.txt">External monitor setup guide</a></div>
       </article>
 
       <article class="card wide">
@@ -71,5 +92,6 @@
 <script src="offline.js?v=20260915-v36"></script><script src="status.js?v=20260915-v36"></script>
 <script src="pwa-update.js?v=20260915-v36"></script>
 <script src="accessibility.js?v=20260915-v36"></script>
+<script src="navigation.js?v=20260915-v37"></script>
 </body>
 </html>

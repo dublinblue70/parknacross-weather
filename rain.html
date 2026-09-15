@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260915-v36">
+  <link rel="stylesheet" href="styles.css?v=20260915-v37">
   
   <title>Rainfall in Ardamine &amp; North Wexford | Parknacross Weather</title>
   <link rel="canonical" href="https://parknacrossweather.ie/rain.html">
@@ -22,7 +22,7 @@
         <p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p>
       </div>
     </a>
-        <nav class="nav" aria-label="Main navigation">
+    <nav class="nav" aria-label="Main navigation">
       <a href="index.html">Dashboard</a>
       <a href="summary.html">Summary</a>
       <a href="radar.html">Radar</a>
@@ -31,9 +31,22 @@
       <a href="climate.html">Climate</a>
       <a href="station.html">Station</a>
       <a href="history.html">History</a>
+      <div class="nav-more">
+        <button class="nav-more-button" type="button" aria-expanded="false" aria-haspopup="menu">More <span aria-hidden="true">▾</span></button>
+        <div class="nav-more-menu" role="menu" hidden>
+          <a role="menuitem" href="coast.html">Coastal</a>
+          <a role="menuitem" href="sky.html">Sky camera</a>
+          <a role="menuitem" href="records.html">Records</a>
+          <a role="menuitem" href="monthly.html">Monthly report</a>
+          <a role="menuitem" href="annual.html">Annual report</a>
+          <a role="menuitem" href="downloads.html">Downloads</a>
+          <a role="menuitem" href="status.html">System status</a>
+          <a role="menuitem" href="maintenance.html">Maintenance</a>
+        </div>
+      </div>
     </nav>
   </header><main>
-<section class="page-hero"><span class="section-eyebrow">Rain Centre</span><h2>Rainfall in Parknacross & Ardamine</h2><p>Current rain, daily totals, recent events, wettest days and dry spells from the WS90 archive.</p></section>
+<section class="page-hero"><span class="section-eyebrow">Rain Centre</span><div class="source-badge-row"><span class="source-badge source-observed">Observed locally</span></div><h2>Rainfall in Parknacross & Ardamine</h2><p>Current rain, daily totals, recent events, wettest days and dry spells from the WS90 archive.</p></section>
 <section class="page-section rain-hero-grid"><article class="rain-primary"><span class="section-eyebrow">Right now</span><strong id="rainNow">-- mm/h</strong><p id="rainEventText">Checking the station…</p></article>
 <article class="context-card"><span>Today</span><strong id="rainToday">--</strong><small>Since midnight</small></article>
 <article class="context-card"><span>Yesterday</span><strong id="rainYesterday">--</strong><small>Daily total</small></article>
@@ -46,13 +59,26 @@
 <article class="climate-card"><span>Wettest day</span><strong id="rainWettest">--</strong><small id="rainWettestDate">--</small></article>
 <article class="climate-card"><span>Current rain event</span><strong id="rainEventTotal">--</strong><small id="rainEventStart">--</small></article>
 </div></section>
+
+<section class="page-section" aria-labelledby="rainAnalyticsHeading">
+  <div class="section-heading"><div><span class="section-eyebrow">Rain-event analytics</span><h2 id="rainAnalyticsHeading">Individual rain events · last 30 days</h2><p>Events are separated after 90 minutes without measurable rain, using WS90 rate and cumulative-rain changes.</p></div><span class="source-badge source-observed">Observed locally</span></div>
+  <div class="rain-event-summary">
+    <article class="climate-card"><span>Events</span><strong id="rainEventCount">--</strong><small>Last 30 days</small></article>
+    <article class="climate-card"><span>Largest event</span><strong id="largestRainEvent">--</strong><small id="largestRainEventDate">--</small></article>
+    <article class="climate-card"><span>Peak event rate</span><strong id="peakRainEventRate">--</strong><small id="peakRainEventDate">--</small></article>
+    <article class="climate-card"><span>Longest dry interval</span><strong id="longestDryInterval">--</strong><small>Between detected events</small></article>
+  </div>
+  <div id="rainEventsList" class="rain-events-list"><p class="info-note">Analysing recent rainfall events…</p></div>
+</section>
+
 <section class="page-section chart-card"><div class="chart-title"><div><h3>Daily rainfall</h3><p>Last 30 available days</p></div><span>mm</span></div><div class="chart-wrap tall-chart"><canvas id="rainDailyChart"></canvas></div></section>
 </main>  <footer>
     <span>© <span id="year"></span> Parknacross Weather</span>
     <span>Hyperlocal weather observations · Ardamine, Co. Wexford, Ireland</span>
   <span><a href="mailto:info@parknacrossweather.ie" style="color:inherit;text-decoration:none" aria-label="Email Parknacross Weather">info@parknacrossweather.ie</a></span></footer>
-</div><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script><script src="site-config.js?v=20260912-mobile2"></script><script src="rain.js?v=20260915-v26"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+</div><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script><script src="site-config.js?v=20260912-mobile2"></script><script src="rain.js?v=20260915-v37"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20260915-v36"></script>
 <script src="offline.js?v=20260915-v36"></script>
 <script src="accessibility.js?v=20260915-v36"></script>
+<script src="navigation.js?v=20260915-v37"></script>
 </body></html>

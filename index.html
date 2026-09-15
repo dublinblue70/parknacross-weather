@@ -16,57 +16,36 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260915-v36">
+  <link rel="stylesheet" href="styles.css?v=20260915-v37">
 
   <title>Ardamine Weather | Live Weather for Courtown &amp; North Wexford</title>
   <link rel="canonical" href="https://parknacrossweather.ie/">
 
   <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      "@id": "https://parknacrossweather.ie/#website",
-      "name": "Parknacross Weather",
-      "alternateName": "ParknacrossWeather.ie",
-      "url": "https://parknacrossweather.ie/",
-      "description": "Independent hyperlocal weather observations from Ardamine near Courtown on the North Wexford coast."
-    },
-    {
-      "@type": "WebPage",
-      "@id": "https://parknacrossweather.ie/#webpage",
-      "url": "https://parknacrossweather.ie/",
-      "name": "Ardamine Weather | Live Weather for Courtown & North Wexford",
-      "isPartOf": {
-        "@id": "https://parknacrossweather.ie/#website"
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://parknacrossweather.ie/#website",
+        "name": "Parknacross Weather",
+        "alternateName": "ParknacrossWeather.ie",
+        "url": "https://parknacrossweather.ie/",
+        "description": "Independent hyperlocal weather observations from Ardamine near Courtown on the North Wexford coast."
       },
-      "about": {
-        "@type": "Place",
-        "name": "Ardamine, Co. Wexford, Ireland"
+      {
+        "@type": "WebPage",
+        "@id": "https://parknacrossweather.ie/#webpage",
+        "url": "https://parknacrossweather.ie/",
+        "name": "Ardamine Weather | Live Weather for Courtown & North Wexford",
+        "isPartOf": {"@id": "https://parknacrossweather.ie/#website"},
+        "about": {
+          "@type": "Place",
+          "name": "Ardamine, Co. Wexford, Ireland"
+        }
       }
-    },
-    {
-      "@type": "Dataset",
-      "@id": "https://parknacrossweather.ie/downloads.html#dataset",
-      "name": "Parknacross Weather Observation Archive",
-      "url": "https://parknacrossweather.ie/downloads.html",
-      "description": "Free historical hyperlocal weather observations from Parknacross in Ardamine, Co. Wexford.",
-      "temporalCoverage": "2026-09/..",
-      "spatialCoverage": {
-        "@type": "Place",
-        "name": "Ardamine, Co. Wexford, Ireland"
-      },
-      "isAccessibleForFree": true,
-      "measurementTechnique": "Ecowitt WS90 personal weather station with GW3001 gateway",
-      "distribution": {
-        "@type": "DataDownload",
-        "encodingFormat": "text/csv",
-        "contentUrl": "https://parknacross-weather.dave-s-carter.workers.dev/export.csv?days=3660"
-      }
-    }
-  ]
-}
+    ]
+  }
   </script>
   <style>
     .local-search-intro{margin:14px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:var(--radius-sm);background:rgba(255,255,255,.012);color:var(--muted);font-size:.84rem;line-height:1.6}
@@ -129,8 +108,7 @@
         <p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p>
       </div>
     </a>
-
-        <nav class="nav" aria-label="Main navigation">
+    <nav class="nav" aria-label="Main navigation">
       <a class="active" href="index.html">Dashboard</a>
       <a href="summary.html">Summary</a>
       <a href="radar.html">Radar</a>
@@ -139,6 +117,19 @@
       <a href="climate.html">Climate</a>
       <a href="station.html">Station</a>
       <a href="history.html">History</a>
+      <div class="nav-more">
+        <button class="nav-more-button" type="button" aria-expanded="false" aria-haspopup="menu">More <span aria-hidden="true">▾</span></button>
+        <div class="nav-more-menu" role="menu" hidden>
+          <a role="menuitem" href="coast.html">Coastal</a>
+          <a role="menuitem" href="sky.html">Sky camera</a>
+          <a role="menuitem" href="records.html">Records</a>
+          <a role="menuitem" href="monthly.html">Monthly report</a>
+          <a role="menuitem" href="annual.html">Annual report</a>
+          <a role="menuitem" href="downloads.html">Downloads</a>
+          <a role="menuitem" href="status.html">System status</a>
+          <a role="menuitem" href="maintenance.html">Maintenance</a>
+        </div>
+      </div>
     </nav>
   </header>
 
@@ -147,6 +138,7 @@
       <div class="hero-top-row">
         <div class="hero-kicker">
           <span>Current conditions</span>
+          <span class="source-badge source-observed">Observed locally</span>
           <span class="location-label">Parknacross · Ardamine, Co. Wexford</span>
         </div>
 
@@ -337,6 +329,7 @@
       <div class="section-heading">
         <div>
           <span class="section-eyebrow">Official outlook</span>
+          <span class="source-badge source-official">Official</span>
           <h2>Met Éireann forecast</h2>
           <p>Leinster forecast · separate from local Parknacross observations</p>
         </div>
@@ -380,6 +373,7 @@
       <div class="context-grid">
         <article class="context-card">
           <span>Parknacross vs Johnstown Castle</span>
+          <span class="source-badge source-official card-source">Official comparison</span>
           <strong id="contextTempDelta">Loading…</strong>
           <small id="contextJohnstownTemp">Official Met Éireann comparison</small>
         </article>
@@ -517,5 +511,6 @@
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20260915-v36"></script>
 <script src="accessibility.js?v=20260915-v36"></script>
+<script src="navigation.js?v=20260915-v37"></script>
 </body>
 </html>

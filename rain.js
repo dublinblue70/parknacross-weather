@@ -20,7 +20,7 @@
   if(chart){chart.data=config.data;chart.update();}else chart=new Chart($("rainDailyChart"),config);
  }
  async function load(){
-  try{const [s,d,h,c]=await Promise.all([get("/rain-summary"),get("/daily?days=30"),get("/history?hours=1"),get("/current")]);const rs=rainState(s,h,c);
+  try{const [s,d,h,c,e]=await Promise.all([get("/rain-summary"),get("/daily?days=30"),get("/history?hours=1"),get("/current"),get("/rain-events?days=30")]);const rs=rainState(s,h,c);
    const todayRain=correctedCurrentRain(c)??(usable(s.today_mm)?Number(s.today_mm):null);
    set("rainNow",rs.isRaining&&!(rs.rate>0)?"Rain detected":rs.rate===null?"--":`${n(rs.rate)} mm/h`);set("rainToday",usable(todayRain)?`${n(todayRain)} mm`:"--");set("rainYesterday",`${n(s.yesterday_mm)} mm`);set("rain7",`${n(s.last_7_days_mm)} mm`);
    set("rainMonth",`${n(s.month_mm)} mm`);set("rainMonthDays",usable(s.month_rain_days)?`${Number(s.month_rain_days)} rain days`:"--");set("rainYear",`${n(s.year_mm)} mm`);set("dryDays",usable(s.consecutive_dry_days)?String(Number(s.consecutive_dry_days)):"--");
@@ -31,6 +31,13 @@
    else if(rs.rainRecently){set("rainEventTotal","Rain recently");set("rainEventStart","Within the last 15 min");set("rainEventText","Rain was detected recently at Parknacross.");}
    else{set("rainEventTotal","No active event");set("rainEventStart","Station currently dry");set("rainEventText","No measurable rain has been detected recently at Parknacross.");}
    renderChart(d.days);
+   set("rainEventCount",usable(e.event_count)?String(Number(e.event_count)):"--");
+   set("largestRainEvent",e.largest_event&&usable(e.largest_event.total_mm)?`${n(e.largest_event.total_mm)} mm`:"--");
+   set("largestRainEventDate",e.largest_event?.start_at?dt(e.largest_event.start_at):"--");
+   set("peakRainEventRate",e.highest_rate_event&&usable(e.highest_rate_event.peak_rate_mm_h)?`${n(e.highest_rate_event.peak_rate_mm_h)} mm/h`:"--");
+   set("peakRainEventDate",e.highest_rate_event?.start_at?dt(e.highest_rate_event.start_at):"--");
+   set("longestDryInterval",usable(e.longest_dry_hours)?`${n(e.longest_dry_hours)} h`:"--");
+   const list=$("rainEventsList");if(list){const events=Array.isArray(e.events)?e.events:[];list.innerHTML=events.length?events.slice(0,10).map(event=>{const mins=Number(event.duration_minutes||0),dur=mins>=60?`${Math.floor(mins/60)}h ${mins%60}m`:`${mins} min`;return `<article class="rain-event-row"><span>${dt(event.start_at)}${event.active?" · active":""}</span><strong>${n(event.total_mm)} mm</strong><span>${dur}</span><span>Peak ${n(event.peak_rate_mm_h)} mm/h</span></article>`;}).join(""):'<p class="info-note">No measurable rain events were identified in the last 30 days.</p>';}
   }catch(e){set("rainEventText","Rainfall summary temporarily unavailable.");}
  }
  document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());load();setInterval(load,60*1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});

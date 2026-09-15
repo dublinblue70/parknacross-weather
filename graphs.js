@@ -7,6 +7,8 @@
  function make(){const common={maintainAspectRatio:false,interaction:{mode:"index",intersect:false}};
  charts.t=new Chart($("gTemp"),{type:"line",data:{labels:[],datasets:[line("Temperature","#ff8d8d"),line("Dew point","#6ef1cb")]},options:{...common,scales:scales("°C"),plugins:{legend:{position:"bottom"}}}});
  charts.w=new Chart($("gWind"),{type:"line",data:{labels:[],datasets:[line("Wind","#74ddff"),line("Gust","#ffad66")]},options:{...common,scales:scales("km/h"),plugins:{legend:{position:"bottom"}}}});
+ const roseLabels=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+ charts.rose=new Chart($("gWindRose"),{type:"polarArea",data:{labels:roseLabels,datasets:[{label:"Direction frequency %",data:new Array(16).fill(0),backgroundColor:roseLabels.map((_,i)=>`hsla(${185+i*3},78%,68%,${.30+(i%4)*.08})`),borderColor:"rgba(174,225,244,.32)",borderWidth:1}]},options:{maintainAspectRatio:false,scales:{r:{beginAtZero:true,grid:{color:"rgba(174,210,232,.11)"},angleLines:{color:"rgba(174,210,232,.11)"},ticks:{display:false},pointLabels:{display:true,color:"#bfd0e3",font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${Number(ctx.raw||0).toFixed(1)}%`}}}}});
  charts.p=new Chart($("gPressure"),{type:"line",data:{labels:[],datasets:[line("Pressure","#b594ff")]},options:{...common,scales:scales("hPa"),plugins:{legend:{display:false}}}});
  charts.r=new Chart($("gRain"),{
    type:"line",
@@ -94,6 +96,16 @@
    return hours<=48?d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})+" "+d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit"});
  }
  const value=(x,key)=>x?._gap?null:x?.[key]??null;
+ function updateWindRose(rows){
+   const bins=new Array(16).fill(0);let total=0,calm=0;
+   for(const row of rows){
+     if(!usable(row?.wind_direction_deg)||!usable(row?.wind_speed_kmh))continue;
+     const speed=Number(row.wind_speed_kmh);if(speed<1){calm++;continue;}
+     const deg=((Number(row.wind_direction_deg)%360)+360)%360,index=Math.round(deg/22.5)%16;bins[index]++;total++;
+   }
+   charts.rose.data.datasets[0].data=bins.map(v=>total?v/total*100:0);charts.rose.update();
+   set("windRoseMeta",total?`${total.toLocaleString("en-IE")} directional observations · calm/near-calm samples excluded${calm?` (${calm.toLocaleString("en-IE")})`:""}`:"No usable wind-direction observations in this period.");
+ }
  async function load(h){hours=h;set("graphRangeTitle",({6:"Last 6 hours",24:"Last 24 hours",48:"Last 48 hours",168:"Last 7 days",720:"Last 30 days"})[h]);set("graphCount","Loading…");
  try{const [d,c]=await Promise.all([fetch(`${API}/history?hours=${h}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error();return r.json()}),fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)]);let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const temperatureOutliers=temperatureOutlierRows(rows),gapData=withGapMarkers(rows),r=thin(gapData.rows),labs=r.map(label),rainRows=thinRain(gapData.rows),rainLabs=rainRows.map(label);
  charts.t.data.labels=labs;charts.w.data.labels=labs;charts.p.data.labels=labs;charts.s.data.labels=labs;
@@ -101,7 +113,8 @@
  charts.t.data.datasets[0].data=r.map(x=>x?._gap||temperatureOutliers.has(x)?null:(x?.temperature_c??null));charts.t.data.datasets[1].data=r.map(x=>value(x,"dew_point_c"));
  charts.w.data.datasets[0].data=r.map(x=>value(x,"wind_speed_kmh"));charts.w.data.datasets[1].data=r.map(x=>value(x,"wind_gust_kmh"));charts.p.data.datasets[0].data=r.map(x=>value(x,"pressure_hpa"));
  charts.r.data.datasets[0].data=rainRows.map(x=>x?._gap?null:(usable(x.rain_rate_mm_h)?Number(x.rain_rate_mm_h):null));charts.s.data.datasets[0].data=r.map(x=>value(x,"solar_w_m2"));charts.s.data.datasets[1].data=r.map(x=>value(x,"uv_index"));
- Object.values(charts).forEach(c=>c.update());
+ updateWindRose(rows);
+ [charts.t,charts.w,charts.p,charts.r,charts.s].forEach(c=>c.update());
  const gapText=gapData.gaps?` · ${gapData.gaps} archive gap${gapData.gaps===1?"":"s"} shown as breaks`:"",qualityText=temperatureOutliers.size?` · ${temperatureOutliers.size} isolated temperature spike${temperatureOutliers.size===1?"":"s"} excluded`:"";
  set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.filter(x=>!x?._gap).length.toLocaleString("en-IE")} plotted${gapText}${qualityText}`);}catch(e){set("graphCount","Archive temporarily unavailable.");}}
  document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());make();document.querySelectorAll("[data-hours]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-hours]").forEach(x=>x.classList.toggle("active",x===b));load(Number(b.dataset.hours))}));load(24);setInterval(()=>load(hours),5*60*1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});

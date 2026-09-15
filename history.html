@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260915-v36">
+  <link rel="stylesheet" href="styles.css?v=20260915-v37">
   <title>Ardamine Weather History | Rainfall &amp; Records, North Wexford</title>
   <link rel="canonical" href="https://parknacrossweather.ie/history.html">
   <script type="application/ld+json">
@@ -34,7 +34,7 @@
       <img class="brand-mark" src="favicon.svg" alt="">
       <div class="brand-copy"><h1>PARKNACROSS WEATHER</h1><p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p></div>
     </a>
-        <nav class="nav" aria-label="Main navigation">
+    <nav class="nav" aria-label="Main navigation">
       <a href="index.html">Dashboard</a>
       <a href="summary.html">Summary</a>
       <a href="radar.html">Radar</a>
@@ -43,12 +43,26 @@
       <a href="climate.html">Climate</a>
       <a href="station.html">Station</a>
       <a class="active" href="history.html">History</a>
+      <div class="nav-more">
+        <button class="nav-more-button" type="button" aria-expanded="false" aria-haspopup="menu">More <span aria-hidden="true">▾</span></button>
+        <div class="nav-more-menu" role="menu" hidden>
+          <a role="menuitem" href="coast.html">Coastal</a>
+          <a role="menuitem" href="sky.html">Sky camera</a>
+          <a role="menuitem" href="records.html">Records</a>
+          <a role="menuitem" href="monthly.html">Monthly report</a>
+          <a role="menuitem" href="annual.html">Annual report</a>
+          <a role="menuitem" href="downloads.html">Downloads</a>
+          <a role="menuitem" href="status.html">System status</a>
+          <a role="menuitem" href="maintenance.html">Maintenance</a>
+        </div>
+      </div>
     </nav>
   </header>
 
   <main>
     <section class="page-hero">
       <span class="section-eyebrow">Archive</span>
+      <div class="source-badge-row"><span class="source-badge source-observed">Observed locally</span></div>
       <h2>Ardamine weather history</h2>
       <p>Historical Parknacross observations for Ardamine and the North Wexford coast, including daily temperature, rainfall and station records. The archive grows automatically as each new day of observations is added.</p>
     </section>
@@ -84,10 +98,35 @@
     </section>
 
 
+
+    <section class="page-section" aria-labelledby="completenessHeading">
+      <div class="section-heading">
+        <div><span class="section-eyebrow">Archive health</span><h2 id="completenessHeading">Observation completeness</h2><p>A rolling 12-month view of how completely the 5-minute archive was captured. Click any populated day to inspect it.</p></div>
+        <span class="source-badge source-observed">Observed locally</span>
+      </div>
+      <div class="archive-heatmap-wrap"><div id="archiveHeatmap" class="archive-heatmap" aria-label="365-day archive completeness heatmap"></div></div>
+      <div class="heatmap-legend" aria-label="Completeness legend">
+        <span><i style="background:rgba(110,241,203,.72)"></i>Complete</span>
+        <span><i style="background:rgba(116,221,255,.56)"></i>Good</span>
+        <span><i style="background:rgba(116,221,255,.34)"></i>Partial</span>
+        <span><i style="background:rgba(116,221,255,.18)"></i>Sparse</span>
+        <span><i style="background:rgba(255,255,255,.025)"></i>No data</span>
+      </div>
+      <p id="heatmapSummary" class="info-note" style="margin-top:10px">Calculating archive completeness…</p>
+    </section>
+
     <section class="page-section" aria-labelledby="calendarHeading">
       <div class="section-heading">
         <div><span class="section-eyebrow">Calendar archive</span><h2 id="calendarHeading">Explore a day</h2><p>Select any archived date for its daily statistics and observation graph.</p></div>
       </div>
+
+      <div class="archive-search" aria-label="Find an archived date">
+        <label for="archiveDateSearch">What was the weather on…?
+          <input id="archiveDateSearch" type="date">
+        </label>
+        <button id="archiveDateButton" type="button">Open date</button>
+      </div>
+      <div id="archiveSearchStatus" class="archive-search-status" aria-live="polite"></div>
       <div class="archive-calendar-toolbar">
         <button id="calendarPrev" type="button" aria-label="Previous month">← Previous</button>
         <strong id="calendarTitle" class="archive-calendar-title">--</strong>
@@ -136,10 +175,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="history.js?v=20260915-v36"></script>
+<script src="history.js?v=20260915-v37"></script>
 <script src="site-config.js?v=20260912-mobile2"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20260915-v36"></script>
 <script src="offline.js?v=20260915-v36"></script>
 <script src="accessibility.js?v=20260915-v36"></script>
+<script src="navigation.js?v=20260915-v37"></script>
 </body>
 </html>
