@@ -4,6 +4,7 @@ const HISTORY_24_URL = `${API_BASE}/history?hours=24`;
 const HISTORY_7D_URL = `${API_BASE}/history?hours=168`;
 const STATS_URL = `${API_BASE}/stats`;
 const RAIN_SUMMARY_URL = `${API_BASE}/rain-summary`;
+const DAILY_RECENT_URL = `${API_BASE}/daily?days=2`;
 const FORECAST_URL = `${API_BASE}/met/forecast`;
 const WARNINGS_URL = `${API_BASE}/met/warnings`;
 const MARINE_URL = `${API_BASE}/met/marine`;
@@ -43,6 +44,7 @@ let history24 = [];
 let history7d = [];
 let stats = null;
 let rainSummary = null;
+let dailyRecent = [];
 let charts = {};
 let deferredInstallPrompt = null;
 let latestObservationTime = null;
@@ -114,12 +116,26 @@ function compass(degrees) {
   return labels[Math.round(direction / 22.5) % 16];
 }
 
-function comfort(humidity) {
+function comfort(dewPoint, humidity) {
+  /*
+   * Outdoor "mugginess" is better represented by dew point than relative
+   * humidity. Cool air can easily be 70% RH while still feeling crisp.
+   */
+  if (usable(dewPoint)) {
+    const value = Number(dewPoint);
+    if (value < 5) return "Dry";
+    if (value < 13) return "Comfortable";
+    if (value < 16) return "Slightly humid";
+    if (value < 19) return "Humid";
+    return "Very humid";
+  }
+
+  /* Conservative fallback when dew point is unavailable. */
   const value = Number(humidity);
   if (!Number.isFinite(value)) return "--";
   if (value < 35) return "Dry";
-  if (value <= 65) return "Comfortable";
-  if (value <= 80) return "Humid";
+  if (value <= 75) return "Comfortable";
+  if (value <= 85) return "Humid";
   return "Very humid";
 }
 
@@ -134,9 +150,19 @@ function recordReading(rows, field, mode = "max") {
   }, null);
 }
 
-const TEMP_SPIKE_DELTA_C = 2.5;
-const TEMP_NEIGHBOR_AGREEMENT_C = 1.0;
-const TEMP_NEIGHBOR_WINDOW_MS = 15 * 60 * 1000;
+const TEMP_OUTLIER_DELTA_C = 2.5;
+const TEMP_OUTLIER_BASELINE_C = 1.0;
+const TEMP_OUTLIER_WINDOW_MS = 30 * 60 * 1000;
+const TEMP_OUTLIER_MIN_NEIGHBORS = 3;
+
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2
+    ? sorted[middle]
+    : (sorted[middle - 1] + sorted[middle]) / 2;
+}
 
 function temperatureOutlierRows(rows) {
   const ordered = rows
@@ -145,35 +171,29 @@ function temperatureOutlierRows(rows) {
     .sort((a, b) => a.time - b.time);
 
   const outliers = new Set();
-  const agrees = (a, b) => Math.abs(a.temp - b.temp) <= TEMP_NEIGHBOR_AGREEMENT_C;
-  const isSpikeAgainst = (candidate, a, b) =>
-    agrees(a, b) &&
-    Math.abs(candidate.temp - ((a.temp + b.temp) / 2)) >= TEMP_SPIKE_DELTA_C;
 
-  for (let i = 0; i < ordered.length; i++) {
-    const candidate = ordered[i];
-    const previous = ordered[i - 1];
-    const previous2 = ordered[i - 2];
-    const next = ordered[i + 1];
-    const next2 = ordered[i + 2];
+  for (const candidate of ordered) {
+    const neighbors = ordered.filter(item =>
+      item !== candidate &&
+      Math.abs(item.time - candidate.time) <= TEMP_OUTLIER_WINDOW_MS
+    );
 
-    let spike = false;
+    if (neighbors.length < TEMP_OUTLIER_MIN_NEIGHBORS) continue;
 
-    if (previous && next &&
-        candidate.time - previous.time <= TEMP_NEIGHBOR_WINDOW_MS &&
-        next.time - candidate.time <= TEMP_NEIGHBOR_WINDOW_MS) {
-      spike = isSpikeAgainst(candidate, previous, next);
-    } else if (!next && previous && previous2 &&
-               candidate.time - previous.time <= TEMP_NEIGHBOR_WINDOW_MS &&
-               previous.time - previous2.time <= TEMP_NEIGHBOR_WINDOW_MS) {
-      spike = isSpikeAgainst(candidate, previous, previous2);
-    } else if (!previous && next && next2 &&
-               next.time - candidate.time <= TEMP_NEIGHBOR_WINDOW_MS &&
-               next2.time - next.time <= TEMP_NEIGHBOR_WINDOW_MS) {
-      spike = isSpikeAgainst(candidate, next, next2);
+    const baseline = median(neighbors.map(item => item.temp));
+    if (!Number.isFinite(baseline)) continue;
+
+    const agreeing = neighbors.filter(item =>
+      Math.abs(item.temp - baseline) <= TEMP_OUTLIER_BASELINE_C
+    ).length;
+    const requiredAgreement = Math.max(2, Math.ceil(neighbors.length * 0.6));
+
+    if (
+      agreeing >= requiredAgreement &&
+      Math.abs(candidate.temp - baseline) >= TEMP_OUTLIER_DELTA_C
+    ) {
+      outliers.add(candidate.row);
     }
-
-    if (spike) outliers.add(candidate.row);
   }
 
   return outliers;
@@ -618,28 +638,36 @@ function updateDashboard(current) {
   const gustReading = recordReading(today, "wind_gust_kmh", "max");
   const solarReading = recordReading(today, "solar_w_m2", "max");
 
-  // /current can be newer than the cached history feed. Merge the live value into
-  // today's non-temperature extrema so a current observation can never contradict
-  // the displayed peak gust or solar peak. Temperature extrema use the quality
-  // filter above so an isolated WS90 spike cannot become the daily high or low.
-  const extrema = (historyValue, currentValue, mode) => {
-    const candidates = [historyValue, currentIsToday ? currentValue : null]
+  /*
+   * At a Glance should use the Worker's compact today-only daily summary as
+   * the authoritative source. This avoids stale rolling-history extrema and
+   * keeps Dashboard, Daily Summary and Archive figures aligned.
+   */
+  const todayKey = stationDateKeyFromTime(now);
+  const dailyToday = dailyRecent.find(row => row?.day === todayKey) || null;
+  const extrema = (dailyValue, historyValue, currentValue, mode) => {
+    const candidates = [dailyValue, historyValue, currentIsToday ? currentValue : null]
       .filter(usable)
       .map(Number);
     if (!candidates.length) return null;
     return mode === "min" ? Math.min(...candidates) : Math.max(...candidates);
   };
-  const todayHigh = usable(highReading?.temperature_c) ? Number(highReading.temperature_c) : null;
-  const todayLow = usable(lowReading?.temperature_c) ? Number(lowReading.temperature_c) : null;
-  const peakGust = extrema(gustReading?.wind_gust_kmh, current.wind_gust_kmh, "max");
-  const solarPeak = extrema(solarReading?.solar_w_m2, current.solar_w_m2, "max");
-  const todayHighReading = highReading;
-  const todayLowReading = lowReading;
+
+  const todayHigh = usable(dailyToday?.high_c)
+    ? Number(dailyToday.high_c)
+    : usable(highReading?.temperature_c) ? Number(highReading.temperature_c) : null;
+  const todayLow = usable(dailyToday?.low_c)
+    ? Number(dailyToday.low_c)
+    : usable(lowReading?.temperature_c) ? Number(lowReading.temperature_c) : null;
+  const peakGust = extrema(dailyToday?.peak_gust_kmh, gustReading?.wind_gust_kmh, current.wind_gust_kmh, "max");
+  const solarPeak = extrema(dailyToday?.solar_peak_w_m2, solarReading?.solar_w_m2, current.solar_w_m2, "max");
+  const todayHighReading = highReading && usable(todayHigh) && Math.abs(Number(highReading.temperature_c) - todayHigh) < 0.05 ? highReading : null;
+  const todayLowReading = lowReading && usable(todayLow) && Math.abs(Number(lowReading.temperature_c) - todayLow) < 0.05 ? lowReading : null;
   const peakGustReading = currentIsToday && usable(current.wind_gust_kmh) && (!gustReading || Number(current.wind_gust_kmh) > Number(gustReading.wind_gust_kmh)) ? current : gustReading;
 
   const pressure = pressureStats();
   const direction = compass(current.wind_direction_deg);
-  const rainToday = correctedDailyRain(current);
+  const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : correctedDailyRain(current);
   const isNight = updateSunInfo();
   const condition = conditionInfo(current, isNight);
 
@@ -702,7 +730,7 @@ function updateDashboard(current) {
   set("tempMax", n(todayHigh));
   set("humVal", n(current.humidity, 0));
   set("dewVal", `${n(current.dew_point_c)}°C`);
-  set("comfortVal", comfort(current.humidity));
+  set("comfortVal", comfort(current.dew_point_c, current.humidity));
   set("windVal", n(current.wind_speed_kmh));
   set("gustVal", `${n(current.wind_gust_kmh)} km/h`);
   set(
@@ -1270,7 +1298,8 @@ async function loadEverything() {
     getJSON(HISTORY_24_URL),
     getJSON(HISTORY_7D_URL),
     getJSON(STATS_URL, "no-store"),
-    getJSON(RAIN_SUMMARY_URL, "no-store")
+    getJSON(RAIN_SUMMARY_URL, "no-store"),
+    getJSON(DAILY_RECENT_URL, "no-store")
   ]);
 
   history24 = results[0].status === "fulfilled" && Array.isArray(results[0].value.readings)
@@ -1279,6 +1308,8 @@ async function loadEverything() {
     ? results[1].value.readings : [];
   stats = results[2].status === "fulfilled" ? results[2].value : null;
   rainSummary = results[3].status === "fulfilled" ? results[3].value : null;
+  dailyRecent = results[4].status === "fulfilled" && Array.isArray(results[4].value.days)
+    ? results[4].value.days : [];
 
   updateDashboard(current);
   updateCharts();
@@ -1318,12 +1349,14 @@ async function refreshHistory7d() {
 
 async function refreshStats() {
   try {
-    const [statsResult, rainResult] = await Promise.allSettled([
+    const [statsResult, rainResult, dailyResult] = await Promise.allSettled([
       getJSON(STATS_URL, "no-store"),
-      getJSON(RAIN_SUMMARY_URL, "no-store")
+      getJSON(RAIN_SUMMARY_URL, "no-store"),
+      getJSON(DAILY_RECENT_URL, "no-store")
     ]);
     if (statsResult.status === "fulfilled") stats = statsResult.value;
     if (rainResult.status === "fulfilled") rainSummary = rainResult.value;
+    if (dailyResult.status === "fulfilled" && Array.isArray(dailyResult.value.days)) dailyRecent = dailyResult.value.days;
     if (latestCurrent) updateDashboard(latestCurrent);
   } catch (error) {
     console.warn("Stats refresh:", error);

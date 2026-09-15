@@ -44,8 +44,10 @@
    const ms=Date.parse(x?.received_at||"");
    return Number.isFinite(ms)?Math.floor(ms/1000):null;
  }
- const TEMP_SPIKE_DELTA_C=2.5,TEMP_NEIGHBOR_AGREEMENT_C=1.0,TEMP_NEIGHBOR_WINDOW_SECONDS=15*60;
- function temperatureOutlierRows(rows){const ordered=rows.map(row=>({row,epoch:rowEpoch(row),temp:Number(row?.temperature_c)})).filter(x=>x.epoch!==null&&usable(x.row?.temperature_c)).sort((a,b)=>a.epoch-b.epoch),out=new Set(),agrees=(a,b)=>Math.abs(a.temp-b.temp)<=TEMP_NEIGHBOR_AGREEMENT_C,spike=(c,a,b)=>agrees(a,b)&&Math.abs(c.temp-((a.temp+b.temp)/2))>=TEMP_SPIKE_DELTA_C;for(let i=0;i<ordered.length;i++){const c=ordered[i],p=ordered[i-1],p2=ordered[i-2],n=ordered[i+1],n2=ordered[i+2];let bad=false;if(p&&n&&c.epoch-p.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS&&n.epoch-c.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS)bad=spike(c,p,n);else if(!n&&p&&p2&&c.epoch-p.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS&&p.epoch-p2.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS)bad=spike(c,p,p2);else if(!p&&n&&n2&&n.epoch-c.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS&&n2.epoch-n.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS)bad=spike(c,n,n2);if(bad)out.add(c.row);}return out;}
+ const TEMP_OUTLIER_DELTA_C=2.5,TEMP_OUTLIER_BASELINE_C=1.0,TEMP_OUTLIER_WINDOW_SECONDS=30*60,TEMP_OUTLIER_MIN_NEIGHBORS=3;
+ function median(values){const sorted=[...values].sort((a,b)=>a-b);if(!sorted.length)return null;const m=Math.floor(sorted.length/2);return sorted.length%2?sorted[m]:(sorted[m-1]+sorted[m])/2;}
+ function temperatureOutlierRows(rows){const ordered=rows.map(row=>({row,epoch:rowEpoch(row),temp:Number(row?.temperature_c)})).filter(x=>x.epoch!==null&&usable(x.row?.temperature_c)).sort((a,b)=>a.epoch-b.epoch),out=new Set();for(const c of ordered){const neighbors=ordered.filter(x=>x!==c&&Math.abs(x.epoch-c.epoch)<=TEMP_OUTLIER_WINDOW_SECONDS);if(neighbors.length<TEMP_OUTLIER_MIN_NEIGHBORS)continue;const baseline=median(neighbors.map(x=>x.temp));if(!Number.isFinite(baseline))continue;const agreeing=neighbors.filter(x=>Math.abs(x.temp-baseline)<=TEMP_OUTLIER_BASELINE_C).length,required=Math.max(2,Math.ceil(neighbors.length*.6));if(agreeing>=required&&Math.abs(c.temp-baseline)>=TEMP_OUTLIER_DELTA_C)out.add(c.row);}return out;}
+
  function withGapMarkers(rows){
    if(rows.length<2)return {rows:[...rows],gaps:0};
    const out=[rows[0]];
