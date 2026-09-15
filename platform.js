@@ -23,8 +23,8 @@
   }
 
   async function loadContext() {
-    const [currentR, officialR, climateR, statsR, eventR, verifyR] = await Promise.allSettled([
-      get("/current"), get("/met/johnstown"), get("/climate-summary"), get("/stats"),
+    const [currentR, officialR, climateR, rainR, eventR, verifyR] = await Promise.allSettled([
+      get("/current"), get("/met/johnstown"), get("/climate-summary"), get("/rain-summary"),
       get("/events"), get("/forecast-verification")
     ]);
 
@@ -39,14 +39,23 @@
     } else set("contextTempDelta", "Comparison unavailable");
 
     if (climateR.status === "fulfilled") {
-      const stationMonthRain = statsR.status === "fulfilled" && usable(statsR.value?.month_rain_mm) ? Number(statsR.value.month_rain_mm) : usable(climateR.value.station_month_rain_mm) ? Number(climateR.value.station_month_rain_mm) : null;
+      const monthName = new Intl.DateTimeFormat("en-IE", {timeZone:STATION_TIME_ZONE, month:"long"}).format(new Date());
+      set("contextRainHeading", `${monthName} rainfall context`);
+      const stationMonthRain = rainR.status === "fulfilled" && usable(rainR.value?.month_mm) ? Number(rainR.value.month_mm) : usable(climateR.value.station_month_rain_mm) ? Number(climateR.value.station_month_rain_mm) : null;
       const ltaMonthRain = usable(climateR.value.johnstown_lta_month_rain_mm) ? Number(climateR.value.johnstown_lta_month_rain_mm) : null;
       const rainPct = stationMonthRain !== null && ltaMonthRain !== null && ltaMonthRain > 0
         ? (stationMonthRain / ltaMonthRain) * 100
         : usable(climateR.value.rain_percent_of_lta_month) ? Number(climateR.value.rain_percent_of_lta_month) : null;
-      if (rainPct !== null) set("contextRainLta", `${Math.round(rainPct)}% of LTA`);
-      else set("contextRainLta", "Building context");
-    } else set("contextRainLta", "Building context");
+      if (rainPct !== null) {
+        set("contextRainLta", `${Math.round(rainPct)}% of LTA`);
+        set("contextRainDetail", `Compared with Johnstown Castle's 1991–2020 ${monthName} average`);
+      } else {
+        set("contextRainLta", "LTA not configured");
+        set("contextRainDetail", `Long-term rainfall comparison is not configured for ${monthName} yet`);
+      }
+    } else {
+      set("contextRainLta", "Building context");
+    }
 
     if (eventR.status === "fulfilled" && eventR.value.events?.length) {
       const e = eventR.value.events[0];

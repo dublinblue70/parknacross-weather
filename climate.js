@@ -16,6 +16,27 @@
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
 
+
+  async function loadCurrentComparison() {
+    const [officialR, currentR] = await Promise.allSettled([
+      get("/met/johnstown"),
+      get("/current")
+    ]);
+
+    const official = officialR.status === "fulfilled" && usable(officialR.value?.temperature_c)
+      ? Number(officialR.value.temperature_c) : null;
+    const local = currentR.status === "fulfilled" && usable(currentR.value?.temperature_c)
+      ? Number(currentR.value.temperature_c) : null;
+
+    set("climateOfficialTemp", official === null ? "--" : `${official.toFixed(1)}°C`);
+    if (official !== null && local !== null) {
+      const d = local - official;
+      set("climateDelta", `${d >= 0 ? "+" : ""}${d.toFixed(1)}°C`);
+    } else {
+      set("climateDelta", "--");
+    }
+  }
+
   function events(items) {
     const e = $("eventTimeline");
     if (!items.length) {
@@ -30,13 +51,14 @@
   document.addEventListener("DOMContentLoaded", async () => {
     set("year", new Date().getFullYear());
     get("/met/point").catch(() => {});
+    loadCurrentComparison();
+    setInterval(loadCurrentComparison, 5 * 60 * 1000);
 
-    // /stats is the same source used by the Dashboard for the month-to-date
-    // rainfall total. Using it here prevents the Climate page drifting from
-    // the Dashboard if /climate-summary is cached or updated at a different time.
+    // /rain-summary includes the latest WS90 daily counter and is the same
+    // rainfall source used by the refreshed Dashboard figures.
     const [cR, sR, eR, dR, vR] = await Promise.allSettled([
       get("/climate-summary"),
-      get("/stats"),
+      get("/rain-summary"),
       get("/events"),
       get("/daily?days=3660"),
       get("/forecast-verification")
@@ -44,7 +66,7 @@
 
     if (cR.status === "fulfilled") {
       const c = cR.value;
-      const statsMonthRain = sR.status === "fulfilled" && usable(sR.value?.month_rain_mm) ? Number(sR.value.month_rain_mm) : null;
+      const statsMonthRain = sR.status === "fulfilled" && usable(sR.value?.month_mm) ? Number(sR.value.month_mm) : null;
       const climateMonthRain = usable(c.station_month_rain_mm) ? Number(c.station_month_rain_mm) : null;
       const stationMonthRain = statsMonthRain !== null ? statsMonthRain : climateMonthRain;
       const ltaMonthRain = usable(c.johnstown_lta_month_rain_mm) ? Number(c.johnstown_lta_month_rain_mm) : null;
@@ -59,12 +81,6 @@
         ? `${n(stationMonthRain)} mm at Parknacross so far; Johnstown Castle's 1991–2020 ${monthName} average is ${n(ltaMonthRain)} mm.`
         : `${n(stationMonthRain)} mm at Parknacross so far. A Johnstown Castle long-term rainfall comparison is not configured for ${monthName} yet.`);
       set("climateLocalMean", `${n(c.station_month_mean_temperature_c)}°C`);
-      set("climateOfficialTemp", `${n(c.johnstown_temperature_c)}°C`);
-
-      if (usable(c.current_temperature_delta_c)) {
-        const d = Number(c.current_temperature_delta_c);
-        set("climateDelta", `${d >= 0 ? "+" : ""}${d.toFixed(1)}°C`);
-      }
       if (c.on_this_day?.available) {
         set("onDayTitle", c.on_this_day.title);
         set("onDayText", c.on_this_day.summary);

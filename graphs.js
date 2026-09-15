@@ -91,7 +91,7 @@
  }
  const value=(x,key)=>x?._gap?null:x?.[key]??null;
  async function load(h){hours=h;set("graphRangeTitle",({6:"Last 6 hours",24:"Last 24 hours",48:"Last 48 hours",168:"Last 7 days",720:"Last 30 days"})[h]);set("graphCount","Loading…");
- try{const d=await fetch(`${API}/history?hours=${h}`).then(r=>r.json()),rows=d.readings||[],gapData=withGapMarkers(rows),r=thin(gapData.rows),labs=r.map(label),rainRows=thinRain(gapData.rows),rainLabs=rainRows.map(label);
+ try{const [d,c]=await Promise.all([fetch(`${API}/history?hours=${h}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error();return r.json()}),fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)]);let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const gapData=withGapMarkers(rows),r=thin(gapData.rows),labs=r.map(label),rainRows=thinRain(gapData.rows),rainLabs=rainRows.map(label);
  charts.t.data.labels=labs;charts.w.data.labels=labs;charts.p.data.labels=labs;charts.s.data.labels=labs;
  charts.r.data.labels=rainLabs;
  charts.t.data.datasets[0].data=r.map(x=>value(x,"temperature_c"));charts.t.data.datasets[1].data=r.map(x=>value(x,"dew_point_c"));
@@ -100,5 +100,5 @@
  Object.values(charts).forEach(c=>c.update());
  const gapText=gapData.gaps?` · ${gapData.gaps} archive gap${gapData.gaps===1?"":"s"} shown as breaks`:"";
  set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.filter(x=>!x?._gap).length.toLocaleString("en-IE")} plotted${gapText}`);}catch(e){set("graphCount","Archive temporarily unavailable.");}}
- document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());make();document.querySelectorAll("[data-hours]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-hours]").forEach(x=>x.classList.toggle("active",x===b));load(Number(b.dataset.hours))}));load(24);if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
+ document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());make();document.querySelectorAll("[data-hours]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-hours]").forEach(x=>x.classList.toggle("active",x===b));load(Number(b.dataset.hours))}));load(24);setInterval(()=>load(hours),5*60*1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
 })();

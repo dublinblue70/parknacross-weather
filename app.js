@@ -3,6 +3,7 @@ const CURRENT_URL = `${API_BASE}/current`;
 const HISTORY_24_URL = `${API_BASE}/history?hours=24`;
 const HISTORY_7D_URL = `${API_BASE}/history?hours=168`;
 const STATS_URL = `${API_BASE}/stats`;
+const RAIN_SUMMARY_URL = `${API_BASE}/rain-summary`;
 const FORECAST_URL = `${API_BASE}/met/forecast`;
 const WARNINGS_URL = `${API_BASE}/met/warnings`;
 const MARINE_URL = `${API_BASE}/met/marine`;
@@ -41,6 +42,7 @@ function batteryStatus(voltage) {
 let history24 = [];
 let history7d = [];
 let stats = null;
+let rainSummary = null;
 let charts = {};
 let deferredInstallPrompt = null;
 let latestObservationTime = null;
@@ -434,8 +436,15 @@ function updateSunInfo() {
 
 function dailyRainTotals() {
   const days = new Map();
+  const source = [...history7d];
+  if (latestCurrent && usable(latestCurrent.epoch)) {
+    const currentEpoch = Number(latestCurrent.epoch);
+    const lastEpoch = source.length && usable(source.at(-1)?.epoch) ? Number(source.at(-1).epoch) : null;
+    if (lastEpoch === null || currentEpoch > lastEpoch) source.push(latestCurrent);
+    else if (currentEpoch === lastEpoch) source[source.length - 1] = latestCurrent;
+  }
 
-  history7d.forEach(reading => {
+  source.forEach(reading => {
     const time = readingTime(reading);
     const correctedRain = correctedDailyRain(reading);
     if (!time || !usable(correctedRain)) return;
@@ -481,9 +490,13 @@ function updateFreshness(current) {
 function updateStatsPanel() {
   if (!stats) return;
 
-  set("monthRain", `${n(stats.month_rain_mm)} mm`);
-  set("monthRainDays", `${stats.month_rain_days ?? 0} rain day${stats.month_rain_days === 1 ? "" : "s"} this month`);
-  set("yearRain", `${n(stats.year_rain_mm)} mm`);
+  const monthRain = usable(rainSummary?.month_mm) ? Number(rainSummary.month_mm) : stats.month_rain_mm;
+  const yearRain = usable(rainSummary?.year_mm) ? Number(rainSummary.year_mm) : stats.year_rain_mm;
+  const rainDays = usable(rainSummary?.month_rain_days) ? Number(rainSummary.month_rain_days) : (usable(stats.month_rain_days) ? Number(stats.month_rain_days) : null);
+
+  set("monthRain", `${n(monthRain)} mm`);
+  set("monthRainDays", rainDays === null ? "Rain days unavailable" : `${rainDays} rain day${rainDays === 1 ? "" : "s"} this month`);
+  set("yearRain", `${n(yearRain)} mm`);
   set("stationSince", dateLabel(stats.first_epoch));
 
   if (stats.wettest_day) {
@@ -492,21 +505,40 @@ function updateStatsPanel() {
   }
 
   const records = stats.records || {};
-  if (records.high_temperature) {
-    set("allHigh", `${n(records.high_temperature.value)} °C`);
-    set("allHighDate", dateLabel(records.high_temperature.epoch));
+  const mergeRecord = (record, field, mode) => {
+    const currentValue = usable(latestCurrent?.[field]) ? Number(latestCurrent[field]) : null;
+    const savedValue = usable(record?.value) ? Number(record.value) : null;
+    if (currentValue === null) return record || null;
+    if (savedValue === null || (mode === "min" ? currentValue < savedValue : currentValue > savedValue)) {
+      return {
+        value: currentValue,
+        epoch: usable(latestCurrent?.epoch) ? Number(latestCurrent.epoch) : Math.floor(Date.now() / 1000),
+        received_at: latestCurrent?.received_at || null
+      };
+    }
+    return record;
+  };
+
+  const high = mergeRecord(records.high_temperature, "temperature_c", "max");
+  const low = mergeRecord(records.low_temperature, "temperature_c", "min");
+  const gust = mergeRecord(records.peak_gust, "wind_gust_kmh", "max");
+  const pressure = mergeRecord(records.high_pressure, "pressure_hpa", "max");
+
+  if (high) {
+    set("allHigh", `${n(high.value)} °C`);
+    set("allHighDate", dateLabel(high.epoch));
   }
-  if (records.low_temperature) {
-    set("allLow", `${n(records.low_temperature.value)} °C`);
-    set("allLowDate", dateLabel(records.low_temperature.epoch));
+  if (low) {
+    set("allLow", `${n(low.value)} °C`);
+    set("allLowDate", dateLabel(low.epoch));
   }
-  if (records.peak_gust) {
-    set("allGust", `${n(records.peak_gust.value)} km/h`);
-    set("allGustDate", dateLabel(records.peak_gust.epoch));
+  if (gust) {
+    set("allGust", `${n(gust.value)} km/h`);
+    set("allGustDate", dateLabel(gust.epoch));
   }
-  if (records.high_pressure) {
-    set("allPressure", `${n(records.high_pressure.value)} hPa`);
-    set("allPressureDate", dateLabel(records.high_pressure.epoch));
+  if (pressure) {
+    set("allPressure", `${n(pressure.value)} hPa`);
+    set("allPressureDate", dateLabel(pressure.epoch));
   }
 }
 
@@ -835,9 +867,19 @@ function chartRowsWithGaps(rows, gapMinutes = 20) {
 }
 
 function updateCharts() {
+  // Merge the latest live observation into cached history so chart endpoints
+  // cannot visibly lag behind the live cards while the history cache catches up.
+  const source = [...history24];
+  if (latestCurrent && usable(latestCurrent.epoch)) {
+    const currentEpoch = Number(latestCurrent.epoch);
+    const lastEpoch = source.length && usable(source.at(-1)?.epoch) ? Number(source.at(-1).epoch) : null;
+    if (lastEpoch === null || currentEpoch > lastEpoch) source.push(latestCurrent);
+    else if (currentEpoch === lastEpoch) source[source.length - 1] = latestCurrent;
+  }
+
   // Never draw a continuous weather line across a substantial D1 archive gap.
   // A null data point makes Chart.js visibly break the line instead.
-  const rows = chartRowsWithGaps(history24, 20);
+  const rows = chartRowsWithGaps(source, 20);
   const timeForChartRow = row => row?._archiveGap ? row._gapTime : readingTime(row);
   const valueForChartRow = (row, field) => row?._archiveGap ? null : row?.[field];
 
@@ -1158,7 +1200,8 @@ async function loadEverything() {
   const results = await Promise.allSettled([
     getJSON(HISTORY_24_URL),
     getJSON(HISTORY_7D_URL),
-    getJSON(STATS_URL)
+    getJSON(STATS_URL, "no-store"),
+    getJSON(RAIN_SUMMARY_URL, "no-store")
   ]);
 
   history24 = results[0].status === "fulfilled" && Array.isArray(results[0].value.readings)
@@ -1166,6 +1209,7 @@ async function loadEverything() {
   history7d = results[1].status === "fulfilled" && Array.isArray(results[1].value.readings)
     ? results[1].value.readings : [];
   stats = results[2].status === "fulfilled" ? results[2].value : null;
+  rainSummary = results[3].status === "fulfilled" ? results[3].value : null;
 
   updateDashboard(current);
   updateCharts();
@@ -1205,7 +1249,12 @@ async function refreshHistory7d() {
 
 async function refreshStats() {
   try {
-    stats = await getJSON(STATS_URL);
+    const [statsResult, rainResult] = await Promise.allSettled([
+      getJSON(STATS_URL, "no-store"),
+      getJSON(RAIN_SUMMARY_URL, "no-store")
+    ]);
+    if (statsResult.status === "fulfilled") stats = statsResult.value;
+    if (rainResult.status === "fulfilled") rainSummary = rainResult.value;
     if (latestCurrent) updateDashboard(latestCurrent);
   } catch (error) {
     console.warn("Stats refresh:", error);
@@ -1282,9 +1331,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setInterval(updateRelativeObservation, 15 * 1000);
   setInterval(refreshCurrent, 60 * 1000);
-  setInterval(refreshHistory24, 10 * 60 * 1000);
-  setInterval(refreshHistory7d, 30 * 60 * 1000);
-  setInterval(refreshStats, 30 * 60 * 1000);
+  setInterval(refreshHistory24, 5 * 60 * 1000);
+  setInterval(refreshHistory7d, 15 * 60 * 1000);
+  setInterval(refreshStats, 2 * 60 * 1000);
   setInterval(updateSunInfo, 60 * 1000);
   setInterval(loadWarnings, 5 * 60 * 1000);
   setInterval(loadForecast, 30 * 60 * 1000);

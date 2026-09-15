@@ -139,7 +139,7 @@ function renderRainSummary(rain, todayRain) {
   set("currentRainRate",rate !== null?`${num(rate)} mm/h`:"--");
   set("rainNowNote",rate === null?"Current rain rate unavailable":rate>0?"Rain is currently being detected":"No measurable rain right now");
   set("rainTodayPanel",usable(todayRain)?`${num(todayRain)} mm`:"--");
-  const dry=Number(rain?.consecutive_dry_days); set("drySpell",Number.isFinite(dry)?`${dry} day${dry===1?"":"s"}`:"--");
+  const dry=usable(rain?.consecutive_dry_days)?Number(rain.consecutive_dry_days):null; set("drySpell",dry===null?"--":`${dry} day${dry===1?"":"s"}`);
 }
 
 function localTimestamp(date) {
