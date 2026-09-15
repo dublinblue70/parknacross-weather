@@ -1816,3 +1816,47 @@ canvas {
     height: 112px;
   }
 }
+
+
+/* v34: dormant WH57 lightning panel; JS only reveals it after real sensor data arrives. */
+.lightning-panel {
+  margin-top: 16px;
+  padding: 15px 18px;
+  border: 1px solid rgba(118,201,238,.22);
+  border-radius: var(--radius);
+  background: rgba(118,201,238,.035);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.lightning-panel[hidden] { display: none !important; }
+.lightning-panel > div:first-child { min-width: 190px; }
+.lightning-panel strong { display: block; margin-top: 3px; }
+.lightning-panel small { display: block; margin-top: 3px; color: var(--muted); }
+.lightning-stats { display: flex; gap: 24px; flex-wrap: wrap; justify-content: flex-end; }
+.lightning-stats span { color: var(--muted); font-size: .78rem; }
+.lightning-stats span strong { display: inline; margin: 0 0 0 5px; color: var(--text); font-size: .88rem; }
+@media(max-width:780px){
+  .lightning-panel { align-items: flex-start; flex-direction: column; }
+  .lightning-stats { justify-content: flex-start; gap: 12px 20px; }
+}
+
+/* v34 History calendar + event diary */
+.archive-calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
+.archive-calendar-toolbar button{border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--text);border-radius:10px;padding:8px 12px;cursor:pointer}
+.archive-calendar-title{font-weight:700}
+.archive-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.archive-calendar .cal-head{padding:8px 4px;text-align:center;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;background:rgba(255,255,255,.02)}
+.archive-day{min-height:76px;border:0;border-top:1px solid var(--line);border-right:1px solid var(--line);background:rgba(255,255,255,.012);color:var(--text);padding:8px;text-align:left;cursor:pointer}
+.archive-day:nth-child(7n){border-right:0}.archive-day.empty{cursor:default;background:transparent}.archive-day.has-data:hover,.archive-day.active{background:rgba(118,201,238,.075)}
+.archive-day .day-num{font-weight:750}.archive-day small{display:block;color:var(--muted);margin-top:7px;line-height:1.35}.archive-day.no-data{opacity:.38;cursor:default}
+.day-detail-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:14px 0}
+.day-detail-stat{border:1px solid var(--line);border-radius:12px;padding:12px;background:rgba(255,255,255,.016)}
+.day-detail-stat span,.day-detail-stat small{display:block;color:var(--muted);font-size:.72rem}.day-detail-stat strong{display:block;margin-top:5px;font-size:1rem}
+.day-detail-chart{height:230px}
+.weather-diary{display:grid;gap:9px}
+.weather-event{display:grid;grid-template-columns:110px 1fr auto;gap:14px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.014)}
+.weather-event time{color:var(--muted);font-size:.76rem}.weather-event strong{display:block}.weather-event small{color:var(--muted)}.event-type{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+@media(max-width:900px){.day-detail-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){.archive-day{min-height:58px;padding:6px}.archive-day small{font-size:.62rem}.day-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.weather-event{grid-template-columns:1fr}.event-type{justify-self:start}}

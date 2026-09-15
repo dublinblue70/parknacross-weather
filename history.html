@@ -68,6 +68,39 @@
       </div>
     </section>
 
+
+    <section class="page-section" aria-labelledby="calendarHeading">
+      <div class="section-heading">
+        <div><span class="section-eyebrow">Calendar archive</span><h2 id="calendarHeading">Explore a day</h2><p>Select any archived date for its daily statistics and observation graph.</p></div>
+      </div>
+      <div class="archive-calendar-toolbar">
+        <button id="calendarPrev" type="button" aria-label="Previous month">← Previous</button>
+        <strong id="calendarTitle" class="archive-calendar-title">--</strong>
+        <button id="calendarNext" type="button" aria-label="Next month">Next →</button>
+      </div>
+      <div id="archiveCalendar" class="archive-calendar" aria-label="Weather archive calendar"></div>
+
+      <article class="chart-card" style="margin-top:14px">
+        <div class="chart-title"><div><h3 id="dayDetailTitle">Select a date</h3><p id="dayDetailStory">Choose a day in the calendar to inspect its observations.</p></div><span id="dayDetailCount">--</span></div>
+        <div class="day-detail-grid">
+          <div class="day-detail-stat"><span>High</span><strong id="dayHigh">--</strong></div>
+          <div class="day-detail-stat"><span>Low</span><strong id="dayLow">--</strong></div>
+          <div class="day-detail-stat"><span>Rain</span><strong id="dayRain">--</strong></div>
+          <div class="day-detail-stat"><span>Peak gust</span><strong id="dayGust">--</strong></div>
+          <div class="day-detail-stat"><span>Pressure range</span><strong id="dayPressure">--</strong></div>
+          <div class="day-detail-stat"><span>Lightning</span><strong id="dayLightning">--</strong><small id="dayLightningNote"></small></div>
+        </div>
+        <div class="day-detail-chart"><canvas id="dayDetailChart"></canvas></div>
+      </article>
+    </section>
+
+    <section class="page-section" aria-labelledby="diaryHeading">
+      <div class="section-heading">
+        <div><span class="section-eyebrow">Weather diary</span><h2 id="diaryHeading">Notable Parknacross weather</h2><p>Automatically identified wet, windy, warm, frosty and lightning days, alongside station records.</p></div>
+      </div>
+      <div id="weatherDiary" class="weather-diary"><p class="info-note">Building the diary from the archive…</p></div>
+    </section>
+
     <section class="page-section">
       <div class="section-heading"><div><span class="section-eyebrow">Records</span><h2>All-time station records</h2><p>Since the station archive began.</p></div></div>
       <div class="records-grid-page">
@@ -88,7 +121,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="history.js?v=20260914-dublintime1"></script>
+<script src="history.js?v=20260915-v34-calendar"></script>
 <script src="site-config.js?v=20260912-mobile2"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="pwa-update.js?v=20260915-v34"></script>
 </body>
 </html>

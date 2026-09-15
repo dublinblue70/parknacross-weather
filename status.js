@@ -129,11 +129,13 @@ async function runChecks() {
   $("overall").className="overall";
 
   const sitePromise=checkSite();
-  const [health,current,quality,history,site] = await Promise.all([
+  const [health,current,quality,history,reliability,backup,site] = await Promise.all([
     fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/history?hours=24`).catch(e=>({__error:e})),
+    fetchJSON(`${API_BASE}/reliability`).catch(e=>({__error:e})),
+    fetchJSON(`${API_BASE}/backup-status`).catch(e=>({__error:e})),
     sitePromise
   ]);
 
@@ -170,6 +172,29 @@ async function runChecks() {
     states.push(gapState);
     const batt=String(quality.battery_status||"--"); const battState=/^Normal/i.test(batt)?"good":/^Check/i.test(batt)?"warn":/^Low/i.test(batt)?"bad":"warn";
     setBadge("batteryBadge",battState,battState==="good"?"OK":battState==="warn"?"CHECK":"LOW"); setText("batteryValue",batt.replace(/^\w+\s*·\s*/,"")||"--"); setText("batteryDetail",batt); states.push(battState);
+  }
+
+  if(reliability.__error || !usableNumber(reliability.archive_reliability_percent)) {
+    setBadge("reliabilityBadge","warn","CHECK");setText("reliabilityValue","--");setText("reliabilityDetail","Reliability endpoint unavailable");states.push("warn");
+  } else {
+    const pct=Number(reliability.archive_reliability_percent);
+    const state=pct>=99?"good":pct>=97?"good":pct>=90?"warn":"bad";
+    setBadge("reliabilityBadge",state,state==="good"?"GOOD":state==="warn"?"REVIEW":"LOW");
+    setText("reliabilityValue",`${pct.toFixed(1)}%`);
+    setText("reliabilityDetail",`${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected archive saves this month`);
+    states.push(state);
+  }
+
+  if(backup.__error) {
+    setBadge("backupBadge","warn","CHECK");setText("backupValue","Unavailable");setText("backupDetail","Backup status endpoint unavailable");states.push("warn");
+  } else if(!backup.configured) {
+    setBadge("backupBadge","warn","READY");setText("backupValue","Awaiting R2");setText("backupDetail","Code is ready; add the BACKUPS R2 binding to activate automatic daily copies.");
+  } else {
+    const ok=Boolean(backup.last_success);
+    setBadge("backupBadge",ok?"good":"warn",ok?"ACTIVE":"READY");
+    setText("backupValue",ok?"Automatic":"Configured");
+    setText("backupDetail",ok?`Last backup ${backup.last_backup_day||"--"} · ${backup.last_key||""}`:"Waiting for the next scheduled run");
+    if(!ok) states.push("warn");
   }
 
   if(history.__error || !Array.isArray(history.readings)) {

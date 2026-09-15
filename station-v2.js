@@ -16,9 +16,15 @@
 
     async function loadQuality() {
       try {
-        const r = await fetch(`${c.apiBase}/quality`, { cache: "no-store" });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const q = await r.json();
+        const [qualityResponse,reliabilityResponse,lightningResponse] = await Promise.all([
+          fetch(`${c.apiBase}/quality`, { cache: "no-store" }),
+          fetch(`${c.apiBase}/reliability`, { cache: "no-store" }),
+          fetch(`${c.apiBase}/lightning`, { cache: "no-store" })
+        ]);
+        if (!qualityResponse.ok) throw new Error(`HTTP ${qualityResponse.status}`);
+        const q = await qualityResponse.json();
+        const reliability = reliabilityResponse.ok ? await reliabilityResponse.json() : null;
+        const lightning = lightningResponse.ok ? await lightningResponse.json() : null;
         set("qualityFeed", q.feed_status || "--");
         set("qualityAge", usable(q.latest_age_seconds) ? `${Math.round(Number(q.latest_age_seconds) / 60)} min since latest reading` : "Latest observation");
         set("quality24", usable(q.samples_last_24h) ? Number(q.samples_last_24h).toLocaleString("en-IE") : "--");
@@ -26,6 +32,14 @@
         set("qualityGap", formatGap(q.largest_recent_gap_minutes));
         set("qualityTotal", usable(q.total_samples) ? Number(q.total_samples).toLocaleString("en-IE") : "--");
         set("qualityBattery", q.battery_status || "--");
+        set("qualityReliability", usable(reliability?.archive_reliability_percent) ? `${Number(reliability.archive_reliability_percent).toFixed(1)}%` : "--");
+        set("qualityReliabilityNote", reliability?.label ? `${reliability.label} · against 5-minute save schedule` : "Against the 5-minute save schedule");
+        if (lightning?.available) {
+          const strikes = usable(lightning.strikes_today) ? Math.round(Number(lightning.strikes_today)) : 0;
+          set("stationLightning", `WH57 active · ${strikes} strike${strikes===1?"":"s"} today`);
+        } else {
+          set("stationLightning", "WH57 integration ready · sensor awaiting installation");
+        }
       } catch (e) {
         console.warn("Station quality refresh:", e);
       }

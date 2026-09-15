@@ -4,6 +4,7 @@ const HISTORY_24_URL = `${API_BASE}/history?hours=24`;
 const HISTORY_7D_URL = `${API_BASE}/history?hours=168`;
 const STATS_URL = `${API_BASE}/stats`;
 const RAIN_SUMMARY_URL = `${API_BASE}/rain-summary`;
+const LIGHTNING_URL = `${API_BASE}/lightning`;
 const DAILY_RECENT_URL = `${API_BASE}/daily?days=2`;
 const FORECAST_URL = `${API_BASE}/met/forecast`;
 const WARNINGS_URL = `${API_BASE}/met/warnings`;
@@ -1280,6 +1281,49 @@ async function restoreBatteryIfMissing(current) {
   return current;
 }
 
+
+function lightningRelative(epoch) {
+  if (!usable(epoch)) return "--";
+  const ms = Date.now() - Number(epoch) * 1000;
+  if (!Number.isFinite(ms) || ms < 0) return "--";
+  const min = Math.floor(ms / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min} min ago`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h ${min % 60}m ago`;
+  const d = Math.floor(h / 24);
+  return `${d} day${d === 1 ? "" : "s"} ago`;
+}
+
+async function refreshLightning() {
+  const panel = $("lightningPanel");
+  if (!panel) return;
+  try {
+    const data = await getJSON(LIGHTNING_URL, "no-store");
+    if (!data?.available) {
+      panel.hidden = true;
+      panel.style.display = "none";
+      return;
+    }
+    panel.hidden = false;
+    panel.style.display = "";
+    set("lightningHeadline", "WH57 lightning detector");
+    set("lightningStrikes", usable(data.strikes_today) ? Math.round(Number(data.strikes_today)).toLocaleString("en-IE") : "--");
+    set("lightningNearest", usable(data.nearest_24h_km) ? `${Number(data.nearest_24h_km).toFixed(0)} km` : "--");
+    set("lightningLast", usable(data.last_strike_epoch) ? lightningRelative(data.last_strike_epoch) : "--");
+    set(
+      "lightningDetail",
+      usable(data.distance_km)
+        ? `Latest detected lightning approximately ${Number(data.distance_km).toFixed(0)} km away`
+        : "Lightning sensor is online"
+    );
+  } catch (error) {
+    console.warn("Lightning refresh:", error);
+    panel.hidden = true;
+    panel.style.display = "none";
+  }
+}
+
 async function loadEverything() {
   let current = null;
 
@@ -1485,6 +1529,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadEverything();
   loadForecast();
   loadWarnings();
+  refreshLightning();
   setupPWA();
 
   setInterval(updateRelativeObservation, 15 * 1000);
@@ -1495,4 +1540,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(updateSunInfo, 60 * 1000);
   setInterval(loadWarnings, 5 * 60 * 1000);
   setInterval(loadForecast, 30 * 60 * 1000);
+  setInterval(refreshLightning, 60 * 1000);
 });

@@ -77,17 +77,47 @@ function metrics(rows) {
 function temperatureWord(high) { if (!usable(high)) return "mixed"; const v=Number(high); return v>=23?"warm":v>=17?"mild":v>=11?"cool":"cold"; }
 function rainPhrase(rain) { if (!usable(rain)) return "with rainfall data still building"; const v=Number(rain); if(v<0.1)return"and dry so far"; if(v<1)return`with just ${v.toFixed(1)} mm of rain`; if(v<5)return`with ${v.toFixed(1)} mm of rain`; if(v<15)return`with a fairly wet ${v.toFixed(1)} mm recorded`; return`with a wet ${v.toFixed(1)} mm recorded`; }
 function windPhrase(gust) { if (!usable(gust)) return ""; const v=Number(gust); if(v<20)return"Winds have generally been light"; if(v<35)return"There has been a noticeable breeze"; if(v<50)return"It has been breezy at times"; if(v<70)return"It has been windy, with some strong gusts"; return"It has been very windy, with strong gusts"; }
-function buildStory(m) {
-  const high=m.high?.temperature_c, low=m.low?.temperature_c, gust=m.gust?.wind_gust_kmh;
-  const first=`A ${temperatureWord(high)} day so far ${rainPhrase(m.rain)}.`;
-  const temp=usable(high)&&usable(low)?`Temperatures have ranged from ${Number(low).toFixed(1)}°C to ${Number(high).toFixed(1)}°C.`:"Temperature observations are still building.";
-  const wind=windPhrase(gust); const windSentence=wind?`${wind}${usable(gust)?`, reaching ${Number(gust).toFixed(1)} km/h`:""}.`:"";
-  const uv=usable(m.uv?.uv_index)?`The highest UV index recorded so far is ${Number(m.uv.uv_index).toFixed(1)}.`:"";
-  return [first,temp,windSentence,uv].filter(Boolean).join(" ");
+function averageDaily(rows, field) {
+  const values=(rows||[]).map(row=>row?.[field]).filter(usable).map(Number);
+  return values.length ? values.reduce((a,b)=>a+b,0)/values.length : null;
 }
 
-function renderToday(m) {
-  set("dayStory", buildStory(m));
+function buildStory(m, yesterday, recentDays=[]) {
+  const high=m.high?.temperature_c, low=m.low?.temperature_c, gust=m.gust?.wind_gust_kmh;
+  const humidity=usable(m.avgHumidity)?Number(m.avgHumidity):null;
+  const humidityWord=humidity===null?"":humidity>=85?"very humid":humidity>=75?"humid":humidity>=60?"slightly humid":"fairly dry";
+  const first=`A ${temperatureWord(high)}${humidityWord?` and ${humidityWord}`:""} day so far ${rainPhrase(m.rain)}.`;
+  const temp=usable(high)&&usable(low)?`Temperatures have ranged from ${Number(low).toFixed(1)}°C to ${Number(high).toFixed(1)}°C.`:"Temperature observations are still building.";
+  const wind=windPhrase(gust); const windSentence=wind?`${wind}${usable(gust)?`, reaching ${Number(gust).toFixed(1)} km/h`:""}.`:"";
+
+  const comparisons=[];
+  if(usable(high)&&usable(yesterday?.high?.temperature_c)){
+    const d=Number(high)-Number(yesterday.high.temperature_c);
+    if(Math.abs(d)>=0.5) comparisons.push(`the high is ${Math.abs(d).toFixed(1)}°C ${d>0?"warmer":"cooler"} than yesterday`);
+  }
+  if(usable(m.rain)&&usable(yesterday?.rain)){
+    const d=Number(m.rain)-Number(yesterday.rain);
+    if(Math.abs(d)>=0.5) comparisons.push(`${Math.abs(d).toFixed(1)} mm ${d>0?"wetter":"drier"} than yesterday so far`);
+  }
+
+  const avgHigh=averageDaily(recentDays,"high_c");
+  const avgRain=averageDaily(recentDays,"rain_mm");
+  if(usable(high)&&usable(avgHigh)){
+    const d=Number(high)-Number(avgHigh);
+    if(Math.abs(d)>=0.5) comparisons.push(`${Math.abs(d).toFixed(1)}°C ${d>0?"above":"below"} the recent 7-day average high`);
+  }
+  if(usable(m.rain)&&usable(avgRain)&&Number(m.rain)>=0.1){
+    const d=Number(m.rain)-Number(avgRain);
+    if(Math.abs(d)>=1) comparisons.push(`rainfall is ${d>0?"above":"below"} the recent daily average`);
+  }
+
+  const comparisonSentence=comparisons.length?`Compared with recent conditions, ${comparisons.slice(0,2).join(" and ")}.`:"";
+  const uv=usable(m.uv?.uv_index)?`Peak UV so far is ${Number(m.uv.uv_index).toFixed(1)}.`:"";
+  return [first,temp,windSentence,comparisonSentence,uv].filter(Boolean).join(" ");
+}
+
+function renderToday(m, yesterday=null, recentDays=[]) {
+  set("dayStory", buildStory(m, yesterday, recentDays));
   set("todayHigh", usable(m.high?.temperature_c) ? `${num(m.high.temperature_c)} °C` : "--"); set("todayHighTime", m.high ? shortTime(readingDate(m.high)) : "--");
   set("todayLow", usable(m.low?.temperature_c) ? `${num(m.low.temperature_c)} °C` : "--"); set("todayLowTime", m.low ? shortTime(readingDate(m.low)) : "--");
   set("todayRain", usable(m.rain) ? `${num(m.rain)} mm` : "--");
@@ -182,7 +212,7 @@ async function shareCurrentWeather(){
 
 async function loadSummary(){
   try{
-    const [history,rain,current]=await Promise.all([getJSON("/history?hours=48"),getJSON("/rain-summary","no-store"),getJSON("/current","no-store")]);
+    const [history,rain,current,daily]=await Promise.all([getJSON("/history?hours=48"),getJSON("/rain-summary","no-store"),getJSON("/current","no-store"),getJSON("/daily?days=8","no-store")]);
     const rows=Array.isArray(history.readings)?history.readings.filter(r=>readingDate(r)):[]; const now=new Date(),todayKey=localDayKey(now),grouped=new Map();
     rows.forEach(row=>{const key=localDayKey(readingDate(row));if(!key)return;if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(row);});
     const todayRows=mergeCurrent(grouped.get(todayKey)||[],current,todayKey);currentTodayRows=todayRows;currentTodayKey=todayKey;latestShareRow=current&&localDayKey(readingDate(current))===todayKey?current:(todayRows.length?todayRows[todayRows.length-1]:null);
@@ -192,7 +222,8 @@ async function loadSummary(){
     else if (usable(rain?.today_mm)) todayMetrics.rain = Number(rain.today_mm);
     const rainDisplay = {...rain, current_rate_mm_h: usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : rain?.current_rate_mm_h};
     set("summaryTitle",`Today in Parknacross · ${longDate(now)}`);set("summarySubtitle",todayRows.length?`Live day-so-far summary from ${todayRows.length.toLocaleString("en-IE")} stored observations.`:"Waiting for today's stored station observations.");
-    renderToday(todayMetrics);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);
+    const recentCompletedDays=(Array.isArray(daily?.days)?daily.days:[]).filter(row=>row.day!==todayKey).slice(-7);
+    renderToday(todayMetrics,yesterdayMetrics,recentCompletedDays);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);
     $("downloadCsvButton").disabled=!todayRows.length;$("shareWeatherButton").disabled=!latestShareRow;
     set("actionStatus",todayRows.length?`${todayRows.length.toLocaleString("en-IE")} observations ready. Download or share using the buttons above.`:"No observations are available yet.");
   }catch(error){console.error("Daily summary:",error);set("summarySubtitle","The daily summary is temporarily unavailable.");set("dayStory","Live station observations could not be loaded. Please try again shortly.");currentTodayRows=[];currentTodayKey=null;latestShareRow=null;$("downloadCsvButton").disabled=true;$("shareWeatherButton").disabled=true;set("actionStatus","Summary tools are temporarily unavailable.");}

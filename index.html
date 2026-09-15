@@ -183,6 +183,20 @@
       <div class="station-status"><span class="status-label">Data feed</span><strong id="cloudStatus">Connecting</strong></div>
     </section>
 
+
+    <section id="lightningPanel" class="lightning-panel" hidden aria-live="polite">
+      <div>
+        <span class="section-eyebrow">Lightning</span>
+        <strong id="lightningHeadline">WH57 active</strong>
+        <small id="lightningDetail">Waiting for lightning data…</small>
+      </div>
+      <div class="lightning-stats">
+        <span>Strikes today <strong id="lightningStrikes">--</strong></span>
+        <span>Nearest <strong id="lightningNearest">--</strong></span>
+        <span>Last strike <strong id="lightningLast">--</strong></span>
+      </div>
+    </section>
+
     <section class="today-section" aria-labelledby="todayHeading">
       <div class="section-heading compact-heading">
         <div>
@@ -470,10 +484,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="app.js?v=20260915-v33-installpanel"></script>
+<script src="app.js?v=20260915-v34-features"></script>
 
 <script src="site-config.js?v=20260912-mobile2"></script>
 <script src="platform.js?v=20260915-v27"></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="pwa-update.js?v=20260915-v34"></script>
 </body>
 </html>
