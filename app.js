@@ -1377,6 +1377,7 @@ function setupPWA() {
   }
 
   const button = $("installButton");
+  const installStrip = button?.closest(".install-strip");
   const userAgent = navigator.userAgent || "";
   const isIOS =
     /iPhone|iPad|iPod/i.test(userAgent) ||
@@ -1384,35 +1385,62 @@ function setupPWA() {
   const isSafari =
     /Safari/i.test(userAgent) &&
     !/CriOS|FxiOS|EdgiOS|OPiOS|Chrome|Chromium|Android/i.test(userAgent);
-  const isStandalone =
+
+  const isRunningInstalled = () =>
     window.matchMedia?.("(display-mode: standalone)")?.matches ||
     window.navigator.standalone === true;
+
+  const setInstallPanelVisible = visible => {
+    if (installStrip) installStrip.hidden = !visible;
+    if (!visible && button) button.hidden = true;
+  };
+
+  /*
+   * If the dashboard is already running as the installed PWA, the Quick
+   * Access panel has served its purpose and should not take up space.
+   * No persistent "installed" flag is stored: after an uninstall, Chromium
+   * can make the site installable again and beforeinstallprompt will restore
+   * the panel automatically.
+   */
+  if (isRunningInstalled()) {
+    setInstallPanelVisible(false);
+  }
 
   /*
    * Apple Safari does not provide the Chromium beforeinstallprompt event.
    * On iPhone/iPad Safari, keep the same Install app button available and
    * guide the user through Safari's native Add to Home Screen flow.
    */
-  if (button && isIOS && isSafari && !isStandalone) {
+  if (button && isIOS && isSafari && !isRunningInstalled()) {
     button.hidden = false;
   }
 
   window.addEventListener("beforeinstallprompt", event => {
     event.preventDefault();
     deferredInstallPrompt = event;
-    if (button && !isStandalone) button.hidden = false;
+
+    if (!isRunningInstalled()) {
+      setInstallPanelVisible(true);
+      if (button) button.hidden = false;
+    }
   });
 
   button?.addEventListener("click", async () => {
     if (deferredInstallPrompt) {
       deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
+      const choice = await deferredInstallPrompt.userChoice;
       deferredInstallPrompt = null;
-      button.hidden = true;
+
+      if (choice?.outcome === "accepted") {
+        setInstallPanelVisible(false);
+      } else {
+        setInstallPanelVisible(true);
+        button.hidden = false;
+      }
       return;
     }
 
-    if (isIOS && isSafari && !isStandalone) {
+    if (isIOS && isSafari && !isRunningInstalled()) {
       alert(
         "To install Parknacross Weather on your iPhone or iPad:\n\n" +
         "1. Tap the Share button in Safari (the square with the upward arrow).\n" +
@@ -1425,7 +1453,7 @@ function setupPWA() {
 
   window.addEventListener("appinstalled", () => {
     deferredInstallPrompt = null;
-    if (button) button.hidden = true;
+    setInstallPanelVisible(false);
   });
 }
 
