@@ -43,8 +43,10 @@ async function getJSON(path, cache = "default") {
   return data;
 }
 
-function maxReading(rows, field) { return rows.reduce((best, row) => !usable(row[field]) ? best : (!best || Number(row[field]) > Number(best[field]) ? row : best), null); }
-function minReading(rows, field) { return rows.reduce((best, row) => !usable(row[field]) ? best : (!best || Number(row[field]) < Number(best[field]) ? row : best), null); }
+const TEMP_SPIKE_DELTA_C = 2.5, TEMP_NEIGHBOR_AGREEMENT_C = 1.0, TEMP_NEIGHBOR_WINDOW_MS = 15*60*1000;
+function temperatureOutlierRows(rows){const ordered=rows.map(row=>({row,date:readingDate(row),temp:Number(row?.temperature_c)})).filter(x=>x.date&&usable(x.row?.temperature_c)).sort((a,b)=>a.date-b.date),out=new Set(),agrees=(a,b)=>Math.abs(a.temp-b.temp)<=TEMP_NEIGHBOR_AGREEMENT_C,spike=(c,a,b)=>agrees(a,b)&&Math.abs(c.temp-((a.temp+b.temp)/2))>=TEMP_SPIKE_DELTA_C;for(let i=0;i<ordered.length;i++){const c=ordered[i],p=ordered[i-1],p2=ordered[i-2],n=ordered[i+1],n2=ordered[i+2],t=c.date.getTime();let bad=false;if(p&&n&&t-p.date.getTime()<=TEMP_NEIGHBOR_WINDOW_MS&&n.date.getTime()-t<=TEMP_NEIGHBOR_WINDOW_MS)bad=spike(c,p,n);else if(!n&&p&&p2&&t-p.date.getTime()<=TEMP_NEIGHBOR_WINDOW_MS&&p.date.getTime()-p2.date.getTime()<=TEMP_NEIGHBOR_WINDOW_MS)bad=spike(c,p,p2);else if(!p&&n&&n2&&n.date.getTime()-t<=TEMP_NEIGHBOR_WINDOW_MS&&n2.date.getTime()-n.date.getTime()<=TEMP_NEIGHBOR_WINDOW_MS)bad=spike(c,n,n2);if(bad)out.add(c.row);}return out;}
+function maxReading(rows, field) { const out=field==="temperature_c"?temperatureOutlierRows(rows):null; return rows.reduce((best, row) => !usable(row[field]) || out?.has(row) ? best : (!best || Number(row[field]) > Number(best[field]) ? row : best), null); }
+function minReading(rows, field) { const out=field==="temperature_c"?temperatureOutlierRows(rows):null; return rows.reduce((best, row) => !usable(row[field]) || out?.has(row) ? best : (!best || Number(row[field]) < Number(best[field]) ? row : best), null); }
 function average(rows, field) { const values = rows.filter(row => usable(row[field])).map(row => Number(row[field])); return values.length ? values.reduce((a,b)=>a+b,0)/values.length : null; }
 const RAIN_CORRECTIONS_MM = { "2026-09-11": 0.1 };
 function correctedRain(row) {

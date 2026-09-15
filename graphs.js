@@ -44,6 +44,8 @@
    const ms=Date.parse(x?.received_at||"");
    return Number.isFinite(ms)?Math.floor(ms/1000):null;
  }
+ const TEMP_SPIKE_DELTA_C=2.5,TEMP_NEIGHBOR_AGREEMENT_C=1.0,TEMP_NEIGHBOR_WINDOW_SECONDS=15*60;
+ function temperatureOutlierRows(rows){const ordered=rows.map(row=>({row,epoch:rowEpoch(row),temp:Number(row?.temperature_c)})).filter(x=>x.epoch!==null&&usable(x.row?.temperature_c)).sort((a,b)=>a.epoch-b.epoch),out=new Set(),agrees=(a,b)=>Math.abs(a.temp-b.temp)<=TEMP_NEIGHBOR_AGREEMENT_C,spike=(c,a,b)=>agrees(a,b)&&Math.abs(c.temp-((a.temp+b.temp)/2))>=TEMP_SPIKE_DELTA_C;for(let i=0;i<ordered.length;i++){const c=ordered[i],p=ordered[i-1],p2=ordered[i-2],n=ordered[i+1],n2=ordered[i+2];let bad=false;if(p&&n&&c.epoch-p.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS&&n.epoch-c.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS)bad=spike(c,p,n);else if(!n&&p&&p2&&c.epoch-p.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS&&p.epoch-p2.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS)bad=spike(c,p,p2);else if(!p&&n&&n2&&n.epoch-c.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS&&n2.epoch-n.epoch<=TEMP_NEIGHBOR_WINDOW_SECONDS)bad=spike(c,n,n2);if(bad)out.add(c.row);}return out;}
  function withGapMarkers(rows){
    if(rows.length<2)return {rows:[...rows],gaps:0};
    const out=[rows[0]];
@@ -91,14 +93,14 @@
  }
  const value=(x,key)=>x?._gap?null:x?.[key]??null;
  async function load(h){hours=h;set("graphRangeTitle",({6:"Last 6 hours",24:"Last 24 hours",48:"Last 48 hours",168:"Last 7 days",720:"Last 30 days"})[h]);set("graphCount","Loading…");
- try{const [d,c]=await Promise.all([fetch(`${API}/history?hours=${h}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error();return r.json()}),fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)]);let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const gapData=withGapMarkers(rows),r=thin(gapData.rows),labs=r.map(label),rainRows=thinRain(gapData.rows),rainLabs=rainRows.map(label);
+ try{const [d,c]=await Promise.all([fetch(`${API}/history?hours=${h}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error();return r.json()}),fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)]);let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const temperatureOutliers=temperatureOutlierRows(rows),gapData=withGapMarkers(rows),r=thin(gapData.rows),labs=r.map(label),rainRows=thinRain(gapData.rows),rainLabs=rainRows.map(label);
  charts.t.data.labels=labs;charts.w.data.labels=labs;charts.p.data.labels=labs;charts.s.data.labels=labs;
  charts.r.data.labels=rainLabs;
- charts.t.data.datasets[0].data=r.map(x=>value(x,"temperature_c"));charts.t.data.datasets[1].data=r.map(x=>value(x,"dew_point_c"));
+ charts.t.data.datasets[0].data=r.map(x=>x?._gap||temperatureOutliers.has(x)?null:(x?.temperature_c??null));charts.t.data.datasets[1].data=r.map(x=>value(x,"dew_point_c"));
  charts.w.data.datasets[0].data=r.map(x=>value(x,"wind_speed_kmh"));charts.w.data.datasets[1].data=r.map(x=>value(x,"wind_gust_kmh"));charts.p.data.datasets[0].data=r.map(x=>value(x,"pressure_hpa"));
  charts.r.data.datasets[0].data=rainRows.map(x=>x?._gap?null:(usable(x.rain_rate_mm_h)?Number(x.rain_rate_mm_h):null));charts.s.data.datasets[0].data=r.map(x=>value(x,"solar_w_m2"));charts.s.data.datasets[1].data=r.map(x=>value(x,"uv_index"));
  Object.values(charts).forEach(c=>c.update());
- const gapText=gapData.gaps?` · ${gapData.gaps} archive gap${gapData.gaps===1?"":"s"} shown as breaks`:"";
- set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.filter(x=>!x?._gap).length.toLocaleString("en-IE")} plotted${gapText}`);}catch(e){set("graphCount","Archive temporarily unavailable.");}}
+ const gapText=gapData.gaps?` · ${gapData.gaps} archive gap${gapData.gaps===1?"":"s"} shown as breaks`:"",qualityText=temperatureOutliers.size?` · ${temperatureOutliers.size} isolated temperature spike${temperatureOutliers.size===1?"":"s"} excluded`:"";
+ set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.filter(x=>!x?._gap).length.toLocaleString("en-IE")} plotted${gapText}${qualityText}`);}catch(e){set("graphCount","Archive temporarily unavailable.");}}
  document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());make();document.querySelectorAll("[data-hours]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-hours]").forEach(x=>x.classList.toggle("active",x===b));load(Number(b.dataset.hours))}));load(24);setInterval(()=>load(hours),5*60*1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
 })();

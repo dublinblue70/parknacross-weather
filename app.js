@@ -134,6 +134,56 @@ function recordReading(rows, field, mode = "max") {
   }, null);
 }
 
+const TEMP_SPIKE_DELTA_C = 2.5;
+const TEMP_NEIGHBOR_AGREEMENT_C = 1.0;
+const TEMP_NEIGHBOR_WINDOW_MS = 15 * 60 * 1000;
+
+function temperatureOutlierRows(rows) {
+  const ordered = rows
+    .map(row => ({ row, time: readingTime(row), temp: Number(row?.temperature_c) }))
+    .filter(item => Number.isFinite(item.time) && usable(item.row?.temperature_c))
+    .sort((a, b) => a.time - b.time);
+
+  const outliers = new Set();
+  const agrees = (a, b) => Math.abs(a.temp - b.temp) <= TEMP_NEIGHBOR_AGREEMENT_C;
+  const isSpikeAgainst = (candidate, a, b) =>
+    agrees(a, b) &&
+    Math.abs(candidate.temp - ((a.temp + b.temp) / 2)) >= TEMP_SPIKE_DELTA_C;
+
+  for (let i = 0; i < ordered.length; i++) {
+    const candidate = ordered[i];
+    const previous = ordered[i - 1];
+    const previous2 = ordered[i - 2];
+    const next = ordered[i + 1];
+    const next2 = ordered[i + 2];
+
+    let spike = false;
+
+    if (previous && next &&
+        candidate.time - previous.time <= TEMP_NEIGHBOR_WINDOW_MS &&
+        next.time - candidate.time <= TEMP_NEIGHBOR_WINDOW_MS) {
+      spike = isSpikeAgainst(candidate, previous, next);
+    } else if (!next && previous && previous2 &&
+               candidate.time - previous.time <= TEMP_NEIGHBOR_WINDOW_MS &&
+               previous.time - previous2.time <= TEMP_NEIGHBOR_WINDOW_MS) {
+      spike = isSpikeAgainst(candidate, previous, previous2);
+    } else if (!previous && next && next2 &&
+               next.time - candidate.time <= TEMP_NEIGHBOR_WINDOW_MS &&
+               next2.time - next.time <= TEMP_NEIGHBOR_WINDOW_MS) {
+      spike = isSpikeAgainst(candidate, next, next2);
+    }
+
+    if (spike) outliers.add(candidate.row);
+  }
+
+  return outliers;
+}
+
+function temperatureRecordReading(rows, mode = "max") {
+  const outliers = temperatureOutlierRows(rows);
+  return recordReading(rows.filter(row => !outliers.has(row)), "temperature_c", mode);
+}
+
 function timeLabel(reading) {
   const time = readingTime(reading);
   if (!time) return "--";
@@ -549,16 +599,29 @@ function updateDashboard(current) {
     return time && sameDay(time, now);
   });
 
-  const highReading = recordReading(today, "temperature_c", "max");
-  const lowReading = recordReading(today, "temperature_c", "min");
-  const gustReading = recordReading(today, "wind_gust_kmh", "max");
-  const solarReading = recordReading(today, "solar_w_m2", "max");
   const currentTime = readingTime(current);
   const currentIsToday = currentTime && sameDay(currentTime, now);
+  const temperatureRows = [...today];
+
+  if (currentIsToday) {
+    const currentEpoch = usable(current?.epoch) ? Number(current.epoch) : null;
+    const duplicate = temperatureRows.some(row =>
+      currentEpoch !== null
+        ? Number(row?.epoch) === currentEpoch
+        : readingTime(row) === currentTime
+    );
+    if (!duplicate) temperatureRows.push(current);
+  }
+
+  const highReading = temperatureRecordReading(temperatureRows, "max");
+  const lowReading = temperatureRecordReading(temperatureRows, "min");
+  const gustReading = recordReading(today, "wind_gust_kmh", "max");
+  const solarReading = recordReading(today, "solar_w_m2", "max");
 
   // /current can be newer than the cached history feed. Merge the live value into
-  // today's extrema so a current observation can never contradict the displayed
-  // high, low, peak gust or solar peak. Stale previous-day readings are excluded.
+  // today's non-temperature extrema so a current observation can never contradict
+  // the displayed peak gust or solar peak. Temperature extrema use the quality
+  // filter above so an isolated WS90 spike cannot become the daily high or low.
   const extrema = (historyValue, currentValue, mode) => {
     const candidates = [historyValue, currentIsToday ? currentValue : null]
       .filter(usable)
@@ -566,12 +629,12 @@ function updateDashboard(current) {
     if (!candidates.length) return null;
     return mode === "min" ? Math.min(...candidates) : Math.max(...candidates);
   };
-  const todayHigh = extrema(highReading?.temperature_c, current.temperature_c, "max");
-  const todayLow = extrema(lowReading?.temperature_c, current.temperature_c, "min");
+  const todayHigh = usable(highReading?.temperature_c) ? Number(highReading.temperature_c) : null;
+  const todayLow = usable(lowReading?.temperature_c) ? Number(lowReading.temperature_c) : null;
   const peakGust = extrema(gustReading?.wind_gust_kmh, current.wind_gust_kmh, "max");
   const solarPeak = extrema(solarReading?.solar_w_m2, current.solar_w_m2, "max");
-  const todayHighReading = currentIsToday && usable(current.temperature_c) && (!highReading || Number(current.temperature_c) > Number(highReading.temperature_c)) ? current : highReading;
-  const todayLowReading = currentIsToday && usable(current.temperature_c) && (!lowReading || Number(current.temperature_c) < Number(lowReading.temperature_c)) ? current : lowReading;
+  const todayHighReading = highReading;
+  const todayLowReading = lowReading;
   const peakGustReading = currentIsToday && usable(current.wind_gust_kmh) && (!gustReading || Number(current.wind_gust_kmh) > Number(gustReading.wind_gust_kmh)) ? current : gustReading;
 
   const pressure = pressureStats();
@@ -877,6 +940,10 @@ function updateCharts() {
     else if (currentEpoch === lastEpoch) source[source.length - 1] = latestCurrent;
   }
 
+  // Do not plot isolated temperature spikes as genuine weather observations.
+  // The raw observation remains in D1; only the temperature series is filtered.
+  const temperatureOutliers = temperatureOutlierRows(source);
+
   // Never draw a continuous weather line across a substantial D1 archive gap.
   // A null data point makes Chart.js visibly break the line instead.
   const rows = chartRowsWithGaps(source, 20);
@@ -893,7 +960,9 @@ function updateCharts() {
   });
 
   charts.temperature.data.labels = labels;
-  charts.temperature.data.datasets[0].data = rows.map(row => valueForChartRow(row, "temperature_c"));
+  charts.temperature.data.datasets[0].data = rows.map(row =>
+    row?._archiveGap || temperatureOutliers.has(row) ? null : row?.temperature_c
+  );
   charts.temperature.data.datasets[1].data = rows.map(row => valueForChartRow(row, "dew_point_c"));
   charts.temperature.update();
 
