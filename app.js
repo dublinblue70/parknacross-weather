@@ -1385,13 +1385,23 @@ function setupPWA() {
   const isSafari =
     /Safari/i.test(userAgent) &&
     !/CriOS|FxiOS|EdgiOS|OPiOS|Chrome|Chromium|Android/i.test(userAgent);
+  const isChromiumInstallBrowser =
+    /Chrome|Chromium|EdgA|Edg\/|OPR|SamsungBrowser/i.test(userAgent);
 
   const isRunningInstalled = () =>
     window.matchMedia?.("(display-mode: standalone)")?.matches ||
     window.navigator.standalone === true;
 
   const setInstallPanelVisible = visible => {
-    if (installStrip) installStrip.hidden = !visible;
+    if (installStrip) {
+      installStrip.hidden = !visible;
+      /*
+       * .install-strip uses display:flex in the site stylesheet. Setting an
+       * inline display value as well makes the hidden state unambiguous and
+       * prevents that layout rule from keeping the panel visible.
+       */
+      installStrip.style.display = visible ? "" : "none";
+    }
     if (!visible && button) button.hidden = true;
   };
 
@@ -1404,6 +1414,17 @@ function setupPWA() {
    */
   if (isRunningInstalled()) {
     setInstallPanelVisible(false);
+  } else if (isChromiumInstallBrowser) {
+    /*
+     * Chromium does not expose a dependable "is this PWA already installed?"
+     * query to the page. Instead, keep the panel hidden until Chromium tells
+     * us installation is currently available via beforeinstallprompt.
+     *
+     * Result:
+     * - installed app -> no prompt event -> panel stays hidden
+     * - app later uninstalled -> prompt event becomes available -> panel returns
+     */
+    setInstallPanelVisible(false);
   }
 
   /*
@@ -1412,6 +1433,7 @@ function setupPWA() {
    * guide the user through Safari's native Add to Home Screen flow.
    */
   if (button && isIOS && isSafari && !isRunningInstalled()) {
+    setInstallPanelVisible(true);
     button.hidden = false;
   }
 
