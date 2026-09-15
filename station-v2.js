@@ -40,6 +40,9 @@
         } else {
           set("stationLightning", "WH57 integration ready · sensor awaiting installation");
         }
+        if (lightning?.available) {
+          window.PWAlerts?.evaluateLightning?.(lightning);
+        }
       } catch (e) {
         console.warn("Station quality refresh:", e);
       }

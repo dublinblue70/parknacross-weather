@@ -49,6 +49,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches && window.Chart) {
+      Chart.defaults.animation = false;
+    }
     set("year", new Date().getFullYear());
     get("/met/point").catch(() => {});
     loadCurrentComparison();

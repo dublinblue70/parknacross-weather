@@ -16,7 +16,7 @@
     main{padding:24px}.hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}.hero h1{font-size:clamp(1.65rem,4vw,2.4rem);margin:0 0 5px}.hero p{margin:0;color:var(--muted);max-width:700px}.refresh{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:11px;cursor:pointer}.refresh:disabled{opacity:.6;cursor:wait}
     .overall{display:flex;align-items:center;gap:12px;padding:17px 18px;border:1px solid var(--line);border-radius:15px;background:var(--panel);margin-bottom:18px}.dot{width:12px;height:12px;border-radius:50%;background:#71808a;box-shadow:0 0 0 5px rgba(255,255,255,.04)}.overall.good .dot,.badge.good{background:var(--good)}.overall.warn .dot,.badge.warn{background:var(--warn)}.overall.bad .dot,.badge.bad{background:var(--bad)}.overall strong{font-size:1.05rem}.overall small{display:block;color:var(--muted)}
     .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{border:1px solid var(--line);background:var(--panel);border-radius:15px;padding:17px;min-height:138px}.card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.card h2{font-size:.98rem;margin:0}.badge{display:inline-flex;align-items:center;justify-content:center;min-width:58px;padding:4px 8px;border-radius:999px;background:#71808a;color:#07131f;font-size:.72rem;font-weight:800;text-transform:uppercase}.metric{font-size:1.55rem;font-weight:700;margin-top:18px}.sub{color:var(--muted);font-size:.8rem;margin-top:4px;word-break:break-word}
-    .wide{grid-column:1/-1}.checks{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px}.checks li{display:grid;grid-template-columns:11px 1fr;gap:9px;align-items:start;color:var(--muted)}.checks i{width:8px;height:8px;border-radius:50%;margin-top:7px;background:#71808a}.checks .good i{background:var(--good)}.checks .warn i{background:var(--warn)}.checks .bad i{background:var(--bad)}.checks strong{color:var(--text);font-weight:600}.note{margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-radius:13px;color:var(--muted);background:rgba(17,38,56,.42);font-size:.84rem}
+    .wide{grid-column:1/-1}.checks{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px}.checks li{display:grid;grid-template-columns:11px 1fr;gap:9px;align-items:start;color:var(--muted)}.checks i{width:8px;height:8px;border-radius:50%;margin-top:7px;background:#71808a}.checks .good i{background:var(--good)}.checks .warn i{background:var(--warn)}.checks .bad i{background:var(--bad)}.checks strong{color:var(--text);font-weight:600}.note{margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-radius:13px;color:var(--muted);background:rgba(17,38,56,.42);font-size:.84rem}.uptime-targets{display:grid;gap:8px;margin-top:12px}.uptime-target{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02)}.uptime-target code{color:var(--muted);font-size:.76rem;overflow-wrap:anywhere}
     footer{border-top:1px solid var(--line);padding:16px 24px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.78rem}
     @media(max-width:850px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){main{padding:17px 13px}.grid{grid-template-columns:1fr}.wide{grid-column:auto}header{padding:16px 14px}.hero{align-items:flex-start}.refresh{width:100%}footer{padding:14px 8px;justify-content:center;gap:0;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;font-size:.68rem}footer>span{display:inline-flex;align-items:center;white-space:nowrap}footer>span+span::before{content:" · ";margin:0 .4em}footer>span:nth-child(2){font-size:0}footer>span:nth-child(2)::before{font-size:.68rem}footer>span:nth-child(2)::after{content:"Health";font-size:.68rem}footer>span:nth-child(3) a{font-size:0}footer>span:nth-child(3) a::after{content:"Email";font-size:.68rem}}@media(max-width:360px){footer{font-size:.62rem}footer>span:nth-child(2)::before,footer>span:nth-child(2)::after,footer>span:nth-child(3) a::after{font-size:.62rem}}
   </style>
@@ -48,6 +48,16 @@
       <article class="card"><div class="card-head"><h2>Secondary backup</h2><span class="badge" id="backupBadge">CHECK</span></div><div class="metric" id="backupValue">--</div><div class="sub" id="backupDetail">Automatic completed-day archive copy</div></article>
 
       <article class="card wide">
+        <div class="card-head"><h2>External uptime targets</h2><span class="badge good">READY</span></div>
+        <div class="sub">These two endpoints are designed to be checked independently from outside the Parknacross hosting stack.</div>
+        <div class="uptime-targets">
+          <div class="uptime-target"><strong>Public website</strong><code>https://parknacrossweather.ie/</code></div>
+          <div class="uptime-target"><strong>Weather API health</strong><code>https://parknacross-weather.dave-s-carter.workers.dev/health</code></div>
+        </div>
+        <div class="sub" style="margin-top:10px"><a href="UPTIME-MONITOR-SETUP-v36.txt">External monitor setup guide</a></div>
+      </article>
+
+      <article class="card wide">
         <div class="card-head"><h2>Data-quality checks</h2><span class="badge" id="qualityBadge">CHECK</span></div>
         <div class="sub">Broad plausibility checks only. Suspicious values are flagged for review; nothing is deleted, corrected or hidden.</div>
         <ul class="checks" id="qualityChecks"><li><i></i><span>Loading the latest 24 hours…</span></li></ul>
@@ -58,7 +68,8 @@
   </main>
   <footer><span>© 2026 Parknacross Weather</span><span id="lastRun">Health check not yet completed</span><span><a href="mailto:info@parknacrossweather.ie" style="color:inherit;text-decoration:none" aria-label="Email Parknacross Weather">info@parknacrossweather.ie</a></span></footer>
 </div>
-<script src="status.js?v=20260915-v34-reliability"></script>
-<script src="pwa-update.js?v=20260915-v34"></script>
+<script src="offline.js?v=20260915-v36"></script><script src="status.js?v=20260915-v36"></script>
+<script src="pwa-update.js?v=20260915-v36"></script>
+<script src="accessibility.js?v=20260915-v36"></script>
 </body>
 </html>

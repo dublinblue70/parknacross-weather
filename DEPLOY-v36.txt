@@ -1,0 +1,39 @@
+PARKNACROSS WEATHER v36 — DEPLOYMENT
+
+PART 1 — CLOUDFLARE WORKER
+1. Open Cloudflare → Workers & Pages → Parknacross Weather Worker.
+2. Replace the ENTIRE Worker source with Parknacross-Cloudflare-Worker-v36.js.
+3. Deploy.
+4. Test:
+   /health
+   /current
+   /reliability
+   /lightning
+   /marine/sea-temperature
+5. /health should report status=ok and release=v36.
+6. /lightning should remain available=false until the WH57 is actually installed and supplying data.
+7. /marine/sea-temperature should return Marine Institute NEATL model data when the upstream model service is available.
+
+PART 2 — GITHUB PAGES
+Upload/replace every file in parknacross-v36-GITHUB-FILES.zip in the repository root.
+Keep CNAME unchanged.
+
+PART 3 — AFTER DEPLOYMENT
+1. Open https://parknacrossweather.ie/
+2. Hard refresh once.
+3. Check Dashboard → Summary → Radar → Graphs → Rain → Climate → Station → History.
+4. Open Climate → Monthly reports and Annual reports.
+5. Open Station → Weather notifications and Maintenance log.
+6. Open Coastal conditions and confirm tide/wind still load.
+7. Open System Health and run checks.
+
+NOTIFICATION NOTE
+Notifications require an explicit browser permission click on the Station page.
+The built-in local alert engine runs while the Dashboard or Station page / installed app is running.
+It is not a full closed-app Web Push service and does not replace official Met Éireann alerts.
+
+UPTIME NOTE
+A separate hourly external watch has been created. UPTIME-MONITOR-SETUP-v36.txt also documents the stable endpoints if you later want a 5-minute specialist HTTP monitor.
+
+BACKUP NOTE
+The v34 R2 / external backup configuration remains unchanged and compatible with v36.

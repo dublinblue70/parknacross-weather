@@ -1,0 +1,4 @@
+Parknacross Weather MASTER CURRENT
+Version: v36
+Date: 2026-09-15
+Release: polish, offline resilience, local alerts, climate reports, dataset metadata, maintenance log and coastal context

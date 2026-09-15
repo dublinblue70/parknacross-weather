@@ -75,11 +75,32 @@
     get("/met/point").catch(() => {});
   }
 
+  function shareSummary(current, high, low, rain, gust) {
+    const temp = usable(current?.temperature_c) ? Number(current.temperature_c) : null;
+    const humidity = usable(current?.humidity) ? Number(current.humidity) : null;
+    const words = [];
+    if (temp !== null) words.push(temp >= 20 ? "Mild" : temp >= 15 ? "Cool" : "Fresh");
+    if (humidity !== null && humidity >= 80) words.push("humid");
+    if (gust !== null && gust >= 40) words.push("windy");
+    else if (usable(current?.wind_speed_kmh) && Number(current.wind_speed_kmh) >= 20) words.push("breezy");
+    const lead = words.length ? words.join(" and ") : "Local conditions";
+    const details = [];
+    if (rain !== null) details.push(`${rain.toFixed(1)} mm rain today`);
+    if (gust !== null) details.push(`peak gust ${gust.toFixed(1)} km/h`);
+    if (high !== null && low !== null) details.push(`high/low ${high.toFixed(1)}°/${low.toFixed(1)}°`);
+    return `${lead} · ${details.slice(0,2).join(" · ")}`;
+  }
+
   async function shareToday() {
     const button = $("shareTodayButton");
     if (button) button.disabled = true;
     try {
-      const [c, h] = await Promise.all([get("/current"), get("/history?hours=24")]);
+      const [c, h, rainSummary, daily] = await Promise.all([
+        get("/current"),
+        get("/history?hours=24"),
+        get("/rain-summary"),
+        get("/daily?days=2")
+      ]);
       const rows = h.readings || [];
       const todayKey = stationDayKey(new Date());
       const today = rows.filter(r =>
@@ -87,11 +108,22 @@
       );
       const currentIsToday = stationDayKey(new Date(c.received_at || Number(c.epoch) * 1000)) === todayKey;
       const mergedToday = currentIsToday ? [...today.filter(r => Number(r.epoch) !== Number(c.epoch)), c] : today;
-      const vals = (field) => mergedToday.filter(x => usable(x[field])).map(x => Number(x[field]));
+      const vals = field => mergedToday.filter(x => usable(x[field])).map(x => Number(x[field]));
       const temps = vals("temperature_c"), gusts = vals("wind_gust_kmh");
       const high = temps.length ? Math.max(...temps) : null;
       const low = temps.length ? Math.min(...temps) : null;
       const gust = gusts.length ? Math.max(...gusts) : null;
+      const rain = usable(rainSummary?.today_mm)
+        ? Number(rainSummary.today_mm)
+        : usable(c.rain_daily_mm) ? Number(c.rain_daily_mm) : null;
+      const summary = shareSummary(c, high, low, rain, gust);
+
+      const previous = Array.isArray(daily?.days)
+        ? daily.days.find(row => row.day && row.day !== todayKey)
+        : null;
+      const comparison = usable(high) && usable(previous?.high_c)
+        ? `${Math.abs(high - Number(previous.high_c)).toFixed(1)}°C ${high >= Number(previous.high_c) ? "warmer" : "cooler"} than yesterday's high`
+        : "";
 
       const canvas = document.createElement("canvas");
       canvas.width = 1200; canvas.height = 630;
@@ -100,34 +132,59 @@
       g.addColorStop(0,"#07131f"); g.addColorStop(1,"#123649");
       ctx.fillStyle = g; ctx.fillRect(0,0,1200,630);
 
-      ctx.fillStyle="#7bd7ef"; ctx.font="700 30px system-ui"; ctx.fillText("PARKNACROSS WEATHER",70,80);
-      ctx.fillStyle="#9fb3c1"; ctx.font="400 24px system-ui";
-      ctx.fillText(new Date().toLocaleDateString("en-IE",{timeZone:STATION_TIME_ZONE,weekday:"long",day:"numeric",month:"long",year:"numeric"})+" · Ardamine, Co. Wexford",70,122);
-      ctx.fillStyle="#f3f8fb"; ctx.font="300 128px system-ui"; ctx.fillText(`${n(c.temperature_c)}°`,65,315);
-      ctx.fillStyle="#b9ccd8"; ctx.font="500 28px system-ui"; ctx.fillText("Current temperature",75,355);
+      ctx.fillStyle="#7bd7ef"; ctx.font="700 30px system-ui"; ctx.fillText("PARKNACROSS WEATHER",70,76);
+      ctx.fillStyle="#9fb3c1"; ctx.font="400 23px system-ui";
+      ctx.fillText(new Date().toLocaleDateString("en-IE",{timeZone:STATION_TIME_ZONE,weekday:"long",day:"numeric",month:"long",year:"numeric"})+" · Ardamine, Co. Wexford",70,116);
 
-      const cards=[["HIGH",high==null?"--":high.toFixed(1)+"°C"],["LOW",low==null?"--":low.toFixed(1)+"°C"],
-        ["RAIN",`${n(c.rain_daily_mm)} mm`],["PEAK GUST",gust==null?"--":gust.toFixed(1)+" km/h"]];
+      ctx.fillStyle="#f3f8fb"; ctx.font="300 126px system-ui"; ctx.fillText(`${n(c.temperature_c)}°`,65,300);
+      ctx.fillStyle="#b9ccd8"; ctx.font="500 27px system-ui"; ctx.fillText("Current temperature",75,340);
+
+      const cards=[
+        ["HIGH",high==null?"--":high.toFixed(1)+"°C"],
+        ["LOW",low==null?"--":low.toFixed(1)+"°C"],
+        ["RAIN",rain==null?"--":rain.toFixed(1)+" mm"],
+        ["PEAK GUST",gust==null?"--":gust.toFixed(1)+" km/h"]
+      ];
       cards.forEach((a,i)=>{
-        const x=540+(i%2)*300,y=205+Math.floor(i/2)*150;
-        ctx.fillStyle="rgba(255,255,255,.055)"; ctx.fillRect(x,y,270,125);
-        ctx.fillStyle="#8fa8b7"; ctx.font="700 18px system-ui"; ctx.fillText(a[0],x+22,y+34);
-        ctx.fillStyle="#f3f8fb"; ctx.font="650 33px system-ui"; ctx.fillText(a[1],x+22,y+82);
+        const x=540+(i%2)*300,y=180+Math.floor(i/2)*145;
+        ctx.fillStyle="rgba(255,255,255,.055)";
+        if (typeof ctx.roundRect === "function") {
+          ctx.beginPath();ctx.roundRect(x,y,270,120,16);ctx.fill();
+        } else ctx.fillRect(x,y,270,120);
+        ctx.fillStyle="#8fa8b7";ctx.font="700 18px system-ui";ctx.fillText(a[0],x+22,y+34);
+        ctx.fillStyle="#f3f8fb";ctx.font="650 32px system-ui";ctx.fillText(a[1],x+22,y+79);
       });
-      ctx.fillStyle="#78909f";ctx.font="500 20px system-ui";ctx.fillText("parknacrossweather.ie",70,580);
+
+      ctx.fillStyle="#dbeaf2";ctx.font="600 28px system-ui";
+      ctx.fillText(summary.slice(0,75),70,462);
+      if (comparison) {
+        ctx.fillStyle="#9fb3c1";ctx.font="500 22px system-ui";ctx.fillText(comparison,70,500);
+      }
+
+      ctx.fillStyle="#78909f";ctx.font="500 20px system-ui";
+      ctx.fillText("Independent personal weather station · parknacrossweather.ie",70,580);
 
       const blob = await new Promise(r => canvas.toBlob(r,"image/png"));
+      if (!blob) throw new Error("Could not create PNG");
       const file = new File([blob],"parknacross-weather-today.png",{type:"image/png"});
       if (navigator.share && navigator.canShare?.({files:[file]})) {
-        await navigator.share({title:"Today in Parknacross",text:"Local weather from Parknacross Weather.",files:[file]});
+        await navigator.share({
+          title:"Parknacross Weather today",
+          text:`${summary}. parknacrossweather.ie`,
+          files:[file]
+        });
       } else {
-        const url=URL.createObjectURL(blob); const a=document.createElement("a");
-        a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a");
+        a.href=url;a.download=file.name;a.click();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
       }
     } catch(e) {
       console.warn(e);
       alert("The share card could not be created just now.");
-    } finally { if (button) button.disabled=false; }
+    } finally {
+      if (button) button.disabled=false;
+    }
   }
 
   document.addEventListener("DOMContentLoaded", () => {

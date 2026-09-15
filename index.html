@@ -16,36 +16,57 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260915-v28">
+  <link rel="stylesheet" href="styles.css?v=20260915-v36">
 
   <title>Ardamine Weather | Live Weather for Courtown &amp; North Wexford</title>
   <link rel="canonical" href="https://parknacrossweather.ie/">
 
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebSite",
-        "@id": "https://parknacrossweather.ie/#website",
-        "name": "Parknacross Weather",
-        "alternateName": "ParknacrossWeather.ie",
-        "url": "https://parknacrossweather.ie/",
-        "description": "Independent hyperlocal weather observations from Ardamine near Courtown on the North Wexford coast."
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://parknacrossweather.ie/#website",
+      "name": "Parknacross Weather",
+      "alternateName": "ParknacrossWeather.ie",
+      "url": "https://parknacrossweather.ie/",
+      "description": "Independent hyperlocal weather observations from Ardamine near Courtown on the North Wexford coast."
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://parknacrossweather.ie/#webpage",
+      "url": "https://parknacrossweather.ie/",
+      "name": "Ardamine Weather | Live Weather for Courtown & North Wexford",
+      "isPartOf": {
+        "@id": "https://parknacrossweather.ie/#website"
       },
-      {
-        "@type": "WebPage",
-        "@id": "https://parknacrossweather.ie/#webpage",
-        "url": "https://parknacrossweather.ie/",
-        "name": "Ardamine Weather | Live Weather for Courtown & North Wexford",
-        "isPartOf": {"@id": "https://parknacrossweather.ie/#website"},
-        "about": {
-          "@type": "Place",
-          "name": "Ardamine, Co. Wexford, Ireland"
-        }
+      "about": {
+        "@type": "Place",
+        "name": "Ardamine, Co. Wexford, Ireland"
       }
-    ]
-  }
+    },
+    {
+      "@type": "Dataset",
+      "@id": "https://parknacrossweather.ie/downloads.html#dataset",
+      "name": "Parknacross Weather Observation Archive",
+      "url": "https://parknacrossweather.ie/downloads.html",
+      "description": "Free historical hyperlocal weather observations from Parknacross in Ardamine, Co. Wexford.",
+      "temporalCoverage": "2026-09/..",
+      "spatialCoverage": {
+        "@type": "Place",
+        "name": "Ardamine, Co. Wexford, Ireland"
+      },
+      "isAccessibleForFree": true,
+      "measurementTechnique": "Ecowitt WS90 personal weather station with GW3001 gateway",
+      "distribution": {
+        "@type": "DataDownload",
+        "encodingFormat": "text/csv",
+        "contentUrl": "https://parknacross-weather.dave-s-carter.workers.dev/export.csv?days=3660"
+      }
+    }
+  ]
+}
   </script>
   <style>
     .local-search-intro{margin:14px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:var(--radius-sm);background:rgba(255,255,255,.012);color:var(--muted);font-size:.84rem;line-height:1.6}
@@ -109,7 +130,7 @@
       </div>
     </a>
 
-    <nav class="nav" aria-label="Main navigation">
+        <nav class="nav" aria-label="Main navigation">
       <a class="active" href="index.html">Dashboard</a>
       <a href="summary.html">Summary</a>
       <a href="radar.html">Radar</a>
@@ -210,6 +231,7 @@
         <article class="today-item">
           <span>High / Low</span>
           <strong><span id="todayHigh">--</span>° / <span id="todayLow">--</span>°</strong>
+          <small id="todayTempCompare">Yesterday comparison building</small>
         </article>
         <article class="today-item">
           <span>Peak gust</span>
@@ -218,6 +240,7 @@
         <article class="today-item">
           <span>Rain</span>
           <strong><span id="summaryRain">--</span> mm</strong>
+          <small id="todayRainCompare">Yesterday comparison building</small>
         </article>
         <article class="today-item">
           <span>Solar peak</span>
@@ -485,11 +508,14 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="app.js?v=20260915-v34-features"></script>
+<script src="offline.js?v=20260915-v36"></script>
+<script src="alert-settings.js?v=20260915-v36"></script>
+<script src="app.js?v=20260915-v36"></script>
 
 <script src="site-config.js?v=20260912-mobile2"></script>
-<script src="platform.js?v=20260915-v27"></script>
+<script src="platform.js?v=20260915-v36"></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
-<script src="pwa-update.js?v=20260915-v34"></script>
+<script src="pwa-update.js?v=20260915-v36"></script>
+<script src="accessibility.js?v=20260915-v36"></script>
 </body>
 </html>

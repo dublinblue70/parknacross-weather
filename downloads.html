@@ -9,18 +9,60 @@
   <link rel="canonical" href="https://parknacrossweather.ie/downloads.html">
   <title>Ardamine Weather Data Archive &amp; CSV Downloads | Parknacross</title>
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Dataset",
-    "name": "Parknacross Weather Observation Archive",
-    "description": "Historical personal weather station observations from Parknacross in Ardamine, Co. Wexford, including temperature, humidity, dew point, wind, gusts, direction, pressure, rainfall, solar radiation, UV and station battery data.",
-    "url": "https://parknacrossweather.ie/downloads.html",
-    "isAccessibleForFree": true,
-    "creator": {"@type": "Organization", "name": "Parknacross Weather", "url": "https://parknacrossweather.ie/"},
-    "spatialCoverage": {"@type": "Place", "name": "Ardamine, Co. Wexford, Ireland"},
-    "variableMeasured": ["Air temperature", "Feels-like temperature", "Relative humidity", "Dew point", "Wind speed", "Wind gust", "Wind direction", "Barometric pressure", "Rainfall", "Solar radiation", "UV index", "WS90 battery voltage"],
-    "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": "https://parknacrossweather.ie/downloads.html"}]
-  }
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "@id": "https://parknacrossweather.ie/downloads.html#dataset",
+  "name": "Parknacross Weather Observation Archive",
+  "description": "Historical personal weather station observations from Parknacross in Ardamine, Co. Wexford, including temperature, humidity, dew point, wind, gusts, direction, pressure, rainfall, solar radiation, UV, station battery and lightning data when available.",
+  "url": "https://parknacrossweather.ie/downloads.html",
+  "isAccessibleForFree": true,
+  "dateModified": "2026-09-15",
+  "temporalCoverage": "2026-09/..",
+  "creator": {
+    "@type": "Organization",
+    "name": "Parknacross Weather",
+    "url": "https://parknacrossweather.ie/"
+  },
+  "spatialCoverage": {
+    "@type": "Place",
+    "name": "Ardamine, Co. Wexford, Ireland"
+  },
+  "measurementTechnique": "Ecowitt WS90 personal weather station with GW3001 gateway; WH57 lightning detector when installed",
+  "keywords": [
+    "Ardamine weather",
+    "North Wexford weather",
+    "personal weather station",
+    "rainfall",
+    "wind",
+    "temperature",
+    "weather archive"
+  ],
+  "variableMeasured": [
+    "Air temperature",
+    "Feels-like temperature",
+    "Relative humidity",
+    "Dew point",
+    "Wind speed",
+    "Wind gust",
+    "Wind direction",
+    "Barometric pressure",
+    "Rainfall",
+    "Solar radiation",
+    "UV index",
+    "WS90 battery voltage",
+    "Lightning distance",
+    "Lightning strike count"
+  ],
+  "distribution": [
+    {
+      "@type": "DataDownload",
+      "name": "Parknacross Weather CSV download",
+      "encodingFormat": "text/csv",
+      "contentUrl": "https://parknacrossweather.ie/downloads.html"
+    }
+  ]
+}
   </script>
   <style>
     :root{--bg:#07131f;--panel:#0d1d2b;--panel2:#112638;--line:rgba(190,220,238,.14);--text:#f2f7fa;--muted:#9fb2c1;--accent:#76c9ee;--good:#71d59a;--bad:#f27f7f}
@@ -49,7 +91,9 @@
 </main>
 <footer><span>© 2026 Parknacross Weather</span><span>Read-only archive export</span><span><a href="mailto:info@parknacrossweather.ie" style="color:inherit;text-decoration:none" aria-label="Email Parknacross Weather">info@parknacrossweather.ie</a></span></footer>
 </div>
-<script src="downloads.js?v=20260915-v34-backup"></script>
-<script src="pwa-update.js?v=20260915-v34"></script>
+<script src="downloads.js?v=20260915-v36"></script>
+<script src="pwa-update.js?v=20260915-v36"></script>
+<script src="offline.js?v=20260915-v36"></script>
+<script src="accessibility.js?v=20260915-v36"></script>
 </body>
 </html>

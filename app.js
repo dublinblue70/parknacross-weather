@@ -51,6 +51,62 @@ let deferredInstallPrompt = null;
 let latestObservationTime = null;
 let latestCurrent = null;
 
+const LOCAL_CACHE_PREFIX = "parknacross.dashboard.";
+const localCacheKey = name => `${LOCAL_CACHE_PREFIX}${name}.v1`;
+
+function writeLocalCache(name, value) {
+  try {
+    localStorage.setItem(localCacheKey(name), JSON.stringify({
+      saved_at: new Date().toISOString(),
+      value
+    }));
+  } catch (_) {}
+}
+
+function readLocalCache(name) {
+  try {
+    const wrapper = JSON.parse(localStorage.getItem(localCacheKey(name)) || "null");
+    return wrapper && typeof wrapper === "object" ? wrapper : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function markLiveMode() {
+  window.PWOffline?.setLive?.();
+}
+
+function markOfflineMode(current) {
+  const timestamp = current?.received_at ||
+    (usable(current?.epoch) ? new Date(Number(current.epoch) * 1000).toISOString() : null);
+  window.PWOffline?.setOffline?.(timestamp);
+}
+
+function yesterdayKey(todayKey) {
+  const match = String(todayKey || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  return new Date(Date.UTC(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]) - 1,
+    12
+  )).toISOString().slice(0, 10);
+}
+
+function comparisonText(currentValue, previousValue, unit, noun) {
+  if (!usable(currentValue) || !usable(previousValue)) return "Yesterday comparison building";
+  const delta = Number(currentValue) - Number(previousValue);
+  if (Math.abs(delta) < 0.05) return `About the same as yesterday`;
+  return `${Math.abs(delta).toFixed(1)} ${unit} ${delta > 0 ? "higher" : "lower"} than yesterday${noun ? ` ${noun}` : ""}`;
+}
+
+function rainComparisonText(currentValue, previousValue) {
+  if (!usable(currentValue) || !usable(previousValue)) return "Yesterday comparison building";
+  const delta = Number(currentValue) - Number(previousValue);
+  if (Math.abs(delta) < 0.05) return "About the same rainfall as yesterday";
+  return `${Math.abs(delta).toFixed(1)} mm ${delta > 0 ? "wetter" : "drier"} than yesterday`;
+}
+
 const RAIN_ACTIVE_WINDOW_MS = 5 * 60 * 1000;
 const RAIN_RECENT_WINDOW_MS = 15 * 60 * 1000;
 const RAIN_INCREMENT_EPSILON_MM = 0.05;
@@ -731,6 +787,20 @@ function updateDashboard(current) {
   set("summaryRain", n(rainToday));
   set("solarPeak", n(solarPeak, 0));
 
+  const priorDay = dailyRecent.find(row => row?.day === yesterdayKey(todayKey)) || null;
+  set(
+    "todayTempCompare",
+    usable(todayHigh) && usable(priorDay?.high_c)
+      ? comparisonText(todayHigh, priorDay.high_c, "°C", "")
+      : "Yesterday comparison building"
+  );
+  set(
+    "todayRainCompare",
+    usable(rainToday) && usable(priorDay?.rain_mm)
+      ? rainComparisonText(rainToday, priorDay.rain_mm)
+      : "Yesterday comparison building"
+  );
+
   set("tempVal", n(current.temperature_c));
   set("feelsVal", `${n(current.feels_like_c)}°C`);
   set("tempMin", n(todayLow));
@@ -837,6 +907,9 @@ function line(label, colour, axis = "y") {
 }
 
 function createCharts() {
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+    Chart.defaults.animation = false;
+  }
   Chart.defaults.color = "#bfd0e3";
   Chart.defaults.font.family = "Inter,system-ui,sans-serif";
 
@@ -1317,6 +1390,7 @@ async function refreshLightning() {
         ? `Latest detected lightning approximately ${Number(data.distance_km).toFixed(0)} km away`
         : "Lightning sensor is online"
     );
+    window.PWAlerts?.evaluateLightning?.(data);
   } catch (error) {
     console.warn("Lightning refresh:", error);
     panel.hidden = true;
@@ -1326,22 +1400,32 @@ async function refreshLightning() {
 
 async function loadEverything() {
   let current = null;
+  let liveCurrent = false;
 
   try {
     current = await getJSON(CURRENT_URL, "no-store");
     current = await restoreBatteryIfMissing(current);
     latestCurrent = current;
-    updateDashboard(current);
+    writeLocalCache("current", current);
+    liveCurrent = true;
+    markLiveMode();
   } catch (error) {
     console.error("Current conditions:", error);
-    set("cloudStatus", "Error");
-    $("cloudStatus")?.classList.remove("ok", "warn");
-    $("cloudStatus")?.classList.add("bad");
-    set("conditionsTag", "Feed unavailable");
-    set("lastUpdated", "Unable to load live weather");
-    $("livePill")?.classList.add("offline");
-    set("liveText", "STATION DATA UNAVAILABLE");
-    return;
+    const cached = readLocalCache("current");
+    current = cached?.value || null;
+    if (!current) {
+      set("cloudStatus", "Error");
+      $("cloudStatus")?.classList.remove("ok", "warn");
+      $("cloudStatus")?.classList.add("bad");
+      set("conditionsTag", "Feed unavailable");
+      set("lastUpdated", "Unable to load live weather");
+      $("livePill")?.classList.add("offline");
+      set("liveText", "STATION DATA UNAVAILABLE");
+      markOfflineMode(null);
+      return;
+    }
+    latestCurrent = current;
+    markOfflineMode(current);
   }
 
   const results = await Promise.allSettled([
@@ -1352,17 +1436,49 @@ async function loadEverything() {
     getJSON(DAILY_RECENT_URL, "no-store")
   ]);
 
-  history24 = results[0].status === "fulfilled" && Array.isArray(results[0].value.readings)
-    ? results[0].value.readings : [];
+  if (results[0].status === "fulfilled" && Array.isArray(results[0].value.readings)) {
+    history24 = results[0].value.readings;
+    writeLocalCache("history24", history24);
+  } else {
+    history24 = readLocalCache("history24")?.value || [];
+  }
+
   history7d = results[1].status === "fulfilled" && Array.isArray(results[1].value.readings)
     ? results[1].value.readings : [];
-  stats = results[2].status === "fulfilled" ? results[2].value : null;
-  rainSummary = results[3].status === "fulfilled" ? results[3].value : null;
-  dailyRecent = results[4].status === "fulfilled" && Array.isArray(results[4].value.days)
-    ? results[4].value.days : [];
+
+  if (results[2].status === "fulfilled") {
+    stats = results[2].value;
+    writeLocalCache("stats", stats);
+  } else {
+    stats = readLocalCache("stats")?.value || null;
+  }
+
+  if (results[3].status === "fulfilled") {
+    rainSummary = results[3].value;
+    writeLocalCache("rain", rainSummary);
+  } else {
+    rainSummary = readLocalCache("rain")?.value || null;
+  }
+
+  if (results[4].status === "fulfilled" && Array.isArray(results[4].value.days)) {
+    dailyRecent = results[4].value.days;
+    writeLocalCache("daily", dailyRecent);
+  } else {
+    dailyRecent = readLocalCache("daily")?.value || [];
+  }
 
   updateDashboard(current);
   updateCharts();
+
+  if (!liveCurrent) {
+    $("livePill")?.classList.add("offline");
+    set("liveText", navigator.onLine ? "LAST SAVED OBSERVATION" : "OFFLINE · LAST SAVED OBSERVATION");
+    set("cloudStatus", "Cached");
+    $("cloudStatus")?.classList.remove("ok", "bad");
+    $("cloudStatus")?.classList.add("warn");
+  } else {
+    window.PWAlerts?.evaluateCurrent?.(current);
+  }
 }
 
 async function refreshCurrent() {
@@ -1370,9 +1486,17 @@ async function refreshCurrent() {
     let current = await getJSON(CURRENT_URL, "no-store");
     current = await restoreBatteryIfMissing(current);
     latestCurrent = current;
+    writeLocalCache("current", current);
+    markLiveMode();
     updateDashboard(current);
+    window.PWAlerts?.evaluateCurrent?.(current);
   } catch (error) {
     console.error("Current refresh:", error);
+    if (latestCurrent) {
+      markOfflineMode(latestCurrent);
+      $("livePill")?.classList.add("offline");
+      set("liveText", navigator.onLine ? "LIVE FEED UNAVAILABLE · LAST SAVED DATA" : "OFFLINE · LAST SAVED DATA");
+    }
   }
 }
 
@@ -1380,6 +1504,7 @@ async function refreshHistory24() {
   try {
     const data = await getJSON(HISTORY_24_URL);
     history24 = Array.isArray(data.readings) ? data.readings : history24;
+    writeLocalCache("history24", history24);
     if (latestCurrent) updateDashboard(latestCurrent);
     updateCharts();
   } catch (error) {
@@ -1404,9 +1529,12 @@ async function refreshStats() {
       getJSON(RAIN_SUMMARY_URL, "no-store"),
       getJSON(DAILY_RECENT_URL, "no-store")
     ]);
-    if (statsResult.status === "fulfilled") stats = statsResult.value;
-    if (rainResult.status === "fulfilled") rainSummary = rainResult.value;
-    if (dailyResult.status === "fulfilled" && Array.isArray(dailyResult.value.days)) dailyRecent = dailyResult.value.days;
+    if (statsResult.status === "fulfilled") { stats = statsResult.value; writeLocalCache("stats", stats); }
+    if (rainResult.status === "fulfilled") { rainSummary = rainResult.value; writeLocalCache("rain", rainSummary); }
+    if (dailyResult.status === "fulfilled" && Array.isArray(dailyResult.value.days)) {
+      dailyRecent = dailyResult.value.days;
+      writeLocalCache("daily", dailyRecent);
+    }
     if (latestCurrent) updateDashboard(latestCurrent);
   } catch (error) {
     console.warn("Stats refresh:", error);

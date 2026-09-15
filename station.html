@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260915-v28">
+  <link rel="stylesheet" href="styles.css?v=20260915-v36">
   <title>Parknacross Personal Weather Station | Ardamine, Co. Wexford</title>
   <link rel="canonical" href="https://parknacrossweather.ie/station.html">
 
@@ -95,7 +95,7 @@
       <img class="brand-mark" src="favicon.svg" alt="">
       <div class="brand-copy"><h1>PARKNACROSS WEATHER</h1><p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p></div>
     </a>
-    <nav class="nav" aria-label="Main navigation">
+        <nav class="nav" aria-label="Main navigation">
       <a href="index.html">Dashboard</a>
       <a href="summary.html">Summary</a>
       <a href="radar.html">Radar</a>
@@ -231,6 +231,48 @@
           The capacity forecast is based on the database's observed growth rate and is only an estimate.
           If old raw JSON is trimmed later, the archive can retain the actual weather measurements for substantially longer.
         </p>
+      </article>
+    </section>
+
+    <section class="page-section" aria-labelledby="alertsHeading">
+      <article class="info-card alert-settings-panel">
+        <div class="section-heading">
+          <div>
+            <span class="section-eyebrow">Optional local alerts</span>
+            <h2 id="alertsHeading">Weather notifications</h2>
+            <p>Choose which Parknacross observations should trigger a device notification while the website or installed app is running.</p>
+          </div>
+          <button class="primary-button" id="alertsEnableButton" type="button">Enable notifications</button>
+        </div>
+        <p class="info-note" id="alertsPermission" aria-live="polite">Permission not requested</p>
+        <div class="alert-options">
+          <label><input id="alertRainStart" type="checkbox"> <span><strong>Rain starting</strong><small>Notify when the WS90 first detects measurable rain.</small></span></label>
+          <label><input id="alertGust" type="checkbox"> <span><strong>Strong gust</strong><small>Notify when a gust reaches 50 km/h.</small></span></label>
+          <label><input id="alertFrost" type="checkbox"> <span><strong>Freezing temperature</strong><small>Notify when the outdoor temperature reaches 0°C or below.</small></span></label>
+          <label><input id="alertHeavyRain" type="checkbox"> <span><strong>Heavy rain</strong><small>Notify when the rain rate reaches 10 mm/h.</small></span></label>
+          <label class="alert-lightning-option"><span><strong>Lightning proximity</strong><small>WH57-ready; remains dormant until real lightning data arrives.</small></span>
+            <select id="alertLightningDistance" aria-label="Lightning alert distance">
+              <option value="0">Off</option>
+              <option value="25">Within 25 km</option>
+              <option value="15">Within 15 km</option>
+              <option value="10">Within 10 km</option>
+            </select>
+          </label>
+        </div>
+        <p class="storage-note">These are local station notifications, not official weather warnings. Met Éireann remains the source for official warnings and safety-critical decisions.</p>
+      </article>
+    </section>
+
+    <section class="page-section">
+      <article class="info-card">
+        <div class="section-heading">
+          <div>
+            <span class="section-eyebrow">Station stewardship</span>
+            <h2>Maintenance & change log</h2>
+            <p>Firmware, sensor installation, calibration and maintenance changes are recorded so historical observations have useful context.</p>
+          </div>
+          <a class="primary-button" href="maintenance.html">Open station log</a>
+        </div>
       </article>
     </section>
 
@@ -447,6 +489,7 @@ async function loadStationStatus() {
       }
 
       set("stationBattery", batteryStatus(current.battery_v));
+      window.PWAlerts?.evaluateCurrent?.(current);
     } else {
       set("stationFeed", "Unavailable");
     }
@@ -467,7 +510,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
-<script src="site-config.js?v=20260912-batteryrestore1"></script><script src="station-v2.js?v=20260915-v34-reliability"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
-<script src="pwa-update.js?v=20260915-v34"></script>
+<script src="offline.js?v=20260915-v36"></script><script src="alert-settings.js?v=20260915-v36"></script><script src="site-config.js?v=20260912-batteryrestore1"></script><script src="station-v2.js?v=20260915-v36"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="pwa-update.js?v=20260915-v36"></script>
+<script src="accessibility.js?v=20260915-v36"></script>
 </body>
 </html>

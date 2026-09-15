@@ -1,16 +1,61 @@
-const CACHE_NAME = "parknacross-weather-v35-summary-navigation-20260915";
+const CACHE_NAME = "parknacross-weather-v36-polish-20260915";
 const STATIC_ASSETS = [
-  "./", "./index.html", "./styles.css", "./app.js", "./site-config.js", "./platform.js",
-  "./radar.html", "./radar.js", "./graphs.html", "./graphs.js", "./rain.html", "./rain.js",
-  "./climate.html", "./climate.js", "./coast.html", "./coast.js", "./sky.html", "./sky.js",
-  "./station.html", "./station-v2.js", "./status.html", "./status.js", "./history.html", "./history.js",
-  "./manifest.webmanifest", "./favicon.svg", "./icon-192.png", "./icon-512.png",
-  "./apple-touch-icon.png", "./og-image.png", "./north-wexford-coast.jpg", "./pwa-update.js"
+  "./",
+  "./index.html",
+  "./summary.html",
+  "./radar.html",
+  "./graphs.html",
+  "./rain.html",
+  "./climate.html",
+  "./monthly.html",
+  "./annual.html",
+  "./coast.html",
+  "./sky.html",
+  "./station.html",
+  "./maintenance.html",
+  "./status.html",
+  "./history.html",
+  "./records.html",
+  "./downloads.html",
+  "./styles.css",
+  "./app.js",
+  "./site-config.js",
+  "./platform.js",
+  "./summary.js",
+  "./radar.js",
+  "./graphs.js",
+  "./rain.js",
+  "./climate.js",
+  "./monthly.js",
+  "./annual.js",
+  "./coast.js",
+  "./sky.js",
+  "./station-v2.js",
+  "./maintenance-log.js",
+  "./maintenance.js",
+  "./status.js",
+  "./history.js",
+  "./records.js",
+  "./downloads.js",
+  "./offline.js",
+  "./accessibility.js",
+  "./alert-settings.js",
+  "./pwa-update.js",
+  "./manifest.webmanifest",
+  "./favicon.svg",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./apple-touch-icon.png",
+  "./og-image.png",
+  "./north-wexford-coast.jpg"
 ];
+
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache =>
-    Promise.all(STATIC_ASSETS.map(asset => cache.add(asset).catch(() => null)))
-  ));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.all(STATIC_ASSETS.map(asset => cache.add(asset).catch(() => null)))
+    )
+  );
   self.skipWaiting();
 });
 
@@ -23,6 +68,7 @@ self.addEventListener("activate", event => {
     clients.forEach(client => client.postMessage({type:"PARKNACROSS_UPDATE_READY"}));
   })());
 });
+
 self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
@@ -35,8 +81,24 @@ self.addEventListener("fetch", event => {
     url.hostname.includes("met.ie") ||
     url.hostname.includes("marine.ie")
   ) return;
+
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match(request).then(r => r || caches.match("./index.html"))));
+    event.respondWith((async () => {
+      try {
+        return await fetch(request);
+      } catch (_) {
+        /*
+         * Ignore the query string for archived report pages so, for example,
+         * monthly.html?month=2026-09 can still open from the offline cache.
+         */
+        const pathname = url.pathname.endsWith("/")
+          ? "./index.html"
+          : `.${url.pathname}`;
+        return (await caches.match(pathname)) ||
+          (await caches.match(request)) ||
+          (await caches.match("./index.html"));
+      }
+    })());
     return;
   }
 
@@ -47,4 +109,28 @@ self.addEventListener("fetch", event => {
       return response;
     }).catch(() => caches.match(request))
   );
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const target = event.notification?.data?.url || "./index.html";
+
+  event.waitUntil((async () => {
+    const openClients = await self.clients.matchAll({
+      type: "window",
+      includeUncontrolled: true
+    });
+
+    for (const client of openClients) {
+      if ("focus" in client) {
+        await client.focus();
+        if ("navigate" in client) await client.navigate(target);
+        return;
+      }
+    }
+
+    if (self.clients.openWindow) {
+      await self.clients.openWindow(target);
+    }
+  })());
 });
