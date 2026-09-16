@@ -2083,3 +2083,6 @@ html.is-offline .live-pill{opacity:.78}
   .archive-search{align-items:stretch}.archive-search label{flex:1 1 180px}.archive-search input{width:100%}
 }
 @media(max-width:480px){.rain-event-summary{grid-template-columns:1fr}.rain-event-row{grid-template-columns:1fr}}
+
+/* v38.4.5 — shared wind rose on Dashboard and Graphs */
+.wind-card > .wind-readout { margin-top:14px; }

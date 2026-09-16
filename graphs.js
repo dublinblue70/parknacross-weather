@@ -52,8 +52,7 @@
      plugins:{legend:{position:"bottom"}}
    }
  });
- const roseLabels=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
- charts.rose=new Chart($("gWindRose"),{type:"polarArea",data:{labels:roseLabels,datasets:[{label:"Direction frequency %",data:new Array(16).fill(0),backgroundColor:roseLabels.map((_,i)=>`hsla(${185+i*3},78%,68%,${.30+(i%4)*.08})`),borderColor:"rgba(174,225,244,.32)",borderWidth:1}]},options:{maintainAspectRatio:false,scales:{r:{beginAtZero:true,grid:{color:"rgba(174,210,232,.11)"},angleLines:{color:"rgba(174,210,232,.11)"},ticks:{display:false},pointLabels:{display:true,color:"#bfd0e3",font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${Number(ctx.raw||0).toFixed(1)}%`}}}}});
+ charts.rose=window.ParknacrossWindRose?.create($("gWindRose")) || null;
  charts.p=new Chart($("gPressure"),{type:"line",data:{labels:[],datasets:[line("Pressure","#b594ff")]},options:{...common,scales:scales("hPa"),plugins:{legend:{display:false}}}});
  charts.r=new Chart($("gRain"),{
    type:"line",
@@ -162,14 +161,7 @@
  }
  const value=(x,key)=>x?._gap?null:x?.[key]??null;
  function updateWindRose(rows){
-   const bins=new Array(16).fill(0);let total=0,calm=0;
-   for(const row of rows){
-     if(!usable(row?.wind_direction_deg)||!usable(row?.wind_speed_kmh))continue;
-     const speed=Number(row.wind_speed_kmh);if(speed<1){calm++;continue;}
-     const deg=((Number(row.wind_direction_deg)%360)+360)%360,index=Math.round(deg/22.5)%16;bins[index]++;total++;
-   }
-   charts.rose.data.datasets[0].data=bins.map(v=>total?v/total*100:0);charts.rose.update();
-   set("windRoseMeta",total?`${total.toLocaleString("en-IE")} directional observations · calm/near-calm samples excluded${calm?` (${calm.toLocaleString("en-IE")})`:""}`:"No usable wind-direction observations in this period.");
+   window.ParknacrossWindRose?.update(charts.rose,rows,$("windRoseMeta"));
  }
  async function load(h){hours=h;set("graphRangeTitle",({6:"Last 6 hours",24:"Last 24 hours",48:"Last 48 hours",168:"Last 7 days",720:"Last 30 days"})[h]);set("graphCount","Loading…");
  try{const [d,c]=await Promise.all([fetch(`${API}/history?hours=${h}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error();return r.json()}),fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)]);let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const temperatureOutliers=temperatureOutlierRows(rows),gapData=withGapMarkers(rows),r=h===24?gapData.rows:thin(gapData.rows),labs=r.map(label),rainRows=thinRain(gapData.rows),rainLabs=rainRows.map(label);

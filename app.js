@@ -1088,6 +1088,8 @@ function createCharts() {
     }
   });
 
+  charts.windRose = window.ParknacrossWindRose?.create($("windRose")) || null;
+
   charts.pressure = new Chart($("pressureChart"), {
     type: "line",
     data: { labels: [], datasets: [line("Pressure hPa", "#b594ff")] },
@@ -1222,6 +1224,12 @@ function updateCharts() {
     row?._archiveGap || windGustOutliers.has(row) ? null : valueForChartRow(row, "wind_gust_kmh")
   );
   charts.wind.update();
+
+  window.ParknacrossWindRose?.update(
+    charts.windRose,
+    source,
+    $("dashboardWindRoseMeta")
+  );
 
   charts.pressure.data.labels = labels;
   charts.pressure.data.datasets[0].data = rows.map(row => valueForChartRow(row, "pressure_hpa"));

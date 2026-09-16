@@ -1,0 +1,19 @@
+Parknacross Weather v38.4.5 — GitHub deployment
+
+Replace/add these files in the ROOT of the GitHub repository:
+1. index.html
+2. app.js
+3. graphs.html
+4. graphs.js
+5. wind-rose.js   (NEW shared component)
+6. styles.css
+7. service-worker.js
+
+No Cloudflare Worker update is required.
+
+After GitHub Pages deploys, refresh the site once. The v38.4.5 service worker uses a new cache name so the old wind chart assets are discarded.
+
+Verification:
+- Dashboard -> Weather trends -> Wind rose
+- Graphs -> leave range on 24h -> Wind rose
+The two wind roses should have the same rendering and distribution at the same observation point in time.

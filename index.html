@@ -16,7 +16,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260915-v37">
+  <link rel="stylesheet" href="styles.css?v=20260916-v38-4-5">
 
   <title>Ardamine Weather | Live Weather for Courtown &amp; North Wexford</title>
   <link rel="canonical" href="https://parknacrossweather.ie/">
@@ -437,18 +437,14 @@
           <div class="chart-wrap"><canvas id="rainChart"></canvas></div>
         </article>
         <article class="chart-card wind-card">
-          <div class="chart-title"><div><h3>Wind direction</h3><p>Current and prevailing wind</p></div><span>Compass</span></div>
-          <div class="wind-grid">
-            <div class="compass">
-              <span class="dir n">N</span><span class="dir e">E</span><span class="dir s">S</span><span class="dir w">W</span>
-              <div class="needle" id="needle"></div>
-              <div class="centre">Prevailing · last 24h<strong id="prevailing">--</strong></div>
-            </div>
-            <div class="wind-readout">
-              <div><span>Current wind direction</span><strong id="currentDirection">--</strong></div>
-              <div><span>Current wind</span><strong id="currentWind">--</strong></div>
-              <div><span>Current gust</span><strong id="currentGust">--</strong></div>
-            </div>
+          <div class="chart-title"><div><h3>Wind rose</h3><p>Direction frequency · last 24 hours</p></div><span>Observed</span></div>
+          <div class="wind-rose-wrap"><canvas id="windRose" aria-label="Wind direction frequency for the last 24 hours"></canvas></div>
+          <p id="dashboardWindRoseMeta" class="wind-rose-meta">Building wind direction distribution…</p>
+          <div class="wind-readout">
+            <div><span>Prevailing direction · last 24h</span><strong id="prevailing">--</strong></div>
+            <div><span>Current wind direction</span><strong id="currentDirection">--</strong></div>
+            <div><span>Current wind</span><strong id="currentWind">--</strong></div>
+            <div><span>Current gust</span><strong id="currentGust">--</strong></div>
           </div>
         </article>
       </div>
@@ -503,9 +499,10 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="wind-rose.js?v=20260916-v38-4-5"></script>
 <script src="offline.js?v=20260915-v36"></script>
 <script src="alert-settings.js?v=20260915-v36"></script>
-<script src="app.js?v=20260916-v38-4"></script>
+<script src="app.js?v=20260916-v38-4-5"></script>
 
 <script src="site-config.js?v=20260912-mobile2"></script>
 <script src="platform.js?v=20260916-v38"></script>
