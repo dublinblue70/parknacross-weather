@@ -747,12 +747,24 @@ function updateDashboard(current) {
   const todayLow = usable(lowReading?.temperature_c)
     ? Number(lowReading.temperature_c)
     : usable(dailyToday?.low_c) ? Number(dailyToday.low_c) : null;
-  const peakGust = extrema(dailyToday?.peak_gust_kmh, gustReading?.wind_gust_kmh, current.wind_gust_kmh, "max");
+  /*
+   * For today's peak gust, prefer the actual observation stream over the
+   * compact daily summary. A previously stored daily maximum can survive
+   * after an anomalous reading, whereas history24 contains the readings that
+   * visitors can inspect on the wind chart. Fall back to the daily summary
+   * only if today's raw history is unavailable.
+   */
+  let peakGustReading = gustReading;
+  if (currentIsToday && usable(current.wind_gust_kmh) &&
+      (!peakGustReading || Number(current.wind_gust_kmh) > Number(peakGustReading.wind_gust_kmh))) {
+    peakGustReading = current;
+  }
+  const peakGust = peakGustReading && usable(peakGustReading.wind_gust_kmh)
+    ? Number(peakGustReading.wind_gust_kmh)
+    : usable(dailyToday?.peak_gust_kmh) ? Number(dailyToday.peak_gust_kmh) : null;
   const solarPeak = extrema(dailyToday?.solar_peak_w_m2, solarReading?.solar_w_m2, current.solar_w_m2, "max");
   const todayHighReading = highReading && usable(todayHigh) && Math.abs(Number(highReading.temperature_c) - todayHigh) < 0.05 ? highReading : null;
   const todayLowReading = lowReading && usable(todayLow) && Math.abs(Number(lowReading.temperature_c) - todayLow) < 0.05 ? lowReading : null;
-  const peakGustReading = currentIsToday && usable(current.wind_gust_kmh) && (!gustReading || Number(current.wind_gust_kmh) > Number(gustReading.wind_gust_kmh)) ? current : gustReading;
-
   const pressure = pressureStats();
   const direction = compass(current.wind_direction_deg);
   const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : correctedDailyRain(current);
@@ -809,6 +821,21 @@ function updateDashboard(current) {
   set("todayLow", n(todayLow));
   set("todayHigh", n(todayHigh));
   set("peakGust", n(peakGust));
+  if (peakGustReading) {
+    const gustTime = readingTime(peakGustReading);
+    set(
+      "peakGustTime",
+      gustTime
+        ? `Recorded at ${new Date(gustTime).toLocaleTimeString("en-IE", {
+            timeZone: STATION_TIME_ZONE,
+            hour: "2-digit",
+            minute: "2-digit"
+          })}`
+        : "Since local midnight"
+    );
+  } else {
+    set("peakGustTime", usable(peakGust) ? "Since local midnight" : "Awaiting observations");
+  }
   set("summaryRain", n(rainToday));
   set("solarPeak", n(solarPeak, 0));
 
