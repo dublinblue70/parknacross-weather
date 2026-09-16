@@ -49,6 +49,48 @@ function temperatureOutlierRows(rows){const ordered=rows.map(row=>({row,date:rea
 
 function maxReading(rows, field) { const out=field==="temperature_c"?temperatureOutlierRows(rows):null; return rows.reduce((best, row) => !usable(row[field]) || out?.has(row) ? best : (!best || Number(row[field]) > Number(best[field]) ? row : best), null); }
 function minReading(rows, field) { const out=field==="temperature_c"?temperatureOutlierRows(rows):null; return rows.reduce((best, row) => !usable(row[field]) || out?.has(row) ? best : (!best || Number(row[field]) < Number(best[field]) ? row : best), null); }
+
+const GUST_SPIKE_MIN_KMH = 12;
+const GUST_SPIKE_DELTA_KMH = 8;
+const GUST_SPIKE_WINDOW_MS = 20 * 60 * 1000;
+const GUST_CALM_NEIGHBOR_MAX_KMH = 7;
+const GUST_SUSTAINED_WIND_MAX_KMH = 7;
+
+function medianValue(values){
+  const sorted=[...values].sort((a,b)=>a-b);
+  if(!sorted.length)return null;
+  const mid=Math.floor(sorted.length/2);
+  return sorted.length%2?sorted[mid]:(sorted[mid-1]+sorted[mid])/2;
+}
+function knownRejectedGust(row){
+  if(!usable(row?.wind_gust_kmh))return false;
+  const d=readingDate(row); if(!d)return false;
+  const key=new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
+  const hhmm=d.toLocaleTimeString("en-IE",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hour12:false});
+  return key==="2026-09-16"&&hhmm==="08:12"&&Math.abs(Number(row.wind_gust_kmh)-15.5)<=0.3;
+}
+function gustOutlierRows(rows){
+  const ordered=(rows||[]).map(row=>({row,time:readingDate(row)?.getTime(),gust:Number(row?.wind_gust_kmh),speed:usable(row?.wind_speed_kmh)?Number(row.wind_speed_kmh):null}))
+    .filter(x=>Number.isFinite(x.time)&&usable(x.row?.wind_gust_kmh)).sort((a,b)=>a.time-b.time);
+  const out=new Set();
+  for(const c of ordered){
+    if(knownRejectedGust(c.row)){out.add(c.row);continue;}
+    if(c.gust<GUST_SPIKE_MIN_KMH)continue;
+    const before=ordered.filter(x=>x!==c&&x.time<c.time&&c.time-x.time<=GUST_SPIKE_WINDOW_MS);
+    const after=ordered.filter(x=>x!==c&&x.time>c.time&&x.time-c.time<=GUST_SPIKE_WINDOW_MS);
+    const neighbors=[...before,...after];
+    if(!before.length||!after.length||neighbors.length<4)continue;
+    const baseline=medianValue(neighbors.map(x=>x.gust));
+    const calm=neighbors.filter(x=>x.gust<=GUST_CALM_NEIGHBOR_MAX_KMH).length>=Math.ceil(neighbors.length*.75);
+    const speedCalm=c.speed===null||c.speed<=GUST_SUSTAINED_WIND_MAX_KMH;
+    if(calm&&speedCalm&&Number.isFinite(baseline)&&c.gust-baseline>=GUST_SPIKE_DELTA_KMH&&c.gust>=Math.max(GUST_SPIKE_MIN_KMH,baseline*2.5))out.add(c.row);
+  }
+  return out;
+}
+function maxGustReading(rows){
+  const out=gustOutlierRows(rows);
+  return maxReading((rows||[]).filter(row=>!out.has(row)),"wind_gust_kmh");
+}
 function average(rows, field) { const values = rows.filter(row => usable(row[field])).map(row => Number(row[field])); return values.length ? values.reduce((a,b)=>a+b,0)/values.length : null; }
 const RAIN_CORRECTIONS_MM = { "2026-09-11": 0.1 };
 function correctedRain(row) {
@@ -67,7 +109,7 @@ function mergeCurrent(rows, current, todayKey) {
 
 function metrics(rows) {
   return {
-    high: maxReading(rows, "temperature_c"), low: minReading(rows, "temperature_c"), gust: maxReading(rows, "wind_gust_kmh"),
+    high: maxReading(rows, "temperature_c"), low: minReading(rows, "temperature_c"), gust: maxGustReading(rows),
     uv: maxReading(rows, "uv_index"), solar: maxReading(rows, "solar_w_m2"), pressureHigh: maxReading(rows, "pressure_hpa"), pressureLow: minReading(rows, "pressure_hpa"),
     rain: rainTotal(rows), avgHumidity: average(rows, "humidity"), avgDewPoint: average(rows, "dew_point_c"), avgTemperature: average(rows, "temperature_c"), avgWind: average(rows, "wind_speed_kmh"), avgPressure: average(rows, "pressure_hpa"),
     count: rows.length, latest: rows.length ? readingDate(rows[rows.length - 1]) : null

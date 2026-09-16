@@ -268,6 +268,90 @@ function temperatureRecordReading(rows, mode = "max") {
   return recordReading(rows.filter(row => !outliers.has(row)), "temperature_c", mode);
 }
 
+const GUST_SPIKE_MIN_KMH = 12;
+const GUST_SPIKE_DELTA_KMH = 8;
+const GUST_SPIKE_WINDOW_MS = 20 * 60 * 1000;
+const GUST_CALM_NEIGHBOR_MAX_KMH = 7;
+const GUST_SUSTAINED_WIND_MAX_KMH = 7;
+
+function knownRejectedGust(reading) {
+  if (!usable(reading?.wind_gust_kmh)) return false;
+  const time = readingTime(reading);
+  if (!time || stationDateKeyFromTime(time) !== "2026-09-16") return false;
+  const hhmm = new Date(time).toLocaleTimeString("en-IE", {
+    timeZone: STATION_TIME_ZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+  return hhmm === "08:12" && Math.abs(Number(reading.wind_gust_kmh) - 15.5) <= 0.3;
+}
+
+function gustOutlierRows(rows) {
+  const ordered = (rows || [])
+    .map(row => ({
+      row,
+      time: readingTime(row),
+      gust: Number(row?.wind_gust_kmh),
+      speed: usable(row?.wind_speed_kmh) ? Number(row.wind_speed_kmh) : null
+    }))
+    .filter(item => Number.isFinite(item.time) && usable(item.row?.wind_gust_kmh))
+    .sort((a, b) => a.time - b.time);
+
+  const outliers = new Set();
+
+  for (const candidate of ordered) {
+    if (knownRejectedGust(candidate.row)) {
+      outliers.add(candidate.row);
+      continue;
+    }
+
+    if (candidate.gust < GUST_SPIKE_MIN_KMH) continue;
+
+    const before = ordered.filter(item =>
+      item !== candidate &&
+      item.time < candidate.time &&
+      candidate.time - item.time <= GUST_SPIKE_WINDOW_MS
+    );
+    const after = ordered.filter(item =>
+      item !== candidate &&
+      item.time > candidate.time &&
+      item.time - candidate.time <= GUST_SPIKE_WINDOW_MS
+    );
+    const neighbors = [...before, ...after];
+
+    /* Do not discard a real brief gust unless calm observations exist on both
+       sides of it. This deliberately favours keeping genuine weather. */
+    if (!before.length || !after.length || neighbors.length < 4) continue;
+
+    const baseline = median(neighbors.map(item => item.gust));
+    if (!Number.isFinite(baseline)) continue;
+
+    const calmNeighbors = neighbors.filter(item =>
+      item.gust <= GUST_CALM_NEIGHBOR_MAX_KMH
+    ).length;
+    const calmAgreement = calmNeighbors >= Math.ceil(neighbors.length * 0.75);
+    const sustainedWindCalm =
+      candidate.speed === null || candidate.speed <= GUST_SUSTAINED_WIND_MAX_KMH;
+
+    if (
+      calmAgreement &&
+      sustainedWindCalm &&
+      candidate.gust - baseline >= GUST_SPIKE_DELTA_KMH &&
+      candidate.gust >= Math.max(GUST_SPIKE_MIN_KMH, baseline * 2.5)
+    ) {
+      outliers.add(candidate.row);
+    }
+  }
+
+  return outliers;
+}
+
+function gustRecordReading(rows) {
+  const outliers = gustOutlierRows(rows);
+  return recordReading(rows.filter(row => !outliers.has(row)), "wind_gust_kmh", "max");
+}
+
 function timeLabel(reading) {
   const time = readingTime(reading);
   if (!time) return "--";
@@ -717,7 +801,20 @@ function updateDashboard(current) {
 
   const highReading = temperatureRecordReading(temperatureRows, "max");
   const lowReading = temperatureRecordReading(temperatureRows, "min");
-  const gustReading = recordReading(today, "wind_gust_kmh", "max");
+
+  const gustRows = [...today];
+  if (currentIsToday) {
+    const currentEpoch = usable(current?.epoch) ? Number(current.epoch) : null;
+    const duplicate = gustRows.some(row =>
+      currentEpoch !== null
+        ? Number(row?.epoch) === currentEpoch
+        : readingTime(row) === currentTime
+    );
+    if (!duplicate) gustRows.push(current);
+  }
+  const gustReading = gustRecordReading(gustRows);
+  const gustOutliers = gustOutlierRows(gustRows);
+  const hasRawGustHistory = gustRows.some(row => usable(row?.wind_gust_kmh));
   const solarReading = recordReading(today, "solar_w_m2", "max");
 
   /*
@@ -748,20 +845,16 @@ function updateDashboard(current) {
     ? Number(lowReading.temperature_c)
     : usable(dailyToday?.low_c) ? Number(dailyToday.low_c) : null;
   /*
-   * For today's peak gust, prefer the actual observation stream over the
-   * compact daily summary. A previously stored daily maximum can survive
-   * after an anomalous reading, whereas history24 contains the readings that
-   * visitors can inspect on the wind chart. Fall back to the daily summary
-   * only if today's raw history is unavailable.
+   * Peak gust uses quality-checked raw observations. Known bad readings and
+   * strongly isolated ultrasonic spikes surrounded by calm samples are kept
+   * in the raw archive but excluded from derived peak-gust statistics.
    */
-  let peakGustReading = gustReading;
-  if (currentIsToday && usable(current.wind_gust_kmh) &&
-      (!peakGustReading || Number(current.wind_gust_kmh) > Number(peakGustReading.wind_gust_kmh))) {
-    peakGustReading = current;
-  }
+  const peakGustReading = gustReading;
   const peakGust = peakGustReading && usable(peakGustReading.wind_gust_kmh)
     ? Number(peakGustReading.wind_gust_kmh)
-    : usable(dailyToday?.peak_gust_kmh) ? Number(dailyToday.peak_gust_kmh) : null;
+    : !hasRawGustHistory && usable(dailyToday?.peak_gust_kmh)
+      ? Number(dailyToday.peak_gust_kmh)
+      : null;
   const solarPeak = extrema(dailyToday?.solar_peak_w_m2, solarReading?.solar_w_m2, current.solar_w_m2, "max");
   const todayHighReading = highReading && usable(todayHigh) && Math.abs(Number(highReading.temperature_c) - todayHigh) < 0.05 ? highReading : null;
   const todayLowReading = lowReading && usable(todayLow) && Math.abs(Number(lowReading.temperature_c) - todayLow) < 0.05 ? lowReading : null;
@@ -823,6 +916,9 @@ function updateDashboard(current) {
   set("peakGust", n(peakGust));
   if (peakGustReading) {
     const gustTime = readingTime(peakGustReading);
+    const qualityNote = gustOutliers.size
+      ? ` · ${gustOutliers.size} suspect spike${gustOutliers.size === 1 ? "" : "s"} excluded`
+      : "";
     set(
       "peakGustTime",
       gustTime
@@ -830,11 +926,16 @@ function updateDashboard(current) {
             timeZone: STATION_TIME_ZONE,
             hour: "2-digit",
             minute: "2-digit"
-          })}`
-        : "Since local midnight"
+          })}${qualityNote}`
+        : `Since local midnight${qualityNote}`
     );
   } else {
-    set("peakGustTime", usable(peakGust) ? "Since local midnight" : "Awaiting observations");
+    set(
+      "peakGustTime",
+      gustOutliers.size
+        ? `${gustOutliers.size} suspect spike${gustOutliers.size === 1 ? "" : "s"} excluded`
+        : usable(peakGust) ? "Since local midnight" : "Awaiting observations"
+    );
   }
   set("summaryRain", n(rainToday));
   set("solarPeak", n(solarPeak, 0));
@@ -1127,8 +1228,11 @@ function updateCharts() {
   charts.temperature.update();
 
   charts.wind.data.labels = labels;
+  const windGustOutliers = gustOutlierRows(rows);
   charts.wind.data.datasets[0].data = rows.map(row => valueForChartRow(row, "wind_speed_kmh"));
-  charts.wind.data.datasets[1].data = rows.map(row => valueForChartRow(row, "wind_gust_kmh"));
+  charts.wind.data.datasets[1].data = rows.map(row =>
+    row?._archiveGap || windGustOutliers.has(row) ? null : valueForChartRow(row, "wind_gust_kmh")
+  );
   charts.wind.update();
 
   charts.pressure.data.labels = labels;
