@@ -2,13 +2,56 @@
  const cfg=window.PARKNACROSS_CONFIG||{},API=cfg.apiBase,$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};let charts={},hours=24;
  const line=(label,color,axis="y")=>({label,data:[],borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.25,yAxisID:axis});
  const scales=unit=>({x:{grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:9}},y:{grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:unit,color:"#9fb3c1"}}});
- const dashboardWindLine=(label,color,axis="y")=>({label,data:[],borderColor:color,backgroundColor:color,borderWidth:2.2,pointRadius:0,pointHoverRadius:4,tension:.3,fill:false,spanGaps:false,yAxisID:axis});
- const dashboardWindScales=unit=>({x:{grid:{color:"transparent"},ticks:{color:"#a8bfd4",maxTicksLimit:8}},y:{grid:{color:"rgba(163,209,255,.10)"},ticks:{color:"#a8bfd4"},title:{display:true,text:unit,color:"#a8bfd4"}}});
+ const windLine=(label,colour,axis="y")=>({
+   label,
+   data:[],
+   borderColor:colour,
+   backgroundColor:colour,
+   borderWidth:2.2,
+   pointRadius:0,
+   pointHoverRadius:4,
+   tension:0.3,
+   fill:false,
+   spanGaps:false,
+   yAxisID:axis
+ });
+ const windScales=title=>({
+   x:{
+     grid:{color:"transparent"},
+     ticks:{color:"#a8bfd4",maxTicksLimit:8}
+   },
+   y:{
+     grid:{color:"rgba(163,209,255,.10)"},
+     ticks:{color:"#a8bfd4"},
+     title:{display:true,text:title,color:"#a8bfd4"}
+   }
+ });
  const usable=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v));
  const rainText=v=>{if(!usable(v))return"Unavailable";const n=Number(v);if(n<=0)return"Dry";if(n<1)return"Very light rain";if(n<2.5)return"Light rain";if(n<7.5)return"Moderate rain";return"Heavy rain"};
- function make(){const common={maintainAspectRatio:false,interaction:{mode:"index",intersect:false}};
+ function make(){
+ if(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches){
+   Chart.defaults.animation=false;
+ }
+ Chart.defaults.color="#bfd0e3";
+ Chart.defaults.font.family="Inter,system-ui,sans-serif";
+ const common={maintainAspectRatio:false,interaction:{mode:"index",intersect:false}};
  charts.t=new Chart($("gTemp"),{type:"line",data:{labels:[],datasets:[line("Temperature","#ff8d8d"),line("Dew point","#6ef1cb")]},options:{...common,scales:scales("°C"),plugins:{legend:{position:"bottom"}}}});
- charts.w=new Chart($("gWind"),{type:"line",data:{labels:[],datasets:[dashboardWindLine("Wind km/h","#74ddff"),dashboardWindLine("Gust km/h","#ffad66")]},options:{...common,scales:dashboardWindScales("km/h"),plugins:{legend:{position:"bottom"}}}});
+ charts.w=new Chart($("gWind"),{
+   type:"line",
+   data:{
+     labels:[],
+     datasets:[
+       windLine("Wind km/h","#74ddff"),
+       windLine("Gust km/h","#ffad66")
+     ]
+   },
+   options:{
+     maintainAspectRatio:false,
+     interaction:{mode:"index",intersect:false},
+     scales:windScales("km/h"),
+     plugins:{legend:{position:"bottom"}}
+   }
+ });
  const roseLabels=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
  charts.rose=new Chart($("gWindRose"),{type:"polarArea",data:{labels:roseLabels,datasets:[{label:"Direction frequency %",data:new Array(16).fill(0),backgroundColor:roseLabels.map((_,i)=>`hsla(${185+i*3},78%,68%,${.30+(i%4)*.08})`),borderColor:"rgba(174,225,244,.32)",borderWidth:1}]},options:{maintainAspectRatio:false,scales:{r:{beginAtZero:true,grid:{color:"rgba(174,210,232,.11)"},angleLines:{color:"rgba(174,210,232,.11)"},ticks:{display:false},pointLabels:{display:true,color:"#bfd0e3",font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${Number(ctx.raw||0).toFixed(1)}%`}}}}});
  charts.p=new Chart($("gPressure"),{type:"line",data:{labels:[],datasets:[line("Pressure","#b594ff")]},options:{...common,scales:scales("hPa"),plugins:{legend:{display:false}}}});
@@ -129,7 +172,7 @@
    set("windRoseMeta",total?`${total.toLocaleString("en-IE")} directional observations · calm/near-calm samples excluded${calm?` (${calm.toLocaleString("en-IE")})`:""}`:"No usable wind-direction observations in this period.");
  }
  async function load(h){hours=h;set("graphRangeTitle",({6:"Last 6 hours",24:"Last 24 hours",48:"Last 48 hours",168:"Last 7 days",720:"Last 30 days"})[h]);set("graphCount","Loading…");
- try{const [d,c]=await Promise.all([fetch(`${API}/history?hours=${h}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error();return r.json()}),fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)]);let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const temperatureOutliers=temperatureOutlierRows(rows),gapData=withGapMarkers(rows),r=thin(gapData.rows),labs=r.map(label),rainRows=thinRain(gapData.rows),rainLabs=rainRows.map(label);
+ try{const [d,c]=await Promise.all([fetch(`${API}/history?hours=${h}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error();return r.json()}),fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)]);let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const temperatureOutliers=temperatureOutlierRows(rows),gapData=withGapMarkers(rows),r=h===24?gapData.rows:thin(gapData.rows),labs=r.map(label),rainRows=thinRain(gapData.rows),rainLabs=rainRows.map(label);
  charts.t.data.labels=labs;charts.w.data.labels=labs;charts.p.data.labels=labs;charts.s.data.labels=labs;
  charts.r.data.labels=rainLabs;
  charts.t.data.datasets[0].data=r.map(x=>x?._gap||temperatureOutliers.has(x)?null:(x?.temperature_c??null));charts.t.data.datasets[1].data=r.map(x=>value(x,"dew_point_c"));
