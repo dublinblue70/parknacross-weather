@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v38-4-10-current-model-time-20260916";
+const CACHE_NAME = "parknacross-weather-v38-4-11-sea-temp-labels-20260916";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
