@@ -14,4 +14,4 @@
  L.circleMarker([cfg.stationLat,cfg.stationLon],{radius:7,color:"#fff",weight:2,fillColor:"#7bd7ef",fillOpacity:1}).addTo(map).bindTooltip("Parknacross Weather");
  $("radarSlider").addEventListener("input",e=>{playing=false;set("radarPlay","Play");show(Number(e.target.value))});
  $("radarPlay").addEventListener("click",()=>{playing=!playing;set("radarPlay",playing?"Pause":"Play")});loadRadar();loadRain();setInterval(loadRain,60*1000);setInterval(loadRadar,5*60*1000);
- if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});})();
+ });})();

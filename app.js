@@ -274,18 +274,6 @@ const GUST_SPIKE_WINDOW_MS = 20 * 60 * 1000;
 const GUST_CALM_NEIGHBOR_MAX_KMH = 7;
 const GUST_SUSTAINED_WIND_MAX_KMH = 7;
 
-function knownRejectedGust(reading) {
-  if (!usable(reading?.wind_gust_kmh)) return false;
-  const time = readingTime(reading);
-  if (!time || stationDateKeyFromTime(time) !== "2026-09-16") return false;
-  const hhmm = new Date(time).toLocaleTimeString("en-IE", {
-    timeZone: STATION_TIME_ZONE,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  });
-  return hhmm === "08:12" && Math.abs(Number(reading.wind_gust_kmh) - 15.5) <= 0.3;
-}
 
 function gustOutlierRows(rows) {
   const ordered = (rows || [])
@@ -301,7 +289,7 @@ function gustOutlierRows(rows) {
   const outliers = new Set();
 
   for (const candidate of ordered) {
-    if (knownRejectedGust(candidate.row)) {
+    if (candidate.row?.wind_gust_excluded) {
       outliers.add(candidate.row);
       continue;
     }
@@ -1698,12 +1686,6 @@ async function refreshStats() {
 }
 
 function setupPWA() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js").catch(error =>
-      console.warn("Service worker:", error)
-    );
-  }
-
   const button = $("installButton");
   const installStrip = button?.closest(".install-strip");
   const userAgent = navigator.userAgent || "";

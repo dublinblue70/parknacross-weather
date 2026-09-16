@@ -62,19 +62,12 @@ function medianValue(values){
   const mid=Math.floor(sorted.length/2);
   return sorted.length%2?sorted[mid]:(sorted[mid-1]+sorted[mid])/2;
 }
-function knownRejectedGust(row){
-  if(!usable(row?.wind_gust_kmh))return false;
-  const d=readingDate(row); if(!d)return false;
-  const key=new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
-  const hhmm=d.toLocaleTimeString("en-IE",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hour12:false});
-  return key==="2026-09-16"&&hhmm==="08:12"&&Math.abs(Number(row.wind_gust_kmh)-15.5)<=0.3;
-}
 function gustOutlierRows(rows){
   const ordered=(rows||[]).map(row=>({row,time:readingDate(row)?.getTime(),gust:Number(row?.wind_gust_kmh),speed:usable(row?.wind_speed_kmh)?Number(row.wind_speed_kmh):null}))
     .filter(x=>Number.isFinite(x.time)&&usable(x.row?.wind_gust_kmh)).sort((a,b)=>a.time-b.time);
   const out=new Set();
   for(const c of ordered){
-    if(knownRejectedGust(c.row)){out.add(c.row);continue;}
+    if(c.row?.wind_gust_excluded){out.add(c.row);continue;}
     if(c.gust<GUST_SPIKE_MIN_KMH)continue;
     const before=ordered.filter(x=>x!==c&&x.time<c.time&&c.time-x.time<=GUST_SPIKE_WINDOW_MS);
     const after=ordered.filter(x=>x!==c&&x.time>c.time&&x.time-c.time<=GUST_SPIKE_WINDOW_MS);
@@ -281,4 +274,4 @@ async function loadSummary(){
   }catch(error){console.error("Daily summary:",error);set("summarySubtitle","The daily summary is temporarily unavailable.");set("dayStory","Live station observations could not be loaded. Please try again shortly.");currentTodayRows=[];currentTodayKey=null;latestShareRow=null;$("downloadCsvButton").disabled=true;$("shareWeatherButton").disabled=true;set("actionStatus","Summary tools are temporarily unavailable.");}
 }
 
-document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("downloadCsvButton")?.addEventListener("click",downloadTodayCsv);$("shareWeatherButton")?.addEventListener("click",shareCurrentWeather);loadSummary();setInterval(loadSummary,60*1000);if("serviceWorker" in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
+document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("downloadCsvButton")?.addEventListener("click",downloadTodayCsv);$("shareWeatherButton")?.addEventListener("click",shareCurrentWeather);loadSummary();setInterval(loadSummary,60*1000);});

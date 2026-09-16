@@ -40,5 +40,5 @@
    const list=$("rainEventsList");if(list){const events=Array.isArray(e.events)?e.events:[];list.innerHTML=events.length?events.slice(0,10).map(event=>{const mins=Number(event.duration_minutes||0),dur=mins>=60?`${Math.floor(mins/60)}h ${mins%60}m`:`${mins} min`;return `<article class="rain-event-row"><span>${dt(event.start_at)}${event.active?" · active":""}</span><strong>${n(event.total_mm)} mm</strong><span>${dur}</span><span>Peak ${n(event.peak_rate_mm_h)} mm/h</span></article>`;}).join(""):'<p class="info-note">No measurable rain events were identified in the last 30 days.</p>';}
   }catch(e){set("rainEventText","Rainfall summary temporarily unavailable.");}
  }
- document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());load();setInterval(load,60*1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
+ document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());load();setInterval(load,60*1000);});
 })();

@@ -159,7 +159,8 @@ async function runChecks() {
   if(quality.__error) {
     setBadge("samplesBadge","warn","CHECK"); setText("samplesValue","--"); setText("samplesDetail","Quality endpoint unavailable");
     setBadge("gapBadge","warn","CHECK"); setText("gapValue","--"); setText("gapDetail","Quality endpoint unavailable");
-    setBadge("batteryBadge","warn","CHECK"); setText("batteryValue","--"); setText("batteryDetail","Quality endpoint unavailable"); states.push("warn");
+    setBadge("batteryBadge","warn","CHECK"); setText("batteryValue","--"); setText("batteryDetail","Quality endpoint unavailable");
+    setBadge("gustQualityBadge","warn","CHECK"); setText("gustQualityValue","--"); setText("gustQualityDetail","Quality endpoint unavailable"); states.push("warn");
   } else {
     const samples=usableNumber(quality.samples_last_24h)?Number(quality.samples_last_24h):null; const sampleState=samples===null?"warn":samples>=100?"good":samples>=24?"warn":"bad";
     setBadge("samplesBadge",sampleState,samples===null?"CHECK":sampleState==="good"?"OK":sampleState==="warn"?"LOW":"POOR"); setText("samplesValue",samples===null?"--":samples.toLocaleString("en-IE")); setText("samplesDetail",usableNumber(quality.median_interval_minutes)?`Median interval ${fmtNum(quality.median_interval_minutes,1)} min`:"Median interval unavailable"); states.push(sampleState);
@@ -172,6 +173,17 @@ async function runChecks() {
     states.push(gapState);
     const batt=String(quality.battery_status||"--"); const battState=/^Normal/i.test(batt)?"good":/^Check/i.test(batt)?"warn":/^Low/i.test(batt)?"bad":"warn";
     setBadge("batteryBadge",battState,battState==="good"?"OK":battState==="warn"?"CHECK":"LOW"); setText("batteryValue",batt.replace(/^\w+\s*·\s*/,"")||"--"); setText("batteryDetail",batt); states.push(battState);
+
+    const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):0;
+    const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):0;
+    setBadge("gustQualityBadge","good",gustTotal>0?"FILTERING":"CLEAN");
+    setText("gustQualityValue",gust24===0?"None":`${gust24} excluded`);
+    const lastGust=usableNumber(quality.last_gust_exclusion_epoch)
+      ? new Date(Number(quality.last_gust_exclusion_epoch)*1000).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})
+      : null;
+    setText("gustQualityDetail",gustTotal>0
+      ? `${gustTotal} total · raw observations retained${lastGust?` · last ${lastGust}`:""}`
+      : "No suspect isolated gust spikes recorded");
   }
 
   if(reliability.__error || !usableNumber(reliability.archive_reliability_percent)) {

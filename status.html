@@ -67,6 +67,7 @@
       <article class="card"><div class="card-head"><h2>Longest archive gap</h2><span class="badge" id="gapBadge">CHECK</span></div><div class="metric" id="gapValue">--</div><div class="sub" id="gapDetail">Longest interval between saved readings in the last 24 hours</div></article>
       <article class="card"><div class="card-head"><h2>WS90 battery</h2><span class="badge" id="batteryBadge">CHECK</span></div><div class="metric" id="batteryValue">--</div><div class="sub" id="batteryDetail">Latest battery status</div></article>
       <article class="card"><div class="card-head"><h2>Archive reliability</h2><span class="badge" id="reliabilityBadge">CHECK</span></div><div class="metric" id="reliabilityValue">--</div><div class="sub" id="reliabilityDetail">Against the 5-minute save schedule</div></article>
+      <article class="card"><div class="card-head"><h2>Gust quality</h2><span class="badge" id="gustQualityBadge">CHECK</span></div><div class="metric" id="gustQualityValue">--</div><div class="sub" id="gustQualityDetail">Suspect isolated gust spikes excluded from derived records</div></article>
       <article class="card"><div class="card-head"><h2>Secondary backup</h2><span class="badge" id="backupBadge">CHECK</span></div><div class="metric" id="backupValue">--</div><div class="sub" id="backupDetail">Automatic completed-day archive copy</div></article>
 
       <article class="card wide">
@@ -80,7 +81,7 @@
 
       <article class="card wide">
         <div class="card-head"><h2>Data-quality checks</h2><span class="badge" id="qualityBadge">CHECK</span></div>
-        <div class="sub">Broad plausibility checks only. Suspicious values are flagged for review; nothing is deleted, corrected or hidden.</div>
+        <div class="sub">Raw observations are never deleted. Readings that fail conservative gust validation remain in the archive but are excluded from derived peak-gust statistics.</div>
         <ul class="checks" id="qualityChecks"><li><i></i><span>Loading the latest 24 hours…</span></li></ul>
       </article>
     </section>
@@ -89,8 +90,8 @@
   </main>
   <footer><span>© 2026 Parknacross Weather</span><span id="lastRun">Health check not yet completed</span><span><a href="mailto:info@parknacrossweather.ie" style="color:inherit;text-decoration:none" aria-label="Email Parknacross Weather">info@parknacrossweather.ie</a></span></footer>
 </div>
-<script src="offline.js?v=20260915-v36"></script><script src="status.js?v=20260915-v36"></script>
-<script src="pwa-update.js?v=20260916-v38"></script>
+<script src="offline.js?v=20260915-v36"></script><script src="status.js?v=20260916-v38-4"></script>
+<script src="pwa-update.js?v=20260916-v38-4"></script>
 <script src="accessibility.js?v=20260915-v36"></script>
 <script src="navigation.js?v=20260915-v37"></script>
 </body>

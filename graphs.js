@@ -117,5 +117,5 @@
  [charts.t,charts.w,charts.p,charts.r,charts.s].forEach(c=>c.update());
  const gapText=gapData.gaps?` · ${gapData.gaps} archive gap${gapData.gaps===1?"":"s"} shown as breaks`:"",qualityText=temperatureOutliers.size?` · ${temperatureOutliers.size} isolated temperature spike${temperatureOutliers.size===1?"":"s"} excluded`:"";
  set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.filter(x=>!x?._gap).length.toLocaleString("en-IE")} plotted${gapText}${qualityText}`);}catch(e){set("graphCount","Archive temporarily unavailable.");}}
- document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());make();document.querySelectorAll("[data-hours]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-hours]").forEach(x=>x.classList.toggle("active",x===b));load(Number(b.dataset.hours))}));load(24);setInterval(()=>load(hours),5*60*1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{});});
+ document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());make();document.querySelectorAll("[data-hours]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-hours]").forEach(x=>x.classList.toggle("active",x===b));load(Number(b.dataset.hours))}));load(24);setInterval(()=>load(hours),5*60*1000);});
 })();
