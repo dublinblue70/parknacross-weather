@@ -173,27 +173,34 @@ function compass(degrees) {
   return labels[Math.round(direction / 22.5) % 16];
 }
 
-function comfort(dewPoint, humidity) {
+function comfort(dewPoint, humidity, temperature) {
   /*
-   * Outdoor "mugginess" is better represented by dew point than relative
-   * humidity. Cool air can easily be 70% RH while still feeling crisp.
+   * Relative humidity on its own is a poor description of how outdoor air
+   * feels. Cool coastal air can be 80–95% RH and still feel fresh. Prefer dew
+   * point, then use air temperature to distinguish cool/fresh from muggy air.
    */
   if (usable(dewPoint)) {
-    const value = Number(dewPoint);
-    if (value < 5) return "Dry";
-    if (value < 13) return "Comfortable";
-    if (value < 16) return "Slightly humid";
-    if (value < 19) return "Humid";
-    return "Very humid";
+    const dp = Number(dewPoint);
+    const temp = usable(temperature) ? Number(temperature) : null;
+
+    if (dp < 5) return temp !== null && temp <= 16 ? "Fresh & dry" : "Dry";
+    if (dp < 10) return "Fresh";
+    if (dp < 13) return temp !== null && temp <= 16 ? "Fresh" : "Comfortable";
+    if (dp < 16) return "Comfortable";
+    if (dp < 18) return temp !== null && temp <= 17 ? "Mild" : "Slightly muggy";
+    if (dp < 20) return "Muggy";
+    return "Very muggy";
   }
 
-  /* Conservative fallback when dew point is unavailable. */
-  const value = Number(humidity);
-  if (!Number.isFinite(value)) return "--";
-  if (value < 35) return "Dry";
-  if (value <= 75) return "Comfortable";
-  if (value <= 85) return "Humid";
-  return "Very humid";
+  /* Conservative fallback only when dew point is unavailable. */
+  const rh = Number(humidity);
+  const temp = usable(temperature) ? Number(temperature) : null;
+  if (!Number.isFinite(rh)) return "--";
+  if (temp !== null && temp <= 16 && rh <= 95) return "Fresh";
+  if (rh < 35) return "Dry";
+  if (rh <= 80) return "Comfortable";
+  if (rh <= 90) return "Damp";
+  return "Very damp";
 }
 
 function recordReading(rows, field, mode = "max") {
@@ -491,8 +498,7 @@ function normalize360(value) {
   return ((value % 360) + 360) % 360;
 }
 
-function sunEvent(date, latitude, longitude, sunrise) {
-  const zenith = 90.833;
+function sunEvent(date, latitude, longitude, sunrise, zenith = 90.833) {
   const N = dayOfYear(date);
   const lngHour = longitude / 15;
   const t = N + ((sunrise ? 6 : 18) - lngHour) / 24;
@@ -533,11 +539,21 @@ function sunEvent(date, latitude, longitude, sunrise) {
   ) + UT * 3600000);
 }
 
-function updateSunInfo() {
+function updateSunInfo(current = latestCurrent) {
   const now = new Date();
   const stationDate = stationCalendarDate(now);
-  const rise = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, true);
-  const setTime = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, false);
+
+  /* Official sunrise/sunset remain the values displayed in the astronomy strip. */
+  const rise = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, true, 90.833);
+  const setTime = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, false, 90.833);
+
+  /*
+   * Use civil twilight (Sun 6° below horizon) for the human-facing day/night
+   * condition. It is normally visibly light before official sunrise and after
+   * official sunset, so calling those periods "Night" is misleading.
+   */
+  const civilDawn = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, true, 96);
+  const civilDusk = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, false, 96);
 
   const fmt = date => date
     ? date.toLocaleTimeString("en-IE", { timeZone: STATION_TIME_ZONE, hour: "2-digit", minute: "2-digit" })
@@ -546,12 +562,21 @@ function updateSunInfo() {
   set("sunrise", fmt(rise));
   set("sunset", fmt(setTime));
 
-  const isNight = !!(rise && setTime && (now < rise || now >= setTime));
+  let isNight = !!(civilDawn && civilDusk && (now < civilDawn || now >= civilDusk));
+
+  /* A genuine WS90 solar reading is an additional real-world daylight check. */
+  if (usable(current?.solar_w_m2) && Number(current.solar_w_m2) >= 3) {
+    isNight = false;
+  }
 
   if (rise && setTime) {
     if (now >= rise && now < setTime) {
       const mins = Math.max(0, Math.floor((setTime - now) / 60000));
       set("daylightRemaining", `${Math.floor(mins / 60)}h ${mins % 60}m`);
+    } else if (civilDawn && now >= civilDawn && now < rise) {
+      set("daylightRemaining", "Dawn");
+    } else if (civilDusk && now >= setTime && now < civilDusk) {
+      set("daylightRemaining", "Dusk");
     } else {
       set("daylightRemaining", "Night");
     }
@@ -731,7 +756,7 @@ function updateDashboard(current) {
   const pressure = pressureStats();
   const direction = compass(current.wind_direction_deg);
   const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : correctedDailyRain(current);
-  const isNight = updateSunInfo();
+  const isNight = updateSunInfo(current);
   const condition = conditionInfo(current, isNight);
 
   if (currentTime) {
@@ -807,7 +832,7 @@ function updateDashboard(current) {
   set("tempMax", n(todayHigh));
   set("humVal", n(current.humidity, 0));
   set("dewVal", `${n(current.dew_point_c)}°C`);
-  set("comfortVal", comfort(current.dew_point_c, current.humidity));
+  set("comfortVal", comfort(current.dew_point_c, current.humidity, current.temperature_c));
   set("windVal", n(current.wind_speed_kmh));
   set("gustVal", `${n(current.wind_gust_kmh)} km/h`);
   set(
@@ -1665,7 +1690,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(refreshHistory24, 5 * 60 * 1000);
   setInterval(refreshHistory7d, 15 * 60 * 1000);
   setInterval(refreshStats, 2 * 60 * 1000);
-  setInterval(updateSunInfo, 60 * 1000);
+  setInterval(() => updateSunInfo(latestCurrent), 60 * 1000);
   setInterval(loadWarnings, 5 * 60 * 1000);
   setInterval(loadForecast, 30 * 60 * 1000);
   setInterval(refreshLightning, 60 * 1000);

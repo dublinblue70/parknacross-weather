@@ -77,10 +77,10 @@
 
   function shareSummary(current, high, low, rain, gust) {
     const temp = usable(current?.temperature_c) ? Number(current.temperature_c) : null;
-    const humidity = usable(current?.humidity) ? Number(current.humidity) : null;
+    const dewPoint = usable(current?.dew_point_c) ? Number(current.dew_point_c) : null;
     const words = [];
     if (temp !== null) words.push(temp >= 20 ? "Mild" : temp >= 15 ? "Cool" : "Fresh");
-    if (humidity !== null && humidity >= 80) words.push("humid");
+    if (dewPoint !== null && dewPoint >= 18) words.push(dewPoint >= 20 ? "very muggy" : "muggy");
     if (gust !== null && gust >= 40) words.push("windy");
     else if (usable(current?.wind_speed_kmh) && Number(current.wind_speed_kmh) >= 20) words.push("breezy");
     const lead = words.length ? words.join(" and ") : "Local conditions";

@@ -69,7 +69,7 @@ function metrics(rows) {
   return {
     high: maxReading(rows, "temperature_c"), low: minReading(rows, "temperature_c"), gust: maxReading(rows, "wind_gust_kmh"),
     uv: maxReading(rows, "uv_index"), solar: maxReading(rows, "solar_w_m2"), pressureHigh: maxReading(rows, "pressure_hpa"), pressureLow: minReading(rows, "pressure_hpa"),
-    rain: rainTotal(rows), avgHumidity: average(rows, "humidity"), avgWind: average(rows, "wind_speed_kmh"), avgPressure: average(rows, "pressure_hpa"),
+    rain: rainTotal(rows), avgHumidity: average(rows, "humidity"), avgDewPoint: average(rows, "dew_point_c"), avgTemperature: average(rows, "temperature_c"), avgWind: average(rows, "wind_speed_kmh"), avgPressure: average(rows, "pressure_hpa"),
     count: rows.length, latest: rows.length ? readingDate(rows[rows.length - 1]) : null
   };
 }
@@ -84,9 +84,19 @@ function averageDaily(rows, field) {
 
 function buildStory(m, yesterday, recentDays=[]) {
   const high=m.high?.temperature_c, low=m.low?.temperature_c, gust=m.gust?.wind_gust_kmh;
-  const humidity=usable(m.avgHumidity)?Number(m.avgHumidity):null;
-  const humidityWord=humidity===null?"":humidity>=85?"very humid":humidity>=75?"humid":humidity>=60?"slightly humid":"fairly dry";
-  const first=`A ${temperatureWord(high)}${humidityWord?` and ${humidityWord}`:""} day so far ${rainPhrase(m.rain)}.`;
+  const dewPoint=usable(m.avgDewPoint)?Number(m.avgDewPoint):null;
+  const avgTemp=usable(m.avgTemperature)?Number(m.avgTemperature):null;
+  let airFeel="";
+  if(dewPoint!==null){
+    if(dewPoint<5) airFeel=avgTemp!==null&&avgTemp<=16?"fresh and dry":"dry";
+    else if(dewPoint<10) airFeel="fresh";
+    else if(dewPoint<13) airFeel=avgTemp!==null&&avgTemp<=16?"fresh":"comfortable";
+    else if(dewPoint<16) airFeel="comfortable";
+    else if(dewPoint<18) airFeel=avgTemp!==null&&avgTemp<=17?"mild":"slightly muggy";
+    else if(dewPoint<20) airFeel="muggy";
+    else airFeel="very muggy";
+  }
+  const first=`A ${temperatureWord(high)}${airFeel?` and ${airFeel}`:""} day so far ${rainPhrase(m.rain)}.`;
   const temp=usable(high)&&usable(low)?`Temperatures have ranged from ${Number(low).toFixed(1)}°C to ${Number(high).toFixed(1)}°C.`:"Temperature observations are still building.";
   const wind=windPhrase(gust); const windSentence=wind?`${wind}${usable(gust)?`, reaching ${Number(gust).toFixed(1)} km/h`:""}.`:"";
 

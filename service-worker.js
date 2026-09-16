@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v37-analysis-navigation-20260915";
+const CACHE_NAME = "parknacross-weather-v38-light-comfort-ios-update-20260916";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -57,7 +57,12 @@ self.addEventListener("install", event => {
       Promise.all(STATIC_ASSETS.map(asset => cache.add(asset).catch(() => null)))
     )
   );
-  self.skipWaiting();
+});
+
+self.addEventListener("message", event => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", event => {

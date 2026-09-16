@@ -1,0 +1,8 @@
+Parknacross Weather v38 deployment
+
+1. Upload/replace every file supplied in parknacross-v38-GITHUB-FILES.zip in the GitHub Pages repository.
+2. Commit the changes and allow GitHub Pages to deploy.
+3. Open parknacrossweather.ie once while online.
+4. On iPhone/iPad, close and reopen the Home Screen app or Safari page if it was already running before the deployment. The new updater will then check for future versions whenever the app resumes.
+
+No Cloudflare Worker deployment is required for v38.
