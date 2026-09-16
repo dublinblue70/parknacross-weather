@@ -1,0 +1,11 @@
+UPLOAD THESE 3 FILES TO THE ROOT OF THE GITHUB REPOSITORY:
+
+1. coast.html
+2. coast.js
+3. service-worker.js
+
+Replace the existing versions.
+
+Then open Coastal Conditions and hard-refresh once. The service worker cache name has been bumped, so subsequent visits should use the corrected coast.js automatically.
+
+Expected result: the “Irish Sea temperature” card changes from “--” to a °C value with a Marine Institute NEATL timestamp.
