@@ -2033,6 +2033,16 @@ html.is-offline .live-pill{opacity:.78}
 .source-observed { color:#78e6c7; background:rgba(120,230,199,.055); }
 .source-official { color:#7ecfff; background:rgba(126,207,255,.055); }
 .source-modelled { color:#c7a6ff; background:rgba(199,166,255,.055); }
+
+/* v38.4.13 — preserve provenance colours inside cards.
+ * Earlier .climate-card span / .context-card span rules were more specific
+ * and unintentionally forced these badges back to the generic muted grey. */
+.climate-card .source-badge.source-observed,
+.context-card .source-badge.source-observed { color:#78e6c7; background:rgba(120,230,199,.055); }
+.climate-card .source-badge.source-official,
+.context-card .source-badge.source-official { color:#7ecfff; background:rgba(126,207,255,.055); }
+.climate-card .source-badge.source-modelled,
+.context-card .source-badge.source-modelled { color:#c7a6ff; background:rgba(199,166,255,.055); }
 .source-badge-row { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
 .card-source { margin-top:8px; }
 
