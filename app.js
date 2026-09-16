@@ -485,7 +485,7 @@ function conditionInfo(current, isNight) {
   if (solar >= 100) {
     return { tag: "Some brightness", icon: "⛅", story: "Some brightness breaking through at Parknacross.", className: "weather-bright" };
   }
-  return { tag: "Calm & local", icon: "☁️", story: "Quiet local conditions at Parknacross.", className: "weather-neutral" };
+  return { tag: "Calm", icon: "☁️", story: "Calm conditions at Parknacross.", className: "weather-neutral" };
 }
 
 /* NOAA-style sunrise/sunset calculation using the public Ardamine area centre. */

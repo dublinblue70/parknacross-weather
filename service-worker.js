@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v38-light-comfort-ios-update-20260916";
+const CACHE_NAME = "parknacross-weather-v38-1-calm-wording-20260916";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
