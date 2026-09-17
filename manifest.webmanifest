@@ -1,6 +1,6 @@
 {
   "name": "Parknacross Weather",
-  "short_name": "Parknacross Weather",
+  "short_name": "Parknacross Wx",
   "description": "Live hyperlocal weather from a personal weather station in Ardamine, Co. Wexford.",
   "start_url": "./index.html",
   "scope": "./",
@@ -18,5 +18,6 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "id": "/"
 }

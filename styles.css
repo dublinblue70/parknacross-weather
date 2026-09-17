@@ -75,7 +75,8 @@ button, input { font: inherit; }
 }
 
 .brand-copy { min-width: 0; }
-.brand h1 {
+.brand h1,
+.brand .brand-title {
   margin: 0;
   font-size: clamp(1rem, 2vw, 1.28rem);
   letter-spacing: .11em;
@@ -290,7 +291,8 @@ main { padding: 30px; }
 }
 .compact-heading { margin-bottom: 14px; }
 .section-heading h2,
-.page-hero h2 {
+.page-hero h2,
+.page-hero h1 {
   margin: 3px 0 0;
   font-size: clamp(1.35rem, 2.5vw, 2rem);
   letter-spacing: -.025em;
@@ -709,7 +711,8 @@ body.is-night .weather-orb::before {
 }
 
 @media (max-width: 480px) {
-  .brand h1 { font-size: .95rem; letter-spacing: .075em; }
+  .brand h1,
+.brand .brand-title { font-size: .95rem; letter-spacing: .075em; }
   .brand p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 245px; }
   .hero-condition { display: block; }
   .weather-orb { margin-bottom: 12px; }
@@ -849,7 +852,8 @@ canvas {
     min-width: 0;
   }
 
-  .brand h1 {
+  .brand h1,
+.brand .brand-title {
     font-size: 1rem;
     letter-spacing: .085em;
   }
@@ -946,7 +950,8 @@ canvas {
     gap: 10px;
   }
 
-  .brand h1 {
+  .brand h1,
+.brand .brand-title {
     font-size: .9rem;
     letter-spacing: .07em;
   }
@@ -1118,7 +1123,8 @@ canvas {
   }
 
   .section-heading h2,
-  .page-hero h2 {
+  .page-hero h2,
+  .page-hero h1 {
     font-size: 1.42rem;
   }
 
@@ -1280,7 +1286,8 @@ canvas {
     padding-right: 10px;
   }
 
-  .brand h1 {
+  .brand h1,
+.brand .brand-title {
     font-size: .84rem;
   }
 

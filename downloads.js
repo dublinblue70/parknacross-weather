@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id);
 function safeDate(){return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});}
 function status(text,state=""){const el=$("downloadStatus");if(!el)return;el.textContent=text;el.className=`status ${state}`.trim();}
 async function download(days,label,button){
-  const n=Math.max(1,Math.min(3660,Math.floor(Number(days)||1)));
+  const n=Math.max(1,Math.min(365,Math.floor(Number(days)||1)));
   const original=button?.textContent;
   if(button){button.disabled=true;button.textContent="Preparing…";}
   status(`Preparing ${n}-day export…`);
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   loadBackupStatus();
   $("customButton")?.addEventListener("click",()=>{
     const input=$("customDays");const n=Math.floor(Number(input?.value));
-    if(!Number.isFinite(n)||n<1||n>3660){status("Enter a number between 1 and 3660 days.","bad");return;}
+    if(!Number.isFinite(n)||n<1||n>365){status("Enter a number between 1 and 365 days.","bad");return;}
     download(n,`${n}-days`,$("customButton"));
   });
 });

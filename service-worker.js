@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v38-4-27-forecast-pressure-20260917";
+const CACHE_NAME = "parknacross-weather-v38-4-28-gold-20260917";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -79,6 +79,10 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
+
+  // Cache API only accepts safe idempotent resources here. Let non-GET
+  // requests pass straight through instead of attempting cache.put().
+  if (request.method !== "GET") return;
 
   if (
     url.hostname.includes("workers.dev") ||

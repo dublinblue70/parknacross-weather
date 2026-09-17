@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#07131f">
   <meta name="description" content="Ardamine weather history from Parknacross in North Wexford, including historical temperature, rainfall, wind, pressure, daily charts and station records.">
   <meta name="robots" content="index,follow">
-  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="manifest" href="manifest.webmanifest?v=20260917-v38-4-28-gold">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260917-v38-4-23">
+  <link rel="stylesheet" href="styles.css?v=20260917-v38-4-28-gold">
   <title>Ardamine Weather History | Rainfall &amp; Records, North Wexford</title>
   <link rel="canonical" href="https://parknacrossweather.ie/history.html">
   <script type="application/ld+json">
@@ -23,7 +23,7 @@
     "spatialCoverage":{"@type":"Place","name":"Ardamine, Co. Wexford, Ireland"},
     "measurementTechnique":"Ecowitt WS90 personal weather station with GW3001 gateway",
     "isAccessibleForFree":true,
-    "distribution":{"@type":"DataDownload","encodingFormat":"text/csv","contentUrl":"https://parknacross-weather.dave-s-carter.workers.dev/export.csv?days=3660"}
+    "distribution":{"@type":"DataDownload","encodingFormat":"text/csv","contentUrl":"https://parknacross-weather.dave-s-carter.workers.dev/export.csv?days=365"}
   }
   </script>
 </head>
@@ -32,7 +32,7 @@
   <header class="topbar">
     <a class="brand" href="index.html" aria-label="Parknacross Weather home">
       <img class="brand-mark" src="favicon.svg" alt="">
-      <div class="brand-copy"><h1>PARKNACROSS WEATHER</h1><p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p></div>
+      <div class="brand-copy"><div class="brand-title">PARKNACROSS WEATHER</div><p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p></div>
     </a>
     <nav class="nav" aria-label="Main navigation">
       <a href="index.html">Dashboard</a>
@@ -63,7 +63,7 @@
     <section class="page-hero">
       <span class="section-eyebrow">Archive</span>
       <div class="source-badge-row"><span class="source-badge source-observed">Observed locally</span></div>
-      <h2>Ardamine weather history</h2>
+      <h1>Ardamine weather history</h1>
       <p>Historical Parknacross observations for Ardamine and the North Wexford coast, including daily temperature, rainfall and station records. The archive grows automatically as each new day of observations is added.</p>
     </section>
 
@@ -175,11 +175,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="history.js?v=20260917-v38-4-27-forecast-pressure"></script>
+<script src="history.js?v=20260917-v38-4-28-gold"></script>
 <script src="site-config.js?v=20260912-mobile2"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20260916-v38-4"></script>
 <script src="offline.js?v=20260915-v36"></script>
 <script src="accessibility.js?v=20260915-v36"></script>
-<script src="navigation.js?v=20260917-v38-4-23"></script>
+<script src="navigation.js?v=20260917-v38-4-28-gold"></script>
 </body>
 </html>

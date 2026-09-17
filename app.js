@@ -9,7 +9,6 @@ const DAILY_RECENT_URL = `${API_BASE}/daily?days=2`;
 const FORECAST_URL = `${API_BASE}/met/forecast`;
 const WARNINGS_URL = `${API_BASE}/met/warnings`;
 const MARINE_URL = `${API_BASE}/met/marine`;
-const BATTERY_DEBUG_URL = `${API_BASE}/battery-debug`;
 
 const ARDAMINE_LAT = 52.6247;
 const ARDAMINE_LON = -6.25;
@@ -835,7 +834,7 @@ function updateStatsPanel() {
   }
   if (pressure) {
     set("allPressure", `${n(pressure.value)} hPa`);
-    set("allPressureDate", dateLabel(pressure.epoch));
+    set("allPressureDate", `Verified record · ${dateLabel(pressure.epoch)}`);
   } else {
     set("allPressure", "Building…");
     set("allPressureDate", "Awaiting verified sea-level reading");
@@ -1566,24 +1565,8 @@ async function loadWarnings() {
 
 
 async function restoreBatteryIfMissing(current) {
-  if (!current || usable(current.battery_v)) return current;
-
-  try {
-    const debug = await getJSON(BATTERY_DEBUG_URL, "no-store");
-    const fallback =
-      debug?.effective_battery_v ??
-      debug?.explicit_realtime_battery_v ??
-      debug?.history_battery_v ??
-      debug?.recovered_from_saved_raw_json ??
-      debug?.stored_battery_v;
-
-    if (usable(fallback)) {
-      current.battery_v = Number(fallback);
-    }
-  } catch (error) {
-    console.warn("Battery fallback:", error);
-  }
-
+  // /current already performs server-side WS90 battery recovery. Keep public
+  // clients away from the admin-only diagnostic endpoint.
   return current;
 }
 

@@ -17,7 +17,7 @@
   "description": "Historical personal weather station observations from Parknacross in Ardamine, Co. Wexford, including temperature, humidity, dew point, wind, gusts, direction, pressure, rainfall, solar radiation, UV, station battery and lightning data when available.",
   "url": "https://parknacrossweather.ie/downloads.html",
   "isAccessibleForFree": true,
-  "dateModified": "2026-09-15",
+  "dateModified": "2026-09-17",
   "temporalCoverage": "2026-09/..",
   "creator": {
     "@type": "Organization",
@@ -113,19 +113,19 @@
     <article class="card"><h2>Last 30 days</h2><p>Useful for monthly charts and comparisons.</p><button class="button export" data-days="30" data-name="30-days">Download CSV</button></article>
     <article class="card"><h2>Last 90 days</h2><p>A broader seasonal view of the station archive.</p><button class="button export" data-days="90" data-name="90-days">Download CSV</button></article>
     <article class="card"><h2>Last 365 days</h2><p>Up to one year of observations.</p><button class="button export" data-days="365" data-name="365-days">Download CSV</button></article>
-    <article class="card"><h2>All available data</h2><p>Requests up to ten years, which currently covers the full Parknacross archive.</p><button class="button export" data-days="3660" data-name="all-data">Download CSV</button></article>
-    <article class="card"><h2>Custom period</h2><p>Choose any number of days from 1 to 3660.</p><div class="custom"><input id="customDays" type="number" min="1" max="3660" value="14" inputmode="numeric" aria-label="Number of days"><button id="customButton" class="button" type="button">Download CSV</button></div></article>
+    <article class="card"><h2>Full public raw archive</h2><p>The public raw export is capped at 365 days to protect the live station database from high-cost scans.</p><button class="button export" data-days="365" data-name="public-archive">Download CSV</button></article>
+    <article class="card"><h2>Custom period</h2><p>Choose any number of days from 1 to 365.</p><div class="custom"><input id="customDays" type="number" min="1" max="365" value="14" inputmode="numeric" aria-label="Number of days"><button id="customButton" class="button" type="button">Download CSV</button></div></article>
     <article class="card"><h2>Automatic secondary backup</h2><p id="backupStatusText">Checking whether the separate archive backup is active…</p><a class="button" href="status.html">View backup health</a></article>
   </section>
   <div id="downloadStatus" class="status" aria-live="polite"></div>
-  <div class="note">CSV columns include timestamps, temperature, feels-like temperature, humidity, dew point, wind, gusts, wind direction, pressure, rainfall, solar radiation, UV and WS90 battery voltage.</div>
+  <div class="note">CSV columns include timestamps, temperature, feels-like temperature, humidity, dew point, wind, gusts, wind direction, pressure, rainfall, solar radiation, UV and WS90 battery voltage. Public raw exports are limited to 365 days; completed-day backups remain separate from the live database.</div>
 </main>
 <footer><span>© 2026 Parknacross Weather</span><span>Read-only archive export</span><nav class="footer-links" aria-label="Parknacross Weather contact and social links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a></nav></footer>
 </div>
-<script src="downloads.js?v=20260915-v36"></script>
+<script src="downloads.js?v=20260917-v38-4-28-gold"></script>
 <script src="pwa-update.js?v=20260916-v38-4"></script>
 <script src="offline.js?v=20260915-v36"></script>
 <script src="accessibility.js?v=20260915-v36"></script>
-<script src="navigation.js?v=20260917-v38-4-23"></script>
+<script src="navigation.js?v=20260917-v38-4-28-gold"></script>
 </body>
 </html>

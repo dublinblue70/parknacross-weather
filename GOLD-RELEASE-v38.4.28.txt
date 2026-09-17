@@ -1,0 +1,15 @@
+Parknacross Weather v38.4.28 GOLD / Worker v38.4.25 GOLD
+
+Final release-quality patch:
+- Added sea-level pressure record spike/outlier QC and reset verified pressure metadata to v2.
+- Expanded temperature/gust record candidate scans from 25/50 to 250.
+- Capped raw /history queries at 720 hours (30 days), matching the public graph UI.
+- Capped public raw CSV exports at 365 days and edge-cached CSV responses for 6 hours.
+- Made /sync and /battery-debug admin-only; public pages rely on /current for battery recovery.
+- Parse Met Éireann issue times explicitly as Europe/Dublin civil time, including DST transitions.
+- Prefer the confirmed live Met Éireann Leinster webpage, retaining official JSON/XML fallbacks.
+- Clarified pressure records as verified records rather than implying every historic pressure row is proven sea-level pressure.
+- Service worker now ignores non-GET requests for caching.
+- Updated sitemap lastmod dates, PWA short_name/id, and dataset dateModified.
+- Improved semantic headings: page subject is H1 on secondary pages; brand remains styled but is no longer the page heading.
+- Bumped Worker/site/service-worker cache versions.
