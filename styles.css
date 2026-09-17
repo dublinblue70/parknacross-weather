@@ -1265,8 +1265,10 @@ canvas {
   footer > span:nth-child(2) { font-size: 0; }
   footer > span:nth-child(2)::before { font-size: .68rem; }
   footer > span:nth-child(2)::after { content: "Ardamine, Co. Wexford"; font-size: .68rem; }
-  footer > span:nth-child(3) a { font-size: 0; }
-  footer > span:nth-child(3) a::after { content: "Email"; font-size: .68rem; }
+  footer > span:nth-child(3) .footer-email-link { font-size: 0; }
+  footer > span:nth-child(3) .footer-email-link::after { content: "Email"; font-size: .68rem; }
+  footer > span:nth-child(3) .footer-social-link { font-size: 0; }
+  footer > span:nth-child(3) .footer-social-link::after { content: attr(data-short-label); font-size: .68rem; }
 }
 
 /* Narrow phones */
@@ -1274,7 +1276,8 @@ canvas {
   footer { padding-left: 6px; padding-right: 6px; font-size: .62rem; }
   footer > span:nth-child(2)::before { font-size: .62rem; }
   footer > span:nth-child(2)::after { content: "Ardamine"; font-size: .62rem; }
-  footer > span:nth-child(3) a::after { font-size: .62rem; }
+  footer > span:nth-child(3) .footer-email-link::after,
+  footer > span:nth-child(3) .footer-social-link::after { font-size: .62rem; }
   main {
     padding-left: 10px;
     padding-right: 10px;
@@ -2096,3 +2099,31 @@ html.is-offline .live-pill{opacity:.78}
 
 /* v38.4.5 — shared wind rose on Dashboard and Graphs */
 .wind-card > .wind-readout { margin-top:14px; }
+
+/* Social/contact links in the shared footer. */
+.footer-links {
+  display: inline-flex;
+  align-items: center;
+  gap: .38em;
+  white-space: nowrap;
+}
+.footer-links a {
+  color: inherit;
+  text-decoration: none;
+  transition: color .15s ease;
+}
+.footer-links a:hover,
+.footer-links a:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.footer-link-separator {
+  opacity: .62;
+  user-select: none;
+}
+@media (max-width: 480px) {
+  .footer-links { gap: .28em; }
+  .footer-link-separator { margin: 0 .05em; }
+}
+

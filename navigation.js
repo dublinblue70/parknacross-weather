@@ -64,3 +64,54 @@
   window.addEventListener("resize", () => closeAll());
   window.addEventListener("scroll", () => closeAll(), {passive:true});
 })();
+
+/* Parknacross Weather social links — injected into the shared footer on every page. */
+(() => {
+  "use strict";
+
+  const FACEBOOK_URL = "https://www.facebook.com/1361994206992789";
+  const X_URL = "https://x.com/ParknacrossWx";
+
+  const footer = document.querySelector("footer");
+  if (!footer) return;
+
+  let contact = footer.querySelector(".footer-links");
+  if (!contact) {
+    const spans = footer.querySelectorAll(":scope > span");
+    contact = spans.length >= 3 ? spans[2] : document.createElement("span");
+    contact.classList.add("footer-links");
+    if (!contact.parentElement) footer.appendChild(contact);
+  }
+
+  const email = contact.querySelector('a[href^="mailto:"]');
+  if (email) {
+    email.classList.add("footer-email-link");
+    email.setAttribute("aria-label", "Email Parknacross Weather");
+  }
+
+  function addSeparator() {
+    const separator = document.createElement("span");
+    separator.className = "footer-link-separator";
+    separator.setAttribute("aria-hidden", "true");
+    separator.textContent = "·";
+    contact.appendChild(separator);
+  }
+
+  function addSocialLink(label, shortLabel, url, cssClass) {
+    if (!url || contact.querySelector(`.${cssClass}`)) return;
+    if (contact.children.length) addSeparator();
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.className = `footer-social-link ${cssClass}`;
+    link.dataset.shortLabel = shortLabel;
+    link.textContent = label;
+    link.setAttribute("aria-label", `Follow Parknacross Weather on ${label}`);
+    contact.appendChild(link);
+  }
+
+  addSocialLink("Facebook", "FB", FACEBOOK_URL, "footer-facebook-link");
+  addSocialLink("X", "X", X_URL, "footer-x-link");
+})();
+
