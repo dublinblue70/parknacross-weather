@@ -72,6 +72,12 @@
     @media(max-width:640px){main{padding:18px 13px}.grid{grid-template-columns:1fr}header{padding:16px 14px}.button{width:100%}.custom input{width:100%}footer{padding:14px 8px;justify-content:center;gap:0;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;font-size:.68rem}footer>span{display:inline-flex;align-items:center;white-space:nowrap}footer>span+span::before{content:" · ";margin:0 .4em}footer>span:nth-child(2){font-size:0}footer>span:nth-child(2)::before{font-size:.68rem}footer>span:nth-child(2)::after{content:"Archive";font-size:.68rem}footer>span:nth-child(3) a{font-size:0}footer>span:nth-child(3) a::after{content:"Email";font-size:.68rem}}@media(max-width:360px){footer{font-size:.62rem}footer>span:nth-child(2)::before,footer>span:nth-child(2)::after,footer>span:nth-child(3) a::after{font-size:.62rem}}
   
     .nav-more{position:relative;display:inline-flex}.nav-more-button{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:10px;color:var(--muted);background:transparent;cursor:pointer}.nav-more-button:hover,.nav-more-button:focus-visible,.nav-more-button.nav-more-active,.nav-more-button[aria-expanded="true"]{color:var(--text);border-color:rgba(118,201,238,.45)}.nav-more-menu{position:fixed;z-index:10050;display:grid;gap:3px;padding:8px;border:1px solid var(--line);border-radius:13px;background:#0d1d2b;box-shadow:0 18px 50px rgba(0,0,0,.42)}.nav-more-menu[hidden]{display:none!important}.nav-more-menu a{display:block;white-space:nowrap}.nav-more-menu a.active{color:var(--text);border-color:rgba(118,201,238,.45);background:rgba(118,201,238,.08)}
+  
+    /* v38.4.20 — footer contact + social links */
+    footer .footer-links{display:inline-flex;align-items:center;gap:.45em}
+    footer .footer-links a{color:inherit;text-decoration:none}
+    footer .footer-links a:hover,footer .footer-links a:focus-visible{color:var(--text);text-decoration:underline;text-underline-offset:3px}
+    @media(max-width:640px){footer{flex-wrap:wrap;overflow:visible;white-space:normal;gap:5px 8px}footer>span:nth-child(3) a{font-size:inherit}footer>span:nth-child(3) a::after{content:none}footer>.footer-links{white-space:nowrap}}
   </style>
 </head>
 <body>
@@ -114,10 +120,10 @@
   <div id="downloadStatus" class="status" aria-live="polite"></div>
   <div class="note">CSV columns include timestamps, temperature, feels-like temperature, humidity, dew point, wind, gusts, wind direction, pressure, rainfall, solar radiation, UV and WS90 battery voltage.</div>
 </main>
-<footer><span>© 2026 Parknacross Weather</span><span>Read-only archive export</span><span><a href="mailto:info@parknacrossweather.ie" style="color:inherit;text-decoration:none" aria-label="Email Parknacross Weather">info@parknacrossweather.ie</a></span></footer>
+<footer><span>© 2026 Parknacross Weather</span><span>Read-only archive export</span><span class="footer-links" aria-label="Parknacross Weather contact and social links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a></span></footer>
 </div>
 <script src="downloads.js?v=20260915-v36"></script>
-<script src="pwa-update.js?v=20260916-v38"></script>
+<script src="pwa-update.js?v=20260916-v38-4"></script>
 <script src="offline.js?v=20260915-v36"></script>
 <script src="accessibility.js?v=20260915-v36"></script>
 <script src="navigation.js?v=20260915-v37"></script>
