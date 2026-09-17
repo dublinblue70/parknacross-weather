@@ -82,15 +82,19 @@ function markOfflineMode(current) {
   window.PWOffline?.setOffline?.(timestamp);
 }
 
-function yesterdayKey(todayKey) {
-  const match = String(todayKey || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+function shiftStationDateKey(dayKey, amount) {
+  const match = String(dayKey || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return null;
   return new Date(Date.UTC(
     Number(match[1]),
     Number(match[2]) - 1,
-    Number(match[3]) - 1,
+    Number(match[3]) + Number(amount || 0),
     12
   )).toISOString().slice(0, 10);
+}
+
+function yesterdayKey(todayKey) {
+  return shiftStationDateKey(todayKey, -1);
 }
 
 function comparisonText(currentValue, previousValue, unit, noun) {
@@ -394,28 +398,59 @@ function dateLabel(value) {
   });
 }
 
-function pressureStats() {
-  const rows = history24.filter(row => usable(row.pressure_hpa));
-  if (rows.length < 2) return { change: null, trend: "--" };
-  const change =
-    Number(rows.at(-1).pressure_hpa) -
-    Number(rows[0].pressure_hpa);
-  return {
-    change,
-    trend: change > 0.5 ? "Rising" : change < -0.5 ? "Falling" : "Steady"
-  };
+function closestReadingTo(targetTime, maxDeltaMs = Infinity, rows = history24) {
+  if (!Array.isArray(rows) || !rows.length || !Number.isFinite(Number(targetTime))) return null;
+
+  let best = null;
+  let bestDelta = Infinity;
+  for (const row of rows) {
+    const time = readingTime(row);
+    if (!time) continue;
+    const delta = Math.abs(time - Number(targetTime));
+    if (delta < bestDelta) {
+      best = row;
+      bestDelta = delta;
+    }
+  }
+
+  return best && bestDelta <= maxDeltaMs ? best : null;
 }
 
-function closestReadingTo(targetTime) {
-  if (!history24.length) return null;
-  return history24.reduce((best, row) => {
-    const t = readingTime(row);
-    if (!t) return best;
-    if (!best) return row;
-    return Math.abs(t - targetTime) < Math.abs(readingTime(best) - targetTime)
-      ? row
-      : best;
-  }, null);
+function pressureStats(currentReading = null) {
+  const rows = history24.filter(row => usable(row.pressure_hpa) && readingTime(row));
+  if (currentReading && usable(currentReading.pressure_hpa) && readingTime(currentReading)) {
+    const currentEpoch = usable(currentReading.epoch) ? Number(currentReading.epoch) : null;
+    const duplicate = rows.some(row =>
+      currentEpoch !== null
+        ? Number(row?.epoch) === currentEpoch
+        : readingTime(row) === readingTime(currentReading)
+    );
+    if (!duplicate) rows.push(currentReading);
+  }
+
+  rows.sort((left, right) => readingTime(left) - readingTime(right));
+  if (rows.length < 2) return { change: null, trend: "--", basis_hours: null };
+
+  const latest = rows.at(-1);
+  const latestTime = readingTime(latest);
+  const targetTime = latestTime - 24 * 60 * 60 * 1000;
+  const baseline = closestReadingTo(
+    targetTime,
+    30 * 60 * 1000,
+    rows
+  );
+
+  if (!baseline) return { change: null, trend: "--", basis_hours: null };
+
+  const baselineTime = readingTime(baseline);
+  const change = Number(latest.pressure_hpa) - Number(baseline.pressure_hpa);
+  const basisHours = (latestTime - baselineTime) / 3600000;
+
+  return {
+    change,
+    trend: change > 0.5 ? "Rising" : change < -0.5 ? "Falling" : "Steady",
+    basis_hours: basisHours
+  };
 }
 
 function updateTrend(id, currentValue, oldValue, unit, digits = 1) {
@@ -484,7 +519,7 @@ function rainActivity(current) {
   }
 
   // Seed/refresh the detection from archived observations. Also compare the
-  // latest archived total with /current because /history is cached for 5 min.
+  // latest archived total with /current because /history is intentionally cached.
   const rows = [...history24]
     .filter(row => readingTime(row) && localDateKey(row) === currentDay && usable(correctedDailyRain(row)))
     .sort((a, b) => readingTime(a) - readingTime(b));
@@ -661,6 +696,7 @@ function updateSunInfo(current = latestCurrent) {
 function dailyRainTotals() {
   const days = new Map();
   const source = [...history7d];
+
   if (latestCurrent && usable(latestCurrent.epoch)) {
     const currentEpoch = Number(latestCurrent.epoch);
     const lastEpoch = source.length && usable(source.at(-1)?.epoch) ? Number(source.at(-1).epoch) : null;
@@ -674,15 +710,29 @@ function dailyRainTotals() {
     if (!time || !usable(correctedRain)) return;
 
     const key = stationDateKeyFromTime(time);
-
     const rain = Number(correctedRain);
     const existing = days.get(key);
     if (!existing || rain > existing.rain) {
-      days.set(key, { time, rain });
+      days.set(key, { time, rain, key });
     }
   });
 
-  return [...days.values()].sort((a, b) => a.time - b.time).slice(-7);
+  const todayKey = stationDateKeyFromTime(new Date());
+  if (!todayKey) return [];
+
+  /*
+   * Always represent the last seven CALENDAR dates. Missing archive days are
+   * null gaps, never zero rain and never replaced by an older stored day.
+   */
+  return Array.from({ length: 7 }, (_, index) => {
+    const key = shiftStationDateKey(todayKey, index - 6);
+    const observed = days.get(key);
+    const [year, month, day] = key.split("-").map(Number);
+    const labelTime = new Date(year, month - 1, day, 12, 0, 0).getTime();
+    return observed
+      ? { ...observed, key }
+      : { key, time: labelTime, rain: null, missing: true };
+  });
 }
 
 function updateFreshness(current) {
@@ -846,7 +896,7 @@ function updateDashboard(current) {
   const solarPeak = extrema(dailyToday?.solar_peak_w_m2, solarReading?.solar_w_m2, current.solar_w_m2, "max");
   const todayHighReading = highReading && usable(todayHigh) && Math.abs(Number(highReading.temperature_c) - todayHigh) < 0.05 ? highReading : null;
   const todayLowReading = lowReading && usable(todayLow) && Math.abs(Number(lowReading.temperature_c) - todayLow) < 0.05 ? lowReading : null;
-  const pressure = pressureStats();
+  const pressure = pressureStats(current);
   const direction = compass(current.wind_direction_deg);
   const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : correctedDailyRain(current);
   const isNight = updateSunInfo(current);
@@ -986,7 +1036,12 @@ function updateDashboard(current) {
     }
   }
 
-  const threeHoursAgo = closestReadingTo(Date.now() - 3 * 60 * 60 * 1000);
+  const threeHourTarget = currentTime
+    ? currentTime - 3 * 60 * 60 * 1000
+    : null;
+  const threeHoursAgo = threeHourTarget === null
+    ? null
+    : closestReadingTo(threeHourTarget, 20 * 60 * 1000);
   updateTrend("temp3h", current.temperature_c, threeHoursAgo?.temperature_c, "°C");
   updateTrend("pressure3h", current.pressure_hpa, threeHoursAgo?.pressure_hpa, "hPa");
 
@@ -1808,9 +1863,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setInterval(updateRelativeObservation, 15 * 1000);
   setInterval(refreshCurrent, 60 * 1000);
-  setInterval(refreshHistory24, 5 * 60 * 1000);
-  setInterval(refreshHistory7d, 15 * 60 * 1000);
-  setInterval(refreshStats, 2 * 60 * 1000);
+  setInterval(refreshHistory24, 10 * 60 * 1000);
+  setInterval(refreshHistory7d, 30 * 60 * 1000);
+  setInterval(refreshStats, 15 * 60 * 1000);
   setInterval(() => updateSunInfo(latestCurrent), 60 * 1000);
   setInterval(loadWarnings, 5 * 60 * 1000);
   setInterval(loadForecast, 30 * 60 * 1000);

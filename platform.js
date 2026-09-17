@@ -72,7 +72,6 @@
     }
 
     // Opportunistically save tomorrow's official point forecast for verification.
-    get("/met/point").catch(() => {});
   }
 
   function shareSummary(current, high, low, rain, gust) {

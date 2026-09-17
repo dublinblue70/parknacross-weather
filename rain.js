@@ -23,7 +23,9 @@
   try{const [s,d,h,c,e]=await Promise.all([get("/rain-summary"),get("/daily?days=30"),get("/history?hours=1"),get("/current"),get("/rain-events?days=30")]);const rs=rainState(s,h,c);
    const todayRain=correctedCurrentRain(c)??(usable(s.today_mm)?Number(s.today_mm):null);
    set("rainNow",rs.isRaining&&!(rs.rate>0)?"Rain detected":rs.rate===null?"--":`${n(rs.rate)} mm/h`);set("rainToday",usable(todayRain)?`${n(todayRain)} mm`:"--");set("rainYesterday",`${n(s.yesterday_mm)} mm`);set("rain7",`${n(s.last_7_days_mm)} mm`);
+   set("rain7Note",s.last_7_days_complete===false&&Array.isArray(s.last_7_days_missing_dates)&&s.last_7_days_missing_dates.length?`Observed total · ${s.last_7_days_missing_dates.length} missing calendar day${s.last_7_days_missing_dates.length===1?"":"s"}`:"Complete 7-calendar-day total");
    set("rainMonth",`${n(s.month_mm)} mm`);set("rainMonthDays",usable(s.month_rain_days)?`${Number(s.month_rain_days)} rain days`:"--");set("rainYear",`${n(s.year_mm)} mm`);set("dryDays",usable(s.consecutive_dry_days)?String(Number(s.consecutive_dry_days)):"--");
+   set("dryDaysNote",s.consecutive_dry_days_complete===false?"Stops at first missing archive day":"0.0 mm daily total · consecutive calendar days");
    set("rainWettest",s.wettest_day&&usable(s.wettest_day.rain_mm)?`${n(s.wettest_day.rain_mm)} mm`:"--");set("rainWettestDate",s.wettest_day?.day||"--");
    const detectedAt=rs.lastIncrease?new Date(rs.lastIncrease).toISOString():s.last_measurable_rain?.received_at;set("lastRain",detectedAt?"Rain detected":"No rain yet");set("lastRainDate",dt(detectedAt));
    if(s.current_event){set("rainEventTotal",`${n(s.current_event.total_mm)} mm`);set("rainEventStart",`Since ${dt(s.current_event.started_at)}`);set("rainEventText",`Active rain event · ${n(s.current_event.total_mm)} mm accumulated.`)}

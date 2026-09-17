@@ -33,7 +33,7 @@
         set("qualityTotal", usable(q.total_samples) ? Number(q.total_samples).toLocaleString("en-IE") : "--");
         set("qualityBattery", q.battery_status || "--");
         set("qualityReliability", usable(reliability?.archive_reliability_percent) ? `${Number(reliability.archive_reliability_percent).toFixed(1)}%` : "--");
-        set("qualityReliabilityNote", reliability?.label ? `${reliability.label} · against 5-minute save schedule` : "Against the 5-minute save schedule");
+        set("qualityReliabilityNote", reliability?.label ? `${reliability.label} · against 5-minute archive target` : "Against the 5-minute archive target");
         if (lightning?.available) {
           const strikes = usable(lightning.strikes_today) ? Math.round(Number(lightning.strikes_today)) : 0;
           set("stationLightning", `WH57 active · ${strikes} strike${strikes===1?"":"s"} today`);

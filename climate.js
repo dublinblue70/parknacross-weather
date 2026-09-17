@@ -53,7 +53,6 @@
       Chart.defaults.animation = false;
     }
     set("year", new Date().getFullYear());
-    get("/met/point").catch(() => {});
     loadCurrentComparison();
     setInterval(loadCurrentComparison, 5 * 60 * 1000);
 
@@ -95,7 +94,10 @@
     if (vR.status === "fulfilled" && vR.value.comparisons?.length) {
       const v = vR.value.comparisons[0];
       set("verifyTitle", `${v.target_day}: forecast vs actual`);
-      set("verifyText", `High ${n(v.forecast_high_c)}° → ${n(v.actual_high_c)}° · Low ${n(v.forecast_low_c)}° → ${n(v.actual_low_c)}° · Rain ${n(v.forecast_rain_mm)} → ${n(v.actual_rain_mm)} mm`);
+      const captured = v.captured_at
+        ? new Date(v.captured_at).toLocaleTimeString("en-IE", { timeZone:"Europe/Dublin", hour:"2-digit", minute:"2-digit" })
+        : "07:00";
+      set("verifyText", `Morning snapshot ${captured} · High ${n(v.forecast_high_c)}° → ${n(v.actual_high_c)}° · Low ${n(v.forecast_low_c)}° → ${n(v.actual_low_c)}° · Rain ${n(v.forecast_rain_mm)} → ${n(v.actual_rain_mm)} mm`);
     }
 
     if (dR.status === "fulfilled") {
