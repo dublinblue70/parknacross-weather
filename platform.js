@@ -13,6 +13,12 @@
     const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
     return `${map.year}-${map.month}-${map.day}`;
   };
+  const dayLabel = day => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(day || ""))) return "--";
+    return new Date(`${day}T12:00:00Z`).toLocaleDateString("en-IE", {
+      timeZone: STATION_TIME_ZONE, day: "numeric", month: "short"
+    });
+  };
 
   async function get(path) {
     const r = await fetch(`${API}${path}`, { cache: "no-store" });
@@ -63,15 +69,31 @@
       set("contextMilestoneDetail", e.detail || "");
     }
 
-    if (verifyR.status === "fulfilled" && verifyR.value.comparisons?.length) {
-      const v = verifyR.value.comparisons[0];
-      if (usable(v.high_error_c)) {
-        const d = Number(v.high_error_c);
-        set("contextForecastVerification", `High ${d >= 0 ? "+" : ""}${d.toFixed(1)}°C error`);
-      } else set("contextForecastVerification", "Comparison available");
+    if (verifyR.status === "fulfilled") {
+      const verification = verifyR.value || {};
+      if (verification.comparisons?.length) {
+        const v = verification.comparisons[0];
+        if (usable(v.high_error_c)) {
+          const d = Number(v.high_error_c);
+          set("contextForecastVerification", `High ${d >= 0 ? "+" : ""}${d.toFixed(1)}°C error`);
+        } else {
+          set("contextForecastVerification", "Comparison available");
+        }
+        set("contextForecastVerificationDetail", `${dayLabel(v.target_day)} · morning forecast compared with completed Parknacross observations.`);
+      } else if (verification.pending?.length) {
+        const p = verification.pending[0];
+        set("contextForecastVerification", `Snapshot captured for ${dayLabel(p.target_day)}`);
+        set("contextForecastVerificationDetail", "Awaiting the completed Parknacross day before calculating forecast error.");
+      } else {
+        set("contextForecastVerification", "Awaiting first morning snapshot");
+        set("contextForecastVerificationDetail", `Next capture window ${verification.capture_window_local || "07:00–10:00 Europe/Dublin"} · forecast target ${dayLabel(verification.next_target_day)}.`);
+      }
+    } else {
+      set("contextForecastVerification", "Verification temporarily unavailable");
+      set("contextForecastVerificationDetail", "The forecast-verification endpoint could not be reached.");
     }
 
-    // Opportunistically save tomorrow's official point forecast for verification.
+    // Forecast snapshots are captured by the scheduled Worker only.
   }
 
   function shareSummary(current, high, low, rain, gust) {

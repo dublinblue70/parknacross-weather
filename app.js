@@ -836,6 +836,9 @@ function updateStatsPanel() {
   if (pressure) {
     set("allPressure", `${n(pressure.value)} hPa`);
     set("allPressureDate", dateLabel(pressure.epoch));
+  } else {
+    set("allPressure", "Building…");
+    set("allPressureDate", "Awaiting verified sea-level reading");
   }
 }
 

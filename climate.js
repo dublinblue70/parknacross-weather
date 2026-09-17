@@ -91,13 +91,26 @@
 
     if (eR.status === "fulfilled") events(eR.value.events || []);
 
-    if (vR.status === "fulfilled" && vR.value.comparisons?.length) {
-      const v = vR.value.comparisons[0];
-      set("verifyTitle", `${v.target_day}: forecast vs actual`);
-      const captured = v.captured_at
-        ? new Date(v.captured_at).toLocaleTimeString("en-IE", { timeZone:"Europe/Dublin", hour:"2-digit", minute:"2-digit" })
-        : "07:00";
-      set("verifyText", `Morning snapshot ${captured} · High ${n(v.forecast_high_c)}° → ${n(v.actual_high_c)}° · Low ${n(v.forecast_low_c)}° → ${n(v.actual_low_c)}° · Rain ${n(v.forecast_rain_mm)} → ${n(v.actual_rain_mm)} mm`);
+    if (vR.status === "fulfilled") {
+      const verification = vR.value || {};
+      if (verification.comparisons?.length) {
+        const v = verification.comparisons[0];
+        set("verifyTitle", `${v.target_day}: forecast vs actual`);
+        const captured = v.captured_at
+          ? new Date(v.captured_at).toLocaleTimeString("en-IE", { timeZone:"Europe/Dublin", hour:"2-digit", minute:"2-digit" })
+          : "morning";
+        set("verifyText", `Morning snapshot ${captured} · High ${n(v.forecast_high_c)}° → ${n(v.actual_high_c)}° · Low ${n(v.forecast_low_c)}° → ${n(v.actual_low_c)}° · Rain ${n(v.forecast_rain_mm)} → ${n(v.actual_rain_mm)} mm`);
+      } else if (verification.pending?.length) {
+        const pending = verification.pending[0];
+        set("verifyTitle", `Snapshot captured for ${pending.target_day}`);
+        set("verifyText", `Morning forecast saved. Comparison will appear after Parknacross observations for ${pending.target_day} are complete.`);
+      } else {
+        set("verifyTitle", "Awaiting first morning snapshot");
+        set("verifyText", `Next scheduled capture: ${verification.next_capture_day || "next morning"}, ${verification.capture_window_local || "07:00–10:00 Europe/Dublin"}. It will verify the forecast for ${verification.next_target_day || "the following day"}.`);
+      }
+    } else {
+      set("verifyTitle", "Verification temporarily unavailable");
+      set("verifyText", "The forecast-verification endpoint could not be reached.");
     }
 
     if (dR.status === "fulfilled") {

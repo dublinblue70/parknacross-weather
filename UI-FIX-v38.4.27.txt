@@ -1,0 +1,9 @@
+Parknacross Weather v38.4.27 — Forecast Verification + Pressure Record fix
+
+- Forecast Verification now always shows an explicit state: awaiting snapshot, pending actuals, or completed comparison.
+- Climate page uses the same verification state.
+- Highest/lowest sea-level pressure records rank only readings with verified relative-pressure provenance.
+- New archive rows keep a tiny relative-pressure provenance marker; full Ecowitt payload is still stored only once in latest_payload_v1.
+- Current duplicate observation can receive a one-off provenance backfill after deployment.
+- Pressure cards show a clear building state instead of a blank if no verified record exists yet.
+- Service-worker cache bumped to v38.4.27.
