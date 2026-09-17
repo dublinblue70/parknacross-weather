@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v38-4-24-accuracy-20260917";
+const CACHE_NAME = "parknacross-weather-v38-4-25-qa-20260917";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

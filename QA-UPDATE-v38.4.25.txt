@@ -1,0 +1,16 @@
+Parknacross Weather v38.4.25-QA / Worker v38.4.22-QA
+
+Final QA corrections:
+- Pressure is now Ecowitt relative/sea-level pressure only; no absolute-pressure fallback.
+- All-time pressure records require raw-payload evidence of relative pressure.
+- Monthly mean temperature uses the same observation-weighted method for all months.
+- Cross-midnight rain-event totals retain post-midnight accumulation.
+- Rain events stop across >30-minute observation gaps (unknown weather).
+- Dashboard all-time records no longer let raw live samples bypass Worker QC.
+- Removed unreachable duplicate /health implementation; Status now reports Worker release + D1 state.
+- Forecast verification captures first successful morning snapshot 07:00-10:00 Europe/Dublin, once per target date.
+- Partial Facebook/X failures release the daily lock so only the missing network can retry.
+- Social 24-hour forecast rain uses the same non-overlapping precipitation aggregation as forecast verification.
+- First 20 C milestone searches for the first valid reading, not merely the first candidate.
+- Radar timeline range control has an accessible label.
+- Annual YTD logic uses Europe/Dublin year.

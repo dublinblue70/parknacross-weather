@@ -145,7 +145,7 @@ async function runChecks() {
     setBadge("apiBadge","bad","DOWN"); setText("apiValue","Unavailable"); setText("apiDetail",health.__error.message||"Health endpoint failed"); states.push("bad");
   } else {
     const db=health.database==="connected"; const ok=health.status==="ok"&&db;
-    setBadge("apiBadge",ok?"good":"warn",ok?"OK":"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",`${fmtNum(health.readings,0)} archived readings`); states.push(ok?"good":"warn");
+    setBadge("apiBadge",ok?"good":"warn",ok?"OK":"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",health.release ? `Worker ${health.release} · D1 ${db?"connected":"check"}` : `D1 ${db?"connected":"check"}`); states.push(ok?"good":"warn");
   }
 
   if(current.__error) {

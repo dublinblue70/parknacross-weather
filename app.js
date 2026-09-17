@@ -778,25 +778,14 @@ function updateStatsPanel() {
     set("wettestDate", dateLabel(`${stats.wettest_day.day}T12:00:00Z`));
   }
 
+  // All-time records are authoritative only after Worker-side quality control.
+  // Do not let an unvalidated live sample temporarily override a validated
+  // archive record on the public dashboard.
   const records = stats.records || {};
-  const mergeRecord = (record, field, mode) => {
-    const currentValue = usable(latestCurrent?.[field]) ? Number(latestCurrent[field]) : null;
-    const savedValue = usable(record?.value) ? Number(record.value) : null;
-    if (currentValue === null) return record || null;
-    if (savedValue === null || (mode === "min" ? currentValue < savedValue : currentValue > savedValue)) {
-      return {
-        value: currentValue,
-        epoch: usable(latestCurrent?.epoch) ? Number(latestCurrent.epoch) : Math.floor(Date.now() / 1000),
-        received_at: latestCurrent?.received_at || null
-      };
-    }
-    return record;
-  };
-
-  const high = mergeRecord(records.high_temperature, "temperature_c", "max");
-  const low = mergeRecord(records.low_temperature, "temperature_c", "min");
-  const gust = mergeRecord(records.peak_gust, "wind_gust_kmh", "max");
-  const pressure = mergeRecord(records.high_pressure, "pressure_hpa", "max");
+  const high = records.high_temperature || null;
+  const low = records.low_temperature || null;
+  const gust = records.peak_gust || null;
+  const pressure = records.high_pressure || null;
 
   if (high) {
     set("allHigh", `${n(high.value)} °C`);
