@@ -65,53 +65,81 @@
   window.addEventListener("scroll", () => closeAll(), {passive:true});
 })();
 
-/* Parknacross Weather social links — injected into the shared footer on every page. */
+/* v38.4.22 — canonical footer contact/social links.
+   Defensive normaliser: regardless of older cached/merged footer markup,
+   each footer ends with exactly one Email · Facebook · X group. */
 (() => {
   "use strict";
 
-  const FACEBOOK_URL = "https://www.facebook.com/1361994206992789";
-  const X_URL = "https://x.com/ParknacrossWx";
+  const EMAIL = "mailto:info@parknacrossweather.ie";
+  const FACEBOOK = "https://www.facebook.com/1361994206992789";
+  const X = "https://x.com/ParknacrossWx";
 
-  const footer = document.querySelector("footer");
-  if (!footer) return;
-
-  let contact = footer.querySelector(".footer-links");
-  if (!contact) {
-    const spans = footer.querySelectorAll(":scope > span");
-    contact = spans.length >= 3 ? spans[2] : document.createElement("span");
-    contact.classList.add("footer-links");
-    if (!contact.parentElement) footer.appendChild(contact);
+  function isParknacrossFooterLink(anchor) {
+    const href = (anchor.getAttribute("href") || "").trim().toLowerCase();
+    return href.startsWith("mailto:info@parknacrossweather.ie") ||
+      href.includes("facebook.com/1361994206992789") ||
+      href.includes("x.com/parknacrosswx");
   }
 
-  const email = contact.querySelector('a[href^="mailto:"]');
-  if (email) {
-    email.classList.add("footer-email-link");
-    email.setAttribute("aria-label", "Email Parknacross Weather");
+  function makeLink(label, href, ariaLabel) {
+    const a = document.createElement("a");
+    a.href = href;
+    a.textContent = label;
+    a.setAttribute("aria-label", ariaLabel);
+    if (!href.startsWith("mailto:")) {
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+    }
+    return a;
   }
 
-  function addSeparator() {
-    const separator = document.createElement("span");
-    separator.className = "footer-link-separator";
-    separator.setAttribute("aria-hidden", "true");
-    separator.textContent = "·";
-    contact.appendChild(separator);
+  function appendSeparator(nav) {
+    const sep = document.createElement("span");
+    sep.setAttribute("aria-hidden", "true");
+    sep.textContent = "·";
+    nav.appendChild(sep);
   }
 
-  function addSocialLink(label, shortLabel, url, cssClass) {
-    if (!url || contact.querySelector(`.${cssClass}`)) return;
-    if (contact.children.length) addSeparator();
-    const link = document.createElement("a");
-    link.href = url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.className = `footer-social-link ${cssClass}`;
-    link.dataset.shortLabel = shortLabel;
-    link.textContent = label;
-    link.setAttribute("aria-label", `Follow Parknacross Weather on ${label}`);
-    contact.appendChild(link);
+  function normaliseFooter(footer) {
+    // Remove every previous canonical block first.
+    footer.querySelectorAll(".footer-links").forEach(node => node.remove());
+
+    // Remove legacy standalone copies that may have been added by an older release.
+    footer.querySelectorAll("a").forEach(anchor => {
+      if (isParknacrossFooterLink(anchor)) anchor.remove();
+    });
+
+    // Remove empty wrapper spans left behind by old footer implementations.
+    footer.querySelectorAll("span").forEach(span => {
+      if (span.closest(".footer-links")) return;
+      const text = (span.textContent || "").replace(/[·|•\s]/g, "");
+      if (!text && !span.querySelector("a, img, svg")) span.remove();
+    });
+
+    const nav = document.createElement("nav");
+    nav.className = "footer-links";
+    nav.setAttribute("aria-label", "Parknacross Weather contact and social links");
+
+    nav.appendChild(makeLink("Email", EMAIL, "Email Parknacross Weather"));
+    appendSeparator(nav);
+    nav.appendChild(makeLink("Facebook", FACEBOOK, "Parknacross Weather on Facebook"));
+    appendSeparator(nav);
+    nav.appendChild(makeLink("X", X, "Parknacross Weather on X, @ParknacrossWx"));
+
+    footer.appendChild(nav);
   }
 
-  addSocialLink("Facebook", "FB", FACEBOOK_URL, "footer-facebook-link");
-  addSocialLink("X", "X", X_URL, "footer-x-link");
+  function normaliseAllFooters() {
+    document.querySelectorAll("footer").forEach(normaliseFooter);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", normaliseAllFooters, { once: true });
+  } else {
+    normaliseAllFooters();
+  }
+
+  // Covers BFCache/PWA restores without ever accumulating another copy.
+  window.addEventListener("pageshow", normaliseAllFooters);
 })();
-

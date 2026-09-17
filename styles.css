@@ -2240,3 +2240,42 @@ footer > .footer-links a:focus-visible {
     display: none !important;
   }
 }
+
+/* v38.4.22 — canonical footer: one Email · Facebook · X set only */
+footer > .footer-links {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: .45em !important;
+  white-space: nowrap !important;
+  min-width: 0;
+}
+footer > .footer-links a {
+  display: inline !important;
+  font-size: inherit !important;
+  color: inherit !important;
+  text-decoration: none;
+  white-space: nowrap !important;
+}
+footer > .footer-links a::before,
+footer > .footer-links a::after,
+footer > .footer-links::before,
+footer > .footer-links::after {
+  content: none !important;
+  display: none !important;
+}
+footer > .footer-links a:hover,
+footer > .footer-links a:focus-visible {
+  color: var(--text) !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* Disable obsolete mobile-only footer-link relabelling from older releases. */
+footer > span:nth-child(3) a,
+footer > span:nth-child(3) a::after {
+  font-size: inherit !important;
+}
+footer > span:nth-child(3) a::after {
+  content: none !important;
+  display: none !important;
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v38-4-21-footer-regression-fix-20260917";
+const CACHE_NAME = "parknacross-weather-v38-4-22-footer-dedupe-20260917";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
