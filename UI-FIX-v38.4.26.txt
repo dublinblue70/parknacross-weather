@@ -1,0 +1,11 @@
+Parknacross Weather v38.4.26 — Dashboard Trend + More Menu fix
+
+1. Dashboard pressure Trend now uses the recent 3-hour pressure tendency.
+   The separate 24h change remains a strict 24-hour comparison and can remain
+   unavailable when a genuine 24-hour baseline is missing.
+
+2. More menu is now a compact two-column dropdown on laptop and mobile.
+   It is positioned dynamically within the viewport, with an internal-scroll
+   fallback only for unusually short windows or high accessibility zoom.
+
+3. Service-worker cache version bumped so installed/PWA clients receive fixes.

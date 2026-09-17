@@ -2012,12 +2012,18 @@ html.is-offline .live-pill{opacity:.78}
 .nav-more-button:hover,.nav-more-button:focus-visible,.nav-more-button.nav-more-active,
 .nav-more-button[aria-expanded="true"] { color:#fff; background:rgba(123,215,239,.09); }
 .nav-more-menu {
-  position: fixed; z-index: 10050; display: grid; gap: 3px;
-  padding: 8px; border: 1px solid var(--line-strong); border-radius: 13px;
+  position: fixed; z-index: 10050; display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px 5px;
+  padding: 7px; border: 1px solid var(--line-strong); border-radius: 13px;
   background: #0a1b26; box-shadow: 0 18px 50px rgba(0,0,0,.42);
+  max-height: calc(100dvh - 16px); overflow-y: auto; overscroll-behavior: contain;
 }
 .nav-more-menu[hidden] { display:none !important; }
-.nav-more-menu a { display:block; padding:9px 11px; border-radius:8px; font-size:.84rem; }
+.nav-more-menu a {
+  display:flex; align-items:center; min-width:0; padding:8px 10px;
+  border-radius:8px; font-size:.82rem; line-height:1.2; white-space:normal;
+}
 .nav-more-menu a.active { background:rgba(123,215,239,.12); color:#fff; }
 @media(max-width:900px){.nav-more-button{font-size:.82rem;padding:8px 10px}}
 @media(max-width:560px){.nav-more-button{font-size:.78rem;padding:7px 9px}}

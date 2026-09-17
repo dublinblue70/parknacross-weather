@@ -13,19 +13,43 @@
   }
 
   function positionMenu(button, menu) {
+    const edge = 8;
+    const gap = 8;
+
     menu.hidden = false;
     menu.style.visibility = "hidden";
+    menu.style.maxHeight = "none";
+    menu.style.overflowY = "visible";
+
     const rect = button.getBoundingClientRect();
-    const width = Math.min(248, Math.max(210, menu.offsetWidth || 220));
-    const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width));
-    let top = rect.bottom + 8;
-    const estimatedHeight = menu.offsetHeight || 330;
-    if (top + estimatedHeight > window.innerHeight - 8) {
-      top = Math.max(8, rect.top - estimatedHeight - 8);
-    }
+
+    /*
+     * v38.4.26: use a compact two-column menu. Eight secondary destinations
+     * then fit comfortably in a normal laptop or phone viewport instead of
+     * extending below the page. Keep an internal scroll fallback only for
+     * unusually short browser windows or accessibility zoom levels.
+     */
+    const width = Math.min(340, Math.max(280, window.innerWidth - edge * 2));
     menu.style.width = `${width}px`;
+
+    const left = Math.max(
+      edge,
+      Math.min(window.innerWidth - width - edge, rect.right - width)
+    );
     menu.style.left = `${left}px`;
-    menu.style.top = `${top}px`;
+
+    const naturalHeight = menu.scrollHeight || menu.offsetHeight || 190;
+    const spaceBelow = Math.max(0, window.innerHeight - rect.bottom - gap - edge);
+    const spaceAbove = Math.max(0, rect.top - gap - edge);
+    const openBelow = spaceBelow >= naturalHeight || spaceBelow >= spaceAbove;
+    const available = Math.max(120, openBelow ? spaceBelow : spaceAbove);
+    const renderedHeight = Math.min(naturalHeight, available);
+
+    menu.style.maxHeight = `${renderedHeight}px`;
+    menu.style.overflowY = naturalHeight > renderedHeight ? "auto" : "visible";
+    menu.style.top = openBelow
+      ? `${Math.min(window.innerHeight - renderedHeight - edge, rect.bottom + gap)}px`
+      : `${Math.max(edge, rect.top - gap - renderedHeight)}px`;
     menu.style.visibility = "visible";
   }
 

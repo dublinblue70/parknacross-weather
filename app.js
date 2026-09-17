@@ -429,27 +429,61 @@ function pressureStats(currentReading = null) {
   }
 
   rows.sort((left, right) => readingTime(left) - readingTime(right));
-  if (rows.length < 2) return { change: null, trend: "--", basis_hours: null };
+  if (rows.length < 2) {
+    return {
+      change: null,
+      trend: "--",
+      change_basis_hours: null,
+      trend_basis_hours: null,
+      trend_change_hpa: null
+    };
+  }
 
   const latest = rows.at(-1);
   const latestTime = readingTime(latest);
-  const targetTime = latestTime - 24 * 60 * 60 * 1000;
-  const baseline = closestReadingTo(
-    targetTime,
+
+  /*
+   * Pressure tendency and 24-hour change are intentionally independent.
+   * A pressure TREND is a short-term tendency, so use a three-hour baseline.
+   * The separate "24h change" figure stays strict: if there is no observation
+   * close enough to 24 hours ago, show it as unavailable rather than inventing
+   * a comparison from a different period.
+   */
+  const threeHourBaseline = closestReadingTo(
+    latestTime - 3 * 60 * 60 * 1000,
+    30 * 60 * 1000,
+    rows
+  );
+  const dayBaseline = closestReadingTo(
+    latestTime - 24 * 60 * 60 * 1000,
     30 * 60 * 1000,
     rows
   );
 
-  if (!baseline) return { change: null, trend: "--", basis_hours: null };
+  let trend = "--";
+  let trendChange = null;
+  let trendBasisHours = null;
+  if (threeHourBaseline) {
+    const baselineTime = readingTime(threeHourBaseline);
+    trendChange = Number(latest.pressure_hpa) - Number(threeHourBaseline.pressure_hpa);
+    trendBasisHours = (latestTime - baselineTime) / 3600000;
+    trend = trendChange > 0.5 ? "Rising" : trendChange < -0.5 ? "Falling" : "Steady";
+  }
 
-  const baselineTime = readingTime(baseline);
-  const change = Number(latest.pressure_hpa) - Number(baseline.pressure_hpa);
-  const basisHours = (latestTime - baselineTime) / 3600000;
+  let change = null;
+  let changeBasisHours = null;
+  if (dayBaseline) {
+    const baselineTime = readingTime(dayBaseline);
+    change = Number(latest.pressure_hpa) - Number(dayBaseline.pressure_hpa);
+    changeBasisHours = (latestTime - baselineTime) / 3600000;
+  }
 
   return {
     change,
-    trend: change > 0.5 ? "Rising" : change < -0.5 ? "Falling" : "Steady",
-    basis_hours: basisHours
+    trend,
+    change_basis_hours: changeBasisHours,
+    trend_basis_hours: trendBasisHours,
+    trend_change_hpa: trendChange
   };
 }
 
