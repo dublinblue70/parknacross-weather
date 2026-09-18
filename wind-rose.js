@@ -90,7 +90,7 @@
 
     if (metaElement) {
       metaElement.textContent = result.directional
-        ? `${result.directional.toLocaleString("en-IE")} directional observations · calm/near-calm samples excluded${result.calm ? ` (${result.calm.toLocaleString("en-IE")})` : ""}`
+        ? `${result.directional.toLocaleString("en-IE")} wind-direction readings · calm periods omitted${result.calm ? ` (${result.calm.toLocaleString("en-IE")})` : ""}`
         : "No usable wind-direction observations in this period.";
     }
 

@@ -113,15 +113,14 @@
     <article class="card"><h2>Last 30 days</h2><p>Useful for monthly charts and comparisons.</p><button class="button export" data-days="30" data-name="30-days">Download CSV</button></article>
     <article class="card"><h2>Last 90 days</h2><p>A broader seasonal view of the station archive.</p><button class="button export" data-days="90" data-name="90-days">Download CSV</button></article>
     <article class="card"><h2>Last 365 days</h2><p>Up to one year of observations.</p><button class="button export" data-days="365" data-name="365-days">Download CSV</button></article>
-    <article class="card"><h2>Full public raw archive</h2><p>The public raw export is capped at 365 days to protect the live station database from high-cost scans.</p><button class="button export" data-days="365" data-name="public-archive">Download CSV</button></article>
-    <article class="card"><h2>Automatic secondary backup</h2><p id="backupStatusText">Checking whether the separate archive backup is active…</p><a class="button" href="status.html">View backup health</a></article>
+    <article class="card"><h2>Automatic archive backup</h2><p id="backupStatusText">Checking whether the separate archive backup is active…</p><a class="button" href="status.html">View backup health</a></article>
   </section>
   <div id="downloadStatus" class="status" aria-live="polite"></div>
-  <div class="note">CSV columns include timestamps, temperature, feels-like temperature, humidity, dew point, wind, gusts, wind direction, pressure, rainfall, solar radiation, UV and WS90 battery voltage. Public raw exports are available in fixed 7, 30, 90 and 365 day windows so identical requests can be safely cached and the live station database is protected from unnecessary scans; completed-day backups remain separate from the live database.</div>
+  <div class="note">CSV downloads include time, temperature, humidity, dew point, wind, gusts, wind direction, pressure, rainfall, solar radiation, UV and WS90 battery information. Choose 7, 30, 90 or 365 days; daily backups are kept separately from the live weather archive.</div>
 </main>
-<footer><span>© 2026 Parknacross Weather</span><span>Read-only archive export</span><nav class="footer-links" aria-label="Parknacross Weather contact and social links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a></nav></footer>
+<footer><span>© 2026 Parknacross Weather</span><span>Weather data downloads</span><nav class="footer-links" aria-label="Parknacross Weather contact and social links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a></nav></footer>
 </div>
-<script src="downloads.js?v=20260917-v38-4-28-gold"></script>
+<script src="downloads.js?v=20260918-v38-4-40-final-audit"></script>
 <script src="pwa-update.js?v=20260916-v38-4"></script>
 <script src="offline.js?v=20260915-v36"></script>
 <script src="accessibility.js?v=20260915-v36"></script>

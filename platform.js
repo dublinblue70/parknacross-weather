@@ -90,7 +90,7 @@
       }
     } else {
       set("contextForecastVerification", "Verification temporarily unavailable");
-      set("contextForecastVerificationDetail", "The forecast-verification endpoint could not be reached.");
+      set("contextForecastVerificationDetail", "Forecast comparison is temporarily unavailable.");
     }
 
     // Forecast snapshots are captured by the scheduled Worker only.

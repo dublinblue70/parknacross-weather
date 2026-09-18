@@ -142,14 +142,14 @@ async function runChecks() {
   let states=[site.state];
 
   if(health.__error) {
-    setBadge("apiBadge","bad","DOWN"); setText("apiValue","Unavailable"); setText("apiDetail",health.__error.message||"Health endpoint failed"); states.push("bad");
+    setBadge("apiBadge","bad","DOWN"); setText("apiValue","Unavailable"); setText("apiDetail","Weather data service could not be reached"); states.push("bad");
   } else {
     const db=health.database==="connected"; const ok=health.status==="ok"&&db;
     setBadge("apiBadge",ok?"good":"warn",ok?"OK":"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",db?"Weather data service connected":"Weather data service needs checking"); states.push(ok?"good":"warn");
   }
 
   if(current.__error) {
-    setBadge("feedBadge","bad","FAIL"); setText("feedValue","No reading"); setText("feedDetail",current.__error.message||"Current endpoint failed"); states.push("bad");
+    setBadge("feedBadge","bad","FAIL"); setText("feedValue","No reading"); setText("feedDetail","Current weather reading could not be reached"); states.push("bad");
   } else {
     const age=usableNumber(current.epoch)?Math.max(0,Math.floor(Date.now()/1000)-Number(current.epoch)):null;
     const state=age===null?"warn":age<600?"good":age<1800?"warn":"bad";
@@ -157,10 +157,10 @@ async function runChecks() {
   }
 
   if(quality.__error) {
-    setBadge("samplesBadge","warn","CHECK"); setText("samplesValue","--"); setText("samplesDetail","Quality endpoint unavailable");
-    setBadge("gapBadge","warn","CHECK"); setText("gapValue","--"); setText("gapDetail","Quality endpoint unavailable");
-    setBadge("batteryBadge","warn","CHECK"); setText("batteryValue","--"); setText("batteryDetail","Quality endpoint unavailable");
-    setBadge("gustQualityBadge","warn","CHECK"); setText("gustQualityValue","--"); setText("gustQualityDetail","Quality endpoint unavailable"); states.push("warn");
+    setBadge("samplesBadge","warn","CHECK"); setText("samplesValue","--"); setText("samplesDetail","Weather quality check unavailable");
+    setBadge("gapBadge","warn","CHECK"); setText("gapValue","--"); setText("gapDetail","Weather quality check unavailable");
+    setBadge("batteryBadge","warn","CHECK"); setText("batteryValue","--"); setText("batteryDetail","Weather quality check unavailable");
+    setBadge("gustQualityBadge","warn","CHECK"); setText("gustQualityValue","--"); setText("gustQualityDetail","Weather quality check unavailable"); states.push("warn");
   } else {
     const samples=usableNumber(quality.samples_last_24h)?Number(quality.samples_last_24h):null; const sampleState=samples===null?"warn":samples>=100?"good":samples>=24?"warn":"bad";
     setBadge("samplesBadge",sampleState,samples===null?"CHECK":sampleState==="good"?"OK":sampleState==="warn"?"LOW":"POOR"); setText("samplesValue",samples===null?"--":samples.toLocaleString("en-IE")); setText("samplesDetail",usableNumber(quality.median_interval_minutes)?`Typical time between saved readings: ${fmtNum(quality.median_interval_minutes,1)} min`:"Typical save interval unavailable"); states.push(sampleState);
@@ -176,8 +176,8 @@ async function runChecks() {
 
     const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):0;
     const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):0;
-    setBadge("gustQualityBadge","good",gustTotal>0?"FILTERING":"CLEAN");
-    setText("gustQualityValue",gust24===0?"None":`${gust24} excluded`);
+    setBadge("gustQualityBadge","good",gustTotal>0?"CHECKED":"OK");
+    setText("gustQualityValue",gust24===0?"None":`${gust24} unusual today`);
     const lastGust=usableNumber(quality.last_gust_exclusion_epoch)
       ? new Date(Number(quality.last_gust_exclusion_epoch)*1000).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})
       : null;
@@ -187,7 +187,7 @@ async function runChecks() {
   }
 
   if(reliability.__error || !usableNumber(reliability.archive_reliability_percent)) {
-    setBadge("reliabilityBadge","warn","CHECK");setText("reliabilityValue","--");setText("reliabilityDetail","Reliability endpoint unavailable");states.push("warn");
+    setBadge("reliabilityBadge","warn","CHECK");setText("reliabilityValue","--");setText("reliabilityDetail","Archive reliability check unavailable");states.push("warn");
   } else {
     const pct=Number(reliability.archive_reliability_percent);
     const state=pct>=99?"good":pct>=97?"good":pct>=90?"warn":"bad";
@@ -198,7 +198,7 @@ async function runChecks() {
   }
 
   if(backup.__error) {
-    setBadge("backupBadge","warn","CHECK");setText("backupValue","Unavailable");setText("backupDetail","Backup status endpoint unavailable");states.push("warn");
+    setBadge("backupBadge","warn","CHECK");setText("backupValue","Unavailable");setText("backupDetail","Backup status unavailable");states.push("warn");
   } else if(!backup.configured) {
     setBadge("backupBadge","warn","READY");setText("backupValue","Not active yet");setText("backupDetail","Daily archive backup is ready to be connected.");
   } else {
@@ -210,7 +210,7 @@ async function runChecks() {
   }
 
   if(history.__error || !Array.isArray(history.readings)) {
-    renderIssues([{state:"warn",text:"Recent readings could not be loaded for plausibility checks. Existing live services are unchanged."}]); states.push("warn");
+    renderIssues([{state:"warn",text:"Recent readings could not be checked. Existing live weather data is unchanged."}]); states.push("warn");
   } else {
     const qState=renderIssues(analyzeRows(history.readings)); states.push(qState);
   }

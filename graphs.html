@@ -51,19 +51,19 @@
 <div class="range-controls"><button data-hours="6">6h</button><button data-hours="24" class="active">24h</button><button data-hours="48">48h</button><button data-hours="168">7d</button><button data-hours="720">30d</button></div></div>
 <div class="chart-grid v2-chart-grid">
 <article class="chart-card"><div class="chart-title"><div><h3>Temperature & dew point</h3><p>Local air and moisture</p></div><span>°C</span></div><div class="chart-wrap"><canvas id="gTemp"></canvas></div></article>
-<article class="chart-card"><div class="chart-title"><div><h3>Wind & gusts</h3><p>Same wind-speed and gust treatment as the Dashboard</p></div><span>km/h</span></div><div class="chart-wrap"><canvas id="gWind"></canvas></div></article>
+<article class="chart-card"><div class="chart-title"><div><h3>Wind & gusts</h3><p>Matches the wind chart on the Dashboard</p></div><span>km/h</span></div><div class="chart-wrap"><canvas id="gWind"></canvas></div></article>
 
 <article class="chart-card"><div class="chart-title"><div><h3>Wind rose</h3><p>Direction frequency for the selected period</p></div><span>Observed</span></div><div class="wind-rose-wrap"><canvas id="gWindRose" aria-label="Historical wind direction frequency"></canvas></div><p id="windRoseMeta" class="wind-rose-meta">Building wind direction distribution…</p></article>
 <article class="chart-card"><div class="chart-title"><div><h3>Sea-level pressure</h3><p>Barometric trend</p></div><span>hPa</span></div><div class="chart-wrap"><canvas id="gPressure"></canvas></div></article>
 <article class="chart-card"><div class="chart-title"><div><h3>Rain rate</h3><p>Intensity over time · stepped blocks show when rain was detected</p></div><span>mm/h</span></div><div class="chart-wrap"><canvas id="gRain"></canvas></div></article>
 <article class="chart-card"><div class="chart-title"><div><h3>Solar & UV</h3><p>Radiation and UV index</p></div><span>W/m²</span></div><div class="chart-wrap"><canvas id="gSolar"></canvas></div></article>
-<article class="info-card"><span class="section-eyebrow">Tip</span><h2>Hover for exact readings</h2><p class="info-note">Longer time ranges are automatically thinned for smooth browser performance while preserving the overall shape of the weather.</p></article>
+<article class="info-card"><span class="section-eyebrow">Tip</span><h2>Hover for exact readings</h2><p class="info-note">For longer periods, fewer points are shown to keep the charts fast while preserving the overall weather trend.</p></article>
 </div></section></main>  <footer>
     <span>© <span id="year"></span> Parknacross Weather</span>
     <span>Hyperlocal weather observations · Ardamine, Co. Wexford, Ireland</span>
   <nav class="footer-links" aria-label="Parknacross Weather contact and social links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a></nav></footer>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script><script src="wind-rose.js?v=20260916-v38-4-5"></script><script src="site-config.js?v=20260912-mobile2"></script><script src="graphs.js?v=20260916-v38-4-5"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script><script src="wind-rose.js?v=20260918-v38-4-40-final-audit"></script><script src="site-config.js?v=20260912-mobile2"></script><script src="graphs.js?v=20260916-v38-4-5"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20260916-v38-4"></script>
 <script src="offline.js?v=20260915-v36"></script>
 <script src="accessibility.js?v=20260915-v36"></script>

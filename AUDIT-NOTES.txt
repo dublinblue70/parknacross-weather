@@ -1,0 +1,22 @@
+Parknacross Weather v38.4.40 — Final site audit
+18 September 2026
+
+Functional fix
+- History calendar/day detail: selecting a date now rebuilds the Chart.js day graph from that date's readings.
+- Added stale-request protection so a slower response from an earlier date cannot overwrite a newer selection.
+- If a daily summary exists but detailed five-minute readings are unavailable, the page now says this clearly rather than appearing broken.
+
+Visitor wording cleanup
+- Simplified technical wording across History, Station, Status, Downloads, Climate, Graphs, Rain, Records, Monthly, Annual, Coastal and Radar pages.
+- Removed the duplicate 365-day/full-archive download card.
+- Replaced visitor-facing backend terms such as endpoint/API/Worker/D1 where they were unnecessary.
+
+Cache/update handling
+- Bumped affected script query versions.
+- Bumped the service-worker cache to v38.4.40 so installed/PWA copies pick up the new frontend files.
+
+Validation completed
+- All JavaScript files pass syntax checks.
+- 20 HTML pages checked: no duplicate element IDs.
+- No broken local file references detected.
+- No Worker or weather-calculation logic changed in this patch.

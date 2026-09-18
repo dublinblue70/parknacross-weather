@@ -7,7 +7,7 @@ async function download(days,label,button){
   const n=Math.max(1,Math.min(365,Math.floor(Number(days)||1)));
   const original=button?.textContent;
   if(button){button.disabled=true;button.textContent="Preparing…";}
-  status(`Preparing ${n}-day export…`);
+  status(`Preparing ${n}-day download…`);
   try{
     const r=await fetch(`${API}?days=${encodeURIComponent(n)}`,{cache:"no-store"});
     if(!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -18,7 +18,7 @@ async function download(days,label,button){
     a.href=url;a.download=`parknacross-weather-${label}-${safeDate()}.csv`;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
     status(`CSV ready: ${label.replaceAll("-"," ")}.`,"good");
-  }catch(err){status(`Download failed: ${err.message||"unknown error"}. No site data was changed.`,"bad");}
+  }catch(err){console.warn("Weather archive download:",err);status("Download failed. Please try again.","bad");}
   finally{if(button){button.disabled=false;button.textContent=original;}}
 }
 async function loadBackupStatus(){
@@ -29,7 +29,7 @@ async function loadBackupStatus(){
     const b=await r.json();
     el.textContent=b.configured
       ? (b.last_success?`Automatic completed-day backup is active. Last successful copy: ${b.last_backup_day||"recently"}.`:"Backup storage is configured and will populate on the next scheduled run.")
-      : "Backup automation is built in and ready; the Cloudflare R2 BACKUPS binding still needs to be added once.";
+      : "Automatic backup is ready, but the separate backup destination has not been connected yet.";
   }catch(e){el.textContent="Backup status is temporarily unavailable.";}
 }
 document.addEventListener("DOMContentLoaded",()=>{

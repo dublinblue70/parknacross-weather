@@ -110,7 +110,7 @@
       }
     } else {
       set("verifyTitle", "Verification temporarily unavailable");
-      set("verifyText", "The forecast-verification endpoint could not be reached.");
+      set("verifyText", "Forecast comparison is temporarily unavailable.");
     }
 
     if (dR.status === "fulfilled") {
