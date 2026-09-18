@@ -4,10 +4,37 @@
   const buttons = [...document.querySelectorAll(".nav-more-button")];
   if (!buttons.length) return;
 
+  const menuState = new Map();
   let repositionFrame = 0;
 
+  for (const button of buttons) {
+    const wrapper = button.parentElement;
+    const menu = wrapper?.querySelector(".nav-more-menu") || null;
+    if (!menu || !wrapper) continue;
+    menuState.set(button, { menu, wrapper, nextSibling: menu.nextSibling });
+  }
+
   function menuFor(button) {
-    return button.parentElement?.querySelector(".nav-more-menu") || null;
+    return menuState.get(button)?.menu || null;
+  }
+
+  function restoreMenu(button) {
+    const state = menuState.get(button);
+    if (!state) return;
+    const { menu, wrapper, nextSibling } = state;
+    if (menu.parentElement === wrapper) return;
+    if (nextSibling && nextSibling.parentElement === wrapper) {
+      wrapper.insertBefore(menu, nextSibling);
+    } else {
+      wrapper.appendChild(menu);
+    }
+  }
+
+  function portalMenu(button) {
+    const menu = menuFor(button);
+    if (!menu) return null;
+    if (menu.parentElement !== document.body) document.body.appendChild(menu);
+    return menu;
   }
 
   function closeOne(button) {
@@ -15,6 +42,12 @@
     if (menu) {
       menu.hidden = true;
       menu.style.visibility = "";
+      menu.style.left = "";
+      menu.style.top = "";
+      menu.style.width = "";
+      menu.style.maxHeight = "";
+      menu.style.overflowY = "";
+      restoreMenu(button);
     }
     button.setAttribute("aria-expanded", "false");
   }
@@ -26,9 +59,6 @@
   }
 
   function viewportBox() {
-    // iOS Safari's visual viewport can be smaller/offset from the layout
-    // viewport when the URL bar or keyboard changes. Position against the
-    // visual viewport when available so the menu stays on screen.
     const vv = window.visualViewport;
     return {
       left: vv ? vv.offsetLeft : 0,
@@ -57,7 +87,6 @@
     const preferredLeft = rect.right - width;
     menu.style.left = `${Math.max(minLeft, Math.min(maxLeft, preferredLeft))}px`;
 
-    // Force layout only after the final width is known.
     const naturalHeight = Math.max(1, menu.scrollHeight || menu.offsetHeight || 190);
     const viewportBottom = viewport.top + viewport.height;
     const spaceBelow = Math.max(0, viewportBottom - rect.bottom - gap - edge);
@@ -104,22 +133,24 @@
         return;
       }
 
-      positionMenu(button, menu);
+      // Safari/WebKit treats a backdrop-filter ancestor as a containing block
+      // for fixed descendants. Move the open menu to <body> so it is truly
+      // viewport-fixed and cannot be clipped by the blurred/overflowing shell.
+      const portalled = portalMenu(button);
+      if (!portalled) return;
+
+      positionMenu(button, portalled);
       button.setAttribute("aria-expanded", "true");
 
-      // Do not move focus after a finger tap. On iPhone/iPad Safari that focus
-      // operation can move the visual viewport, fire a scroll event and make
-      // the dropdown appear to close immediately. Keyboard activation has
-      // event.detail === 0, so retain useful keyboard focus in that case only.
+      // Retain keyboard focus behaviour without forcing a visual-viewport
+      // change after touch activation on iPhone/iPad Safari.
       if (event.detail === 0) {
-        const first = menu.querySelector("a");
+        const first = portalled.querySelector("a");
         try { first?.focus({ preventScroll: true }); }
         catch (_) { first?.focus(); }
       }
     });
 
-    // Prevent a tap inside the fixed dropdown being treated as an outside tap
-    // by Safari while the visual viewport is settling.
     menu.addEventListener("click", event => event.stopPropagation());
     menu.addEventListener("touchstart", event => event.stopPropagation(), { passive: true });
 
@@ -143,11 +174,11 @@
 
   document.addEventListener("click", event => {
     const target = event.target;
-    if (!(target instanceof Element) || !target.closest(".nav-more")) closeAll();
+    if (!(target instanceof Element)) return;
+    const clickedOpenMenu = [...menuState.values()].some(({ menu }) => menu.contains(target));
+    if (!target.closest(".nav-more") && !clickedOpenMenu) closeAll();
   });
 
-  // Reposition instead of closing. Mobile Safari can emit resize/scroll events
-  // simply because its browser chrome expands/collapses after a tap.
   window.addEventListener("resize", repositionOpenMenus, { passive: true });
   window.addEventListener("scroll", repositionOpenMenus, { passive: true });
   window.addEventListener("orientationchange", repositionOpenMenus, { passive: true });

@@ -35,9 +35,4 @@ async function loadBackupStatus(){
 document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll(".export").forEach(btn=>btn.addEventListener("click",()=>download(btn.dataset.days,btn.dataset.name,btn)));
   loadBackupStatus();
-  $("customButton")?.addEventListener("click",()=>{
-    const input=$("customDays");const n=Math.floor(Number(input?.value));
-    if(!Number.isFinite(n)||n<1||n>365){status("Enter a number between 1 and 365 days.","bad");return;}
-    download(n,`${n}-days`,$("customButton"));
-  });
 });

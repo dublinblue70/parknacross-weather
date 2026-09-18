@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-weather-v38-4-28-gold-20260917";
+const CACHE_NAME = "parknacross-weather-v38-4-31-reliability-20260918";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -53,11 +53,17 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache =>
-      Promise.all(STATIC_ASSETS.map(asset => cache.add(asset).catch(() => null)))
-    )
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await Promise.all(STATIC_ASSETS.map(async asset => {
+      try {
+        const absolute = new URL(asset, self.registration.scope).toString();
+        const request = new Request(absolute, { cache: "reload" });
+        const response = await fetch(request);
+        if (response.ok) await cache.put(request, response);
+      } catch (_) {}
+    }));
+  })());
 });
 
 self.addEventListener("message", event => {
@@ -113,8 +119,16 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  const forceFreshLocalAsset =
+    url.origin === self.location.origin &&
+    (url.pathname.endsWith("/navigation.js") || url.pathname.endsWith("/downloads.js"));
+
+  const networkRequest = forceFreshLocalAsset
+    ? new Request(request, { cache: "reload" })
+    : request;
+
   event.respondWith(
-    fetch(request).then(response => {
+    fetch(networkRequest).then(response => {
       const copy = response.clone();
       caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
       return response;
