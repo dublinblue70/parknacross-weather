@@ -106,7 +106,7 @@ function analyzeRows(rows) {
   if(jumps.humidity) issues.push({state:"warn",text:`Humidity: ${jumps.humidity} unusually large short-term jump${jumps.humidity===1?"":"s"}.`});
   if(jumps.rainDrop) issues.push({state:"warn",text:`Daily rainfall counter: ${jumps.rainDrop} unexpected decrease${jumps.rainDrop===1?"":"s"} before local midnight.`});
 
-  if(!issues.length) issues.push({state:"good",text:`No implausible values or major short-term jumps found across ${rows.length} recent observations.`});
+  if(!issues.length) issues.push({state:"good",text:`No unusual values or large short-term changes found across ${rows.length} recent readings.`});
   return issues;
 }
 
@@ -125,7 +125,7 @@ function renderIssues(issues) {
 
 async function runChecks() {
   const button=$("refreshButton"); if(button) button.disabled=true;
-  setText("overallTitle","Checking systems…"); setText("overallText","Testing the website and live weather services.");
+  setText("overallTitle","Checking systems…"); setText("overallText","Checking the website, weather station and saved data.");
   $("overall").className="overall";
 
   const sitePromise=checkSite();
@@ -145,7 +145,7 @@ async function runChecks() {
     setBadge("apiBadge","bad","DOWN"); setText("apiValue","Unavailable"); setText("apiDetail",health.__error.message||"Health endpoint failed"); states.push("bad");
   } else {
     const db=health.database==="connected"; const ok=health.status==="ok"&&db;
-    setBadge("apiBadge",ok?"good":"warn",ok?"OK":"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",health.release ? `Worker ${health.release} · D1 ${db?"connected":"check"}` : `D1 ${db?"connected":"check"}`); states.push(ok?"good":"warn");
+    setBadge("apiBadge",ok?"good":"warn",ok?"OK":"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",db?"Weather data service connected":"Weather data service needs checking"); states.push(ok?"good":"warn");
   }
 
   if(current.__error) {
@@ -153,7 +153,7 @@ async function runChecks() {
   } else {
     const age=usableNumber(current.epoch)?Math.max(0,Math.floor(Date.now()/1000)-Number(current.epoch)):null;
     const state=age===null?"warn":age<600?"good":age<1800?"warn":"bad";
-    setBadge("feedBadge",state,age===null?"CHECK":state==="good"?"LIVE":state==="warn"?"DELAY":"STALE"); setText("feedValue",fmtAge(age)); setText("feedDetail",`Latest reading age · ${current.received_at||"timestamp unavailable"}`); states.push(state);
+    setBadge("feedBadge",state,age===null?"CHECK":state==="good"?"LIVE":state==="warn"?"DELAY":"STALE"); setText("feedValue",fmtAge(age)); setText("feedDetail",current.received_at?`Latest weather reading · ${current.received_at}`:"Latest weather reading time unavailable"); states.push(state);
   }
 
   if(quality.__error) {
@@ -163,13 +163,13 @@ async function runChecks() {
     setBadge("gustQualityBadge","warn","CHECK"); setText("gustQualityValue","--"); setText("gustQualityDetail","Quality endpoint unavailable"); states.push("warn");
   } else {
     const samples=usableNumber(quality.samples_last_24h)?Number(quality.samples_last_24h):null; const sampleState=samples===null?"warn":samples>=100?"good":samples>=24?"warn":"bad";
-    setBadge("samplesBadge",sampleState,samples===null?"CHECK":sampleState==="good"?"OK":sampleState==="warn"?"LOW":"POOR"); setText("samplesValue",samples===null?"--":samples.toLocaleString("en-IE")); setText("samplesDetail",usableNumber(quality.median_interval_minutes)?`Median interval ${fmtNum(quality.median_interval_minutes,1)} min`:"Median interval unavailable"); states.push(sampleState);
+    setBadge("samplesBadge",sampleState,samples===null?"CHECK":sampleState==="good"?"OK":sampleState==="warn"?"LOW":"POOR"); setText("samplesValue",samples===null?"--":samples.toLocaleString("en-IE")); setText("samplesDetail",usableNumber(quality.median_interval_minutes)?`Typical time between saved readings: ${fmtNum(quality.median_interval_minutes,1)} min`:"Typical save interval unavailable"); states.push(sampleState);
     const gap=usableNumber(quality.largest_recent_gap_minutes)?Number(quality.largest_recent_gap_minutes):null;
     const gapState=gap===null?"warn":gap<=15?"good":"warn";
     const gapLabel=gap===null?"CHECK":gap<=15?"OK":gap<=60?"GAP":"LARGE";
     setBadge("gapBadge",gapState,gapLabel);
     setText("gapValue",fmtDurationMinutes(gap));
-    setText("gapDetail",`Historical archive continuity · feed now: ${quality.feed_status||"unknown"}`);
+    setText("gapDetail",`Largest gap between saved readings · station feed: ${quality.feed_status||"unknown"}`);
     states.push(gapState);
     const batt=String(quality.battery_status||"--"); const battState=/^Normal/i.test(batt)?"good":/^Check/i.test(batt)?"warn":/^Low/i.test(batt)?"bad":"warn";
     setBadge("batteryBadge",battState,battState==="good"?"OK":battState==="warn"?"CHECK":"LOW"); setText("batteryValue",batt.replace(/^\w+\s*·\s*/,"")||"--"); setText("batteryDetail",batt); states.push(battState);
@@ -182,8 +182,8 @@ async function runChecks() {
       ? new Date(Number(quality.last_gust_exclusion_epoch)*1000).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})
       : null;
     setText("gustQualityDetail",gustTotal>0
-      ? `${gustTotal} total · raw observations retained${lastGust?` · last ${lastGust}`:""}`
-      : "No suspect isolated gust spikes recorded");
+      ? `${gustTotal} unusual wind reading${gustTotal===1?"":"s"} identified${lastGust?` · last ${lastGust}`:""}`
+      : "No unusual wind readings found");
   }
 
   if(reliability.__error || !usableNumber(reliability.archive_reliability_percent)) {
@@ -193,19 +193,19 @@ async function runChecks() {
     const state=pct>=99?"good":pct>=97?"good":pct>=90?"warn":"bad";
     setBadge("reliabilityBadge",state,state==="good"?"GOOD":state==="warn"?"REVIEW":"LOW");
     setText("reliabilityValue",`${pct.toFixed(1)}%`);
-    setText("reliabilityDetail",`${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected archive saves this month`);
+    setText("reliabilityDetail",`${reliability.label||""}${reliability.label?" · ":""}${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected 5-minute readings saved this month`);
     states.push(state);
   }
 
   if(backup.__error) {
     setBadge("backupBadge","warn","CHECK");setText("backupValue","Unavailable");setText("backupDetail","Backup status endpoint unavailable");states.push("warn");
   } else if(!backup.configured) {
-    setBadge("backupBadge","warn","READY");setText("backupValue","Awaiting R2");setText("backupDetail","Code is ready; add the BACKUPS R2 binding to activate automatic daily copies.");
+    setBadge("backupBadge","warn","READY");setText("backupValue","Not active yet");setText("backupDetail","Daily archive backup is ready to be connected.");
   } else {
     const ok=Boolean(backup.last_success);
     setBadge("backupBadge",ok?"good":"warn",ok?"ACTIVE":"READY");
     setText("backupValue",ok?"Automatic":"Configured");
-    setText("backupDetail",ok?`Last backup ${backup.last_backup_day||"--"} · ${backup.last_key||""}`:"Waiting for the next scheduled run");
+    setText("backupDetail",ok?`Last daily backup: ${backup.last_backup_day||"--"}`:"Waiting for the next scheduled backup");
     if(!ok) states.push("warn");
   }
 
@@ -218,7 +218,7 @@ async function runChecks() {
   const overall=states.includes("bad")?"bad":states.includes("warn")?"warn":"good";
   $("overall").className=`overall ${overall}`;
   setText("overallTitle",overall==="good"?"All monitored systems look healthy":overall==="warn"?"Site is running, but something is worth checking":"A monitored service needs attention");
-  setText("overallText",overall==="good"?"Website, API, live feed and recent data checks passed.":overall==="warn"?"One or more checks produced a warning. Review the cards below.":"At least one health check failed or the live feed is stale.");
+  setText("overallText",overall==="good"?"Website, weather data service, live readings and recent data checks passed.":overall==="warn"?"One or more checks produced a warning. Review the cards below.":"At least one check failed or the latest weather reading is stale.");
   setText("lastRun",`Last checked ${new Date().toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})}`);
   if(button) button.disabled=false;
 }

@@ -59,7 +59,7 @@
   </header>
   <main>
     <section class="hero">
-      <div><h1>System health</h1><p>A read-only check of the website, live station feed, archive health and recent data quality. This page never alters station data.</p></div>
+      <div><h1>System health</h1><p>A quick check that the website, weather station and saved data are working normally.</p></div>
       <button class="refresh" id="refreshButton" type="button">Run checks now</button>
     </section>
 
@@ -67,36 +67,36 @@
 
     <section class="grid">
       <article class="card"><div class="card-head"><h2>Website</h2><span class="badge" id="siteBadge">CHECK</span></div><div class="metric" id="siteValue">--</div><div class="sub" id="siteDetail">parknacrossweather.ie</div></article>
-      <article class="card"><div class="card-head"><h2>Weather API</h2><span class="badge" id="apiBadge">CHECK</span></div><div class="metric" id="apiValue">--</div><div class="sub" id="apiDetail">Cloudflare Worker</div></article>
+      <article class="card"><div class="card-head"><h2>Weather data service</h2><span class="badge" id="apiBadge">CHECK</span></div><div class="metric" id="apiValue">--</div><div class="sub" id="apiDetail">Weather data service</div></article>
       <article class="card"><div class="card-head"><h2>Latest observation</h2><span class="badge" id="feedBadge">CHECK</span></div><div class="metric" id="feedValue">--</div><div class="sub" id="feedDetail">Waiting for current reading</div></article>
-      <article class="card"><div class="card-head"><h2>Samples · 24h</h2><span class="badge" id="samplesBadge">CHECK</span></div><div class="metric" id="samplesValue">--</div><div class="sub" id="samplesDetail">Recent archive coverage</div></article>
+      <article class="card"><div class="card-head"><h2>Readings saved (24h)</h2><span class="badge" id="samplesBadge">CHECK</span></div><div class="metric" id="samplesValue">--</div><div class="sub" id="samplesDetail">Weather readings saved in the last 24 hours</div></article>
       <article class="card"><div class="card-head"><h2>Longest archive gap</h2><span class="badge" id="gapBadge">CHECK</span></div><div class="metric" id="gapValue">--</div><div class="sub" id="gapDetail">Longest interval between saved readings in the last 24 hours</div></article>
       <article class="card"><div class="card-head"><h2>WS90 battery</h2><span class="badge" id="batteryBadge">CHECK</span></div><div class="metric" id="batteryValue">--</div><div class="sub" id="batteryDetail">Latest battery status</div></article>
-      <article class="card"><div class="card-head"><h2>Archive reliability</h2><span class="badge" id="reliabilityBadge">CHECK</span></div><div class="metric" id="reliabilityValue">--</div><div class="sub" id="reliabilityDetail">Against the 5-minute archive target</div></article>
-      <article class="card"><div class="card-head"><h2>Gust quality</h2><span class="badge" id="gustQualityBadge">CHECK</span></div><div class="metric" id="gustQualityValue">--</div><div class="sub" id="gustQualityDetail">Suspect isolated gust spikes excluded from derived records</div></article>
-      <article class="card"><div class="card-head"><h2>Secondary backup</h2><span class="badge" id="backupBadge">CHECK</span></div><div class="metric" id="backupValue">--</div><div class="sub" id="backupDetail">Automatic completed-day archive copy</div></article>
+      <article class="card"><div class="card-head"><h2>Archive reliability</h2><span class="badge" id="reliabilityBadge">CHECK</span></div><div class="metric" id="reliabilityValue">--</div><div class="sub" id="reliabilityDetail">Percentage of expected 5-minute readings saved this month</div></article>
+      <article class="card"><div class="card-head"><h2>Wind data checks</h2><span class="badge" id="gustQualityBadge">CHECK</span></div><div class="metric" id="gustQualityValue">--</div><div class="sub" id="gustQualityDetail">Checks for unusual wind readings</div></article>
+      <article class="card"><div class="card-head"><h2>Archive backup</h2><span class="badge" id="backupBadge">CHECK</span></div><div class="metric" id="backupValue">--</div><div class="sub" id="backupDetail">Daily backup of saved weather data</div></article>
 
       <article class="card wide">
-        <div class="card-head"><h2>External uptime targets</h2><span class="badge good">READY</span></div>
-        <div class="sub">These two endpoints are designed to be checked independently from outside the Parknacross hosting stack.</div>
+        <div class="card-head"><h2>Website monitoring</h2><span class="badge good">READY</span></div>
+        <div class="sub">These services can be monitored separately to confirm the website and weather data are online.</div>
         <div class="uptime-targets">
           <div class="uptime-target"><strong>Public website</strong><code>https://parknacrossweather.ie/</code></div>
-          <div class="uptime-target"><strong>Weather API health</strong><code>https://parknacross-weather.dave-s-carter.workers.dev/health</code></div>
+          <div class="uptime-target"><strong>Weather data service</strong><code>https://parknacross-weather.dave-s-carter.workers.dev/health</code></div>
         </div>
       </article>
 
       <article class="card wide">
-        <div class="card-head"><h2>Data-quality checks</h2><span class="badge" id="qualityBadge">CHECK</span></div>
-        <div class="sub">Raw observations are never deleted. Readings that fail conservative gust validation remain in the archive but are excluded from derived peak-gust statistics.</div>
+        <div class="card-head"><h2>Weather data checks</h2><span class="badge" id="qualityBadge">CHECK</span></div>
+        <div class="sub">Automatic checks look for unusual readings while keeping the original observations safely stored.</div>
         <ul class="checks" id="qualityChecks"><li><i></i><span>Loading the latest 24 hours…</span></li></ul>
       </article>
     </section>
 
-    <div class="note"><strong>Thresholds are intentionally conservative.</strong> A warning means “worth checking”, not necessarily “wrong”. The page refreshes automatically every five minutes.</div>
+    <div class="note"><strong>A warning simply means something may be worth checking.</strong> It does not necessarily mean there is a problem. The page refreshes automatically every five minutes.</div>
   </main>
   <footer><span>© 2026 Parknacross Weather</span><span id="lastRun">Health check not yet completed</span><nav class="footer-links" aria-label="Parknacross Weather contact and social links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a></nav></footer>
 </div>
-<script src="offline.js?v=20260915-v36"></script><script src="status.js?v=20260916-v38-4"></script>
+<script src="offline.js?v=20260915-v36"></script><script src="status.js?v=20260918-v38-4-39-status-text"></script>
 <script src="pwa-update.js?v=20260916-v38-4"></script>
 <script src="accessibility.js?v=20260915-v36"></script>
 <script src="navigation.js?v=20260917-v38-4-28-gold"></script>
