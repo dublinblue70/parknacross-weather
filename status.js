@@ -177,7 +177,7 @@ async function runChecks() {
     const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):0;
     const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):0;
     setBadge("gustQualityBadge","good",gustTotal>0?"CHECKED":"OK");
-    setText("gustQualityValue",gust24===0?"None":`${gust24} unusual today`);
+    setText("gustQualityValue",gustTotal===0?"No anomalies":`${gustTotal} flagged${gust24>0?` · ${gust24} today`:""}`);
     const lastGust=usableNumber(quality.last_gust_exclusion_epoch)
       ? new Date(Number(quality.last_gust_exclusion_epoch)*1000).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})
       : null;

@@ -58,12 +58,13 @@
 
     // /rain-summary includes the latest WS90 daily counter and is the same
     // rainfall source used by the refreshed Dashboard figures.
-    const [cR, sR, eR, dR, vR] = await Promise.allSettled([
+    const [cR, sR, eR, dR, vR, stR] = await Promise.allSettled([
       get("/climate-summary"),
       get("/rain-summary"),
       get("/events"),
       get("/daily?days=3660"),
-      get("/forecast-verification")
+      get("/forecast-verification"),
+      get("/stats")
     ]);
 
     if (cR.status === "fulfilled") {
@@ -79,8 +80,11 @@
 
       set("climateRainHeading", `${monthName} rainfall`);
       set("climateRainPct", rainPct !== null ? `${Math.round(rainPct)}%` : "--");
+      const archiveSince = stR.status === "fulfilled" && usable(stR.value?.first_epoch)
+        ? new Date(Number(stR.value.first_epoch)*1000).toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"long",year:"numeric"})
+        : null;
       set("climateRainText", ltaMonthRain !== null
-        ? `${n(stationMonthRain)} mm at Parknacross so far; Johnstown Castle's 1991–2020 ${monthName} average is ${n(ltaMonthRain)} mm.`
+        ? `${n(stationMonthRain)} mm at Parknacross${archiveSince?` since records began on ${archiveSince}`:" so far"}; Johnstown Castle's 1991–2020 ${monthName} average is ${n(ltaMonthRain)} mm. This is a partial-period comparison until the local archive covers the full month.`
         : `${n(stationMonthRain)} mm at Parknacross so far. A Johnstown Castle long-term rainfall comparison is not configured for ${monthName} yet.`);
       set("climateLocalMean", `${n(c.station_month_mean_temperature_c)}°C`);
       if (c.on_this_day?.available) {

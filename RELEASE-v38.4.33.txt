@@ -1,0 +1,24 @@
+Parknacross Weather v38.4.33 — site consistency and accessibility cleanup
+
+UPLOAD ORDER
+1. Deploy Parknacross-Worker-v38.4.33-SITE-CLEANUP.txt to the Cloudflare Worker.
+2. Upload the contents of the github-files folder to the GitHub repository root.
+3. Wait for GitHub Pages to finish deploying, then refresh the site once.
+
+CHANGES
+- Archive coverage now uses unique five-minute slots via /coverage.
+- Monthly and annual strongest-gust dates use the verified record timestamp.
+- Station storage activity is labelled as estimated database writes.
+- Wind-quality status reports the actual number of historical flags.
+- History graph accessibility labels update with the selected date.
+- Empty calendar dates are non-interactive and hidden from screen readers.
+- Climate rainfall comparison explicitly identifies the partial archive period.
+- Dashboard uses a descriptive page H1 while preserving the visible brand.
+- Climate and Station are moved into More to reduce navigation crowding.
+- Sitemap dates and asset cache versions are refreshed.
+- A reusable site-smoke-test.mjs regression check is included.
+
+UNCHANGED
+- Buffer remains the social posting provider for Facebook and X.
+- Metricool is not restored.
+- Existing live weather, radar, forecast, CSV, backup and PWA functions are retained.
