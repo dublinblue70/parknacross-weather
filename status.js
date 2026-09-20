@@ -96,10 +96,10 @@ function analyzeRows(rows) {
     const a=sorted[i-1], b=sorted[i];
     const mins=(Number(b.epoch)-Number(a.epoch))/60;
     if(!(mins>0 && mins<=15)) continue;
-    if(Number.isFinite(Number(a.temperature_c))&&Number.isFinite(Number(b.temperature_c))&&Math.abs(Number(b.temperature_c)-Number(a.temperature_c))>8) jumps.temp++;
-    if(Number.isFinite(Number(a.pressure_hpa))&&Number.isFinite(Number(b.pressure_hpa))&&Math.abs(Number(b.pressure_hpa)-Number(a.pressure_hpa))>8) jumps.pressure++;
-    if(Number.isFinite(Number(a.humidity))&&Number.isFinite(Number(b.humidity))&&Math.abs(Number(b.humidity)-Number(a.humidity))>35) jumps.humidity++;
-    if(localDay(a.epoch)===localDay(b.epoch) && Number.isFinite(Number(a.rain_daily_mm))&&Number.isFinite(Number(b.rain_daily_mm)) && Number(b.rain_daily_mm)+0.2<Number(a.rain_daily_mm)) jumps.rainDrop++;
+    if(usableNumber(a.temperature_c)&&usableNumber(b.temperature_c)&&Math.abs(Number(b.temperature_c)-Number(a.temperature_c))>8) jumps.temp++;
+    if(usableNumber(a.pressure_hpa)&&usableNumber(b.pressure_hpa)&&Math.abs(Number(b.pressure_hpa)-Number(a.pressure_hpa))>8) jumps.pressure++;
+    if(usableNumber(a.humidity)&&usableNumber(b.humidity)&&Math.abs(Number(b.humidity)-Number(a.humidity))>35) jumps.humidity++;
+    if(localDay(a.epoch)===localDay(b.epoch) && usableNumber(a.rain_daily_mm)&&usableNumber(b.rain_daily_mm) && Number(b.rain_daily_mm)+0.2<Number(a.rain_daily_mm)) jumps.rainDrop++;
   }
   if(jumps.temp) issues.push({state:"warn",text:`Temperature: ${jumps.temp} unusually large short-term jump${jumps.temp===1?"":"s"}.`});
   if(jumps.pressure) issues.push({state:"warn",text:`Pressure: ${jumps.pressure} unusually large short-term jump${jumps.pressure===1?"":"s"}.`});
@@ -108,6 +108,33 @@ function analyzeRows(rows) {
 
   if(!issues.length) issues.push({state:"good",text:`No unusual values or large short-term changes found across ${rows.length} recent readings.`});
   return issues;
+}
+
+// The Worker may reuse a saved WS90 voltage. Archive time is NOT proof of
+// a new physical battery measurement; show its provenance without falsely
+// telling users with new batteries that their batteries need replacing.
+function describeWs90Battery(quality) {
+  const voltage=quality?.battery_voltage_v;
+  const archivedAt=quality?.battery_last_archived_at;
+  const age=quality?.battery_archive_age_seconds;
+  if(!usableNumber(voltage) || Number(voltage)<1.5 || Number(voltage)>4.0) {
+    return {state:"warn",label:"UNAVAILABLE",value:"--",detail:"No reliable WS90 AA battery voltage is available. Check the Battery reading in Ecowitt; do not confuse it with the solar capacitor."};
+  }
+  const volts=Number(voltage);
+  const value=`${volts.toFixed(2)} V`;
+  const ageValid=usableNumber(age) && Number(age)>=0;
+  const archivedDate=archivedAt ? new Date(archivedAt) : null;
+  const validDate=archivedDate && Number.isFinite(archivedDate.getTime());
+  const timeText=validDate ? archivedDate.toLocaleString("en-IE",{timeZone:"Europe/Dublin",dateStyle:"medium",timeStyle:"short"}) : "time unavailable";
+  const archiveText=`Last archived: ${timeText}${ageValid ? ` (${fmtAge(age)} ago)` : ""}.`;
+  const caution="Ecowitt may reuse a voltage for up to 6 hours; archive time is not the battery measurement time.";
+  if(!ageValid || Number(age)>30*60 || !validDate) {
+    return {state:"warn",label:"LAST KNOWN",value,detail:`${archiveText} ${caution} Confirm the present reading in Ecowitt before assessing newly fitted batteries.`};
+  }
+  if(volts>=3.0) {
+    return {state:"good",label:"REPORTED",value,detail:`${archiveText} This voltage is in the site's normal range. ${caution}`};
+  }
+  return {state:"warn",label:"VERIFY",value,detail:`${archiveText} This recorded voltage is below the site's usual range, but may pre-date a battery change. ${caution} Compare with Ecowitt's current WS90 AA battery reading.`};
 }
 
 function renderIssues(issues) {
@@ -160,7 +187,7 @@ async function runChecks() {
   if(quality.__error) {
     setBadge("samplesBadge","warn","CHECK"); setText("samplesValue","--"); setText("samplesDetail","Weather quality check unavailable");
     setBadge("gapBadge","warn","CHECK"); setText("gapValue","--"); setText("gapDetail","Weather quality check unavailable");
-    setBadge("batteryBadge","warn","CHECK"); setText("batteryValue","--"); setText("batteryDetail","Weather quality check unavailable");
+    setBadge("batteryBadge","warn","UNAVAILABLE"); setText("batteryValue","--"); setText("batteryDetail","Battery reading could not be checked. This does not mean the batteries are low.");
     setBadge("gustQualityBadge","warn","CHECK"); setText("gustQualityValue","--"); setText("gustQualityDetail","Weather quality check unavailable"); states.push("warn");
   } else {
     const samples=usableNumber(quality.samples_last_24h)?Number(quality.samples_last_24h):null; const sampleState=samples===null?"warn":samples>=100?"good":samples>=24?"warn":"bad";
@@ -172,8 +199,11 @@ async function runChecks() {
     setText("gapValue",fmtDurationMinutes(gap));
     setText("gapDetail",`Largest gap between saved readings · station feed: ${quality.feed_status||"unknown"}`);
     states.push(gapState);
-    const batt=String(quality.battery_status||"--"); const battState=/^Normal/i.test(batt)?"good":/^Check/i.test(batt)?"warn":/^Low/i.test(batt)?"bad":"warn";
-    setBadge("batteryBadge",battState,battState==="good"?"OK":battState==="warn"?"CHECK":"LOW"); setText("batteryValue",batt.replace(/^\w+\s*·\s*/,"")||"--"); setText("batteryDetail",batt); states.push(battState);
+    const battery=describeWs90Battery(quality);
+    setBadge("batteryBadge",battery.state,battery.label);
+    setText("batteryValue",battery.value);
+    setText("batteryDetail",battery.detail);
+    states.push(battery.state);
 
     const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):0;
     const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):0;
