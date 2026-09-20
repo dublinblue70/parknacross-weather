@@ -28,21 +28,52 @@
     return j;
   }
 
+  const MAX_LOCAL_AGE_MS = 15 * 60 * 1000;
+  const MAX_REPORT_AGE_MS = 2 * 60 * 60 * 1000;
+  const ageFrom = raw => {
+    if (raw === null || raw === undefined || raw === "") return null;
+    const parsed = typeof raw === "number" || /^\d{10,13}$/.test(String(raw))
+      ? new Date(Number(raw) < 1e12 ? Number(raw) * 1000 : Number(raw))
+      : new Date(raw);
+    const age = Date.now() - parsed.getTime();
+    return Number.isFinite(age) && age >= -5*60*1000 ? age : null;
+  };
+  const reportClock = raw => new Date(raw).toLocaleString("en-IE", {
+    timeZone: STATION_TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+  });
+
   async function loadContext() {
-    const [currentR, officialR, climateR, rainR, eventR, verifyR] = await Promise.allSettled([
+    const [currentR, officialR, climateR, rainR, eventR, verifyR, storageR] = await Promise.allSettled([
       get("/current"), get("/met/johnstown"), get("/climate-summary"), get("/rain-summary"),
-      get("/events"), get("/forecast-verification")
+      get("/events"), get("/forecast-verification"), get("/storage-stats")
     ]);
 
+    // Compare recent observations only. The Met heading is a *report* time;
+    // individual station measurements may be earlier. Never treat fetch time
+    // as the observation time or present an unverified difference as live.
     if (currentR.status === "fulfilled" && officialR.status === "fulfilled") {
       const local = usable(currentR.value.temperature_c) ? Number(currentR.value.temperature_c) : null;
       const official = usable(officialR.value.temperature_c) ? Number(officialR.value.temperature_c) : null;
-      if (local !== null && official !== null) {
+      const localRawTime = currentR.value.received_at ?? currentR.value.timestamp ?? currentR.value.epoch;
+      const officialRawTime = officialR.value.report_time;
+      const localAge = ageFrom(localRawTime), reportAge = ageFrom(officialRawTime);
+      if (local !== null && official !== null && localAge !== null &&
+          localAge <= MAX_LOCAL_AGE_MS && reportAge !== null && reportAge <= MAX_REPORT_AGE_MS) {
         const d = local - official;
         set("contextTempDelta", `${d >= 0 ? "+" : ""}${d.toFixed(1)}°C`);
-        set("contextJohnstownTemp", `Johnstown Castle ${official.toFixed(1)}°C · Parknacross ${local.toFixed(1)}°C`);
+        set("contextJohnstownTemp", `Johnstown Castle ${official.toFixed(1)}°C · Parknacross ${local.toFixed(1)}°C · Met report ${reportClock(officialRawTime)} (station reading may be older)`);
+      } else {
+        set("contextTempDelta", "Comparison unavailable");
+        set("contextJohnstownTemp", reportAge === null
+          ? "Met report time unavailable; temperature difference withheld."
+          : reportAge > MAX_REPORT_AGE_MS
+            ? `Official report is old (${reportClock(officialRawTime)}); difference withheld.`
+            : "A recent local reading is unavailable; difference withheld.");
       }
-    } else set("contextTempDelta", "Comparison unavailable");
+    } else {
+      set("contextTempDelta", "Comparison unavailable");
+      set("contextJohnstownTemp", "One or both weather data sources are unavailable.");
+    }
 
     if (climateR.status === "fulfilled") {
       const monthName = new Intl.DateTimeFormat("en-IE", {timeZone:STATION_TIME_ZONE, month:"long"}).format(new Date());
@@ -54,7 +85,15 @@
         : usable(climateR.value.rain_percent_of_lta_month) ? Number(climateR.value.rain_percent_of_lta_month) : null;
       if (rainPct !== null) {
         set("contextRainLta", `${Math.round(rainPct)}% of monthly average`);
-        set("contextRainDetail", `Rainfall recorded so far, compared with Johnstown Castle's full-month ${monthName} average (1991–2020).`);
+        const firstEpoch = storageR.status === "fulfilled" && usable(storageR.value.first_epoch)
+          ? Number(storageR.value.first_epoch) : null;
+        const firstDate = firstEpoch !== null ? new Date(firstEpoch * 1000) : null;
+        const monthKey = stationDayKey(new Date())?.slice(0, 7);
+        const archiveStartedThisMonth = firstDate && stationDayKey(firstDate)?.slice(0, 7) === monthKey;
+        const startLabel = archiveStartedThisMonth
+          ? `since ${firstDate.toLocaleDateString("en-IE", {timeZone:STATION_TIME_ZONE,day:"numeric",month:"short"})}`
+          : "so far this month";
+        set("contextRainDetail", `Station rainfall ${startLabel}, compared with Johnstown Castle's FULL-MONTH ${monthName} average (1991–2020). This is not a same-date rainfall comparison.`);
       } else {
         set("contextRainLta", "Monthly average unavailable");
         set("contextRainDetail", `The usual rainfall for ${monthName} is not available yet.`);

@@ -129,13 +129,14 @@ async function runChecks() {
   $("overall").className="overall";
 
   const sitePromise=checkSite();
-  const [health,current,quality,history,reliability,backup,site] = await Promise.all([
+  const [health,current,quality,history,reliability,backup,social,site] = await Promise.all([
     fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/history?hours=24`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/reliability`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/backup-status`).catch(e=>({__error:e})),
+    fetchJSON(`${API_BASE}/social-status`).catch(e=>({__error:e})),
     sitePromise
   ]);
 
@@ -202,11 +203,51 @@ async function runChecks() {
   } else if(!backup.configured) {
     setBadge("backupBadge","warn","READY");setText("backupValue","Not active yet");setText("backupDetail","Daily archive backup is ready to be connected.");
   } else {
-    const ok=Boolean(backup.last_success);
-    setBadge("backupBadge",ok?"good":"warn",ok?"ACTIVE":"READY");
-    setText("backupValue",ok?"Automatic":"Configured");
-    setText("backupDetail",ok?`Last daily backup: ${backup.last_backup_day||"--"}`:"Waiting for the next scheduled backup");
-    if(!ok) states.push("warn");
+    const backedUpAt = backup.last_success ? Date.parse(backup.last_success) : NaN;
+    const hoursSinceBackup = Number.isFinite(backedUpAt) ? (Date.now()-backedUpAt)/3600000 : Infinity;
+    const recentBackup = hoursSinceBackup >= -0.25 && hoursSinceBackup <= 48;
+    setBadge("backupBadge",recentBackup?"good":"warn",recentBackup?"ACTIVE":"CHECK");
+    setText("backupValue",recentBackup?"Automatic":"Backup needs checking");
+    setText("backupDetail",recentBackup
+      ? `Last successful backup: ${backup.last_backup_day||"--"}`
+      : backup.last_success
+        ? `Last successful backup is over 48 hours old or has an invalid timestamp · ${backup.last_backup_day||"date unavailable"}`
+        : "Waiting for a confirmed successful backup");
+    if(!recentBackup) states.push("warn");
+  }
+
+  // The public API exposes *verified* delivery-day markers, not scheduled
+  // intent or post creation. This does not independently inspect Facebook/X.
+  const clockParts = new Intl.DateTimeFormat("en-GB", {
+    timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+  }).formatToParts(new Date());
+  const clock = Object.fromEntries(clockParts.map(part=>[part.type,part.value]));
+  const localToday = `${clock.year}-${clock.month}-${clock.day}`;
+  const localMinutes = Number(clock.hour)*60+Number(clock.minute);
+  const shouldHavePosted = localMinutes >= 12*60;
+  const socialNetworks = [
+    ["facebook","Facebook"], ["x","X"]
+  ];
+  for (const [key,name] of socialNetworks) {
+    if (social.__error) {
+      setBadge(`${key}Badge`,"warn","CHECK");
+      setText(`${key}Value`,"Unavailable");
+      setText(`${key}Detail`,"Posting status could not be checked. Check the platform directly.");
+      states.push("warn");
+      continue;
+    }
+    const verified = social[`${key}_verified_day`];
+    const attention = social[`${key}_status`] === "attention";
+    const deliveredToday = verified === localToday;
+    const severity = deliveredToday ? "good" : shouldHavePosted || attention ? "warn" : "good";
+    setBadge(`${key}Badge`, severity, deliveredToday ? "SENT" : shouldHavePosted || attention ? "CHECK" : "PENDING");
+    setText(`${key}Value`, deliveredToday ? "Today's post sent" : verified ? `Last sent: ${verified}` : "Not confirmed");
+    setText(`${key}Detail`, deliveredToday
+      ? "Worker reports verified delivery today. Confirm the visible post on the platform."
+      : shouldHavePosted || attention
+        ? "Today's post is not confirmed. Check Buffer and the platform."
+        : "Today's posting window has not finished; check again after 12:00.");
+    if (severity === "warn") states.push("warn");
   }
 
   if(history.__error || !Array.isArray(history.readings)) {

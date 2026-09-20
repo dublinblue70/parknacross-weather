@@ -11,7 +11,7 @@
  async function loadRain(){try{const c=await fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.json());set("radarRainRate",usable(c.rain_rate_mm_h)?`${Number(c.rain_rate_mm_h).toFixed(1)} mm/h`:"--");set("radarRainToday",usable(c.rain_daily_mm)?`${Number(c.rain_daily_mm).toFixed(1)} mm`:"--");}catch{set("radarRainRate","--");set("radarRainToday","--");}}
  document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());map=L.map("radarMap").setView([cfg.stationLat,cfg.stationLon],7);
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);
- L.circleMarker([cfg.stationLat,cfg.stationLon],{radius:7,color:"#fff",weight:2,fillColor:"#7bd7ef",fillOpacity:1}).addTo(map).bindTooltip("Parknacross Weather");
+ L.circleMarker([cfg.stationLat,cfg.stationLon],{radius:7,color:"#fff",weight:2,fillColor:"#7bd7ef",fillOpacity:1}).addTo(map).bindTooltip("Approximate station area · North Wexford (not an exact location)");
  $("radarSlider").addEventListener("input",e=>{playing=false;set("radarPlay","Play");show(Number(e.target.value))});
  $("radarPlay").addEventListener("click",()=>{playing=!playing;set("radarPlay",playing?"Pause":"Play")});loadRadar();loadRain();setInterval(loadRain,60*1000);setInterval(loadRadar,5*60*1000);
  });})();
