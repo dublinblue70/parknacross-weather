@@ -46,18 +46,18 @@
 
     if (climateR.status === "fulfilled") {
       const monthName = new Intl.DateTimeFormat("en-IE", {timeZone:STATION_TIME_ZONE, month:"long"}).format(new Date());
-      set("contextRainHeading", `${monthName} rainfall context`);
+      set("contextRainHeading", `${monthName} rainfall so far`);
       const stationMonthRain = rainR.status === "fulfilled" && usable(rainR.value?.month_mm) ? Number(rainR.value.month_mm) : usable(climateR.value.station_month_rain_mm) ? Number(climateR.value.station_month_rain_mm) : null;
       const ltaMonthRain = usable(climateR.value.johnstown_lta_month_rain_mm) ? Number(climateR.value.johnstown_lta_month_rain_mm) : null;
       const rainPct = stationMonthRain !== null && ltaMonthRain !== null && ltaMonthRain > 0
         ? (stationMonthRain / ltaMonthRain) * 100
         : usable(climateR.value.rain_percent_of_lta_month) ? Number(climateR.value.rain_percent_of_lta_month) : null;
       if (rainPct !== null) {
-        set("contextRainLta", `${Math.round(rainPct)}% of LTA`);
-        set("contextRainDetail", `Compared with Johnstown Castle's 1991–2020 ${monthName} average`);
+        set("contextRainLta", `${Math.round(rainPct)}% of monthly average`);
+        set("contextRainDetail", `Rainfall recorded so far, compared with Johnstown Castle's full-month ${monthName} average (1991–2020).`);
       } else {
-        set("contextRainLta", "LTA not configured");
-        set("contextRainDetail", `Long-term rainfall comparison is not configured for ${monthName} yet`);
+        set("contextRainLta", "Monthly average unavailable");
+        set("contextRainDetail", `The usual rainfall for ${monthName} is not available yet.`);
       }
     } else {
       set("contextRainLta", "Building context");
