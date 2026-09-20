@@ -82,7 +82,7 @@ function analyzeRows(rows) {
       const n=Number(row[field]);
       if(!Number.isFinite(n) || n<lo || n>hi) counts[field]++;
     }
-    if(Number.isFinite(Number(row.dew_point_c)) && Number.isFinite(Number(row.temperature_c)) && Number(row.dew_point_c)>Number(row.temperature_c)+2) {
+    if(usableNumber(row.dew_point_c) && usableNumber(row.temperature_c) && Number(row.dew_point_c)>Number(row.temperature_c)+2) {
       counts.dew_point_c++;
     }
   }
@@ -201,7 +201,10 @@ async function runChecks() {
   if(backup.__error) {
     setBadge("backupBadge","warn","CHECK");setText("backupValue","Unavailable");setText("backupDetail","Backup status unavailable");states.push("warn");
   } else if(!backup.configured) {
-    setBadge("backupBadge","warn","READY");setText("backupValue","Not active yet");setText("backupDetail","Daily archive backup is ready to be connected.");
+    setBadge("backupBadge","warn","NOT SET");
+    setText("backupValue","Not configured");
+    setText("backupDetail","Automatic archive backup has no configured destination. Configure Cloudflare R2 or an external backup endpoint.");
+    states.push("warn");
   } else {
     const backedUpAt = backup.last_success ? Date.parse(backup.last_success) : NaN;
     const hoursSinceBackup = Number.isFinite(backedUpAt) ? (Date.now()-backedUpAt)/3600000 : Infinity;
