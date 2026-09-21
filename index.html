@@ -715,11 +715,13 @@
   async function loadLikes(photoId) {
     if (!photoId) return;
     try {
-      const response = await fetch(`${base}/sky-photo/likes?photo_id=${encodeURIComponent(photoId)}&_=${Date.now()}`, {cache:"no-store"});
+      const response = await fetch(`${base}/sky-photo/likes?photo_id=${encodeURIComponent(photoId)}&visitor_id=${encodeURIComponent(skyVisitorId())}&_=${Date.now()}`, {cache:"no-store"});
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (photoId !== currentPhotoId) return;
-      setLikeUI(data.likes, localStorage.getItem(likeStorageKey(photoId)) === "1");
+      if (data.liked) localStorage.setItem(likeStorageKey(photoId), "1");
+      else localStorage.removeItem(likeStorageKey(photoId));
+      setLikeUI(data.likes, Boolean(data.liked));
     } catch (_) {
       if (photoId === currentPhotoId) setLikeUI(0, localStorage.getItem(likeStorageKey(photoId)) === "1");
     }
