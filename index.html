@@ -81,6 +81,14 @@
       font-size:.78rem;line-height:1.4;text-align:left;overflow-wrap:anywhere;
       white-space:normal;backdrop-filter:blur(6px);
     }
+    .today-sky-likebar{display:flex;align-items:center;justify-content:flex-start;gap:9px;padding:10px 12px;border-top:1px solid var(--line);background:rgba(7,19,31,.72)}
+    .today-sky-like-button{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);border-radius:999px;background:rgba(255,255,255,.035);color:var(--text);padding:7px 11px;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;transition:transform .12s ease,background .12s ease,border-color .12s ease}
+    .today-sky-like-button:hover{background:rgba(255,255,255,.075)}
+    .today-sky-like-button:active{transform:scale(.97)}
+    .today-sky-like-button.is-liked{background:rgba(255,90,110,.12);border-color:rgba(255,120,135,.38)}
+    .today-sky-like-button:disabled{cursor:default;opacity:.82}
+    .today-sky-like-heart{font-size:1rem;line-height:1}
+    .today-sky-like-count{color:var(--muted);font-size:.8rem}
     @media(max-width:760px){.today-sky-photo-wrap{min-height:190px}}
     .sky-admin-controls{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
     .sky-admin-controls[hidden]{display:none!important}
@@ -664,6 +672,70 @@
       : "The photo service could not be reached just now.";
   }
 
+  const likeStorageKey = photoId => `parknacrossSkyLiked:${photoId}`;
+
+  function makeLikeBar(photoId) {
+    const bar = document.createElement("div");
+    bar.className = "today-sky-likebar";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "today-sky-like-button";
+    button.setAttribute("aria-label", "Like today’s sky photo");
+
+    const heart = document.createElement("span");
+    heart.className = "today-sky-like-heart";
+    heart.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    const count = document.createElement("span");
+    count.className = "today-sky-like-count";
+    count.setAttribute("aria-live", "polite");
+
+    const alreadyLiked = localStorage.getItem(likeStorageKey(photoId)) === "1";
+    const setLiked = liked => {
+      button.classList.toggle("is-liked", liked);
+      heart.textContent = liked ? "♥" : "♡";
+      label.textContent = liked ? "Liked" : "Like";
+      button.disabled = liked;
+      button.setAttribute("aria-pressed", liked ? "true" : "false");
+    };
+    setLiked(alreadyLiked);
+    button.append(heart, label);
+    bar.append(button, count);
+
+    const showCount = likes => {
+      const n = Math.max(0, Number(likes) || 0);
+      count.textContent = n === 1 ? "1 like" : `${n} likes`;
+    };
+
+    fetch(`${base}/sky-photo/likes?photo_id=${encodeURIComponent(photoId)}&_=${Date.now()}`, { cache:"no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then(data => showCount(data.likes))
+      .catch(() => { count.textContent = ""; });
+
+    button.addEventListener("click", async () => {
+      if (localStorage.getItem(likeStorageKey(photoId)) === "1") return;
+      button.disabled = true;
+      try {
+        const response = await fetch(`${base}/sky-photo/likes`, {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({ photo_id:photoId })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+        localStorage.setItem(likeStorageKey(photoId), "1");
+        setLiked(true);
+        showCount(data.likes);
+      } catch (_) {
+        button.disabled = false;
+        setLiked(false);
+      }
+    });
+
+    return bar;
+  }
+
   let photoGeneration = 0;
   function renderPhoto(data) {
     const generation = ++photoGeneration;
@@ -688,7 +760,8 @@
         caption.append(pill);
         wrap.append(caption);
       }
-      media.replaceChildren(wrap);
+      const photoId = String(data.uploaded_at || "").trim();
+      media.replaceChildren(wrap, makeLikeBar(photoId));
       metaText.textContent = `${formatUploaded(data.uploaded_at)} · Parknacross, Ardamine`;
     }, { once:true });
     image.addEventListener("error", () => {
