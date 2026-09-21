@@ -199,11 +199,19 @@
     </section>
 
 
+    <section id="lightningSetupNotice" class="lightning-panel" aria-label="WH57 sensor status" aria-live="polite">
+      <div>
+        <span class="section-eyebrow">Lightning</span>
+        <strong>Ecowitt WH57 sensor</strong>
+        <small id="lightningSetupStatus">Sensor acquired · awaiting live readings from the gateway</small>
+      </div>
+    </section>
+
     <section id="lightningPanel" class="lightning-panel" hidden aria-live="polite">
       <div>
         <span class="section-eyebrow">Lightning</span>
-        <strong id="lightningHeadline">WH57 integration ready</strong>
-        <small id="lightningDetail">Sensor awaiting installation</small>
+        <strong id="lightningHeadline">WH57 lightning detector</strong>
+        <small id="lightningDetail">Waiting for live sensor data</small>
       </div>
       <div class="lightning-stats">
         <span>Strikes today <strong id="lightningStrikes">--</strong></span>
@@ -401,7 +409,7 @@
         <a href="rain.html"><strong>Rain Centre</strong><span>Events, dry spells and totals →</span></a>
         <a href="climate.html"><strong>Climate Almanac</strong><span>Context, records and milestones →</span></a>
         <a href="coast.html"><strong>Coastal conditions</strong><span>Marine outlook and Arklow tides →</span></a>
-        <a href="sky.html"><strong>Sky camera</strong><span>Camera installation planned →</span></a>
+        <a href="sky.html"><strong>Sky camera</strong><span>Live sky view and camera page →</span></a>
         <a href="downloads.html"><strong>Data archive</strong><span>Historical observations & CSV downloads →</span></a>
       </div>
     </section>
@@ -505,8 +513,40 @@
 <script src="alert-settings.js?v=20260915-v36"></script>
 <script src="app.js?v=20260917-v38-4-28-gold"></script>
 
-<script src="site-config.js?v=20260920-v38-4-36"></script>
-<script src="platform.js?v=20260920-v38-4-36"></script>
+<script src="site-config.js?v=20260912-mobile2"></script>
+<script src="platform.js?v=20260920-clear-monthly-average"></script>
+<script>
+/* WH57 acquisition status; existing app.js remains responsible for displaying detections and alerts. */
+(() => {
+  const notice = document.getElementById("lightningSetupNotice");
+  const status = document.getElementById("lightningSetupStatus");
+  const base = window.PARKNACROSS_CONFIG?.apiBase;
+  if (!notice || !status || !base) return;
+  let refreshing = false;
+  async function updateLightningSetupStatus() {
+    if (refreshing) return;
+    refreshing = true;
+    try {
+      const response = await fetch(`${base.replace(/\/$/, "")}/lightning`, {cache: "no-store"});
+      if (!response.ok) throw new Error(`Lightning status HTTP ${response.status}`);
+      const data = await response.json();
+      const hasReadings = data?.available === true;
+      notice.hidden = hasReadings;
+      notice.style.display = hasReadings ? "none" : "";
+      if (!hasReadings) status.textContent = "Sensor acquired · awaiting live readings from the gateway";
+    } catch (_) {
+      notice.hidden = false;
+      notice.style.display = "";
+      status.textContent = "Sensor acquired · live-data connection not yet verified";
+    } finally {
+      refreshing = false;
+    }
+  }
+  updateLightningSetupStatus();
+  setInterval(updateLightningSetupStatus, 60 * 1000);
+})();
+</script>
+
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20260916-v38-4"></script>
 <script src="accessibility.js?v=20260915-v36"></script>

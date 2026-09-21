@@ -1,9 +1,15 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
   {
+    date: "2026-09-21",
+    type: "Sensor expansion",
+    title: "WH57 lightning sensor acquired",
+    detail: "The Ecowitt WH57 lightning sensor is now part of the Parknacross setup. Gateway pairing and the first live reading have not yet been verified; the dashboard shows observations only after genuine sensor data is received."
+  },
+  {
     date: "2026-09-15",
     type: "Sensor expansion",
     title: "WH57 lightning integration prepared",
-    detail: "Website, archive fields and alert logic prepared in advance. The WH57 sensor has been ordered and is awaiting installation; no lightning readings are displayed until genuine sensor data arrives."
+    detail: "Website, archive fields and alert logic prepared before the sensor arrived. Lightning counts and distances are shown only when actual sensor readings are received."
   },
   {
     date: "2026-09-15",
