@@ -53,7 +53,27 @@
     .footer-local-links{display:flex;flex-wrap:wrap;gap:5px 9px}
     .footer-local-links a{color:inherit;text-decoration:none}
     .footer-local-links a:hover{color:var(--accent);text-decoration:underline}
-  </style>
+  
+    /* v38.4.45 — Today's sky photo panel and admin uploader */
+    .today-sky-panel{margin:14px 0 0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:rgba(255,255,255,.016)}
+    .today-sky-copy{padding:24px 26px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+    .today-sky-copy h2{margin:4px 0 8px;font-size:clamp(1.2rem,2vw,1.55rem)}
+    .today-sky-copy p{margin:0;color:var(--muted);line-height:1.6}
+    .today-sky-meta{margin-top:10px!important;font-size:.82rem}
+    .today-sky-figure{margin:0;position:relative;min-height:220px;background:rgba(255,255,255,.025);border-left:1px solid var(--line);overflow:hidden}
+    .today-sky-figure img{display:block;width:100%;height:100%;min-height:220px;max-height:390px;object-fit:cover}
+    .today-sky-placeholder{min-height:220px;display:grid;place-items:center;padding:28px;text-align:center;color:var(--muted)}
+    .today-sky-placeholder strong{display:block;color:var(--text);font-size:1rem;margin-bottom:4px}
+    .today-sky-caption{position:absolute;left:12px;right:12px;bottom:10px;padding:8px 10px;border-radius:10px;background:rgba(7,19,31,.78);backdrop-filter:blur(8px);color:#eaf4fb;font-size:.78rem;line-height:1.4}
+    .sky-admin-controls{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+    .sky-admin-controls[hidden]{display:none!important}
+    .sky-admin-controls input[type="file"]{grid-column:1/-1;width:100%;color:var(--muted);font:inherit;font-size:.82rem}
+    .sky-admin-controls input[type="text"]{min-width:0;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025);color:var(--text);padding:10px 12px;font:inherit}
+    .sky-admin-controls button{border:1px solid var(--line-strong);border-radius:10px;background:rgba(96,208,178,.1);color:var(--text);padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}
+    .sky-admin-controls button:disabled{opacity:.55;cursor:wait}
+    .sky-admin-status{grid-column:1/-1;color:var(--muted);font-size:.78rem;min-height:1.2em}
+    @media(max-width:760px){.today-sky-panel{grid-template-columns:1fr}.today-sky-figure{order:-1;border-left:0;border-bottom:1px solid var(--line);min-height:190px}.today-sky-figure img,.today-sky-placeholder{min-height:190px;max-height:320px}.today-sky-copy{padding:20px}.sky-admin-controls{grid-template-columns:1fr}.sky-admin-controls button{width:100%}}
+</style>
 </head>
 
 <body class="weather-neutral">
@@ -196,6 +216,30 @@
       </div>
       <div class="station-status"><span class="status-label">WS90 battery</span><strong id="battery">--</strong></div>
       <div class="station-status"><span class="status-label">Data feed</span><strong id="cloudStatus">Connecting</strong></div>
+    </section>
+
+    <section id="todaySkyPanel" class="today-sky-panel" aria-labelledby="todaySkyHeading">
+      <div class="today-sky-copy">
+        <span class="section-eyebrow">Visual observation</span>
+        <h2 id="todaySkyHeading">Today’s sky</h2>
+        <p id="todaySkyText">A quick look at the sky over Parknacross today.</p>
+        <p class="today-sky-meta" id="todaySkyMeta">Checking for today’s photo…</p>
+
+        <div id="skyAdminControls" class="sky-admin-controls" hidden aria-label="Today’s sky admin upload">
+          <input id="skyPhotoFile" type="file" accept="image/jpeg,image/png,image/webp">
+          <input id="skyPhotoCaption" type="text" maxlength="140" placeholder="Optional caption, e.g. Bright with fair-weather cloud">
+          <button id="skyPhotoUpload" type="button">Upload today’s photo</button>
+          <span class="sky-admin-status" id="skyAdminStatus" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <figure class="today-sky-figure">
+        <div id="todaySkyPlaceholder" class="today-sky-placeholder">
+          <div><strong>No photo added today</strong><span>The latest local sky view will appear here.</span></div>
+        </div>
+        <img id="todaySkyImage" alt="Today’s sky over Parknacross, Ardamine" hidden>
+        <figcaption id="todaySkyCaption" class="today-sky-caption" hidden></figcaption>
+      </figure>
     </section>
 
 
@@ -544,6 +588,135 @@
   }
   updateLightningSetupStatus();
   setInterval(updateLightningSetupStatus, 60 * 1000);
+})();
+</script>
+
+<script>
+/* v38.4.45 — public Today's sky display + admin-only uploader (?admin=1). */
+(() => {
+  const panel = document.getElementById("todaySkyPanel");
+  const image = document.getElementById("todaySkyImage");
+  const placeholder = document.getElementById("todaySkyPlaceholder");
+  const caption = document.getElementById("todaySkyCaption");
+  const metaText = document.getElementById("todaySkyMeta");
+  const adminControls = document.getElementById("skyAdminControls");
+  const fileInput = document.getElementById("skyPhotoFile");
+  const captionInput = document.getElementById("skyPhotoCaption");
+  const uploadButton = document.getElementById("skyPhotoUpload");
+  const adminStatus = document.getElementById("skyAdminStatus");
+  const base = window.PARKNACROSS_CONFIG?.apiBase?.replace(/\/$/, "");
+  if (!panel || !base) return;
+
+  const isAdminMode = new URLSearchParams(location.search).get("admin") === "1";
+  if (isAdminMode && adminControls) adminControls.hidden = false;
+
+  const dublinDay = value => {
+    const date = value ? new Date(value) : new Date();
+    if (Number.isNaN(date.getTime())) return null;
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Dublin", year: "numeric", month: "2-digit", day: "2-digit"
+    }).formatToParts(date);
+    const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    return `${map.year}-${map.month}-${map.day}`;
+  };
+
+  const formatUploaded = iso => {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return "Uploaded today";
+    return `Uploaded ${new Intl.DateTimeFormat("en-IE", {
+      timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false
+    }).format(date)}`;
+  };
+
+  function renderNoPhoto(message = "No photo added today") {
+    image.hidden = true;
+    image.removeAttribute("src");
+    caption.hidden = true;
+    placeholder.hidden = false;
+    placeholder.innerHTML = `<div><strong>${message}</strong><span>The latest local sky view will appear here.</span></div>`;
+    metaText.textContent = "No visual observation has been added for today yet.";
+  }
+
+  async function loadSkyPhoto() {
+    try {
+      const response = await fetch(`${base}/sky-photo/meta?_=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (!data?.available || !data?.uploaded_at || dublinDay(data.uploaded_at) !== dublinDay()) {
+        renderNoPhoto();
+        return;
+      }
+      image.src = `${base}/sky-photo?v=${encodeURIComponent(data.uploaded_at)}`;
+      image.hidden = false;
+      placeholder.hidden = true;
+      const text = String(data.caption || "").trim();
+      caption.textContent = text;
+      caption.hidden = !text;
+      metaText.textContent = `${formatUploaded(data.uploaded_at)} · Parknacross, Ardamine`;
+    } catch (error) {
+      renderNoPhoto("Sky photo unavailable");
+      metaText.textContent = "The photo service could not be reached just now.";
+    }
+  }
+
+  async function preparePhoto(file) {
+    if (!file) throw new Error("Choose a photo first.");
+    if (file.size > 20 * 1024 * 1024) throw new Error("Please choose an image smaller than 20 MB.");
+    if (!/^image\//i.test(file.type || "")) throw new Error("Please choose an image file.");
+    try {
+      const bitmap = await createImageBitmap(file);
+      const maxWidth = 1800, maxHeight = 1350;
+      const scale = Math.min(1, maxWidth / bitmap.width, maxHeight / bitmap.height);
+      const width = Math.max(1, Math.round(bitmap.width * scale));
+      const height = Math.max(1, Math.round(bitmap.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d", { alpha: false });
+      ctx.drawImage(bitmap, 0, 0, width, height);
+      bitmap.close?.();
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.86));
+      if (blob) return new File([blob], "parknacross-sky.jpg", { type: "image/jpeg" });
+    } catch (_) {}
+    return file;
+  }
+
+  if (isAdminMode && uploadButton) {
+    uploadButton.addEventListener("click", async () => {
+      uploadButton.disabled = true;
+      adminStatus.textContent = "Preparing photo…";
+      try {
+        const prepared = await preparePhoto(fileInput.files?.[0]);
+        let adminKey = sessionStorage.getItem("parknacrossAdminKey") || "";
+        if (!adminKey) adminKey = window.prompt("Enter the Parknacross admin key") || "";
+        if (!adminKey) throw new Error("Upload cancelled — admin key required.");
+        sessionStorage.setItem("parknacrossAdminKey", adminKey);
+        const body = new FormData();
+        body.append("photo", prepared, prepared.name || "parknacross-sky.jpg");
+        body.append("caption", String(captionInput.value || "").trim());
+        adminStatus.textContent = "Uploading…";
+        const response = await fetch(`${base}/sky-photo`, {
+          method: "POST",
+          headers: { "X-Parknacross-Admin-Key": adminKey },
+          body
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 401) {
+          sessionStorage.removeItem("parknacrossAdminKey");
+          throw new Error("Admin key was not accepted. Please try again.");
+        }
+        if (!response.ok) throw new Error(data?.error || `Upload failed (HTTP ${response.status}).`);
+        adminStatus.textContent = "Photo uploaded successfully.";
+        fileInput.value = "";
+        await loadSkyPhoto();
+      } catch (error) {
+        adminStatus.textContent = error?.message || "Upload failed.";
+      } finally {
+        uploadButton.disabled = false;
+      }
+    });
+  }
+
+  loadSkyPhoto();
 })();
 </script>
 
