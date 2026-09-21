@@ -260,6 +260,13 @@
 
       <figure class="today-sky-figure">
         <div id="todaySkyMedia" class="today-sky-media" aria-live="polite"></div>
+        <div id="todaySkyLikeBar" class="today-sky-likebar" hidden>
+          <button id="todaySkyLikeButton" class="today-sky-like-button" type="button" aria-label="Like today’s sky photo" aria-pressed="false">
+            <span id="todaySkyLikeHeart" class="today-sky-like-heart" aria-hidden="true">♡</span>
+            <span id="todaySkyLikeLabel">Like</span>
+          </button>
+          <span id="todaySkyLikeCount" class="today-sky-like-count" aria-live="polite"></span>
+        </div>
       </figure>
     </section>
 
@@ -623,6 +630,11 @@
   const captionInput = document.getElementById("skyPhotoCaption");
   const uploadButton = document.getElementById("skyPhotoUpload");
   const adminStatus = document.getElementById("skyAdminStatus");
+  const likeBar = document.getElementById("todaySkyLikeBar");
+  const likeButton = document.getElementById("todaySkyLikeButton");
+  const likeHeart = document.getElementById("todaySkyLikeHeart");
+  const likeLabel = document.getElementById("todaySkyLikeLabel");
+  const likeCount = document.getElementById("todaySkyLikeCount");
   const base = window.PARKNACROSS_CONFIG?.apiBase?.replace(/\/$/, "");
   if (!panel || !media || !base) return;
 
@@ -653,6 +665,7 @@
 
   function renderNoPhoto(message = "No photo added today", detail = "The latest local sky view will appear here.") {
     ++photoGeneration;
+    hideLikeBar();
     const placeholder = document.createElement("div");
     placeholder.className = "today-sky-placeholder";
 
@@ -673,67 +686,64 @@
   }
 
   const likeStorageKey = photoId => `parknacrossSkyLiked:${photoId}`;
+  let activePhotoId = null;
 
-  function makeLikeBar(photoId) {
-    const bar = document.createElement("div");
-    bar.className = "today-sky-likebar";
+  function hideLikeBar() {
+    activePhotoId = null;
+    if (likeBar) likeBar.hidden = true;
+    if (likeCount) likeCount.textContent = "";
+  }
 
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "today-sky-like-button";
-    button.setAttribute("aria-label", "Like today’s sky photo");
+  function setLikeState(liked) {
+    if (!likeButton || !likeHeart || !likeLabel) return;
+    likeButton.classList.toggle("is-liked", liked);
+    likeHeart.textContent = liked ? "♥" : "♡";
+    likeLabel.textContent = liked ? "Liked" : "Like";
+    likeButton.disabled = liked;
+    likeButton.setAttribute("aria-pressed", liked ? "true" : "false");
+  }
 
-    const heart = document.createElement("span");
-    heart.className = "today-sky-like-heart";
-    heart.setAttribute("aria-hidden", "true");
-    const label = document.createElement("span");
-    const count = document.createElement("span");
-    count.className = "today-sky-like-count";
-    count.setAttribute("aria-live", "polite");
+  function showLikeCount(likes) {
+    if (!likeCount) return;
+    const n = Math.max(0, Number(likes) || 0);
+    likeCount.textContent = n === 1 ? "1 like" : `${n} likes`;
+  }
 
-    const alreadyLiked = localStorage.getItem(likeStorageKey(photoId)) === "1";
-    const setLiked = liked => {
-      button.classList.toggle("is-liked", liked);
-      heart.textContent = liked ? "♥" : "♡";
-      label.textContent = liked ? "Liked" : "Like";
-      button.disabled = liked;
-      button.setAttribute("aria-pressed", liked ? "true" : "false");
-    };
-    setLiked(alreadyLiked);
-    button.append(heart, label);
-    bar.append(button, count);
+  async function activateLikeBar(photoId) {
+    if (!likeBar || !likeButton) return;
+    activePhotoId = photoId;
+    likeBar.hidden = false;
+    setLikeState(localStorage.getItem(likeStorageKey(photoId)) === "1");
+    showLikeCount(0);
+    try {
+      const response = await fetch(`${base}/sky-photo/likes?photo_id=${encodeURIComponent(photoId)}&_=${Date.now()}`, { cache:"no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (activePhotoId === photoId) showLikeCount(data.likes);
+    } catch (_) {
+      if (activePhotoId === photoId && likeCount) likeCount.textContent = "Likes unavailable";
+    }
+  }
 
-    const showCount = likes => {
-      const n = Math.max(0, Number(likes) || 0);
-      count.textContent = n === 1 ? "1 like" : `${n} likes`;
-    };
-
-    fetch(`${base}/sky-photo/likes?photo_id=${encodeURIComponent(photoId)}&_=${Date.now()}`, { cache:"no-store" })
-      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then(data => showCount(data.likes))
-      .catch(() => { count.textContent = ""; });
-
-    button.addEventListener("click", async () => {
-      if (localStorage.getItem(likeStorageKey(photoId)) === "1") return;
-      button.disabled = true;
+  if (likeButton) {
+    likeButton.addEventListener("click", async () => {
+      const photoId = activePhotoId;
+      if (!photoId || localStorage.getItem(likeStorageKey(photoId)) === "1") return;
+      likeButton.disabled = true;
       try {
         const response = await fetch(`${base}/sky-photo/likes`, {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
+          method:"POST", headers:{"Content-Type":"application/json"},
           body:JSON.stringify({ photo_id:photoId })
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
         localStorage.setItem(likeStorageKey(photoId), "1");
-        setLiked(true);
-        showCount(data.likes);
+        setLikeState(true);
+        showLikeCount(data.likes);
       } catch (_) {
-        button.disabled = false;
-        setLiked(false);
+        setLikeState(false);
       }
     });
-
-    return bar;
   }
 
   let photoGeneration = 0;
@@ -761,7 +771,8 @@
         wrap.append(caption);
       }
       const photoId = String(data.uploaded_at || "").trim();
-      media.replaceChildren(wrap, makeLikeBar(photoId));
+      media.replaceChildren(wrap);
+      activateLikeBar(photoId);
       metaText.textContent = `${formatUploaded(data.uploaded_at)} · Parknacross, Ardamine`;
     }, { once:true });
     image.addEventListener("error", () => {
