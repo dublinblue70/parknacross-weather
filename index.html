@@ -61,12 +61,11 @@
     .today-sky-copy p{margin:0;color:var(--muted);line-height:1.6}
     .today-sky-meta{margin-top:10px!important;font-size:.82rem}
     .today-sky-figure{margin:0;position:relative;min-height:220px;background:rgba(255,255,255,.025);border-left:1px solid var(--line);overflow:hidden}
-    .today-sky-figure img{display:block;width:100%;height:100%;min-height:220px;max-height:390px;object-fit:cover}
+    .today-sky-media{position:relative;width:100%;min-height:220px;height:100%}
+    .today-sky-photo{display:block;width:100%;height:100%;min-height:220px;max-height:390px;object-fit:cover}
     .today-sky-placeholder{min-height:220px;display:grid;place-items:center;padding:28px;text-align:center;color:var(--muted)}
-    .today-sky-placeholder[hidden],.today-sky-figure img[hidden],.today-sky-caption[hidden]{display:none!important}
     .today-sky-placeholder strong{display:block;color:var(--text);font-size:1rem;margin-bottom:4px}
-    .today-sky-caption{position:absolute;left:12px;right:auto;bottom:10px;display:block;width:auto;max-width:calc(100% - 24px);padding:0!important;background:none!important;border:0!important;box-shadow:none!important;color:#eaf4fb;font-size:.78rem;line-height:1.4}
-    .today-sky-caption-text{display:inline-block;width:auto;max-width:100%;box-sizing:border-box;padding:8px 10px;border-radius:10px;background:rgba(7,19,31,.78);backdrop-filter:blur(8px);white-space:normal;overflow-wrap:anywhere}
+    .today-sky-caption{position:absolute;top:10px;right:12px;left:auto;bottom:auto;display:inline-block;width:max-content;max-width:calc(100% - 24px);box-sizing:border-box;padding:8px 10px;border-radius:10px;background:rgba(7,19,31,.78);backdrop-filter:blur(8px);color:#eaf4fb;font-size:.78rem;line-height:1.4;white-space:normal;overflow-wrap:anywhere;text-align:left}
     .sky-admin-controls{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
     .sky-admin-controls[hidden]{display:none!important}
     .sky-admin-controls input[type="file"]{grid-column:1/-1;width:100%;color:var(--muted);font:inherit;font-size:.82rem}
@@ -74,7 +73,7 @@
     .sky-admin-controls button{border:1px solid var(--line-strong);border-radius:10px;background:rgba(96,208,178,.1);color:var(--text);padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}
     .sky-admin-controls button:disabled{opacity:.55;cursor:wait}
     .sky-admin-status{grid-column:1/-1;color:var(--muted);font-size:.78rem;min-height:1.2em}
-    @media(max-width:760px){.today-sky-panel{grid-template-columns:1fr}.today-sky-figure{order:-1;border-left:0;border-bottom:1px solid var(--line);min-height:190px}.today-sky-figure img,.today-sky-placeholder{min-height:190px;max-height:320px}.today-sky-copy{padding:20px}.sky-admin-controls{grid-template-columns:1fr}.sky-admin-controls button{width:100%}}
+    @media(max-width:760px){.today-sky-panel{grid-template-columns:1fr}.today-sky-figure{order:-1;border-left:0;border-bottom:1px solid var(--line);min-height:190px}.today-sky-photo,.today-sky-placeholder{min-height:190px;max-height:320px}.today-sky-copy{padding:20px}.sky-admin-controls{grid-template-columns:1fr}.sky-admin-controls button{width:100%}}
 </style>
 </head>
 
@@ -236,11 +235,7 @@
       </div>
 
       <figure class="today-sky-figure">
-        <div id="todaySkyPlaceholder" class="today-sky-placeholder">
-          <div><strong>No photo added today</strong><span>The latest local sky view will appear here.</span></div>
-        </div>
-        <img id="todaySkyImage" alt="Today’s sky over Parknacross, Ardamine" hidden>
-        <figcaption id="todaySkyCaption" class="today-sky-caption" hidden><span id="todaySkyCaptionText" class="today-sky-caption-text"></span></figcaption>
+        <div id="todaySkyMedia" class="today-sky-media" aria-live="polite"></div>
       </figure>
     </section>
 
@@ -594,13 +589,10 @@
 </script>
 
 <script>
-/* v38.4.49 — Today's sky display with explicit mobile-safe placeholder/photo state. */
+/* v38.4.50 — Today's sky rebuilt so empty state and photo can never coexist. */
 (() => {
   const panel = document.getElementById("todaySkyPanel");
-  const image = document.getElementById("todaySkyImage");
-  const placeholder = document.getElementById("todaySkyPlaceholder");
-  const caption = document.getElementById("todaySkyCaption");
-  const captionText = document.getElementById("todaySkyCaptionText");
+  const media = document.getElementById("todaySkyMedia");
   const metaText = document.getElementById("todaySkyMeta");
   const adminControls = document.getElementById("skyAdminControls");
   const fileInput = document.getElementById("skyPhotoFile");
@@ -608,7 +600,7 @@
   const uploadButton = document.getElementById("skyPhotoUpload");
   const adminStatus = document.getElementById("skyAdminStatus");
   const base = window.PARKNACROSS_CONFIG?.apiBase?.replace(/\/$/, "");
-  if (!panel || !base) return;
+  if (!panel || !media || !base) return;
 
   const isAdminMode = new URLSearchParams(location.search).get("admin") === "1";
   if (isAdminMode && adminControls) adminControls.hidden = false;
@@ -631,27 +623,47 @@
     }).format(date)}`;
   };
 
-  function setSkyPhotoVisible(isVisible) {
-    if (image) {
-      image.hidden = !isVisible;
-      image.style.setProperty("display", isVisible ? "block" : "none", "important");
-      image.setAttribute("aria-hidden", isVisible ? "false" : "true");
-    }
-    if (placeholder) {
-      placeholder.hidden = isVisible;
-      placeholder.style.setProperty("display", isVisible ? "none" : "grid", "important");
-      placeholder.setAttribute("aria-hidden", isVisible ? "true" : "false");
-    }
+  function renderNoPhoto(message = "No photo added today", detail = "The latest local sky view will appear here.") {
+    const placeholder = document.createElement("div");
+    placeholder.className = "today-sky-placeholder";
+
+    const copy = document.createElement("div");
+    const strong = document.createElement("strong");
+    strong.textContent = message;
+    const span = document.createElement("span");
+    span.textContent = detail;
+    copy.append(strong, span);
+    placeholder.append(copy);
+
+    // replaceChildren is intentional: the empty state and a photo are never
+    // present in the component at the same time, regardless of browser CSS.
+    media.replaceChildren(placeholder);
+    metaText.textContent = message === "No photo added today"
+      ? "No visual observation has been added for today yet."
+      : "The photo service could not be reached just now.";
   }
 
-  function renderNoPhoto(message = "No photo added today") {
-    setSkyPhotoVisible(false);
-    image.removeAttribute("src");
-    caption.hidden = true;
-    caption.style.setProperty("display", "none", "important");
-    if (captionText) captionText.textContent = "";
-    placeholder.innerHTML = `<div><strong>${message}</strong><span>The latest local sky view will appear here.</span></div>`;
-    metaText.textContent = "No visual observation has been added for today yet.";
+  function renderPhoto(data) {
+    const image = document.createElement("img");
+    image.className = "today-sky-photo";
+    image.alt = "Today’s sky over Parknacross, Ardamine";
+    image.src = `${base}/sky-photo?v=${encodeURIComponent(data.uploaded_at)}`;
+    image.addEventListener("error", () => {
+      renderNoPhoto("Sky photo unavailable", "The uploaded photo could not be displayed just now.");
+    }, { once: true });
+
+    const nodes = [image];
+    const text = String(data.caption || "").trim();
+    if (text) {
+      const caption = document.createElement("figcaption");
+      caption.className = "today-sky-caption";
+      caption.textContent = text;
+      nodes.push(caption);
+    }
+
+    // Photo/caption completely replace the placeholder DOM.
+    media.replaceChildren(...nodes);
+    metaText.textContent = `${formatUploaded(data.uploaded_at)} · Parknacross, Ardamine`;
   }
 
   async function loadSkyPhoto() {
@@ -663,23 +675,11 @@
         renderNoPhoto();
         return;
       }
-      image.src = `${base}/sky-photo?v=${encodeURIComponent(data.uploaded_at)}`;
-      setSkyPhotoVisible(true);
-      const text = String(data.caption || "").trim();
-      if (captionText) captionText.textContent = text;
-      caption.hidden = !text;
-      caption.style.setProperty("display", text ? "block" : "none", "important");
-      metaText.textContent = `${formatUploaded(data.uploaded_at)} · Parknacross, Ardamine`;
-    } catch (error) {
-      renderNoPhoto("Sky photo unavailable");
-      metaText.textContent = "The photo service could not be reached just now.";
+      renderPhoto(data);
+    } catch (_) {
+      renderNoPhoto("Sky photo unavailable", "The photo service could not be reached just now.");
     }
   }
-
-  image.addEventListener("error", () => {
-    renderNoPhoto("Sky photo unavailable");
-    metaText.textContent = "The uploaded photo could not be displayed just now.";
-  });
 
   async function preparePhoto(file) {
     if (!file) throw new Error("Choose a photo first.");
