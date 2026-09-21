@@ -259,9 +259,9 @@
 
       <figure class="today-sky-figure">
         <div id="todaySkyMedia" class="today-sky-media" aria-live="polite"></div>
-        <div id="skyLikeRow" class="sky-like-row" hidden>
+        <div id="skyLikeRow" class="sky-like-row">
           <button id="skyLikeButton" class="sky-like-button" type="button" aria-pressed="false">♡ Like</button>
-          <span id="skyLikeCount" class="sky-like-count" aria-live="polite"></span>
+          <span id="skyLikeCount" class="sky-like-count" aria-live="polite">0 likes</span>
         </div>
       </figure>
     </section>
@@ -707,7 +707,11 @@
       if (photoId !== currentPhotoId) return;
       setLikeUI(data.likes, localStorage.getItem(likeStorageKey(photoId)) === "1");
     } catch (_) {
-      if (photoId === currentPhotoId && likeRow) likeRow.hidden = true;
+      // Keep the control visible even if the count service is temporarily unavailable.
+      // The button itself must never disappear from a successfully displayed photo.
+      if (photoId === currentPhotoId) {
+        setLikeUI(0, localStorage.getItem(likeStorageKey(photoId)) === "1");
+      }
     }
   }
 
@@ -737,6 +741,8 @@
       media.replaceChildren(wrap);
       metaText.textContent = `${formatUploaded(data.uploaded_at)} · Parknacross, Ardamine`;
       currentPhotoId = String(data.uploaded_at || "");
+      // Show Like immediately; fetching the shared count only updates it.
+      setLikeUI(0, localStorage.getItem(likeStorageKey(currentPhotoId)) === "1");
       loadLikes(currentPhotoId);
     }, { once:true });
     image.addEventListener("error", () => {
