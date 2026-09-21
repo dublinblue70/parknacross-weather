@@ -28,7 +28,7 @@ const requiredChecks = [
   ["history.js", "/coverage?days=371"],
   ["history.js", "Weather observations for"],
   ["status.js", "flagged"],
-  ["station.html", "Estimated database writes today"],
+  ["station.html", "Readings saved today"],
   ["navigation.js", "climate.html"],
   ["sitemap.xml", "2026-09-19"]
 ];
