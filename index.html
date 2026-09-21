@@ -723,7 +723,10 @@
       else localStorage.removeItem(likeStorageKey(photoId));
       setLikeUI(data.likes, Boolean(data.liked));
     } catch (_) {
-      if (photoId === currentPhotoId) setLikeUI(0, localStorage.getItem(likeStorageKey(photoId)) === "1");
+      if (photoId === currentPhotoId) {
+        likeCount.textContent = "Likes unavailable";
+        likeButton.disabled = true;
+      }
     }
   }
 
@@ -753,7 +756,10 @@
       media.replaceChildren(wrap);
       metaText.textContent = `${formatUploaded(data.uploaded_at)} · Parknacross, Ardamine`;
       currentPhotoId = String(data.uploaded_at || "");
-      setLikeUI(0, localStorage.getItem(likeStorageKey(currentPhotoId)) === "1");
+      likeRow.hidden = false;
+      likeButton.disabled = true;
+      likeButton.textContent = "♡ Like";
+      likeCount.textContent = "Loading likes…";
       loadLikes(currentPhotoId);
     }, { once:true });
     image.addEventListener("error", () => {

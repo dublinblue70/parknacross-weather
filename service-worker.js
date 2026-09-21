@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-54-like-consistency";
+const CACHE_NAME = "parknacross-v38-4-55-like-status";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
