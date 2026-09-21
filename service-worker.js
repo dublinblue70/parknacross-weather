@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-50";
+const CACHE_NAME = "parknacross-v38-4-51";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -102,7 +102,7 @@ self.addEventListener("fetch", event => {
   if (request.mode === "navigate") {
     event.respondWith((async () => {
       try {
-        return await fetch(request);
+        return await fetch(new Request(request, {cache: "no-store"}));
       } catch (_) {
         /*
          * Ignore the query string for archived report pages so, for example,
