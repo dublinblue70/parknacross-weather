@@ -81,14 +81,6 @@
       font-size:.78rem;line-height:1.4;text-align:left;overflow-wrap:anywhere;
       white-space:normal;backdrop-filter:blur(6px);
     }
-    .today-sky-likebar{display:flex;align-items:center;justify-content:flex-start;gap:9px;padding:10px 12px;border-top:1px solid var(--line);background:rgba(7,19,31,.72)}
-    .today-sky-like-button{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);border-radius:999px;background:rgba(255,255,255,.035);color:var(--text);padding:7px 11px;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;transition:transform .12s ease,background .12s ease,border-color .12s ease}
-    .today-sky-like-button:hover{background:rgba(255,255,255,.075)}
-    .today-sky-like-button:active{transform:scale(.97)}
-    .today-sky-like-button.is-liked{background:rgba(255,90,110,.12);border-color:rgba(255,120,135,.38)}
-    .today-sky-like-button:disabled{cursor:default;opacity:.82}
-    .today-sky-like-heart{font-size:1rem;line-height:1}
-    .today-sky-like-count{color:var(--muted);font-size:.8rem}
     @media(max-width:760px){.today-sky-photo-wrap{min-height:190px}}
     .sky-admin-controls{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
     .sky-admin-controls[hidden]{display:none!important}
@@ -260,13 +252,6 @@
 
       <figure class="today-sky-figure">
         <div id="todaySkyMedia" class="today-sky-media" aria-live="polite"></div>
-        <div id="todaySkyLikeBar" class="today-sky-likebar" hidden>
-          <button id="todaySkyLikeButton" class="today-sky-like-button" type="button" aria-label="Like today’s sky photo" aria-pressed="false">
-            <span id="todaySkyLikeHeart" class="today-sky-like-heart" aria-hidden="true">♡</span>
-            <span id="todaySkyLikeLabel">Like</span>
-          </button>
-          <span id="todaySkyLikeCount" class="today-sky-like-count" aria-live="polite"></span>
-        </div>
       </figure>
     </section>
 
@@ -630,11 +615,6 @@
   const captionInput = document.getElementById("skyPhotoCaption");
   const uploadButton = document.getElementById("skyPhotoUpload");
   const adminStatus = document.getElementById("skyAdminStatus");
-  const likeBar = document.getElementById("todaySkyLikeBar");
-  const likeButton = document.getElementById("todaySkyLikeButton");
-  const likeHeart = document.getElementById("todaySkyLikeHeart");
-  const likeLabel = document.getElementById("todaySkyLikeLabel");
-  const likeCount = document.getElementById("todaySkyLikeCount");
   const base = window.PARKNACROSS_CONFIG?.apiBase?.replace(/\/$/, "");
   if (!panel || !media || !base) return;
 
@@ -665,7 +645,6 @@
 
   function renderNoPhoto(message = "No photo added today", detail = "The latest local sky view will appear here.") {
     ++photoGeneration;
-    hideLikeBar();
     const placeholder = document.createElement("div");
     placeholder.className = "today-sky-placeholder";
 
@@ -683,67 +662,6 @@
     metaText.textContent = message === "No photo added today"
       ? "No visual observation has been added for today yet."
       : "The photo service could not be reached just now.";
-  }
-
-  const likeStorageKey = photoId => `parknacrossSkyLiked:${photoId}`;
-  let activePhotoId = null;
-
-  function hideLikeBar() {
-    activePhotoId = null;
-    if (likeBar) likeBar.hidden = true;
-    if (likeCount) likeCount.textContent = "";
-  }
-
-  function setLikeState(liked) {
-    if (!likeButton || !likeHeart || !likeLabel) return;
-    likeButton.classList.toggle("is-liked", liked);
-    likeHeart.textContent = liked ? "♥" : "♡";
-    likeLabel.textContent = liked ? "Liked" : "Like";
-    likeButton.disabled = liked;
-    likeButton.setAttribute("aria-pressed", liked ? "true" : "false");
-  }
-
-  function showLikeCount(likes) {
-    if (!likeCount) return;
-    const n = Math.max(0, Number(likes) || 0);
-    likeCount.textContent = n === 1 ? "1 like" : `${n} likes`;
-  }
-
-  async function activateLikeBar(photoId) {
-    if (!likeBar || !likeButton) return;
-    activePhotoId = photoId;
-    likeBar.hidden = false;
-    setLikeState(localStorage.getItem(likeStorageKey(photoId)) === "1");
-    showLikeCount(0);
-    try {
-      const response = await fetch(`${base}/sky-photo/likes?photo_id=${encodeURIComponent(photoId)}&_=${Date.now()}`, { cache:"no-store" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      if (activePhotoId === photoId) showLikeCount(data.likes);
-    } catch (_) {
-      if (activePhotoId === photoId && likeCount) likeCount.textContent = "Likes unavailable";
-    }
-  }
-
-  if (likeButton) {
-    likeButton.addEventListener("click", async () => {
-      const photoId = activePhotoId;
-      if (!photoId || localStorage.getItem(likeStorageKey(photoId)) === "1") return;
-      likeButton.disabled = true;
-      try {
-        const response = await fetch(`${base}/sky-photo/likes`, {
-          method:"POST", headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({ photo_id:photoId })
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
-        localStorage.setItem(likeStorageKey(photoId), "1");
-        setLikeState(true);
-        showLikeCount(data.likes);
-      } catch (_) {
-        setLikeState(false);
-      }
-    });
   }
 
   let photoGeneration = 0;
@@ -770,9 +688,7 @@
         caption.append(pill);
         wrap.append(caption);
       }
-      const photoId = String(data.uploaded_at || "").trim();
       media.replaceChildren(wrap);
-      activateLikeBar(photoId);
       metaText.textContent = `${formatUploaded(data.uploaded_at)} · Parknacross, Ardamine`;
     }, { once:true });
     image.addEventListener("error", () => {
