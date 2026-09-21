@@ -82,7 +82,7 @@
       white-space:normal;backdrop-filter:blur(6px);
     }
     @media(max-width:760px){.today-sky-photo-wrap{min-height:190px}}
-    .sky-like-row{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin-top:10px;min-height:36px}
+    .sky-like-row{display:flex!important;position:absolute;right:12px;bottom:12px;z-index:20;align-items:center;justify-content:flex-end;gap:9px;margin:0;min-height:36px;padding:6px 8px;border-radius:999px;background:rgba(7,19,31,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
     .sky-like-button{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);border-radius:999px;background:rgba(255,255,255,.035);color:var(--text);padding:7px 12px;font:inherit;font-size:.84rem;font-weight:700;cursor:pointer;transition:background .15s ease,border-color .15s ease,transform .15s ease}
     .sky-like-button:hover{background:rgba(255,255,255,.07)}
     .sky-like-button:active{transform:scale(.98)}
@@ -261,7 +261,7 @@
         <div id="todaySkyMedia" class="today-sky-media" aria-live="polite"></div>
         <div id="skyLikeRow" class="sky-like-row">
           <button id="skyLikeButton" class="sky-like-button" type="button" aria-pressed="false">♡ Like</button>
-          <span id="skyLikeCount" class="sky-like-count" aria-live="polite">0 likes</span>
+          <span id="skyLikeCount" class="sky-like-count" aria-live="polite"></span>
         </div>
       </figure>
     </section>
@@ -707,11 +707,7 @@
       if (photoId !== currentPhotoId) return;
       setLikeUI(data.likes, localStorage.getItem(likeStorageKey(photoId)) === "1");
     } catch (_) {
-      // Keep the control visible even if the count service is temporarily unavailable.
-      // The button itself must never disappear from a successfully displayed photo.
-      if (photoId === currentPhotoId) {
-        setLikeUI(0, localStorage.getItem(likeStorageKey(photoId)) === "1");
-      }
+      if (photoId === currentPhotoId) setLikeUI(0, localStorage.getItem(likeStorageKey(photoId)) === "1");
     }
   }
 
@@ -741,7 +737,6 @@
       media.replaceChildren(wrap);
       metaText.textContent = `${formatUploaded(data.uploaded_at)} · Parknacross, Ardamine`;
       currentPhotoId = String(data.uploaded_at || "");
-      // Show Like immediately; fetching the shared count only updates it.
       setLikeUI(0, localStorage.getItem(likeStorageKey(currentPhotoId)) === "1");
       loadLikes(currentPhotoId);
     }, { once:true });
