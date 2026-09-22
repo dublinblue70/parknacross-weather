@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-57-photo-archive";
+const CACHE_NAME = "parknacross-v38-4-58-photo-archive-ui-cleanup";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
