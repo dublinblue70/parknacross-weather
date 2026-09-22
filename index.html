@@ -101,6 +101,15 @@
     .sky-admin-archive{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:.83rem}
     .sky-admin-archive[hidden]{display:none!important}
     .sky-admin-archive-result{margin-top:10px}
+    .sky-historical-import{margin-top:10px}
+    .sky-historical-import summary{cursor:pointer;color:var(--text);font-weight:700}
+    .sky-historical-import-grid{margin-top:10px;display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.7fr);gap:10px}
+    .sky-historical-import-grid input{min-width:0;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025);color:var(--text);padding:10px 12px;font:inherit}
+    .sky-historical-import-grid input[type="file"]{grid-column:1/-1;color:var(--muted);font-size:.82rem}
+    .sky-historical-import-grid input[type="text"]{grid-column:1/-1}
+    .sky-historical-import-grid button{border:1px solid var(--line-strong);border-radius:10px;background:rgba(96,208,178,.1);color:var(--text);padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}
+    .sky-historical-import-grid button:disabled{opacity:.55;cursor:wait}
+    .sky-historical-import-status{align-self:center;color:var(--muted);font-size:.78rem;min-height:1.2em}
     .sky-archive-summary{margin:0 0 10px!important;font-size:.8rem;color:var(--muted)}
     .sky-archive-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
     .sky-archive-card{margin:0;min-width:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:rgba(255,255,255,.02)}
@@ -118,7 +127,7 @@
     .sky-admin-controls button{border:1px solid var(--line-strong);border-radius:10px;background:rgba(96,208,178,.1);color:var(--text);padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}
     .sky-admin-controls button:disabled{opacity:.55;cursor:wait}
     .sky-admin-status{grid-column:1/-1;color:var(--muted);font-size:.78rem;min-height:1.2em}
-    @media(max-width:760px){.today-sky-panel{grid-template-columns:1fr}.today-sky-figure{order:-1;border-left:0;border-bottom:1px solid var(--line);min-height:190px}.today-sky-photo,.today-sky-placeholder{min-height:190px;max-height:320px}.today-sky-copy{padding:20px}.sky-admin-controls{grid-template-columns:1fr}.sky-admin-controls button{width:100%}}
+    @media(max-width:760px){.today-sky-panel{grid-template-columns:1fr}.today-sky-figure{order:-1;border-left:0;border-bottom:1px solid var(--line);min-height:190px}.today-sky-photo,.today-sky-placeholder{min-height:190px;max-height:320px}.today-sky-copy{padding:20px}.sky-admin-controls,.sky-historical-import-grid{grid-template-columns:1fr}.sky-admin-controls button,.sky-historical-import-grid button{width:100%}.sky-historical-import-status{grid-column:1/-1}}
 </style>
 </head>
 
@@ -282,6 +291,16 @@
         </div>
         <div id="skyAdminArchive" class="sky-admin-archive" hidden>
           <button id="skyViewArchive" type="button">View photo archive</button>
+          <details id="skyHistoricalImport" class="sky-historical-import">
+            <summary>Import an older photo</summary>
+            <div class="sky-historical-import-grid">
+              <input id="skyHistoricalFile" type="file" accept="image/jpeg,image/png,image/webp">
+              <input id="skyHistoricalCapturedAt" type="datetime-local" aria-label="Photo date and time">
+              <button id="skyHistoricalImportButton" type="button">Import into archive</button>
+              <input id="skyHistoricalCaption" type="text" maxlength="140" placeholder="Optional original caption">
+              <span id="skyHistoricalImportStatus" class="sky-historical-import-status" aria-live="polite"></span>
+            </div>
+          </details>
           <div id="skyAdminArchiveResult" class="sky-admin-archive-result" aria-live="polite"></div>
         </div>
         <div id="skyAdminControls" class="sky-admin-controls" hidden aria-label="Today’s sky admin upload">
@@ -674,6 +693,11 @@
   const adminArchive = document.getElementById("skyAdminArchive");
   const viewArchiveButton = document.getElementById("skyViewArchive");
   const adminArchiveResult = document.getElementById("skyAdminArchiveResult");
+  const historicalFileInput = document.getElementById("skyHistoricalFile");
+  const historicalCapturedInput = document.getElementById("skyHistoricalCapturedAt");
+  const historicalCaptionInput = document.getElementById("skyHistoricalCaption");
+  const historicalImportButton = document.getElementById("skyHistoricalImportButton");
+  const historicalImportStatus = document.getElementById("skyHistoricalImportStatus");
   const base = window.PARKNACROSS_CONFIG?.apiBase?.replace(/\/$/, "");
   let currentPhotoId = null;
   if (!panel || !media || !base) return;
@@ -1098,6 +1122,95 @@
     } finally {
       viewArchiveButton.disabled = false;
     }
+  }
+
+  function dublinLocalInputToIso(value) {
+    const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+    if (!match) return null;
+    const wanted = {
+      year:Number(match[1]), month:Number(match[2]), day:Number(match[3]),
+      hour:Number(match[4]), minute:Number(match[5]), second:Number(match[6] || 0)
+    };
+    const wallUtc = Date.UTC(wanted.year, wanted.month - 1, wanted.day, wanted.hour, wanted.minute, wanted.second);
+    for (const offsetHours of [0, 1]) {
+      const candidate = new Date(wallUtc - offsetHours * 3600_000);
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone:"Europe/Dublin", year:"numeric", month:"2-digit", day:"2-digit",
+        hour:"2-digit", minute:"2-digit", second:"2-digit", hourCycle:"h23"
+      }).formatToParts(candidate);
+      const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
+      if (Number(map.year) === wanted.year && Number(map.month) === wanted.month && Number(map.day) === wanted.day &&
+          Number(map.hour) === wanted.hour && Number(map.minute) === wanted.minute && Number(map.second) === wanted.second) {
+        return candidate.toISOString();
+      }
+    }
+    return null;
+  }
+
+  function dublinDatetimeLocalValue(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone:"Europe/Dublin", year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", hourCycle:"h23"
+    }).formatToParts(date);
+    const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
+  }
+
+  function capturedTimeFromFilename(file) {
+    const match = String(file?.name || "").match(/(20\d{2})(\d{2})(\d{2})[^0-9]?(\d{2})(\d{2})(\d{2})/);
+    if (!match) return "";
+    return `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}`;
+  }
+
+  if (isAdminMode && historicalFileInput) {
+    historicalFileInput.addEventListener("change", () => {
+      const file = historicalFileInput.files?.[0];
+      if (!file || !historicalCapturedInput) return;
+      const fromName = capturedTimeFromFilename(file);
+      if (fromName) historicalCapturedInput.value = fromName;
+      else if (file.lastModified) historicalCapturedInput.value = dublinDatetimeLocalValue(new Date(file.lastModified));
+    });
+  }
+
+  if (isAdminMode && historicalImportButton) {
+    historicalImportButton.addEventListener("click", async () => {
+      historicalImportButton.disabled = true;
+      if (historicalImportStatus) historicalImportStatus.textContent = "Preparing photo…";
+      try {
+        const sourceFile = historicalFileInput?.files?.[0];
+        if (!sourceFile) throw new Error("Choose the older photo first.");
+        const capturedAt = dublinLocalInputToIso(historicalCapturedInput?.value || "");
+        if (!capturedAt) throw new Error("Choose a valid photo date and time.");
+        if (new Date(capturedAt).getTime() > Date.now() + 5 * 60 * 1000) throw new Error("Photo time cannot be in the future.");
+        const prepared = await preparePhoto(sourceFile);
+        const adminKey = archiveAdminKey();
+        if (!adminKey) throw new Error("Import cancelled — admin key required.");
+        const body = new FormData();
+        body.append("photo", prepared, prepared.name || sourceFile.name || "parknacross-sky.jpg");
+        body.append("caption", String(historicalCaptionInput?.value || "").trim());
+        body.append("captured_at", capturedAt);
+        if (historicalImportStatus) historicalImportStatus.textContent = "Importing…";
+        const response = await fetch(`${base}/sky-photo/archive/import`, {
+          method:"POST", headers:{"X-Parknacross-Admin-Key":adminKey}, body, cache:"no-store"
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 401) {
+          sessionStorage.removeItem("parknacrossAdminKey");
+          throw new Error("Admin key was not accepted.");
+        }
+        if (!response.ok) throw new Error(data.error || `Import failed (HTTP ${response.status}).`);
+        if (historicalImportStatus) historicalImportStatus.textContent = `Imported ${archiveDateLabel(data.captured_at || capturedAt)}.`;
+        historicalFileInput.value = "";
+        if (historicalCaptionInput) historicalCaptionInput.value = "";
+        await loadPhotoArchive({reset:true});
+      } catch (error) {
+        if (historicalImportStatus) historicalImportStatus.textContent = error.message || "Historical photo import failed.";
+      } finally {
+        historicalImportButton.disabled = false;
+      }
+    });
   }
 
   if (isAdminMode && viewArchiveButton) {

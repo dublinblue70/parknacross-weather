@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-58-photo-archive-ui-cleanup";
+const CACHE_NAME = "parknacross-v38-4-59-historical-import-admin";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

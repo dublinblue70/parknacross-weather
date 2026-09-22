@@ -14,6 +14,6 @@ Deploy `Parknacross-worker-v38.4.50-admin-like-names.txt` separately in Cloudfla
 
 ## Sky photo archive
 
-Worker v38.4.51 archives every successful Today’s Sky upload permanently in the existing `SKY_PHOTOS` R2 bucket and records its metadata in D1. The public dashboard still displays only the current day’s photo. Open the dashboard with `?admin=1` and choose **View photo archive** to browse and download archived photos. The archive endpoints require the existing `ADMIN_KEY`.
+Worker v38.4.53 archives every successful Today’s Sky upload permanently in the existing `SKY_PHOTOS` R2 bucket and records its metadata in D1. The public dashboard still displays only the current day’s photo. Open the dashboard with `?admin=1` to browse/download archived photos or use **Import an older photo** to add a historical image without replacing today’s current photo. The archive endpoints require the existing `ADMIN_KEY`.
 
 The first admin archive view (or the next upload) also preserves the photo that was already current when archive support was deployed. Photos that had already been replaced before archive support was deployed cannot be recovered automatically because the earlier system stored only `today/current`.
