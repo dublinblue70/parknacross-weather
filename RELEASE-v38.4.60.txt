@@ -1,0 +1,22 @@
+Parknacross Weather v38.4.60 — chart clarity and mobile audit fixes
+
+- Uses proportional elapsed-time axes on live trend charts.
+- Reports exact available date/time coverage and percentage of the selected span.
+- Preserves minimum and maximum observations when reducing longer ranges.
+- Shows archive gaps as genuine time gaps and broken lines.
+- Starts wind and rainfall scales at zero.
+- Detects gust-quality exceptions before aggregation and retains them as muted points.
+- Replaces area-based wind-direction wedges with percentage bars.
+- Explains that wind-direction percentages exclude calm five-minute intervals.
+- Adds a visible UV-index axis title.
+- Treats months with no annual archive data as missing, not zero rainfall.
+- Adds accessible live chart summaries and pressed-state range buttons.
+- Makes the mobile time-range selector sticky and touch-friendly.
+- Changes chart guidance to “Hover or tap”.
+- Self-hosts Chart.js and caches it for improved installed-app resilience.
+
+Validation
+- 20-page website smoke test passed.
+- All JavaScript syntax checks passed.
+- All local HTML asset references resolved.
+- Wind-direction five-minute sampling and percentage test passed.

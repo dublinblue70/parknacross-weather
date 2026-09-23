@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-59-historical-import-admin";
+const CACHE_NAME = "parknacross-v38-4-60-chart-clarity";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -18,6 +18,7 @@ const STATIC_ASSETS = [
   "./records.html",
   "./downloads.html",
   "./styles.css",
+  "./chart.umd.min.js",
   "./app.js",
   "./wind-rose.js",
   "./site-config.js",

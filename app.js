@@ -1088,13 +1088,15 @@ function updateDashboard(current) {
   set("year", stationDateKeyFromTime(new Date())?.slice(0,4) || new Date().getFullYear());
 }
 
-function scales(title) {
+function scales(title, beginAtZero = false, timeBased = false) {
   return {
     x: {
+      ...(timeBased ? { type: "linear" } : {}),
       grid: { color: "transparent" },
-      ticks: { color: "#a8bfd4", maxTicksLimit: 8 }
+      ticks: { color: "#a8bfd4", maxTicksLimit: 8, ...(timeBased ? { callback: value => new Date(Number(value)).toLocaleTimeString("en-IE", { timeZone: STATION_TIME_ZONE, hour: "2-digit", minute: "2-digit" }) } : {}) }
     },
     y: {
+      beginAtZero,
       grid: { color: "rgba(163,209,255,.10)" },
       ticks: { color: "#a8bfd4" },
       title: { display: true, text: title, color: "#a8bfd4" }
@@ -1137,7 +1139,7 @@ function createCharts() {
     options: {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
-      scales: scales("°C"),
+      scales: scales("°C", false, true),
       plugins: { legend: { position: "bottom" } }
     }
   });
@@ -1148,13 +1150,14 @@ function createCharts() {
       labels: [],
       datasets: [
         line("Wind km/h", "#74ddff"),
-        line("Gust km/h", "#ffad66")
+        line("Gust km/h", "#ffad66"),
+        { label: "Suspect gust excluded from line", data: [], borderColor: "#8797a5", backgroundColor: "#8797a5", showLine: false, pointRadius: 3, pointHoverRadius: 6, yAxisID: "y" }
       ]
     },
     options: {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
-      scales: scales("km/h"),
+      scales: scales("km/h", true, true),
       plugins: { legend: { position: "bottom" } }
     }
   });
@@ -1167,7 +1170,7 @@ function createCharts() {
     options: {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
-      scales: scales("hPa"),
+      scales: scales("hPa", false, true),
       plugins: { legend: { display: false } }
     }
   });
@@ -1185,7 +1188,7 @@ function createCharts() {
     },
     options: {
       maintainAspectRatio: false,
-      scales: scales("mm"),
+      scales: scales("mm", true),
       plugins: { legend: { display: false } }
     }
   });
@@ -1204,8 +1207,9 @@ function createCharts() {
       interaction: { mode: "index", intersect: false },
       scales: {
         x: {
+          type: "linear",
           grid: { color: "transparent" },
-          ticks: { color: "#a8bfd4", maxTicksLimit: 8 }
+          ticks: { color: "#a8bfd4", maxTicksLimit: 8, callback: value => new Date(Number(value)).toLocaleTimeString("en-IE", { timeZone: STATION_TIME_ZONE, hour: "2-digit", minute: "2-digit" }) }
         },
         y: {
           position: "left",
@@ -1281,19 +1285,20 @@ function updateCharts() {
     });
   });
 
-  charts.temperature.data.labels = labels;
-  charts.temperature.data.datasets[0].data = rows.map(row =>
-    row?._archiveGap || temperatureOutliers.has(row) ? null : row?.temperature_c
-  );
-  charts.temperature.data.datasets[1].data = rows.map(row => valueForChartRow(row, "dew_point_c"));
+  const point = (row, field, excluded = null) => ({
+    x: timeForChartRow(row),
+    y: row?._archiveGap || excluded?.has(row) ? null : valueForChartRow(row, field)
+  });
+  charts.temperature.data.labels = [];
+  charts.temperature.data.datasets[0].data = rows.map(row => point(row, "temperature_c", temperatureOutliers));
+  charts.temperature.data.datasets[1].data = rows.map(row => point(row, "dew_point_c"));
   charts.temperature.update();
 
-  charts.wind.data.labels = labels;
+  charts.wind.data.labels = [];
   const windGustOutliers = gustOutlierRows(rows);
-  charts.wind.data.datasets[0].data = rows.map(row => valueForChartRow(row, "wind_speed_kmh"));
-  charts.wind.data.datasets[1].data = rows.map(row =>
-    row?._archiveGap || windGustOutliers.has(row) ? null : valueForChartRow(row, "wind_gust_kmh")
-  );
+  charts.wind.data.datasets[0].data = rows.map(row => point(row, "wind_speed_kmh"));
+  charts.wind.data.datasets[1].data = rows.map(row => point(row, "wind_gust_kmh", windGustOutliers));
+  charts.wind.data.datasets[2].data = rows.map(row => ({ x: timeForChartRow(row), y: windGustOutliers.has(row) ? valueForChartRow(row, "wind_gust_kmh") : null }));
   charts.wind.update();
 
   window.ParknacrossWindRose?.update(
@@ -1308,13 +1313,13 @@ function updateCharts() {
     $("needle").style.transform = `rotate(${prevailing.deg}deg)`;
   }
 
-  charts.pressure.data.labels = labels;
-  charts.pressure.data.datasets[0].data = rows.map(row => valueForChartRow(row, "pressure_hpa"));
+  charts.pressure.data.labels = [];
+  charts.pressure.data.datasets[0].data = rows.map(row => point(row, "pressure_hpa"));
   charts.pressure.update();
 
-  charts.solar.data.labels = labels;
-  charts.solar.data.datasets[0].data = rows.map(row => valueForChartRow(row, "solar_w_m2"));
-  charts.solar.data.datasets[1].data = rows.map(row => valueForChartRow(row, "uv_index"));
+  charts.solar.data.labels = [];
+  charts.solar.data.datasets[0].data = rows.map(row => point(row, "solar_w_m2"));
+  charts.solar.data.datasets[1].data = rows.map(row => point(row, "uv_index"));
   charts.solar.update();
 
   const rainfall = dailyRainTotals();

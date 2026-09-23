@@ -2036,6 +2036,16 @@ html.is-offline .live-pill{opacity:.78}
 @media(max-width:900px){.nav-more-button{font-size:.82rem;padding:8px 10px}}
 @media(max-width:560px){.nav-more-button{font-size:.78rem;padding:7px 9px}}
 
+/* v38.4.60 — clear chart coverage and mobile range controls */
+.graph-coverage{color:var(--accent);font-weight:650;margin:.35rem 0}
+.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media(max-width:760px){
+  .graph-range-heading{align-items:stretch}
+  .graph-range-controls{position:sticky;top:6px;z-index:40;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;padding:7px;background:rgba(7,19,31,.96);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.22);backdrop-filter:blur(10px)}
+  .graph-range-controls button{min-width:0;padding:10px 4px;touch-action:manipulation}
+  .v2-chart-grid .chart-card{scroll-margin-top:70px}
+}
+
 /* v37 — consistent provenance badges */
 .source-badge {
   display:inline-flex; align-items:center; gap:5px; width:max-content;

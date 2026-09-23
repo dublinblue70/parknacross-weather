@@ -12,8 +12,8 @@ for (const name of htmlFiles) {
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   const duplicateIds = ids.filter((id, index) => ids.indexOf(id) !== index);
   if (duplicateIds.length) failures.push(`${name}: duplicate IDs ${[...new Set(duplicateIds)].join(", ")}`);
-  if (!/<meta name="description"/i.test(html)) failures.push(`${name}: missing meta description`);
-  if (!/<link rel="canonical"/i.test(html)) failures.push(`${name}: missing canonical URL`);
+  if (!/<meta\s+name="description"/i.test(html)) failures.push(`${name}: missing meta description`);
+  if (!/<link\s+rel="canonical"/i.test(html)) failures.push(`${name}: missing canonical URL`);
   if (!/<h1\b/i.test(html)) failures.push(`${name}: missing H1`);
 
   for (const match of html.matchAll(/(?:src|href)="([^"?#]+)(?:[?#][^"]*)?"/g)) {

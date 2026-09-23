@@ -1,186 +1,411 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#07131f">
-  <meta name="description" content="Ardamine weather history from Parknacross in North Wexford, including historical temperature, rainfall, wind, pressure, daily charts and station records.">
-  <meta name="robots" content="index,follow">
-  <link rel="manifest" href="manifest.webmanifest?v=20260917-v38-4-28-gold">
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260919-v38-4-33">
-  <title>Ardamine Weather History | Rainfall &amp; Records, North Wexford</title>
-  <link rel="canonical" href="https://parknacrossweather.ie/history.html">
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"Dataset",
-    "@id":"https://parknacrossweather.ie/downloads.html#dataset",
-    "name":"Parknacross Weather Observation Archive",
-    "url":"https://parknacrossweather.ie/history.html",
-    "temporalCoverage":"2026-09/..",
-    "spatialCoverage":{"@type":"Place","name":"Ardamine, Co. Wexford, Ireland"},
-    "measurementTechnique":"Ecowitt WS90 personal weather station with GW3001 gateway",
-    "isAccessibleForFree":true,
-    "distribution":{"@type":"DataDownload","encodingFormat":"text/csv","contentUrl":"https://parknacross-weather.dave-s-carter.workers.dev/export.csv?days=365"}
-  }
-  </script>
-</head>
-<body>
-<div class="shell">
-  <header class="topbar">
-    <a class="brand" href="index.html" aria-label="Parknacross Weather home">
-      <img class="brand-mark" src="favicon.svg" alt="">
-      <div class="brand-copy"><div class="brand-title">PARKNACROSS WEATHER</div><p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p></div>
-    </a>
-    <nav class="nav" aria-label="Main navigation">
-      <a href="index.html">Dashboard</a>
-      <a href="summary.html">Summary</a>
-      <a href="radar.html">Radar</a>
-      <a href="graphs.html">Graphs</a>
-      <a href="rain.html">Rain</a>
-      <a href="climate.html">Climate</a>
-      <a href="station.html">Station</a>
-      <a class="active" href="history.html">History</a>
-      <div class="nav-more">
-        <button class="nav-more-button" type="button" aria-expanded="false" aria-haspopup="menu">More <span aria-hidden="true">▾</span></button>
-        <div class="nav-more-menu" role="menu" hidden>
-          <a role="menuitem" href="coast.html">Coastal</a>
-          <a role="menuitem" href="sky.html">Sky camera</a>
-          <a role="menuitem" href="records.html">Records</a>
-          <a role="menuitem" href="monthly.html">Monthly report</a>
-          <a role="menuitem" href="annual.html">Annual report</a>
-          <a role="menuitem" href="downloads.html">Downloads</a>
-          <a role="menuitem" href="status.html">System status</a>
-          <a role="menuitem" href="maintenance.html">Maintenance</a>
-        </div>
-      </div>
-    </nav>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#07131f" />
+    <meta
+      name="description"
+      content="Ardamine weather history from Parknacross in North Wexford, including historical temperature, rainfall, wind, pressure, daily charts and station records."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260917-v38-4-28-gold" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css?v=20260919-v38-4-33" />
+    <title>
+      Ardamine Weather History | Rainfall &amp; Records, North Wexford
+    </title>
+    <link rel="canonical" href="https://parknacrossweather.ie/history.html" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "@id": "https://parknacrossweather.ie/downloads.html#dataset",
+        "name": "Parknacross Weather Observation Archive",
+        "url": "https://parknacrossweather.ie/history.html",
+        "temporalCoverage": "2026-09/..",
+        "spatialCoverage": {
+          "@type": "Place",
+          "name": "Ardamine, Co. Wexford, Ireland"
+        },
+        "measurementTechnique": "Ecowitt WS90 personal weather station with GW3001 gateway",
+        "isAccessibleForFree": true,
+        "distribution": {
+          "@type": "DataDownload",
+          "encodingFormat": "text/csv",
+          "contentUrl": "https://parknacross-weather.dave-s-carter.workers.dev/export.csv?days=365"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a
+          class="brand"
+          href="index.html"
+          aria-label="Parknacross Weather home"
+        >
+          <img class="brand-mark" src="favicon.svg" alt="" />
+          <div class="brand-copy">
+            <div class="brand-title">PARKNACROSS WEATHER</div>
+            <p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p>
+          </div>
+        </a>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="index.html">Dashboard</a>
+          <a href="summary.html">Summary</a>
+          <a href="radar.html">Radar</a>
+          <a href="graphs.html">Graphs</a>
+          <a href="rain.html">Rain</a>
+          <a href="climate.html">Climate</a>
+          <a href="station.html">Station</a>
+          <a class="active" href="history.html">History</a>
+          <div class="nav-more">
+            <button
+              class="nav-more-button"
+              type="button"
+              aria-expanded="false"
+              aria-haspopup="menu"
+            >
+              More <span aria-hidden="true">▾</span>
+            </button>
+            <div class="nav-more-menu" role="menu" hidden>
+              <a role="menuitem" href="coast.html">Coastal</a>
+              <a role="menuitem" href="sky.html">Sky camera</a>
+              <a role="menuitem" href="records.html">Records</a>
+              <a role="menuitem" href="monthly.html">Monthly report</a>
+              <a role="menuitem" href="annual.html">Annual report</a>
+              <a role="menuitem" href="downloads.html">Downloads</a>
+              <a role="menuitem" href="status.html">System status</a>
+              <a role="menuitem" href="maintenance.html">Maintenance</a>
+            </div>
+          </div>
+        </nav>
+      </header>
 
-  <main>
-    <section class="page-hero">
-      <span class="section-eyebrow">Archive</span>
-      <div class="source-badge-row"><span class="source-badge source-observed">Observed locally</span></div>
-      <h1>Ardamine weather history</h1>
-      <p>Historical Parknacross observations for Ardamine and the North Wexford coast, including daily temperature, rainfall and station records. The archive grows automatically as each new day of observations is added.</p>
-    </section>
+      <main>
+        <section class="page-hero">
+          <span class="section-eyebrow">Archive</span>
+          <div class="source-badge-row">
+            <span class="source-badge source-observed">Observed locally</span>
+          </div>
+          <h1>Ardamine weather history</h1>
+          <p>
+            Historical Parknacross observations for Ardamine and the North
+            Wexford coast, including daily temperature, rainfall and station
+            records. The archive grows automatically as each new day of
+            observations is added.
+          </p>
+        </section>
 
-    <section class="climate-grid page-section">
-      <article class="climate-card"><span>Rain this month</span><strong id="historyMonthRain">--</strong><small id="historyMonthRainDays">--</small></article>
-      <article class="climate-card"><span>Rain this year</span><strong id="historyYearRain">--</strong><small>Station observations</small></article>
-      <article class="climate-card"><span>Wettest day</span><strong id="historyWettest">--</strong><small id="historyWettestDate">--</small></article>
-      <article class="climate-card"><span>Records began</span><strong id="historySince">--</strong><small>First stored reading</small></article>
-    </section>
+        <section class="climate-grid page-section">
+          <article class="climate-card">
+            <span>Rain this month</span><strong id="historyMonthRain">--</strong
+            ><small id="historyMonthRainDays">--</small>
+          </article>
+          <article class="climate-card">
+            <span>Rain this year</span><strong id="historyYearRain">--</strong
+            ><small>Station observations</small>
+          </article>
+          <article class="climate-card">
+            <span>Wettest day</span><strong id="historyWettest">--</strong
+            ><small id="historyWettestDate">--</small>
+          </article>
+          <article class="climate-card">
+            <span>Records began</span><strong id="historySince">--</strong
+            ><small>First stored reading</small>
+          </article>
+        </section>
 
-    <section class="page-section">
-      <div class="section-heading">
-        <div><span class="section-eyebrow">Daily archive</span><h2>Temperature & rainfall</h2><p>Choose the period you want to inspect.</p></div>
-        <div class="history-actions"><a class="secondary-button" href="https://parknacross-weather.dave-s-carter.workers.dev/export.csv?days=365" download>Download CSV</a><div class="range-controls">
-          <button data-days="7">7 days</button>
-          <button data-days="30" class="active">30 days</button>
-          <button data-days="90">90 days</button>
-          <button data-days="365">1 year</button>
-        </div></div>
-      </div>
+        <section class="page-section">
+          <div class="section-heading">
+            <div>
+              <span class="section-eyebrow">Daily archive</span>
+              <h2>Temperature & rainfall</h2>
+              <p>Choose the period you want to inspect.</p>
+            </div>
+            <div class="history-actions">
+              <a
+                class="secondary-button"
+                href="https://parknacross-weather.dave-s-carter.workers.dev/export.csv?days=365"
+                download
+                >Download CSV</a
+              >
+              <div class="range-controls">
+                <button data-days="7">7 days</button>
+                <button data-days="30" class="active">30 days</button>
+                <button data-days="90">90 days</button>
+                <button data-days="365">1 year</button>
+              </div>
+            </div>
+          </div>
 
-      <div class="chart-grid">
-        <article class="chart-card">
-          <div class="chart-title"><div><h3>Daily temperature range</h3><p>High and low</p></div><span>°C</span></div>
-          <div class="chart-wrap"><canvas id="dailyTempChart"></canvas></div>
-        </article>
-        <article class="chart-card">
-          <div class="chart-title"><div><h3>Daily rainfall</h3><p>Daily totals</p></div><span>mm</span></div>
-          <div class="chart-wrap"><canvas id="dailyRainChart"></canvas></div>
-        </article>
-      </div>
-    </section>
+          <div class="chart-grid">
+            <article class="chart-card">
+              <div class="chart-title">
+                <div>
+                  <h3>Daily temperature range</h3>
+                  <p>High and low</p>
+                </div>
+                <span>°C</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="dailyTempChart"></canvas>
+              </div>
+            </article>
+            <article class="chart-card">
+              <div class="chart-title">
+                <div>
+                  <h3>Daily rainfall</h3>
+                  <p>Daily totals</p>
+                </div>
+                <span>mm</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="dailyRainChart"></canvas>
+              </div>
+            </article>
+          </div>
+        </section>
 
+        <section class="page-section" aria-labelledby="completenessHeading">
+          <div class="section-heading">
+            <div>
+              <span class="section-eyebrow">Archive health</span>
+              <h2 id="completenessHeading">Archive coverage</h2>
+              <p>
+                Shows how many expected five-minute readings were saved each day
+                over the past year. Click any day with data to inspect it.
+              </p>
+            </div>
+            <span class="source-badge source-observed">Observed locally</span>
+          </div>
+          <div class="archive-heatmap-wrap">
+            <div
+              id="archiveHeatmap"
+              class="archive-heatmap"
+              aria-label="365-day archive completeness heatmap"
+            ></div>
+          </div>
+          <div class="heatmap-legend" aria-label="Completeness legend">
+            <span
+              ><i style="background: rgba(110, 241, 203, 0.72)"></i
+              >Complete</span
+            >
+            <span
+              ><i style="background: rgba(116, 221, 255, 0.56)"></i>Good</span
+            >
+            <span
+              ><i style="background: rgba(116, 221, 255, 0.34)"></i
+              >Partial</span
+            >
+            <span
+              ><i style="background: rgba(116, 221, 255, 0.18)"></i>Sparse</span
+            >
+            <span
+              ><i style="background: rgba(255, 255, 255, 0.025)"></i>No
+              data</span
+            >
+          </div>
+          <p id="heatmapSummary" class="info-note" style="margin-top: 10px">
+            Calculating archive completeness…
+          </p>
+        </section>
 
+        <section class="page-section" aria-labelledby="calendarHeading">
+          <div class="section-heading">
+            <div>
+              <span class="section-eyebrow">Calendar archive</span>
+              <h2 id="calendarHeading">Explore a day</h2>
+              <p>
+                Select any archived date to see its daily summary and, where
+                available, its detailed observation graph.
+              </p>
+            </div>
+          </div>
 
-    <section class="page-section" aria-labelledby="completenessHeading">
-      <div class="section-heading">
-        <div><span class="section-eyebrow">Archive health</span><h2 id="completenessHeading">Archive coverage</h2><p>Shows how many expected five-minute readings were saved each day over the past year. Click any day with data to inspect it.</p></div>
-        <span class="source-badge source-observed">Observed locally</span>
-      </div>
-      <div class="archive-heatmap-wrap"><div id="archiveHeatmap" class="archive-heatmap" aria-label="365-day archive completeness heatmap"></div></div>
-      <div class="heatmap-legend" aria-label="Completeness legend">
-        <span><i style="background:rgba(110,241,203,.72)"></i>Complete</span>
-        <span><i style="background:rgba(116,221,255,.56)"></i>Good</span>
-        <span><i style="background:rgba(116,221,255,.34)"></i>Partial</span>
-        <span><i style="background:rgba(116,221,255,.18)"></i>Sparse</span>
-        <span><i style="background:rgba(255,255,255,.025)"></i>No data</span>
-      </div>
-      <p id="heatmapSummary" class="info-note" style="margin-top:10px">Calculating archive completeness…</p>
-    </section>
+          <div class="archive-search" aria-label="Find an archived date">
+            <label for="archiveDateSearch"
+              >What was the weather on…?
+              <input id="archiveDateSearch" type="date" />
+            </label>
+            <button id="archiveDateButton" type="button">Open date</button>
+          </div>
+          <div
+            id="archiveSearchStatus"
+            class="archive-search-status"
+            aria-live="polite"
+          ></div>
+          <div class="archive-calendar-toolbar">
+            <button id="calendarPrev" type="button" aria-label="Previous month">
+              ← Previous
+            </button>
+            <strong id="calendarTitle" class="archive-calendar-title"
+              >--</strong
+            >
+            <button id="calendarNext" type="button" aria-label="Next month">
+              Next →
+            </button>
+          </div>
+          <div
+            id="archiveCalendar"
+            class="archive-calendar"
+            aria-label="Weather archive calendar"
+          ></div>
 
-    <section class="page-section" aria-labelledby="calendarHeading">
-      <div class="section-heading">
-        <div><span class="section-eyebrow">Calendar archive</span><h2 id="calendarHeading">Explore a day</h2><p>Select any archived date to see its daily summary and, where available, its detailed observation graph.</p></div>
-      </div>
+          <article class="chart-card" style="margin-top: 14px">
+            <div class="chart-title">
+              <div>
+                <h3 id="dayDetailTitle">Select a date</h3>
+                <p id="dayDetailStory">
+                  Choose a day in the calendar to inspect its observations.
+                </p>
+              </div>
+              <span id="dayDetailCount">--</span>
+            </div>
+            <div class="day-detail-grid">
+              <div class="day-detail-stat">
+                <span>High</span><strong id="dayHigh">--</strong>
+              </div>
+              <div class="day-detail-stat">
+                <span>Low</span><strong id="dayLow">--</strong>
+              </div>
+              <div class="day-detail-stat">
+                <span>Rain</span><strong id="dayRain">--</strong>
+              </div>
+              <div class="day-detail-stat">
+                <span>Peak gust</span><strong id="dayGust">--</strong>
+              </div>
+              <div class="day-detail-stat">
+                <span>Sea-level pressure range</span
+                ><strong id="dayPressure">--</strong>
+              </div>
+              <div class="day-detail-stat">
+                <span>Lightning</span><strong id="dayLightning">--</strong
+                ><small id="dayLightningNote"></small>
+              </div>
+            </div>
+            <div class="day-detail-chart">
+              <canvas id="dayDetailChart"></canvas>
+            </div>
+            <p
+              id="dayChartEmpty"
+              class="info-note"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></p>
+          </article>
+        </section>
 
-      <div class="archive-search" aria-label="Find an archived date">
-        <label for="archiveDateSearch">What was the weather on…?
-          <input id="archiveDateSearch" type="date">
-        </label>
-        <button id="archiveDateButton" type="button">Open date</button>
-      </div>
-      <div id="archiveSearchStatus" class="archive-search-status" aria-live="polite"></div>
-      <div class="archive-calendar-toolbar">
-        <button id="calendarPrev" type="button" aria-label="Previous month">← Previous</button>
-        <strong id="calendarTitle" class="archive-calendar-title">--</strong>
-        <button id="calendarNext" type="button" aria-label="Next month">Next →</button>
-      </div>
-      <div id="archiveCalendar" class="archive-calendar" aria-label="Weather archive calendar"></div>
+        <section class="page-section" aria-labelledby="diaryHeading">
+          <div class="section-heading">
+            <div>
+              <span class="section-eyebrow">Weather diary</span>
+              <h2 id="diaryHeading">Notable Parknacross weather</h2>
+              <p>
+                Automatically identified wet, windy, warm, frosty and lightning
+                days, alongside station records.
+              </p>
+            </div>
+          </div>
+          <div id="weatherDiary" class="weather-diary">
+            <p class="info-note">Building the diary from the archive…</p>
+          </div>
+        </section>
 
-      <article class="chart-card" style="margin-top:14px">
-        <div class="chart-title"><div><h3 id="dayDetailTitle">Select a date</h3><p id="dayDetailStory">Choose a day in the calendar to inspect its observations.</p></div><span id="dayDetailCount">--</span></div>
-        <div class="day-detail-grid">
-          <div class="day-detail-stat"><span>High</span><strong id="dayHigh">--</strong></div>
-          <div class="day-detail-stat"><span>Low</span><strong id="dayLow">--</strong></div>
-          <div class="day-detail-stat"><span>Rain</span><strong id="dayRain">--</strong></div>
-          <div class="day-detail-stat"><span>Peak gust</span><strong id="dayGust">--</strong></div>
-          <div class="day-detail-stat"><span>Sea-level pressure range</span><strong id="dayPressure">--</strong></div>
-          <div class="day-detail-stat"><span>Lightning</span><strong id="dayLightning">--</strong><small id="dayLightningNote"></small></div>
-        </div>
-        <div class="day-detail-chart"><canvas id="dayDetailChart"></canvas></div>
-        <p id="dayChartEmpty" class="info-note" role="status" aria-live="polite" hidden></p>
-      </article>
-    </section>
+        <section class="page-section">
+          <div class="section-heading">
+            <div>
+              <span class="section-eyebrow">Records</span>
+              <h2>All-time station records</h2>
+              <p>Since the station archive began.</p>
+            </div>
+          </div>
+          <div class="records-grid-page">
+            <article class="climate-card">
+              <span>Highest temperature</span
+              ><strong id="histAllHigh">--</strong
+              ><small id="histAllHighDate">--</small>
+            </article>
+            <article class="climate-card">
+              <span>Lowest temperature</span><strong id="histAllLow">--</strong
+              ><small id="histAllLowDate">--</small>
+            </article>
+            <article class="climate-card">
+              <span>Strongest gust</span><strong id="histAllGust">--</strong
+              ><small id="histAllGustDate">--</small>
+            </article>
+            <article class="climate-card">
+              <span>Highest sea-level pressure</span
+              ><strong id="histAllPressureHigh">--</strong
+              ><small id="histAllPressureHighDate">--</small>
+            </article>
+            <article class="climate-card">
+              <span>Lowest sea-level pressure</span
+              ><strong id="histAllPressureLow">--</strong
+              ><small id="histAllPressureLowDate">--</small>
+            </article>
+            <article class="climate-card">
+              <span>Total readings saved</span
+              ><strong id="histSamples">--</strong
+              ><small>Historical archive</small>
+            </article>
+          </div>
+        </section>
+      </main>
 
-    <section class="page-section" aria-labelledby="diaryHeading">
-      <div class="section-heading">
-        <div><span class="section-eyebrow">Weather diary</span><h2 id="diaryHeading">Notable Parknacross weather</h2><p>Automatically identified wet, windy, warm, frosty and lightning days, alongside station records.</p></div>
-      </div>
-      <div id="weatherDiary" class="weather-diary"><p class="info-note">Building the diary from the archive…</p></div>
-    </section>
+      <footer>
+        <span>© <span id="year"></span> Parknacross Weather</span>
+        <span
+          >Hyperlocal weather observations · Ardamine, Co. Wexford,
+          Ireland</span
+        >
+        <nav
+          class="footer-links"
+          aria-label="Parknacross Weather contact and social links"
+        >
+          <a
+            href="mailto:info@parknacrossweather.ie"
+            aria-label="Email Parknacross Weather"
+            >Email</a
+          ><span aria-hidden="true">·</span
+          ><a
+            href="https://www.facebook.com/1361994206992789"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Parknacross Weather on Facebook"
+            >Facebook</a
+          ><span aria-hidden="true">·</span
+          ><a
+            href="https://x.com/ParknacrossWx"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Parknacross Weather on X, @ParknacrossWx"
+            >X</a
+          >
+        </nav>
+      </footer>
+    </div>
 
-    <section class="page-section">
-      <div class="section-heading"><div><span class="section-eyebrow">Records</span><h2>All-time station records</h2><p>Since the station archive began.</p></div></div>
-      <div class="records-grid-page">
-        <article class="climate-card"><span>Highest temperature</span><strong id="histAllHigh">--</strong><small id="histAllHighDate">--</small></article>
-        <article class="climate-card"><span>Lowest temperature</span><strong id="histAllLow">--</strong><small id="histAllLowDate">--</small></article>
-        <article class="climate-card"><span>Strongest gust</span><strong id="histAllGust">--</strong><small id="histAllGustDate">--</small></article>
-        <article class="climate-card"><span>Highest sea-level pressure</span><strong id="histAllPressureHigh">--</strong><small id="histAllPressureHighDate">--</small></article>
-        <article class="climate-card"><span>Lowest sea-level pressure</span><strong id="histAllPressureLow">--</strong><small id="histAllPressureLowDate">--</small></article>
-        <article class="climate-card"><span>Total readings saved</span><strong id="histSamples">--</strong><small>Historical archive</small></article>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <span>© <span id="year"></span> Parknacross Weather</span>
-    <span>Hyperlocal weather observations · Ardamine, Co. Wexford, Ireland</span>
-  <nav class="footer-links" aria-label="Parknacross Weather contact and social links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a></nav></footer>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="history.js?v=20260919-v38-4-33"></script>
-<script src="site-config.js?v=20260912-mobile2"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
-<script src="pwa-update.js?v=20260916-v38-4"></script>
-<script src="offline.js?v=20260915-v36"></script>
-<script src="accessibility.js?v=20260915-v36"></script>
-<script src="navigation.js?v=20260919-v38-4-33"></script>
-</body>
+    <script src="chart.umd.min.js?v=4.4.4"></script>
+    <script src="history.js?v=20260919-v38-4-33"></script>
+    <script src="site-config.js?v=20260912-mobile2"></script>
+    <!-- Cloudflare Web Analytics -->
+    <script
+      type="module"
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'
+    ></script>
+    <!-- End Cloudflare Web Analytics -->
+    <script src="pwa-update.js?v=20260916-v38-4"></script>
+    <script src="offline.js?v=20260915-v36"></script>
+    <script src="accessibility.js?v=20260915-v36"></script>
+    <script src="navigation.js?v=20260919-v38-4-33"></script>
+  </body>
 </html>
