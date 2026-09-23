@@ -1,6 +1,12 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
   {
     date: "2026-09-24",
+    type: "Clarity and focus",
+    title: "Weather Lab timeline clarified and simplified",
+    detail: "Added an explicit Irish-local date and time to every coastal timeline entry and labelled whole-day forecasts clearly. Removed forecast accountability, weather stories, the visual weather diary, the microclimate explorer and open-local-weather embed so the page stays focused on useful local tools. Weather observations and calculations are unchanged."
+  },
+  {
+    date: "2026-09-24",
     type: "Weather intelligence",
     title: "Weather Intelligence Lab launched",
     detail: "Added a coastal timeline, automatic Storm Mode analysis, plain-language archive questions, recent event stories, sky-photo weather overlays, forecast verification, local microclimate comparisons, transparent source guidance, public data links and official water-safety guidance. Existing observations and calculations are unchanged."

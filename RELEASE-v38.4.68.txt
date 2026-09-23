@@ -1,0 +1,17 @@
+Parknacross Weather v38.4.68
+Released: 24 September 2026
+
+Weather Lab clarity update
+
+- Every coastal timeline entry now displays an explicit Irish-local date and time.
+- Whole-day forecast entries are labelled “all day” instead of using an ambiguous relative date.
+- Arklow tide predictions retain their Poulshone context and clearer safety note.
+- Removed Forecast Accountability.
+- Removed Recent Weather Stories.
+- Removed Visual Weather Diary.
+- Removed Microclimate Explorer.
+- Removed Open Local Weather.
+- Removed the deleted sections' JavaScript, network requests and unused styles.
+- Added regression checks to prevent the removed sections from returning accidentally.
+
+Existing weather observations, calculations, charts, navigation and archive logic are unchanged.

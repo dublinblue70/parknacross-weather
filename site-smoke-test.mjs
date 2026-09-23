@@ -80,7 +80,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-67"],
+  ["service-worker.js", "parknacross-v38-4-68"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -95,13 +95,18 @@ const requiredChecks = [
   ["intelligence.html", "Weather Intelligence Lab"],
   ["intelligence.js", "loadStormMode"],
   ["intelligence.js", "setupArchiveQuestions"],
-  ["intelligence.js", "loadVerification"],
+  ["intelligence.js", "timelineStamp"],
   ["navigation.js", "data-nav-more-popup"]
 ];
 
 for (const [name, text] of requiredChecks) {
   const content = await readFile(join(root, name), "utf8");
   if (!content.includes(text)) failures.push(`${name}: expected marker missing: ${text}`);
+}
+
+const intelligenceHtml = await readFile(join(root, "intelligence.html"), "utf8");
+for (const removedSection of ["Forecast accountability", "Recent weather stories", "Visual weather diary", "Microclimate explorer", "Open local weather"]) {
+  if (intelligenceHtml.includes(removedSection)) failures.push(`intelligence.html: removed section still present: ${removedSection}`);
 }
 
 const navigation = await readFile(join(root, "navigation.js"), "utf8");
