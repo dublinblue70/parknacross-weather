@@ -11,10 +11,10 @@
       name="description"
       content="Live weather graphs and trends from Parknacross, Ardamine, Co. Wexford, including temperature, wind, pressure, rainfall and humidity."
     />
-    <link rel="manifest" href="manifest.webmanifest?v=20260917-v38-4-28-gold" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260923-v38-4-63" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260919-v38-4-33" />
+    <link rel="stylesheet" href="styles.css?v=20260923-v38-4-63" />
 
     <title>Weather Graphs &amp; Trends | Parknacross, Co. Wexford</title>
     <link rel="canonical" href="https://parknacrossweather.ie/graphs.html" />
@@ -87,6 +87,7 @@
                 Checking available coverage…
               </p>
               <p id="graphCount">Loading…</p>
+              <span id="partialCoverageBadge" class="coverage-badge" hidden>Partial archive</span>
             </div>
             <div
               class="range-controls graph-range-controls"
@@ -116,7 +117,7 @@
                 </div>
                 <span>°C</span>
               </div>
-              <div class="chart-wrap"><canvas id="gTemp"></canvas></div>
+              <div class="chart-wrap"><canvas id="gTemp" role="img" aria-label="Temperature and dew-point chart for the selected period"></canvas></div>
             </article>
             <article class="chart-card">
               <div class="chart-title">
@@ -126,7 +127,7 @@
                 </div>
                 <span>km/h</span>
               </div>
-              <div class="chart-wrap"><canvas id="gWind"></canvas></div>
+              <div class="chart-wrap"><canvas id="gWind" role="img" aria-label="Wind speed and gust chart for the selected period"></canvas></div>
             </article>
 
             <article class="chart-card">
@@ -140,6 +141,7 @@
               <div class="wind-rose-wrap">
                 <canvas
                   id="gWindRose"
+                  role="img"
                   aria-label="Historical wind direction frequency by compass sector"
                 ></canvas>
               </div>
@@ -155,7 +157,7 @@
                 </div>
                 <span>hPa</span>
               </div>
-              <div class="chart-wrap"><canvas id="gPressure"></canvas></div>
+              <div class="chart-wrap"><canvas id="gPressure" role="img" aria-label="Sea-level pressure chart for the selected period"></canvas></div>
             </article>
             <article class="chart-card">
               <div class="chart-title">
@@ -168,7 +170,7 @@
                 </div>
                 <span>mm/h</span>
               </div>
-              <div class="chart-wrap"><canvas id="gRain"></canvas></div>
+              <div class="chart-wrap"><canvas id="gRain" role="img" aria-label="Rain-rate chart for the selected period"></canvas></div>
             </article>
             <article class="chart-card">
               <div class="chart-title">
@@ -178,7 +180,7 @@
                 </div>
                 <span>W/m²</span>
               </div>
-              <div class="chart-wrap"><canvas id="gSolar"></canvas></div>
+              <div class="chart-wrap"><canvas id="gSolar" role="img" aria-label="Solar radiation and UV chart for the selected period"></canvas></div>
             </article>
             <article
               class="chart-card"
@@ -282,7 +284,7 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="wind-rose.js?v=20260923-radial-restore"></script>
     <script src="site-config.js?v=20260912-mobile2"></script>
-    <script src="graphs.js?v=20260923-chart-clarity"></script>
+    <script src="graphs.js?v=20260923-v38-4-63"></script>
     <script src="lightning-charts.js?v=20260921-v38-4-44"></script>
     <!-- Cloudflare Web Analytics -->
     <script
@@ -291,7 +293,7 @@
       data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'
     ></script>
     <!-- End Cloudflare Web Analytics -->
-    <script src="pwa-update.js?v=20260916-v38-4"></script>
+    <script src="pwa-update.js?v=20260923-v38-4-63"></script>
     <script src="offline.js?v=20260915-v36"></script>
     <script src="accessibility.js?v=20260915-v36"></script>
     <script src="navigation.js?v=20260919-v38-4-33"></script>

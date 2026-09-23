@@ -1,0 +1,30 @@
+PARKNACROSS WEATHER v38.4.63
+Released: 23 September 2026
+
+ACCESSIBILITY AND CHART CLARITY
+- Dashboard chart tooltips now show Dublin-local date and time.
+- Dashboard and Graphs canvases have meaningful accessible descriptions.
+- A live non-visual dashboard summary reports chart period and observation count.
+- The Graphs page shows an explicit Partial archive badge below 98% span coverage.
+- Graph descriptions update when the selected time range changes.
+
+MOBILE AND NAVIGATION
+- Mobile navigation now has a subtle edge fade to indicate horizontal scrolling.
+- The dashboard trend link now opens the full Graphs page.
+- The mobile trends heading and link stack cleanly on narrow displays.
+- PWA update wording is shorter and clearer.
+
+HISTORY AND SKY CAMERA
+- Added Previous available day and Next available day controls to History.
+- Sky Camera image and timelapse elements are created only when configured,
+  preventing dormant empty URLs from being reported as broken resources.
+
+SEO AND PWA
+- Added WebApplication structured data to the dashboard.
+- Standard and maskable manifest icon purposes are now declared separately.
+- Maintenance remains publicly accessible but is noindex and removed from sitemap.
+
+UNCHANGED BY DESIGN
+- Weather calculations, thresholds, archive aggregation and outlier logic.
+- Lightning charts remain on Graphs; the dashboard keeps compact sensor status.
+- Wind roses remain circular on Dashboard and Graphs with the same binning logic.

@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-62-offline-pwa-polish";
+const CACHE_NAME = "parknacross-v38-4-63-accessibility-clarity";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

@@ -40,7 +40,9 @@ for (const ref of offlineReferences) {
 try {
   const manifest = JSON.parse(await readFile(join(root, "manifest.webmanifest"), "utf8"));
   if (!Array.isArray(manifest.shortcuts) || manifest.shortcuts.length < 3) failures.push("manifest.webmanifest: expected Dashboard, Graphs and Rain shortcuts");
-  if (!(manifest.icons || []).every(icon => String(icon.purpose || "").includes("maskable"))) failures.push("manifest.webmanifest: every primary icon must support maskable display");
+  const iconPurposes = (manifest.icons || []).map(icon => String(icon.purpose || ""));
+  if (!iconPurposes.some(purpose => purpose.split(/\s+/).includes("maskable"))) failures.push("manifest.webmanifest: expected at least one maskable icon");
+  if (!iconPurposes.some(purpose => purpose.split(/\s+/).includes("any"))) failures.push("manifest.webmanifest: expected at least one standard icon");
   if (!Array.isArray(manifest.screenshots) || manifest.screenshots.length < 2) failures.push("manifest.webmanifest: expected Dashboard and Graphs install screenshots");
   const manifestAssets = [
     ...(manifest.icons || []).map(item => item.src),
@@ -62,7 +64,11 @@ const requiredChecks = [
   ["status.js", "flagged"],
   ["station.html", "Readings saved today"],
   ["navigation.js", "climate.html"],
-  ["sitemap.xml", "2026-09-19"]
+  ["sitemap.xml", "2026-09-19"],
+  ["app.js", "dashboardTooltipTime"],
+  ["graphs.js", "Partial archive"],
+  ["history.html", "previousArchiveDay"],
+  ["maintenance.html", "noindex,follow"]
 ];
 
 for (const [name, text] of requiredChecks) {

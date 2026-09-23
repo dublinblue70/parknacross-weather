@@ -27,7 +27,7 @@
     wrap.style.cssText = "position:fixed;left:50%;bottom:max(18px,calc(env(safe-area-inset-bottom) + 8px));transform:translateX(-50%);z-index:99999;width:min(92vw,540px);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid rgba(168,210,232,.28);border-radius:14px;background:#0d2231;color:#f2f7fa;box-shadow:0 12px 35px rgba(0,0,0,.38);font:14px/1.35 system-ui,-apple-system,Segoe UI,sans-serif";
 
     const text = document.createElement("span");
-    text.textContent = "A newer Parknacross Weather version is ready.";
+    text.textContent = "Update available · refresh to use the latest Parknacross Weather version.";
 
     const button = document.createElement("button");
     button.type = "button";

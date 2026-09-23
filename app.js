@@ -1104,6 +1104,26 @@ function scales(title, beginAtZero = false, timeBased = false) {
   };
 }
 
+function dashboardTooltipTime(items) {
+  const value = items?.[0]?.parsed?.x;
+  return Number.isFinite(value)
+    ? new Date(value).toLocaleString("en-IE", {
+        timeZone: STATION_TIME_ZONE,
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    : "";
+}
+
+function timeChartPlugins(legend) {
+  return {
+    tooltip: { callbacks: { title: dashboardTooltipTime } },
+    legend
+  };
+}
+
 function line(label, colour, axis = "y") {
   return {
     label,
@@ -1140,7 +1160,7 @@ function createCharts() {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       scales: scales("°C", false, true),
-      plugins: { legend: { position: "bottom" } }
+      plugins: timeChartPlugins({ position: "bottom" })
     }
   });
 
@@ -1158,7 +1178,7 @@ function createCharts() {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       scales: scales("km/h", true, true),
-      plugins: { legend: { position: "bottom" } }
+      plugins: timeChartPlugins({ position: "bottom" })
     }
   });
 
@@ -1171,7 +1191,7 @@ function createCharts() {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       scales: scales("hPa", false, true),
-      plugins: { legend: { display: false } }
+      plugins: timeChartPlugins({ display: false })
     }
   });
 
@@ -1226,7 +1246,7 @@ function createCharts() {
           title: { display: true, text: "UV", color: "#a8bfd4" }
         }
       },
-      plugins: { legend: { position: "bottom" } }
+      plugins: timeChartPlugins({ position: "bottom" })
     }
   });
 }
@@ -1276,15 +1296,6 @@ function updateCharts() {
   const timeForChartRow = row => row?._archiveGap ? row._gapTime : readingTime(row);
   const valueForChartRow = (row, field) => row?._archiveGap ? null : row?.[field];
 
-  const labels = rows.map(reading => {
-    if (reading?._archiveGap) return "";
-    return new Date(timeForChartRow(reading)).toLocaleTimeString("en-IE", {
-      timeZone: STATION_TIME_ZONE,
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  });
-
   const point = (row, field, excluded = null) => ({
     x: timeForChartRow(row),
     y: row?._archiveGap || excluded?.has(row) ? null : valueForChartRow(row, field)
@@ -1328,6 +1339,14 @@ function updateCharts() {
   );
   charts.rain.data.datasets[0].data = rainfall.map(day => day.rain);
   charts.rain.update();
+
+  const usableRows = rows.filter(row => !row?._archiveGap);
+  const firstTime = usableRows.length ? timeForChartRow(usableRows[0]) : null;
+  const lastTime = usableRows.length ? timeForChartRow(usableRows.at(-1)) : null;
+  const period = firstTime && lastTime
+    ? `${new Date(firstTime).toLocaleString("en-IE", { timeZone: STATION_TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} to ${new Date(lastTime).toLocaleString("en-IE", { timeZone: STATION_TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
+    : "the latest available period";
+  set("dashboardChartSummary", `Dashboard weather charts cover ${period} using ${usableRows.length.toLocaleString("en-IE")} observations. Large archive gaps are shown as breaks; isolated suspect readings are not joined into the valid trend lines.`);
 }
 
 async function getJSON(url, cacheMode = "default") {

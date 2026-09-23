@@ -2038,12 +2038,26 @@ html.is-offline .live-pill{opacity:.78}
 
 /* v38.4.60 — clear chart coverage and mobile range controls */
 .graph-coverage{color:var(--accent);font-weight:650;margin:.35rem 0}
+.coverage-badge{
+  display:inline-flex;align-items:center;width:max-content;margin-top:5px;
+  padding:5px 9px;border:1px solid rgba(242,191,103,.42);border-radius:999px;
+  background:rgba(242,191,103,.08);color:var(--amber);font-size:.7rem;font-weight:780;
+  letter-spacing:.035em;text-transform:uppercase
+}
+.coverage-badge[hidden]{display:none!important}
 .visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @media(max-width:760px){
   .graph-range-heading{align-items:stretch}
   .graph-range-controls{position:sticky;top:6px;z-index:40;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;padding:7px;background:rgba(7,19,31,.96);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.22);backdrop-filter:blur(10px)}
   .graph-range-controls button{min-width:0;padding:10px 4px;touch-action:manipulation}
   .v2-chart-grid .chart-card{scroll-margin-top:70px}
+  .nav{
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12px,#000 calc(100% - 18px),transparent 100%);
+    mask-image:linear-gradient(90deg,transparent 0,#000 12px,#000 calc(100% - 18px),transparent 100%);
+    padding-inline:12px 18px;
+  }
+  .trends-section .section-heading{align-items:flex-start;flex-direction:column;gap:9px}
+  .trends-section .text-link{white-space:normal}
 }
 
 /* v37 — consistent provenance badges */
@@ -2072,6 +2086,9 @@ html.is-offline .live-pill{opacity:.78}
 
 /* v37 — archive search + completeness heatmap */
 .archive-search { display:flex; align-items:end; gap:9px; flex-wrap:wrap; }
+.archive-day-navigation{display:flex;justify-content:space-between;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.archive-day-navigation button{padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--text);font:inherit;cursor:pointer}
+.archive-day-navigation button:disabled{opacity:.4;cursor:not-allowed}
 .archive-search label { display:grid; gap:5px; color:var(--muted); font-size:.72rem; }
 .archive-search input {
   min-height:38px; padding:8px 10px; border-radius:9px; border:1px solid var(--line);

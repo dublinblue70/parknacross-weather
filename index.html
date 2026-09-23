@@ -28,10 +28,10 @@
     />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <link rel="manifest" href="manifest.webmanifest?v=20260917-v38-4-28-gold" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260923-v38-4-63" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260919-v38-4-33" />
+    <link rel="stylesheet" href="styles.css?v=20260923-v38-4-63" />
 
     <meta name="parknacross-sky-build" content="v38.4.51" />
     <title>
@@ -61,6 +61,17 @@
               "@type": "Place",
               "name": "Ardamine, Co. Wexford, Ireland"
             }
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://parknacrossweather.ie/#app",
+            "name": "Parknacross Weather",
+            "url": "https://parknacrossweather.ie/",
+            "applicationCategory": "WeatherApplication",
+            "operatingSystem": "Any",
+            "browserRequirements": "Requires a modern web browser",
+            "isAccessibleForFree": true,
+            "description": "Installable live weather dashboard and historical archive for Parknacross and Ardamine on the North Wexford coast."
           }
         ]
       }
@@ -1265,10 +1276,12 @@
               <h2 id="trendsHeading">Weather trends</h2>
               <p>Hover or tap a chart for exact observation values.</p>
             </div>
-            <a class="text-link" href="history.html"
-              >7 / 30 / 90 / 365 day views →</a
+            <a class="text-link" href="graphs.html"
+              >All detailed graphs →</a
             >
           </div>
+
+          <p id="dashboardChartSummary" class="visually-hidden" role="status" aria-live="polite">Dashboard weather charts are loading.</p>
 
           <div class="chart-grid">
             <article class="chart-card">
@@ -1280,7 +1293,7 @@
                 <span>°C</span>
               </div>
               <div class="chart-wrap">
-                <canvas id="temperatureChart"></canvas>
+                <canvas id="temperatureChart" role="img" aria-label="Temperature and dew-point observations for the last 24 hours"></canvas>
               </div>
             </article>
             <article class="chart-card">
@@ -1291,7 +1304,7 @@
                 </div>
                 <span>km/h</span>
               </div>
-              <div class="chart-wrap"><canvas id="windChart"></canvas></div>
+              <div class="chart-wrap"><canvas id="windChart" role="img" aria-label="Wind speed and gust observations for the last 24 hours"></canvas></div>
             </article>
             <article class="chart-card">
               <div class="chart-title">
@@ -1301,7 +1314,7 @@
                 </div>
                 <span>hPa</span>
               </div>
-              <div class="chart-wrap"><canvas id="pressureChart"></canvas></div>
+              <div class="chart-wrap"><canvas id="pressureChart" role="img" aria-label="Sea-level pressure observations for the last 24 hours"></canvas></div>
             </article>
             <article class="chart-card">
               <div class="chart-title">
@@ -1311,7 +1324,7 @@
                 </div>
                 <span>W/m²</span>
               </div>
-              <div class="chart-wrap"><canvas id="solarChart"></canvas></div>
+              <div class="chart-wrap"><canvas id="solarChart" role="img" aria-label="Solar radiation and UV observations for the last 24 hours"></canvas></div>
             </article>
             <article class="chart-card">
               <div class="chart-title">
@@ -1321,7 +1334,7 @@
                 </div>
                 <span>mm</span>
               </div>
-              <div class="chart-wrap"><canvas id="rainChart"></canvas></div>
+              <div class="chart-wrap"><canvas id="rainChart" role="img" aria-label="Daily rainfall totals for up to the last seven days"></canvas></div>
             </article>
             <article class="chart-card wind-card">
               <div class="chart-title">
@@ -1334,6 +1347,7 @@
               <div class="wind-rose-wrap">
                 <canvas
                   id="windRose"
+                  role="img"
                   aria-label="Wind direction frequency for the last 24 hours"
                 ></canvas>
               </div>
@@ -1481,7 +1495,7 @@
     <script src="wind-rose.js?v=20260923-radial-restore"></script>
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20260915-v36"></script>
-    <script src="app.js?v=20260923-chart-clarity"></script>
+    <script src="app.js?v=20260923-v38-4-63"></script>
 
     <script src="site-config.js?v=20260912-mobile2"></script>
     <script src="platform.js?v=20260920-clear-monthly-average"></script>
@@ -2362,7 +2376,7 @@
       data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'
     ></script>
     <!-- End Cloudflare Web Analytics -->
-    <script src="pwa-update.js?v=20260916-v38-4"></script>
+    <script src="pwa-update.js?v=20260923-v38-4-63"></script>
     <script src="accessibility.js?v=20260915-v36"></script>
     <script src="navigation.js?v=20260919-v38-4-33"></script>
   </body>

@@ -1,5 +1,11 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
   {
+    date: "2026-09-23",
+    type: "Accessibility and clarity",
+    title: "Chart and mobile usability improvements",
+    detail: "Added Dublin-local chart tooltips, accessible chart descriptions, explicit partial-archive badges, previous and next archived-day navigation, clearer mobile navigation overflow and PWA update wording. Weather calculations and lightning-chart placement are unchanged."
+  },
+  {
     date: "2026-09-21",
     type: "Sensor expansion",
     title: "WH57 lightning sensor acquired",
