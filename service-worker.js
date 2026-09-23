@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-65-resilience-polish";
+const CACHE_NAME = "parknacross-v38-4-66-sea-swim-report-cards";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

@@ -80,7 +80,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-65"],
+  ["service-worker.js", "parknacross-v38-4-66"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -88,6 +88,10 @@ const requiredChecks = [
   ["privacy.html", "Mostly weather, very little personal data"],
   ["playwright.config.mjs", "mobile-safari"],
   ["tests/mobile-menu.spec.mjs", "More menu works"],
+  ["coast.html", "Sea &amp; Swim Conditions"],
+  ["coast.js", "renderSwimSummary"],
+  ["monthly.html", "shareMonthCard"],
+  ["monthly.js", "shareMonthlyCard"],
   ["navigation.js", "data-nav-more-popup"]
 ];
 

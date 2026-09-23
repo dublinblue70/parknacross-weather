@@ -1,0 +1,25 @@
+PARKNACROSS WEATHER v38.4.66
+Released: 24 September 2026
+
+SEA AND SWIM CONDITIONS
+- Reframed the existing Coastal page as Sea & Swim Conditions.
+- Added a concise factual overview combining the latest Parknacross air
+  temperature, wind direction/speed, coastal exposure and rain rate.
+- Includes the existing modelled local sea temperature, observed offshore M2
+  reference, Arklow tide prediction and relevant official marine warning.
+- Clearly states that the page describes conditions and does not declare the
+  sea safe.
+- Renamed the More-menu destination consistently across the website.
+
+SHAREABLE MONTHLY REPORTS
+- Added a branded 1200×630 monthly weather report card.
+- Uses the selected archived month and its actual mean temperature, high/low,
+  rainfall, gust and narrative summary.
+- Shares through supported mobile share sheets or downloads a PNG elsewhere.
+- Added a print-friendly monthly report layout.
+
+ALREADY RETAINED
+- The Dashboard share card continues to provide a branded current-day image.
+- History retains weather-event stories, the archive calendar and event diary.
+- Weather calculations, archive aggregation, wind roses and lightning logic
+  are unchanged.

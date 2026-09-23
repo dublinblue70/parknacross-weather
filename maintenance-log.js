@@ -1,6 +1,12 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
   {
     date: "2026-09-24",
+    type: "Local experience",
+    title: "Sea and swim conditions and shareable reports added",
+    detail: "Expanded the coastal page into a factual Sea & Swim Conditions overview using local station wind, air temperature and rain alongside modelled sea temperature, Arklow tide context and official marine warnings. Monthly reports can now be printed or shared as branded image cards. No swimming-safety score is generated."
+  },
+  {
+    date: "2026-09-24",
     type: "Resilience and polish",
     title: "Navigation, privacy and installed-app experience refined",
     detail: "Standardised the final navigation and footer directly in every page, added mobile menu regression tests, a dedicated offline page, improved install diagnostics and PWA artwork, friendlier privacy information and concise selected-period chart highlights. Weather calculations and archive logic are unchanged."
