@@ -502,32 +502,23 @@ function updateTrend(id, currentValue, oldValue, unit, digits = 1) {
 }
 
 function prevailingWind() {
-  const directionalRows = history24.filter(row => usable(row.wind_direction_deg));
-  if (!directionalRows.length) return { deg: null, text: "--" };
-
-  // Very light winds can make direction readings wander and distort the
-  // 24-hour prevailing direction. Only include readings at 2 km/h or above.
-  const rows = directionalRows.filter(row =>
-    usable(row.wind_speed_kmh) && Number(row.wind_speed_kmh) >= 2
-  );
-
-  if (!rows.length) {
-    const hasWindSpeeds = directionalRows.some(row => usable(row.wind_speed_kmh));
-    return { deg: null, text: hasWindSpeeds ? "Calm" : "--" };
+  // Use exactly the same 16-sector frequency distribution and calm threshold
+  // as the wind rose, so its caption and prevailing direction always agree.
+  const rows = [...history24];
+  if (latestCurrent && usable(latestCurrent.epoch)) {
+    const epoch = Number(latestCurrent.epoch);
+    const index = rows.findIndex(row => Number(row?.epoch) === epoch);
+    if (index >= 0) rows[index] = latestCurrent;
+    else if (!rows.length || epoch > Number(rows.at(-1)?.epoch)) rows.push(latestCurrent);
   }
-
-  let x = 0;
-  let y = 0;
-
-  rows.forEach(row => {
-    const weight = Number(row.wind_speed_kmh);
-    const radians = Number(row.wind_direction_deg) * Math.PI / 180;
-    x += Math.cos(radians) * weight;
-    y += Math.sin(radians) * weight;
-  });
-
-  const degrees = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-  return { deg: degrees, text: compass(degrees) };
+  const distribution = window.ParknacrossWindRose?.distribution(rows);
+  if (!distribution) return { deg: null, text: "--" };
+  if (!distribution.directional) {
+    return { deg: null, text: distribution.calm ? "Calm" : "--" };
+  }
+  const maxCount = Math.max(...distribution.bins);
+  const index = distribution.bins.indexOf(maxCount);
+  return { deg: index * 22.5, text: window.ParknacrossWindRose.labels[index] };
 }
 
 function rainActivity(current) {
@@ -1310,6 +1301,11 @@ function updateCharts() {
     source,
     $("dashboardWindRoseMeta")
   );
+  const prevailing = prevailingWind();
+  set("prevailing", prevailing.text);
+  if (usable(prevailing.deg) && $("needle")) {
+    $("needle").style.transform = `rotate(${prevailing.deg}deg)`;
+  }
 
   charts.pressure.data.labels = labels;
   charts.pressure.data.datasets[0].data = rows.map(row => valueForChartRow(row, "pressure_hpa"));
