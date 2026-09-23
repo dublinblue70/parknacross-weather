@@ -54,6 +54,13 @@
       "description": "Open local rainfall totals and events",
       "url": "./rain.html",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Weather Intelligence Lab",
+      "short_name": "Weather Lab",
+      "description": "Open coastal intelligence, Storm Mode and archive questions",
+      "url": "./intelligence.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
   "screenshots": [

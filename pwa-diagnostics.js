@@ -11,7 +11,7 @@
   }
   function updateNetwork() { set("diagNetwork", navigator.onLine ? "Online" : "Offline"); }
   document.addEventListener("DOMContentLoaded", () => {
-    set("diagCache", "v38.4.66");
+    set("diagCache", "v38.4.67");
     const standalone = window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone === true;
     set("diagInstalled", standalone ? "Yes" : "No · browser mode");
     set("diagPlatform", platformLabel());

@@ -1,6 +1,12 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
   {
     date: "2026-09-24",
+    type: "Weather intelligence",
+    title: "Weather Intelligence Lab launched",
+    detail: "Added a coastal timeline, automatic Storm Mode analysis, plain-language archive questions, recent event stories, sky-photo weather overlays, forecast verification, local microclimate comparisons, transparent source guidance, public data links and official water-safety guidance. Existing observations and calculations are unchanged."
+  },
+  {
+    date: "2026-09-24",
     type: "Local experience",
     title: "Sea and swim conditions and shareable reports added",
     detail: "Expanded the coastal page into a factual Sea & Swim Conditions overview using local station wind, air temperature and rain alongside modelled sea temperature, Arklow tide context and official marine warnings. Monthly reports can now be printed or shared as branded image cards. No swimming-safety score is generated."

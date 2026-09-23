@@ -1,0 +1,25 @@
+PARKNACROSS WEATHER v38.4.67
+Released: 24 September 2026
+
+WEATHER INTELLIGENCE LAB
+- Added one coherent Weather Lab destination to the More menu.
+- Coastal timeline combines current Parknacross observations, upcoming Arklow
+  tide events, the available official point forecast and marine warning state.
+- Storm Mode analyses the latest 24 hours for pressure change, peak gust,
+  peak rain rate and available WH57 lightning-counter change.
+- Ask the Archive answers common plain-language questions from saved daily data.
+- Recent automatically identified weather events are presented as stories.
+- Today’s sky can be downloaded with a branded weather overlay when browser
+  image-security rules permit it.
+- Forecast verification shows completed forecast-versus-observation results.
+- Microclimate comparison presents Parknacross and Johnstown Castle context.
+- Source/confidence explanations distinguish local, official, modelled and
+  partial-archive information.
+- Public JSON/CSV links, a simple embed example and official water-safety links
+  are provided.
+
+SAFETY AND ACCURACY
+- The coastal timeline explicitly does not declare swimming conditions safe.
+- Official warnings and local signs remain authoritative.
+- No core weather calculations, archive aggregation, wind rose or lightning
+  logic was changed.
