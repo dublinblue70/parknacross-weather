@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-61-wind-rose-restore";
+const CACHE_NAME = "parknacross-v38-4-62-offline-pwa-polish";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -26,6 +26,7 @@ const STATIC_ASSETS = [
   "./summary.js",
   "./radar.js",
   "./graphs.js",
+  "./lightning-charts.js",
   "./rain.js",
   "./climate.js",
   "./monthly.js",
@@ -50,7 +51,9 @@ const STATIC_ASSETS = [
   "./icon-512.png",
   "./apple-touch-icon.png",
   "./og-image.png",
-  "./north-wexford-coast.jpg"
+  "./north-wexford-coast.jpg",
+  "./pwa-dashboard-wide.jpg",
+  "./pwa-graphs-wide.jpg"
 ];
 
 self.addEventListener("install", event => {

@@ -11,12 +11,53 @@
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open current Parknacross weather conditions",
+      "url": "./index.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Weather graphs",
+      "short_name": "Graphs",
+      "description": "Open Parknacross weather charts and trends",
+      "url": "./graphs.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Rain Centre",
+      "short_name": "Rain",
+      "description": "Open local rainfall totals and events",
+      "url": "./rain.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "pwa-dashboard-wide.jpg",
+      "sizes": "1348x926",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Live Parknacross Weather dashboard"
+    },
+    {
+      "src": "pwa-graphs-wide.jpg",
+      "sizes": "1348x926",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Parknacross weather graphs and trends"
     }
   ],
   "id": "/"

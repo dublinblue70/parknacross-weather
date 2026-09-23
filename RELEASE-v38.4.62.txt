@@ -1,0 +1,15 @@
+Parknacross Weather v38.4.62 — offline and PWA polish
+
+Scoped maintenance release. Weather calculations, API routes, chart sampling,
+wind-rose logic and page data processing are unchanged.
+
+- Pre-caches lightning-charts.js so the Graphs page lightning panels remain available offline.
+- Adds explicit type="button" to chart-range, history-range, download and radar controls.
+- Updates relevant sitemap last-modified dates to 23 September 2026.
+- Clarifies that reduced archive coverage is historical and not a current station outage.
+- Adds Dashboard, Graphs and Rain Centre installed-app shortcuts.
+- Declares the existing safely padded app icons as maskable.
+- Adds completed-data Dashboard and Graphs screenshots for richer PWA installation presentation.
+- Extends the smoke test to verify explicit button types, manifest structure,
+  manifest assets and complete offline-cache coverage.
+- Keeps lightning history charts on the Graphs page; the Dashboard retains its compact WH57 status panel.

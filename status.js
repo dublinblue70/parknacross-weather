@@ -304,8 +304,8 @@ async function runChecks() {
   const latestAge=usableNumber(current?.epoch)?Math.max(0,Math.floor(Date.now()/1000)-Number(current.epoch)):null;
   const coreFailure=site.state==="bad"||Boolean(health.__error)||Boolean(current.__error)||health?.status!=="ok"||health?.database!=="connected"||(latestAge!==null&&latestAge>=1800);
   $("overall").className=`overall ${overall}`;
-  setText("overallTitle",overall==="good"?"All monitored systems look healthy":overall==="warn"?"Site is running, but something is worth checking":coreFailure?"A monitored service needs attention":"Archive coverage needs review");
-  setText("overallText",overall==="good"?"Website, weather data service, live readings and recent data checks passed.":overall==="warn"?"One or more checks produced a warning. Review the cards below.":coreFailure?"At least one core service failed or the latest weather reading is stale.":"The website, weather data service and latest observation are operating normally, but archive coverage is below its target.");
+  setText("overallTitle",overall==="good"?"All monitored systems look healthy":overall==="warn"?"Site is running, but something is worth checking":coreFailure?"A monitored service needs attention":"Historical archive is incomplete");
+  setText("overallText",overall==="good"?"Website, weather data service, live readings and recent data checks passed.":overall==="warn"?"One or more checks produced a warning. Review the cards below.":coreFailure?"At least one core service failed or the latest weather reading is stale.":"The website, weather data service and latest observation are operating normally. Some earlier five-minute archive intervals are missing; this does not indicate a current station outage.");
   setText("lastRun",`Last checked ${new Date().toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})}`);
   if(button) button.disabled=false;
 }

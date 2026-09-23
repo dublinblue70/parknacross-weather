@@ -6,6 +6,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 const files = await readdir(root);
 const htmlFiles = files.filter(name => name.endsWith(".html"));
 const failures = [];
+const offlineReferences = new Set();
 
 for (const name of htmlFiles) {
   const html = await readFile(join(root, name), "utf8");
@@ -19,9 +20,40 @@ for (const name of htmlFiles) {
   for (const match of html.matchAll(/(?:src|href)="([^"?#]+)(?:[?#][^"]*)?"/g)) {
     const ref = match[1];
     if (/^(?:https?:|mailto:|#|data:)/i.test(ref) || !ref) continue;
-    try { await access(join(root, ref)); }
+    try {
+      await access(join(root, ref));
+      if (/\.(?:html|js|css|webmanifest|png|jpe?g|svg)$/i.test(ref)) offlineReferences.add(ref);
+    }
     catch { failures.push(`${name}: missing local reference ${ref}`); }
   }
+
+  for (const match of html.matchAll(/<button\b([^>]*)>/gi)) {
+    if (!/\btype="(?:button|submit|reset)"/i.test(match[1])) failures.push(`${name}: button missing explicit type`);
+  }
+}
+
+const serviceWorker = await readFile(join(root, "service-worker.js"), "utf8");
+for (const ref of offlineReferences) {
+  if (!serviceWorker.includes(`./${ref}`)) failures.push(`service-worker.js: local page asset is not pre-cached: ${ref}`);
+}
+
+try {
+  const manifest = JSON.parse(await readFile(join(root, "manifest.webmanifest"), "utf8"));
+  if (!Array.isArray(manifest.shortcuts) || manifest.shortcuts.length < 3) failures.push("manifest.webmanifest: expected Dashboard, Graphs and Rain shortcuts");
+  if (!(manifest.icons || []).every(icon => String(icon.purpose || "").includes("maskable"))) failures.push("manifest.webmanifest: every primary icon must support maskable display");
+  if (!Array.isArray(manifest.screenshots) || manifest.screenshots.length < 2) failures.push("manifest.webmanifest: expected Dashboard and Graphs install screenshots");
+  const manifestAssets = [
+    ...(manifest.icons || []).map(item => item.src),
+    ...(manifest.shortcuts || []).flatMap(shortcut => (shortcut.icons || []).map(item => item.src)),
+    ...(manifest.screenshots || []).map(item => item.src)
+  ];
+  for (const asset of new Set(manifestAssets)) {
+    try { await access(join(root, asset)); }
+    catch { failures.push(`manifest.webmanifest: missing asset ${asset}`); }
+    if (!serviceWorker.includes(`./${asset}`)) failures.push(`service-worker.js: manifest asset is not pre-cached: ${asset}`);
+  }
+} catch (error) {
+  failures.push(`manifest.webmanifest: invalid JSON (${error.message})`);
 }
 
 const requiredChecks = [
