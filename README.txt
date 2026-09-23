@@ -1,26 +1,12 @@
-PARKNACROSS WEATHER - FORECAST FIX
+PARKNACROSS WEATHER — WEBSITE FRONT END
 
-Why the page showed "Official forecast temporarily unavailable":
-The front end calls:
-  https://parknacross-weather.dave-s-carter.workers.dev/met/forecast
+This release contains only the files for the GitHub Pages website.
 
-If the upgraded Cloudflare Worker has not been deployed, or that route errors,
-app.js displays the temporary-unavailable message.
+Upload the extracted contents to the root of the Parknacross Weather GitHub
+Pages repository. Do not use any file in this release to replace or edit the
+separately deployed Cloudflare Worker.
 
-FIX:
-1. In Cloudflare -> Workers & Pages -> parknacross-weather -> Edit code
-   replace the entire Worker with worker.js from this ZIP.
-2. Deploy the Worker.
-3. Test this URL in a browser:
-   https://parknacross-weather.dave-s-carter.workers.dev/met/forecast
-   You should see JSON containing today, tonight and tomorrow.
-4. In GitHub replace app.js and service-worker.js with the files in this ZIP.
-5. Commit the changes.
-6. Hard-refresh parknacrossweather.ie (Ctrl+F5 on Windows).
+The file named service-worker.js is the browser/PWA cache worker. It belongs in
+GitHub and is not the Cloudflare API Worker.
 
-The Worker now:
-- uses the official Met Éireann Leinster JSON feed;
-- falls back to the National JSON feed if Leinster temporarily fails;
-- validates the JSON structure before returning it.
-
-The browser app also has a second direct-feed fallback where CORS permits it.
+See README.md for the complete deployment and verification checklist.

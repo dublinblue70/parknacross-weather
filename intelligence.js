@@ -15,14 +15,15 @@
     try{
       const [current,tides,point,marine]=await Promise.all([get("/current"),get("/marine/tides?station=Arklow"),get("/met/point").catch(()=>null),get("/met/marine").catch(()=>null)]);
       const observedAt=current.received_at||Number(current.epoch)*1000;
-      const items=[{time:`Now · ${timelineStamp(observedAt)}`,dateTime:new Date(observedAt).toISOString(),title:`${n(current.temperature_c)}°C · wind ${n(current.wind_speed_kmh)} km/h ${direction(current.wind_direction_deg)}`,detail:`Gust ${n(current.wind_gust_kmh)} km/h · rain rate ${n(current.rain_rate_mm_h)} mm/h`}];
+      const items=[{group:"Current observation",time:`Now · ${timelineStamp(observedAt)}`,dateTime:new Date(observedAt).toISOString(),title:`${n(current.temperature_c)}°C · wind ${n(current.wind_speed_kmh)} km/h ${direction(current.wind_direction_deg)}`,detail:`Gust ${n(current.wind_gust_kmh)} km/h · rain rate ${n(current.rain_rate_mm_h)} mm/h`}];
       const now=Date.now();
-      (tides.events||[]).filter(item=>Date.parse(item.time)>now).slice(0,4).forEach(item=>items.push({time:timelineStamp(item.time),dateTime:new Date(item.time).toISOString(),title:`${item.type==="high"?"High":"Low"} water · Arklow prediction`,detail:usable(item.height_m)?`${n(item.height_m,2)} m OD Malin · Poulshone context only`:"Predicted tide event · Poulshone context only"}));
-      if(point?.target_day)items.push({time:`${dayLabel(point.target_day)} · all day`,dateTime:point.target_day,title:`Official point forecast: ${n(point.forecast_low_c)}–${n(point.forecast_high_c)}°C`,detail:`Forecast rain ${n(point.forecast_rain_mm)} mm · issued ${localDate(point.captured_at)}`});
       const warning=marine&&(marine.local_warning_relevant||marine.local_gale_warning||marine.local_small_craft_warning);
-      items.push({time:`Checked ${timelineStamp(Date.now())}`,dateTime:new Date().toISOString(),title:warning?"Relevant marine warning reported":"No relevant marine warning reported",detail:marine?.local_warning_sector||"Check Met Éireann before marine activity"});
-      host.replaceChildren(...items.map(item=>{const article=document.createElement("article");article.className="intelligence-timeline-item";const time=document.createElement("time");time.textContent=item.time;if(item.dateTime)time.dateTime=item.dateTime;const copy=document.createElement("div"),strong=document.createElement("strong"),small=document.createElement("small");strong.textContent=item.title;small.textContent=item.detail;copy.append(strong,small);article.append(time,copy);return article;}));
-    }catch(error){host.innerHTML='<div class="empty-state">Coastal timeline temporarily unavailable.</div>';}
+      items.push({group:"Marine-warning status",time:`Checked ${timelineStamp(Date.now())}`,dateTime:new Date().toISOString(),title:warning?"Relevant marine warning reported":"No relevant marine warning reported",detail:marine?.local_warning_sector||"Check Met Éireann before marine activity"});
+      if(point?.target_day)items.push({group:"Official point forecast",time:`${dayLabel(point.target_day)} · all day`,dateTime:point.target_day,title:`${n(point.forecast_low_c)}–${n(point.forecast_high_c)}°C`,detail:`Forecast rain ${n(point.forecast_rain_mm)} mm · issued ${localDate(point.captured_at)}`});
+      (tides.events||[]).filter(item=>Date.parse(item.time)>now).slice(0,4).forEach(item=>items.push({group:"Upcoming Arklow tides",time:timelineStamp(item.time),dateTime:new Date(item.time).toISOString(),title:`${item.type==="high"?"High":"Low"} water · Arklow prediction`,detail:usable(item.height_m)?`${n(item.height_m,2)} m OD Malin · Poulshone context only`:"Predicted tide event · Poulshone context only"}));
+      const nodes=[];let lastGroup="";
+      for(const item of items){if(item.group!==lastGroup){const heading=document.createElement("h3");heading.className="intelligence-timeline-group";heading.textContent=item.group;nodes.push(heading);lastGroup=item.group;}const article=document.createElement("article");article.className="intelligence-timeline-item";const time=document.createElement("time");time.textContent=item.time;if(item.dateTime)time.dateTime=item.dateTime;const copy=document.createElement("div"),strong=document.createElement("strong"),small=document.createElement("small");strong.textContent=item.title;small.textContent=item.detail;copy.append(strong,small);article.append(time,copy);nodes.push(article);}host.replaceChildren(...nodes);
+    }catch(error){host.innerHTML='<div class="empty-state">Coastal conditions are temporarily unavailable.</div>';}
   }
 
   async function loadStormMode(){
@@ -31,7 +32,8 @@
       if(!rows.length)throw new Error("No readings");
       const values=key=>rows.filter(row=>usable(row[key])).map(row=>Number(row[key]));
       const pressures=values("pressure_hpa"),gusts=values("wind_gust_kmh"),rainRates=values("rain_rate_mm_h"),lightning=values("lightning_count");
-      const pressureChange=pressures.length>1?pressures.at(-1)-pressures[0]:null,maxGust=gusts.length?Math.max(...gusts):null,maxRain=rainRates.length?Math.max(...rainRates):null,lightningChange=lightning.length>1?Math.max(0,lightning.at(-1)-lightning[0]):null;
+      const lightningChange=lightning.length>1?lightning.slice(1).reduce((total,value,index)=>total+Math.max(0,value-lightning[index]),0):lightning.length===1?0:null;
+      const pressureChange=pressures.length>1?pressures.at(-1)-pressures[0]:null,maxGust=gusts.length?Math.max(...gusts):null,maxRain=rainRates.length?Math.max(...rainRates):null;
       set("stormPressure",usable(pressureChange)?`${pressureChange>=0?"+":""}${n(pressureChange)} hPa`:"Unavailable");set("stormGust",usable(maxGust)?`${n(maxGust)} km/h`:"Unavailable");set("stormRain",usable(maxRain)?`${n(maxRain)} mm/h`:"Unavailable");set("stormLightning",usable(lightningChange)?String(Math.round(lightningChange)):"Unavailable");
       const active=(usable(maxGust)&&maxGust>=50)||(usable(maxRain)&&maxRain>=7.5)||(usable(pressureChange)&&pressureChange<=-8)||(usable(lightningChange)&&lightningChange>0);
       const badge=$("stormModeBadge");badge.textContent=active?"Active weather":"No significant trigger";badge.classList.toggle("storm-active",active);

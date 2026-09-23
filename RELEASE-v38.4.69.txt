@@ -1,0 +1,18 @@
+Parknacross Weather v38.4.69
+Released: 24 September 2026
+
+Final hardening release
+
+- Replaced the mixed coastal timeline with clearly grouped current, warning,
+  forecast and tide information.
+- Kept explicit Irish-local dates and times on every time-specific entry.
+- Made WH57 lightning totals resilient to counter resets.
+- Displayed the four Storm Mode activation thresholds.
+- Moved the System Status “last checked” time beside its heading.
+- Added accessible names to current and historical sky-photo admin controls.
+- Added a reproducible Playwright test setup for mobile Chrome and Safari.
+- Removed obsolete Cloudflare Worker copies from the website release.
+- Replaced contradictory deployment notes with front-end-only instructions.
+- Added regression checks preventing obsolete Worker files from shipping again.
+
+The separately deployed Cloudflare Worker is unchanged.

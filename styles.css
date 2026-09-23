@@ -2240,9 +2240,10 @@ footer .footer-links a:focus-visible {
   .info-note,.monthly-note,.climate-card span,.climate-card small{color:#444!important}
 }
 
-/* v38.4.68 — simplified Weather Intelligence Lab */
+/* v38.4.69 — final Weather Intelligence Lab hardening */
 .intelligence-feature{border-color:rgba(123,215,239,.3);background:linear-gradient(140deg,rgba(123,215,239,.055),rgba(101,209,154,.025))}
 .intelligence-timeline{display:grid;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.intelligence-timeline-group{margin:0;padding:12px 17px 8px;background:rgba(123,215,239,.09);border-bottom:1px solid var(--line);color:var(--accent);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase}
 .intelligence-timeline-item{display:grid;grid-template-columns:minmax(165px,200px) 1fr;gap:18px;padding:15px 17px;background:rgba(7,19,31,.68);border-bottom:1px solid var(--line)}
 .intelligence-timeline-item:last-child{border-bottom:0}.intelligence-timeline-item time{color:var(--accent);font-weight:750;line-height:1.45}.intelligence-timeline-item strong,.intelligence-timeline-item small{display:block}.intelligence-timeline-item small{margin-top:4px;color:var(--muted)}
 .storm-active{color:#fff!important;background:rgba(241,127,127,.16)!important;border-color:rgba(241,127,127,.5)!important}

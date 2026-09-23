@@ -8,6 +8,10 @@ const htmlFiles = files.filter(name => name.endsWith(".html"));
 const failures = [];
 const offlineReferences = new Set();
 
+for (const obsoleteWorker of ["worker.js", "cloudflare-worker.js", "worker-v38.4.47-photo-likes.js", "Parknacross-worker-v38.4.47-photo-likes.txt", "Parknacross-worker-v38.4.48-like-once.txt"]) {
+  if (files.includes(obsoleteWorker)) failures.push(`${obsoleteWorker}: obsolete Cloudflare Worker copy must not ship with the website`);
+}
+
 for (const name of htmlFiles) {
   const html = await readFile(join(root, name), "utf8");
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
@@ -80,7 +84,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-68"],
+  ["service-worker.js", "parknacross-v38-4-69"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -96,7 +100,8 @@ const requiredChecks = [
   ["intelligence.js", "loadStormMode"],
   ["intelligence.js", "setupArchiveQuestions"],
   ["intelligence.js", "timelineStamp"],
-  ["navigation.js", "data-nav-more-popup"]
+  ["navigation.js", "data-nav-more-popup"],
+  ["package.json", "@playwright/test"]
 ];
 
 for (const [name, text] of requiredChecks) {

@@ -1,6 +1,12 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
   {
     date: "2026-09-24",
+    type: "Release hardening",
+    title: "Final clarity, accessibility and deployment safeguards",
+    detail: "Grouped coastal conditions by source and purpose, made lightning counting resilient to WH57 counter resets, exposed Storm Mode thresholds, labelled photo-administration controls, added reproducible browser tests and removed obsolete Cloudflare Worker copies from the website release. Live weather calculations outside Storm Mode are unchanged."
+  },
+  {
+    date: "2026-09-24",
     type: "Clarity and focus",
     title: "Weather Lab timeline clarified and simplified",
     detail: "Added an explicit Irish-local date and time to every coastal timeline entry and labelled whole-day forecasts clearly. Removed forecast accountability, weather stories, the visual weather diary, the microclimate explorer and open-local-weather embed so the page stays focused on useful local tools. Weather observations and calculations are unchanged."

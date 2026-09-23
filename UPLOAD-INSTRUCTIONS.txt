@@ -1,22 +1,18 @@
-PARKNACROSS WEATHER — STATION ALIGNMENT + IRELAND CORRECTION
+PARKNACROSS WEATHER — WEBSITE DEPLOYMENT
 
-Replace these files in the ROOT of your GitHub repository:
-1. index.html
-2. styles.css
-3. station.html
-4. history.html
-5. service-worker.js
+1. Extract this release ZIP.
+2. Upload the complete contents of parknacross-weather-main to the root of the
+   GitHub Pages repository, preserving filenames and folders.
+3. Remove obsolete backend copies from GitHub if they exist: worker.js,
+   cloudflare-worker.js, worker-v*.js and Parknacross-worker-*.txt.
+4. Do not change the separately deployed Cloudflare Worker.
+5. Commit the website files and wait for GitHub Pages to finish deploying.
+6. Open parknacrossweather.ie/status.html and confirm the website, API and live
+   observation checks complete.
+7. Open the More menu on Android and iPhone/Safari and confirm it opens, scrolls
+   and closes with Escape or a tap outside.
+8. If an installed PWA shows an older release, close and reopen it once so the
+   new browser service-worker cache can activate.
 
-DO NOT replace or edit:
-- app.js
-- history.js
-- worker.js
-- CNAME
-- manifest.webmanifest
-
-Changes in this correction:
-- The paragraph under “About the Parknacross station” now uses the same 980px text width as the Station specification paragraph.
-- “Ireland” is now shown clearly in the site location/header wording.
-- Station location now reads “Ardamine, north County Wexford, Ireland”.
-- Footer/location wording includes Ireland.
-- Cache version bumped so the corrected layout is not hidden by an older cached stylesheet/page.
+Important: service-worker.js is the website's offline/PWA cache worker. It is
+not the Cloudflare API Worker and should remain in GitHub.

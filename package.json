@@ -1,0 +1,14 @@
+{
+  "name": "parknacross-weather-site",
+  "private": true,
+  "version": "38.4.69",
+  "scripts": {
+    "test": "node site-smoke-test.mjs && playwright test",
+    "test:smoke": "node site-smoke-test.mjs",
+    "test:browser": "playwright test",
+    "test:install-browsers": "playwright install chromium webkit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

@@ -8,6 +8,13 @@ Deployment: extract this ZIP, then upload the extracted files to the GitHub repo
 
 This cleanup removes obsolete backend copies and historic deployment notes; it does not alter the site's HTML, CSS, live weather code, or the separately deployed Cloudflare Worker.
 
+## Release checks
+
+With Node.js installed, run `npm install`, then `npm run test:install-browsers`
+once, and finally `npm test`. This runs the static integrity checks followed by
+the mobile Chrome and mobile Safari menu tests. The browser tests start a
+temporary local web server automatically.
+
 ## Visitor names on photo likes
 
 Deploy `Parknacross-worker-v38.4.50-admin-like-names.txt` separately in Cloudflare **before** uploading this GitHub ZIP. The public Like remains anonymous unless a visitor voluntarily enters a display name; the name is visible only in the admin view at `/?admin=1`, following an ADMIN_KEY check. Previously recorded anonymous likes remain anonymous. Do not place the Worker TXT, admin key, or backend code in GitHub. The names are visitor-supplied and are not verified identities.
