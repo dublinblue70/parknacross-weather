@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-60-chart-clarity";
+const CACHE_NAME = "parknacross-v38-4-61-wind-rose-restore";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

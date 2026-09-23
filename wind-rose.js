@@ -44,20 +44,40 @@
     if (!canvas || typeof Chart === "undefined") return null;
 
     return new Chart(canvas, {
-      type: "bar",
+      type: "polarArea",
       data: {
         labels: [...LABELS],
         datasets: [{
           label: "Direction frequency %",
           data: new Array(LABELS.length).fill(0),
-          backgroundColor: LABELS.map((_, index) => `hsla(${185 + index * 3},78%,68%,.58)`),
+          backgroundColor: LABELS.map((_, index) =>
+            `hsla(${185 + index * 3},78%,68%,${0.34 + (index % 4) * 0.07})`
+          ),
           borderColor: "rgba(174,225,244,.32)",
           borderWidth: 1
         }]
       },
       options: {
         maintainAspectRatio: false,
-        scales: {x:{grid:{display:false},ticks:{color:"#bfd0e3",font:{size:10}}},y:{beginAtZero:true,grid:{color:"rgba(174,210,232,.11)"},ticks:{color:"#bfd0e3",callback:value=>`${value}%`},title:{display:true,text:"Share of non-calm intervals (%)",color:"#bfd0e3"}}},
+        scales: {
+          r: {
+            beginAtZero: true,
+            startAngle: 0,
+            grid: { color: "rgba(174,210,232,.11)" },
+            angleLines: { color: "rgba(174,210,232,.11)" },
+            ticks: {
+              display: true,
+              backdropColor: "rgba(7,19,31,.72)",
+              color: "#9fb3c1",
+              callback: value => `${value}%`
+            },
+            pointLabels: {
+              display: true,
+              color: "#bfd0e3",
+              font: { size: 11 }
+            }
+          }
+        },
         plugins: {
           legend: { display: false },
           tooltip: {

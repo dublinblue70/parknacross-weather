@@ -1,0 +1,8 @@
+Parknacross Weather v38.4.61 — radial wind rose restored
+
+- Restores the circular polar wind-rose presentation on the Dashboard and Graphs page.
+- Retains the corrected one-reading-per-five-minute sampling for every timeframe.
+- Retains consistent 6h, 24h, 48h, 7d and 30d range boundaries.
+- Retains percentage tooltips and visible percentage rings.
+- Retains the explanation that calm intervals are omitted from directional percentages.
+- Retains every chart-clarity, time-axis, mobile and accessibility correction from v38.4.60.
