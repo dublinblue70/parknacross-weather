@@ -20,7 +20,7 @@ for (const name of htmlFiles) {
     if (!html.includes('href="install.html">Install help</a>')) failures.push(`${name}: missing static Install help link`);
     if (!html.includes('href="privacy.html">Privacy</a>')) failures.push(`${name}: missing static Privacy link`);
     const menuItems = [...html.matchAll(/role="menuitem"/g)].length;
-    if (menuItems !== 11) failures.push(`${name}: expected 11 static More-menu destinations, found ${menuItems}`);
+    if (menuItems !== 12) failures.push(`${name}: expected 12 static More-menu destinations, found ${menuItems}`);
   }
 
   for (const match of html.matchAll(/(?:src|href)="([^"?#]+)(?:[?#][^"]*)?"/g)) {
@@ -80,7 +80,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-66"],
+  ["service-worker.js", "parknacross-v38-4-67"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -92,6 +92,10 @@ const requiredChecks = [
   ["coast.js", "renderSwimSummary"],
   ["monthly.html", "shareMonthCard"],
   ["monthly.js", "shareMonthlyCard"],
+  ["intelligence.html", "Weather Intelligence Lab"],
+  ["intelligence.js", "loadStormMode"],
+  ["intelligence.js", "setupArchiveQuestions"],
+  ["intelligence.js", "loadVerification"],
   ["navigation.js", "data-nav-more-popup"]
 ];
 

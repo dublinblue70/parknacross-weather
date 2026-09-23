@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-66-sea-swim-report-cards";
+const CACHE_NAME = "parknacross-v38-4-67-weather-intelligence-lab";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -19,6 +19,7 @@ const STATIC_ASSETS = [
   "./downloads.html",
   "./install.html",
   "./privacy.html",
+  "./intelligence.html",
   "./offline.html",
   "./styles.css",
   "./chart.umd.min.js",
@@ -49,6 +50,7 @@ const STATIC_ASSETS = [
   "./alert-settings.js",
   "./pwa-update.js",
   "./pwa-diagnostics.js",
+  "./intelligence.js",
   "./manifest.webmanifest",
   "./favicon.svg",
   "./icon-192.png",
