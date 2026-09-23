@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-63-accessibility-clarity";
+const CACHE_NAME = "parknacross-v38-4-64-final-polish-menu-fix";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -17,6 +17,8 @@ const STATIC_ASSETS = [
   "./history.html",
   "./records.html",
   "./downloads.html",
+  "./install.html",
+  "./privacy.html",
   "./styles.css",
   "./chart.umd.min.js",
   "./app.js",
@@ -45,6 +47,7 @@ const STATIC_ASSETS = [
   "./navigation.js",
   "./alert-settings.js",
   "./pwa-update.js",
+  "./pwa-diagnostics.js",
   "./manifest.webmanifest",
   "./favicon.svg",
   "./icon-192.png",

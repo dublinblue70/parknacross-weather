@@ -1,0 +1,36 @@
+PARKNACROSS WEATHER v38.4.64
+Released: 23 September 2026
+
+RELEASE-BLOCKING FIX
+- Fixed the More dropdown on mobile and touch devices.
+- Removed the CSS mask that interfered with the dropdown.
+- Mounts the popup at document level so Mobile Safari cannot clip it inside
+  the horizontally scrolling navigation and overflow-clipped blurred shell.
+- Keeps the open popup correctly positioned during viewport scrolling.
+- Retained click, keyboard, outside-click and resize behaviour.
+- Replaced the navigation mask with a non-clipping inset visual cue.
+
+PRIVACY AND INSTALLATION
+- Added a plain-language Privacy page.
+- Added Android, Samsung Internet, iPhone and iPad installation help.
+- Added update, notification and offline troubleshooting guidance.
+- Added Install help and Privacy links to shared footers.
+- Added both pages to the sitemap and offline cache.
+
+PWA DIAGNOSTICS
+- Added an App installation diagnostics panel to the Station page.
+- Reports standalone mode, service-worker state, expected cache release,
+  notification capability/permission, platform and network state.
+
+CLARITY AND ACCESSIBILITY
+- Added restrained loading placeholders for initial archive values.
+- Changed archive reliability wording from alarming LOW to factual PARTIAL.
+- Current live-feed health is stated separately from historical completeness.
+- Latest observation time is formatted in Irish local time.
+- Annual rainfall and lightning charts now receive dynamic accessible labels.
+- Rain and Climate overview chart height is reduced on desktop.
+
+UNCHANGED
+- Weather calculations, thresholds, archive aggregation and outlier logic.
+- Wind-rose calculation and circular presentation.
+- Lightning charts remain on the Graphs page.

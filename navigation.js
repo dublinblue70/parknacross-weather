@@ -14,11 +14,26 @@
   });
   const buttons = [...document.querySelectorAll(".nav-more-button")];
   if (!buttons.length) return;
+  const menuForButton = new Map();
+
+  /*
+   * Keep the popup outside the horizontally scrolling navigation and the
+   * blurred, overflow-clipped page shell. Mobile Safari treats those
+   * ancestors as the containing/clipping block for position:fixed children,
+   * which made a correctly opened menu invisible on phones.
+   */
+  buttons.forEach(button => {
+    const menu = button.parentElement?.querySelector(".nav-more-menu");
+    if (!menu) return;
+    menuForButton.set(button, menu);
+    menu.dataset.navMorePopup = "true";
+    document.body.appendChild(menu);
+  });
 
   function closeAll(except = null) {
     buttons.forEach(button => {
       if (button === except) return;
-      const menu = button.parentElement?.querySelector(".nav-more-menu");
+      const menu = menuForButton.get(button);
       if (menu) menu.hidden = true;
       button.setAttribute("aria-expanded", "false");
     });
@@ -66,7 +81,7 @@
   }
 
   buttons.forEach(button => {
-    const menu = button.parentElement?.querySelector(".nav-more-menu");
+    const menu = menuForButton.get(button);
     if (!menu) return;
     button.addEventListener("click", event => {
       event.stopPropagation();
@@ -75,10 +90,20 @@
       if (opening) {
         positionMenu(button, menu);
         button.setAttribute("aria-expanded", "true");
-        menu.querySelector("a")?.focus({preventScroll:true});
+        /* Keep focus on the trigger for touch users. Keyboard users can move
+           into the popup with ArrowDown, avoiding Safari's focus-scroll race. */
       } else {
         menu.hidden = true;
         button.setAttribute("aria-expanded", "false");
+      }
+    });
+    button.addEventListener("keydown", event => {
+      if (event.key === "ArrowDown" && menu.hidden) {
+        event.preventDefault();
+        closeAll(button);
+        positionMenu(button, menu);
+        button.setAttribute("aria-expanded", "true");
+        menu.querySelector("a")?.focus({preventScroll:true});
       }
     });
     menu.addEventListener("keydown", event => {
@@ -95,8 +120,15 @@
   });
 
   document.addEventListener("click", event => {
-    if (!event.target.closest(".nav-more")) closeAll();
+    const insideTrigger = event.target.closest?.(".nav-more");
+    const insidePopup = event.target.closest?.('[data-nav-more-popup="true"]');
+    if (!insideTrigger && !insidePopup) closeAll();
   });
   window.addEventListener("resize", () => closeAll());
-  window.addEventListener("scroll", () => closeAll(), {passive:true});
+  window.addEventListener("scroll", () => {
+    buttons.forEach(button => {
+      const menu = menuForButton.get(button);
+      if (menu && !menu.hidden) positionMenu(button, menu);
+    });
+  }, {passive:true});
 })();

@@ -1,6 +1,12 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
   {
     date: "2026-09-23",
+    type: "Navigation and final polish",
+    title: "Mobile More menu and app guidance improved",
+    detail: "Removed a mobile navigation mask that could clip the More dropdown; added privacy and installation guidance, app diagnostics, clearer loading placeholders, friendlier health wording and improved chart descriptions. Weather calculations and archive logic are unchanged."
+  },
+  {
+    date: "2026-09-23",
     type: "Accessibility and clarity",
     title: "Chart and mobile usability improvements",
     detail: "Added Dublin-local chart tooltips, accessible chart descriptions, explicit partial-archive badges, previous and next archived-day navigation, clearer mobile navigation overflow and PWA update wording. Weather calculations and lightning-chart placement are unchanged."

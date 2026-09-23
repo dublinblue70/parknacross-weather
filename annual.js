@@ -122,6 +122,10 @@ function render(year) {
       ? monthRows.reduce((s, r) => s + (usable(r.rain_mm) ? Number(r.rain_mm) : 0), 0)
       : null;
   });
+  const periodType=year===String(dublinYear())?"year-to-date":"annual";
+  const annualCanvas=$("annualRainChart");
+  annualCanvas?.setAttribute("role","img");
+  annualCanvas?.setAttribute("aria-label",`Monthly rainfall totals for ${year}. This is a ${periodType} report based on ${rows.length} archived day${rows.length===1?"":"s"}. Months without archived data are unavailable, not zero.`);
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
     Chart.defaults.animation = false;
   if (chart) chart.destroy();

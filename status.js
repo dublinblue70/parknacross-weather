@@ -24,6 +24,19 @@ function fmtNum(value, digits=1) {
   if (!usableNumber(value)) return "--";
   const n=Number(value); return n.toFixed(digits).replace(/\.0$/,"" );
 }
+function fmtIrishDateTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString("en-IE", {
+    timeZone: "Europe/Dublin",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
 function fmtDurationMinutes(minutes) {
   if(!usableNumber(minutes)) return "--";
   const n=Number(minutes);
@@ -192,7 +205,7 @@ async function runChecks() {
   } else {
     const age=usableNumber(current.epoch)?Math.max(0,Math.floor(Date.now()/1000)-Number(current.epoch)):null;
     const state=age===null?"warn":age<600?"good":age<1800?"warn":"bad";
-    setBadge("feedBadge",state,age===null?"CHECK":state==="good"?"LIVE":state==="warn"?"DELAY":"STALE"); setText("feedValue",fmtAge(age)); setText("feedDetail",current.received_at?`Latest weather reading · ${current.received_at}`:"Latest weather reading time unavailable"); states.push(state);
+    setBadge("feedBadge",state,age===null?"CHECK":state==="good"?"LIVE":state==="warn"?"DELAY":"STALE"); setText("feedValue",fmtAge(age)); setText("feedDetail",current.received_at?`Latest reading: ${fmtIrishDateTime(current.received_at)} Irish time`:"Latest weather reading time unavailable"); states.push(state);
   }
 
   if(quality.__error) {
@@ -232,10 +245,11 @@ async function runChecks() {
     setBadge("reliabilityBadge","warn","CHECK");setText("reliabilityValue","--");setText("reliabilityDetail","Archive reliability check unavailable");states.push("warn");
   } else {
     const pct=Number(reliability.archive_reliability_percent);
-    const state=pct>=99?"good":pct>=97?"good":pct>=90?"warn":"bad";
-    setBadge("reliabilityBadge",state,state==="good"?"GOOD":state==="warn"?"REVIEW":"LOW");
+    const state=pct>=97?"good":"warn";
+    setBadge("reliabilityBadge",state,state==="good"?"COMPLETE":"PARTIAL");
     setText("reliabilityValue",`${pct.toFixed(1)}%`);
-    setText("reliabilityDetail",`${reliability.label||""}${reliability.label?" · ":""}${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected 5-minute readings saved this month`);
+    const currentFeedLive=!current.__error&&usableNumber(current.epoch)&&(Date.now()/1000-Number(current.epoch))<600;
+    setText("reliabilityDetail",`Historical archive completeness · ${currentFeedLive?"current station feed is live · ":""}${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected five-minute slots saved`);
     states.push(state);
   }
 

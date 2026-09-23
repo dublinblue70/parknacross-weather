@@ -68,12 +68,29 @@ const requiredChecks = [
   ["app.js", "dashboardTooltipTime"],
   ["graphs.js", "Partial archive"],
   ["history.html", "previousArchiveDay"],
-  ["maintenance.html", "noindex,follow"]
+  ["maintenance.html", "noindex,follow"],
+  ["privacy.html", "privacy information"],
+  ["install.html", "Install Parknacross Weather"],
+  ["station.html", "diagInstalled"],
+  ["status.js", "PARTIAL"],
+  ["pwa-diagnostics.js", "diagWorker"],
+  ["service-worker.js", "parknacross-v38-4-64"],
+  ["navigation.js", "document.body.appendChild(menu)"],
+  ["navigation.js", "data-nav-more-popup"]
 ];
 
 for (const [name, text] of requiredChecks) {
   const content = await readFile(join(root, name), "utf8");
   if (!content.includes(text)) failures.push(`${name}: expected marker missing: ${text}`);
+}
+
+const navigation = await readFile(join(root, "navigation.js"), "utf8");
+if (/window\.addEventListener\("scroll",\s*\(\)\s*=>\s*closeAll/.test(navigation)) {
+  failures.push("navigation.js: scrolling must not immediately close the mobile More menu");
+}
+const styles = await readFile(join(root, "styles.css"), "utf8");
+if (/mask-image\s*:/.test(styles)) {
+  failures.push("styles.css: mask-image can clip the mobile More popup");
 }
 
 if (failures.length) {

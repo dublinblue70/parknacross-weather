@@ -139,6 +139,7 @@
       distanceChart.data.datasets[0].data = series.distances;
       distanceChart._eventLabels = series.eventLabels;
       activityChart.update(); distanceChart.update();
+      const periodLabel=({6:'6-hour',24:'24-hour',48:'48-hour',168:'7-day',720:'30-day'})[hours]||`${hours}-hour`;
       if (!series.observed) {
         countStatus.textContent = 'No WH57 strike-counter readings in this period yet. Missing data is not zero lightning.';
       } else if (series.counted) {
@@ -149,6 +150,8 @@
       distanceStatus.textContent = series.eventCount
         ? `${series.eventCount} distinct timed detection${series.eventCount===1?'':'s'} · distance in km · times shown in Irish local time. A smaller distance indicates a closer detection, not a storm forecast.`
         : 'No distinct, timed lightning-distance readings in this period. A missing reading is not evidence of no lightning.';
+      $('gLightningCount')?.setAttribute('aria-label',`Lightning detections during the selected ${periodLabel} period. ${countStatus.textContent}`);
+      $('gLightningDistance')?.setAttribute('aria-label',`Lightning-distance readings during the selected ${periodLabel} period. ${distanceStatus.textContent}`);
       lastRefresh = Date.now();
     } catch (error) {
       if (id !== requestId) return;

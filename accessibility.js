@@ -41,6 +41,33 @@
       );
     });
 
+    document.querySelectorAll("strong").forEach(value => {
+      if (value.textContent.trim() !== "--") return;
+      value.classList.add("loading-placeholder");
+      const observer = new MutationObserver(() => {
+        if (value.textContent.trim() !== "--") {
+          value.classList.remove("loading-placeholder");
+          observer.disconnect();
+        }
+      });
+      observer.observe(value, { childList: true, characterData: true, subtree: true });
+    });
+
+    document.querySelectorAll(".footer-links").forEach(footerLinks => {
+      const appendLink = (href, label) => {
+        if (footerLinks.querySelector(`a[href="${href}"]`)) return;
+        const separator = document.createElement("span");
+        separator.setAttribute("aria-hidden", "true");
+        separator.textContent = "·";
+        const link = document.createElement("a");
+        link.href = href;
+        link.textContent = label;
+        footerLinks.append(separator, link);
+      };
+      appendLink("install.html", "Install help");
+      appendLink("privacy.html", "Privacy");
+    });
+
     document.documentElement.classList.add("keyboard-focus-ready");
   });
 })();
