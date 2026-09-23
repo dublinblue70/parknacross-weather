@@ -1,0 +1,20 @@
+name: Website QA
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run static checks
+        run: node site-smoke-test.mjs
+      - name: Install browser test runner
+        run: npm install --no-save @playwright/test@1.55.0 && npx playwright install --with-deps chromium webkit
+      - name: Test mobile navigation
+        run: npx playwright test
