@@ -1,0 +1,27 @@
+PARKNACROSS WEATHER v38.4.65
+Released: 24 September 2026
+
+NAVIGATION RESILIENCE
+- Every page now contains the same final static primary and More navigation.
+- No navigation links are moved between containers by JavaScript.
+- The More popup remains mounted outside clipping and scrolling ancestors.
+- Every footer contains static Email, Facebook, X, Install help and Privacy links.
+- Added automated Chromium and WebKit mobile menu regression tests.
+
+PRIVACY AND INSTALLATION
+- Rewrote Privacy in shorter, friendlier plain language.
+- Moved technical provider details into an optional disclosure.
+- Added installation diagnostics directly to Install help.
+- Added a dedicated, honest offline page rather than showing a live-looking fallback.
+- Added dedicated maskable app icon files and a narrow install screenshot.
+
+CHART CLARITY
+- Detailed Graphs now display concise selected-period highlights for temperature,
+  gust, pressure, rain rate, solar and UV.
+- Existing coverage percentages, archive-gap breaks, outlier handling and partial
+  archive warnings remain in place.
+
+UNCHANGED
+- Weather calculations, thresholds, archive aggregation and outlier logic.
+- Circular wind roses and their selected-range calculations.
+- Lightning summary on Dashboard and detailed lightning charts on Graphs.

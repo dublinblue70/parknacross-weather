@@ -1,17 +1,5 @@
 (() => {
   "use strict";
-  document.querySelectorAll(".nav").forEach(nav => {
-    const menu = nav.querySelector(".nav-more-menu");
-    const moreButton = nav.querySelector(".nav-more-button");
-    if (!menu || !moreButton) return;
-    ["station.html", "climate.html"].forEach(href => {
-      const link = [...nav.children].find(node => node.matches?.(`a[href="${href}"]`));
-      if (!link) return;
-      link.setAttribute("role", "menuitem");
-      menu.prepend(link);
-      if (link.classList.contains("active")) moreButton.classList.add("nav-more-active");
-    });
-  });
   const buttons = [...document.querySelectorAll(".nav-more-button")];
   if (!buttons.length) return;
   const menuForButton = new Map();
@@ -104,6 +92,10 @@
         positionMenu(button, menu);
         button.setAttribute("aria-expanded", "true");
         menu.querySelector("a")?.focus({preventScroll:true});
+      } else if (event.key === "Escape" && !menu.hidden) {
+        event.preventDefault();
+        menu.hidden = true;
+        button.setAttribute("aria-expanded", "false");
       }
     });
     menu.addEventListener("keydown", event => {

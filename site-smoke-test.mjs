@@ -16,6 +16,12 @@ for (const name of htmlFiles) {
   if (!/<meta\s+name="description"/i.test(html)) failures.push(`${name}: missing meta description`);
   if (!/<link\s+rel="canonical"/i.test(html)) failures.push(`${name}: missing canonical URL`);
   if (!/<h1\b/i.test(html)) failures.push(`${name}: missing H1`);
+  if (name !== "offline.html") {
+    if (!html.includes('href="install.html">Install help</a>')) failures.push(`${name}: missing static Install help link`);
+    if (!html.includes('href="privacy.html">Privacy</a>')) failures.push(`${name}: missing static Privacy link`);
+    const menuItems = [...html.matchAll(/role="menuitem"/g)].length;
+    if (menuItems !== 11) failures.push(`${name}: expected 11 static More-menu destinations, found ${menuItems}`);
+  }
 
   for (const match of html.matchAll(/(?:src|href)="([^"?#]+)(?:[?#][^"]*)?"/g)) {
     const ref = match[1];
@@ -63,19 +69,25 @@ const requiredChecks = [
   ["history.js", "Weather observations for"],
   ["status.js", "flagged"],
   ["station.html", "Readings saved today"],
-  ["navigation.js", "climate.html"],
-  ["sitemap.xml", "2026-09-19"],
+  ["navigation.js", "document.body.appendChild(menu)"],
+  ["sitemap.xml", "2026-09-24"],
   ["app.js", "dashboardTooltipTime"],
   ["graphs.js", "Partial archive"],
   ["history.html", "previousArchiveDay"],
   ["maintenance.html", "noindex,follow"],
-  ["privacy.html", "privacy information"],
+  ["privacy.html", "Privacy information"],
   ["install.html", "Install Parknacross Weather"],
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-64"],
-  ["navigation.js", "document.body.appendChild(menu)"],
+  ["service-worker.js", "parknacross-v38-4-65"],
+  ["service-worker.js", "./offline.html"],
+  ["manifest.webmanifest", "icon-maskable-512.png"],
+  ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
+  ["graphs.html", "chart-highlights"],
+  ["privacy.html", "Mostly weather, very little personal data"],
+  ["playwright.config.mjs", "mobile-safari"],
+  ["tests/mobile-menu.spec.mjs", "More menu works"],
   ["navigation.js", "data-nav-more-popup"]
 ];
 

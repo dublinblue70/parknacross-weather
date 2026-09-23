@@ -179,6 +179,23 @@
    const labels={gTemp:"Temperature and dew point",gWind:"Wind speed and gusts",gPressure:"Sea-level pressure",gRain:"Rain rate",gSolar:"Solar radiation and UV",gWindRose:"Wind direction frequency"};
    Object.entries(labels).forEach(([id,label])=>$(id)?.setAttribute("aria-label",`${label} for ${periodLabel.toLowerCase()}, based on ${rowCount.toLocaleString("en-IE")} saved observations. ${coverage.text}.`));
  }
+ function rangeText(rows,key,unit,excluded=null,digits=1){
+   const values=rows.filter(row=>!excluded?.has(row)&&usable(row?.[key])).map(row=>Number(row[key]));
+   if(!values.length)return"Unavailable";
+   return`${Math.min(...values).toFixed(digits)}–${Math.max(...values).toFixed(digits)} ${unit}`;
+ }
+ function maxText(rows,key,unit,excluded=null,digits=1){
+   const values=rows.filter(row=>!excluded?.has(row)&&usable(row?.[key])).map(row=>Number(row[key]));
+   return values.length?`${Math.max(...values).toFixed(digits)} ${unit}`:"Unavailable";
+ }
+ function updateHighlights(rows,tempExcluded,gustExcluded){
+   set("highlightTemp",rangeText(rows,"temperature_c","°C",tempExcluded));
+   set("highlightGust",maxText(rows,"wind_gust_kmh","km/h",gustExcluded));
+   set("highlightPressure",rangeText(rows,"pressure_hpa","hPa",null,1));
+   set("highlightRain",maxText(rows,"rain_rate_mm_h","mm/h"));
+   const solar=maxText(rows,"solar_w_m2","W/m²",null,0),uv=maxText(rows,"uv_index","UV");
+   set("highlightSolar",solar==="Unavailable"&&uv==="Unavailable"?"Unavailable":`${solar} · ${uv}`);
+ }
  function updateWindRose(rows, hours, endEpoch){
    window.ParknacrossWindRose?.update(charts.rose,rows,$("windRoseMeta"),{hours,endEpoch});
  }
@@ -189,7 +206,8 @@
  charts.r.data.datasets[0].data=rainRows.map(x=>point(x,"rain_rate_mm_h"));charts.s.data.datasets[0].data=r.map(x=>point(x,"solar_w_m2"));charts.s.data.datasets[1].data=r.map(x=>point(x,"uv_index"));
  updateWindRose(rows,h,Math.floor(Date.now()/300000)*300);
  [charts.t,charts.w,charts.p,charts.r,charts.s].forEach(c=>c.update());
+ updateHighlights(rows,temperatureOutliers,windGustOutliers);
  const gapText=gapData.gaps?` · ${gapData.gaps} archive gap${gapData.gaps===1?"":"s"} shown as breaks`:"",qualityText=temperatureOutliers.size?` · ${temperatureOutliers.size} isolated temperature spike${temperatureOutliers.size===1?"":"s"} excluded`:"",gustQualityText=windGustOutliers.size?` · ${windGustOutliers.size} suspect gust spike${windGustOutliers.size===1?"":"s"} excluded`:"";
- const coverage=coverageDetails(rows,h),partial=coverage.pct<98;set("graphCoverage",coverage.text);const badge=$("partialCoverageBadge");if(badge){badge.hidden=!partial;badge.textContent=partial?`Partial archive · ${coverage.pct.toFixed(1)}%`:"";}set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.filter(x=>!x?._gap).length.toLocaleString("en-IE")} extrema-preserving points plotted${gapText}${qualityText}${gustQualityText}`);updateChartAccessibility(periodLabel,rows.length,coverage);set("chartTextSummary",`${({6:"Six-hour",24:"Twenty-four-hour",48:"Forty-eight-hour",168:"Seven-day",720:"Thirty-day"})[h]} charts. Available observations cover ${coverage.text}. ${partial?"This is a partial archive and should not be read as a complete selected period. ":""}${gapData.gaps?`${gapData.gaps} archive gap${gapData.gaps===1?" is":"s are"} shown as breaks.`:"No archive gaps longer than twenty minutes."}`);}catch(e){set("graphCount","Archive temporarily unavailable.");set("graphCoverage","Coverage unavailable.");$("partialCoverageBadge")?.setAttribute("hidden","");}}
+ const coverage=coverageDetails(rows,h),partial=coverage.pct<98;set("graphCoverage",coverage.text);const badge=$("partialCoverageBadge");if(badge){badge.hidden=!partial;badge.textContent=partial?`Partial archive · ${coverage.pct.toFixed(1)}%`:"";}set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.filter(x=>!x?._gap).length.toLocaleString("en-IE")} extrema-preserving points plotted${gapText}${qualityText}${gustQualityText}`);updateChartAccessibility(periodLabel,rows.length,coverage);set("chartTextSummary",`${({6:"Six-hour",24:"Twenty-four-hour",48:"Forty-eight-hour",168:"Seven-day",720:"Thirty-day"})[h]} charts. Available observations cover ${coverage.text}. ${partial?"This is a partial archive and should not be read as a complete selected period. ":""}${gapData.gaps?`${gapData.gaps} archive gap${gapData.gaps===1?" is":"s are"} shown as breaks.`:"No archive gaps longer than twenty minutes."}`);}catch(e){["highlightTemp","highlightGust","highlightPressure","highlightRain","highlightSolar"].forEach(id=>set(id,"Unavailable"));set("graphCount","Archive temporarily unavailable.");set("graphCoverage","Coverage unavailable.");$("partialCoverageBadge")?.setAttribute("hidden","");}}
  document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());make();document.querySelectorAll("[data-hours]").forEach(b=>{b.setAttribute("aria-pressed",b.classList.contains("active")?"true":"false");b.addEventListener("click",()=>{document.querySelectorAll("[data-hours]").forEach(x=>{const selected=x===b;x.classList.toggle("active",selected);x.setAttribute("aria-pressed",selected?"true":"false")});load(Number(b.dataset.hours))})});load(24);setInterval(()=>load(hours),5*60*1000);});
 })();

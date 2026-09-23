@@ -1,5 +1,11 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
   {
+    date: "2026-09-24",
+    type: "Resilience and polish",
+    title: "Navigation, privacy and installed-app experience refined",
+    detail: "Standardised the final navigation and footer directly in every page, added mobile menu regression tests, a dedicated offline page, improved install diagnostics and PWA artwork, friendlier privacy information and concise selected-period chart highlights. Weather calculations and archive logic are unchanged."
+  },
+  {
     date: "2026-09-23",
     type: "Navigation and final polish",
     title: "Mobile More menu and app guidance improved",

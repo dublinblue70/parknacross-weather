@@ -15,7 +15,7 @@
       "purpose": "any"
     },
     {
-      "src": "icon-192.png",
+      "src": "icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
@@ -27,7 +27,7 @@
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -70,6 +70,13 @@
       "type": "image/jpeg",
       "form_factor": "wide",
       "label": "Parknacross weather graphs and trends"
+    },
+    {
+      "src": "pwa-dashboard-narrow.jpg",
+      "sizes": "675x900",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Live Parknacross Weather dashboard highlights"
     }
   ],
   "id": "/"

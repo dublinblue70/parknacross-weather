@@ -2208,6 +2208,24 @@ footer .footer-links a:focus-visible {
     margin-right: .15em;
   }
 }
+
+/* v38.4.65 — concise privacy page and chart highlights */
+.privacy-summary{padding-bottom:0}
+.privacy-summary .info-card{border-color:rgba(101,209,154,.28);background:linear-gradient(135deg,rgba(101,209,154,.07),rgba(123,215,239,.035))}
+.friendly-list{display:grid;gap:9px;margin:16px 0 0;padding:0;list-style:none;color:var(--muted)}
+.friendly-list li{position:relative;padding-left:25px}
+.friendly-list li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:800}
+.privacy-details{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.privacy-details summary{cursor:pointer;color:var(--text);font-weight:700}
+.privacy-details p{color:var(--muted);line-height:1.7}
+.privacy-updated{margin:18px 0 0;color:var(--muted-2);font-size:.75rem}
+.chart-highlights{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:14px 0 20px;padding:0;list-style:none}
+.chart-highlights li{padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.02)}
+.chart-highlights span,.chart-highlights strong{display:block}
+.chart-highlights span{color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
+.chart-highlights strong{margin-top:4px;font-size:.88rem}
+@media(max-width:900px){.chart-highlights{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.chart-highlights{grid-template-columns:1fr}}
 @media (max-width: 390px) {
   footer {
     font-size: .68rem;

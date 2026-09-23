@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-64-final-polish-menu-fix";
+const CACHE_NAME = "parknacross-v38-4-65-resilience-polish";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -19,6 +19,7 @@ const STATIC_ASSETS = [
   "./downloads.html",
   "./install.html",
   "./privacy.html",
+  "./offline.html",
   "./styles.css",
   "./chart.umd.min.js",
   "./app.js",
@@ -52,11 +53,14 @@ const STATIC_ASSETS = [
   "./favicon.svg",
   "./icon-192.png",
   "./icon-512.png",
+  "./icon-maskable-192.png",
+  "./icon-maskable-512.png",
   "./apple-touch-icon.png",
   "./og-image.png",
   "./north-wexford-coast.jpg",
   "./pwa-dashboard-wide.jpg",
-  "./pwa-graphs-wide.jpg"
+  "./pwa-graphs-wide.jpg",
+  "./pwa-dashboard-narrow.jpg"
 ];
 
 self.addEventListener("install", event => {
@@ -120,7 +124,7 @@ self.addEventListener("fetch", event => {
           : `.${url.pathname}`;
         return (await caches.match(pathname)) ||
           (await caches.match(request)) ||
-          (await caches.match("./index.html"));
+          (await caches.match("./offline.html"));
       }
     })());
     return;
