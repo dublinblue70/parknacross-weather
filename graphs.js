@@ -160,8 +160,8 @@
    return hours<=48?d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})+" "+d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit"});
  }
  const value=(x,key)=>x?._gap?null:x?.[key]??null;
- function updateWindRose(rows){
-   window.ParknacrossWindRose?.update(charts.rose,rows,$("windRoseMeta"));
+ function updateWindRose(rows, hours, endEpoch){
+   window.ParknacrossWindRose?.update(charts.rose,rows,$("windRoseMeta"),{hours,endEpoch});
  }
  async function load(h){hours=h;set("graphRangeTitle",({6:"Last 6 hours",24:"Last 24 hours",48:"Last 48 hours",168:"Last 7 days",720:"Last 30 days"})[h]);set("graphCount","Loading…");
  try{const [d,c]=await Promise.all([fetch(`${API}/history?hours=${h}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error();return r.json()}),fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)]);let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const temperatureOutliers=temperatureOutlierRows(rows),gapData=withGapMarkers(rows),r=h===24?gapData.rows:thin(gapData.rows),labs=r.map(label),rainRows=thinRain(gapData.rows),rainLabs=rainRows.map(label);
@@ -171,7 +171,7 @@
  const windGustOutliers=gustOutlierRows(r.filter(x=>!x?._gap));
  charts.w.data.datasets[0].data=r.map(x=>value(x,"wind_speed_kmh"));charts.w.data.datasets[1].data=r.map(x=>x?._gap||windGustOutliers.has(x)?null:value(x,"wind_gust_kmh"));charts.p.data.datasets[0].data=r.map(x=>value(x,"pressure_hpa"));
  charts.r.data.datasets[0].data=rainRows.map(x=>x?._gap?null:(usable(x.rain_rate_mm_h)?Number(x.rain_rate_mm_h):null));charts.s.data.datasets[0].data=r.map(x=>value(x,"solar_w_m2"));charts.s.data.datasets[1].data=r.map(x=>value(x,"uv_index"));
- updateWindRose(rows);
+ updateWindRose(rows,h,Math.floor(Date.now()/300000)*300);
  [charts.t,charts.w,charts.p,charts.r,charts.s].forEach(c=>c.update());
  const gapText=gapData.gaps?` · ${gapData.gaps} archive gap${gapData.gaps===1?"":"s"} shown as breaks`:"",qualityText=temperatureOutliers.size?` · ${temperatureOutliers.size} isolated temperature spike${temperatureOutliers.size===1?"":"s"} excluded`:"",gustQualityText=windGustOutliers.size?` · ${windGustOutliers.size} suspect gust spike${windGustOutliers.size===1?"":"s"} excluded`:"";
  set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.filter(x=>!x?._gap).length.toLocaleString("en-IE")} plotted${gapText}${qualityText}${gustQualityText}`);}catch(e){set("graphCount","Archive temporarily unavailable.");}}

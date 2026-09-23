@@ -511,7 +511,7 @@ function prevailingWind() {
     if (index >= 0) rows[index] = latestCurrent;
     else if (!rows.length || epoch > Number(rows.at(-1)?.epoch)) rows.push(latestCurrent);
   }
-  const distribution = window.ParknacrossWindRose?.distribution(rows);
+  const distribution = window.ParknacrossWindRose?.distribution(rows, {hours:24});
   if (!distribution) return { deg: null, text: "--" };
   if (!distribution.directional) {
     return { deg: null, text: distribution.calm ? "Calm" : "--" };
@@ -1299,7 +1299,8 @@ function updateCharts() {
   window.ParknacrossWindRose?.update(
     charts.windRose,
     source,
-    $("dashboardWindRoseMeta")
+    $("dashboardWindRoseMeta"),
+    {hours:24}
   );
   const prevailing = prevailingWind();
   set("prevailing", prevailing.text);

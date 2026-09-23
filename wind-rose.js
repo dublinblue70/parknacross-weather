@@ -8,32 +8,36 @@
     value !== "" &&
     Number.isFinite(Number(value));
 
-  function distribution(rows) {
+  const BUCKET_SECONDS = 300;
+  // One representative reading per UTC five-minute slot. The most recent
+  // valid reading wins, regardless of archive insertion order.
+  function distribution(rows, options = {}) {
     const bins = new Array(LABELS.length).fill(0);
-    let directional = 0;
-    let calm = 0;
-
+    const endEpoch = Number.isFinite(Number(options.endEpoch)) && options.endEpoch != null
+      ? Math.floor(Number(options.endEpoch) / BUCKET_SECONDS) * BUCKET_SECONDS
+      : Math.floor(Date.now() / 1000 / BUCKET_SECONDS) * BUCKET_SECONDS;
+    const hours = Number(options.hours);
+    const startEpoch = Number.isFinite(hours) && hours > 0 ? endEpoch - hours * 3600 : -Infinity;
+    const slots = new Map();
     for (const row of rows || []) {
+      const epoch = Number(row?.epoch ?? (row?.received_at ? Date.parse(row.received_at) / 1000 : NaN));
+      if (!Number.isFinite(epoch) || epoch < startEpoch || epoch >= endEpoch) continue;
       if (!usable(row?.wind_direction_deg) || !usable(row?.wind_speed_kmh)) continue;
-
       const speed = Number(row.wind_speed_kmh);
-      if (speed < CALM_THRESHOLD_KMH) {
-        calm += 1;
-        continue;
-      }
-
-      const degrees = ((Number(row.wind_direction_deg) % 360) + 360) % 360;
-      const index = Math.round(degrees / 22.5) % LABELS.length;
-      bins[index] += 1;
-      directional += 1;
+      const degrees = Number(row.wind_direction_deg);
+      if (speed < 0 || !Number.isFinite(degrees) || degrees < 0 || degrees > 360) continue;
+      const bucket = Math.floor(epoch / BUCKET_SECONDS);
+      const previous = slots.get(bucket);
+      if (!previous || epoch >= previous.epoch) slots.set(bucket, {epoch, speed, degrees});
     }
-
-    return {
-      bins,
-      calm,
-      directional,
-      percentages: bins.map(count => directional ? count / directional * 100 : 0)
-    };
+    let directional = 0, calm = 0;
+    for (const {speed, degrees} of slots.values()) {
+      if (speed < CALM_THRESHOLD_KMH) { calm++; continue; }
+      bins[Math.round((degrees % 360) / 22.5) % LABELS.length]++;
+      directional++;
+    }
+    return {bins, calm, directional, intervalCount: slots.size,
+      percentages: bins.map(count => directional ? count / directional * 100 : 0)};
   }
 
   function create(canvas) {
@@ -81,16 +85,16 @@
     });
   }
 
-  function update(chart, rows, metaElement) {
-    if (!chart) return distribution(rows);
+  function update(chart, rows, metaElement, options = {}) {
+    if (!chart) return distribution(rows, options);
 
-    const result = distribution(rows);
+    const result = distribution(rows, options);
     chart.data.datasets[0].data = result.percentages;
     chart.update();
 
     if (metaElement) {
       metaElement.textContent = result.directional
-        ? `${result.directional.toLocaleString("en-IE")} wind-direction readings · calm periods omitted${result.calm ? ` (${result.calm.toLocaleString("en-IE")})` : ""}`
+        ? `${result.directional.toLocaleString("en-IE")} five-minute wind intervals · calm intervals omitted${result.calm ? ` (${result.calm.toLocaleString("en-IE")})` : ""}`
         : "No usable wind-direction observations in this period.";
     }
 
@@ -100,6 +104,7 @@
   window.ParknacrossWindRose = Object.freeze({
     labels: [...LABELS],
     calmThresholdKmh: CALM_THRESHOLD_KMH,
+    bucketSeconds: BUCKET_SECONDS,
     distribution,
     create,
     update
