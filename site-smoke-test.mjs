@@ -84,7 +84,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-74"],
+  ["service-worker.js", "parknacross-v38-4-75"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -103,6 +103,9 @@ const requiredChecks = [
   ["intelligence.js", "refreshSection"],
   ["intelligence.js", "Refreshing…"],
   ["intelligence.js", "setupArchiveQuestions"],
+  ["intelligence.js", "missing archive dates break the run"],
+  ["records.js", "under 0.2 mm/day"],
+  ["monthly.html", "Under 0.2 mm"],
   ["intelligence.js", "timelineStamp"],
   ["navigation.js", "data-nav-more-popup"],
   ["package.json", "@playwright/test"]
@@ -127,6 +130,10 @@ if (!intelligenceHtml.includes("data-archive-question")) failures.push("intellig
 const skyHtml = await readFile(join(root, "sky.html"), "utf8");
 if (!skyHtml.includes("manually uploaded photograph")) failures.push("sky.html: manual-photo disclosure is missing");
 if (/live camera feed/i.test(skyHtml) && !/not a continuous live camera feed/i.test(skyHtml)) failures.push("sky.html: unfinished live-camera claim is still present");
+const archiveLogic = await readFile(join(root, "intelligence.js"), "utf8");
+if (archiveLogic.indexOf("if(/wettest month|most rain.*month/") > archiveLogic.indexOf("else if(/wettest|most rain/")) failures.push("intelligence.js: wettest-month question must be matched before generic wettest-day question");
+const privacyHtml = await readFile(join(root, "privacy.html"), "utf8");
+if (/Sky Photo (?:identifier|likes)/.test(privacyHtml)) failures.push("privacy.html: outdated Sky Photo terminology remains");
 
 const navigation = await readFile(join(root, "navigation.js"), "utf8");
 if (/window\.addEventListener\("scroll",\s*\(\)\s*=>\s*closeAll/.test(navigation)) {

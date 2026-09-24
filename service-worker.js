@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-74-refresh-buttons";
+const CACHE_NAME = "parknacross-v38-4-75-archive-consistency";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

@@ -1,0 +1,11 @@
+Parknacross Weather v38.4.75
+Released: 24 September 2026
+
+- Corrected Weather Intelligence so “wettest month” cannot be answered as “wettest day”.
+- Made archived dry-spell calculations stop at missing calendar dates.
+- Standardised archive and monthly dry days as rainfall below 0.2 mm.
+- Added the dry-day definition beside the records and monthly figures.
+- Simplified the Privacy page’s sky-photo wording.
+- Advanced the PWA cache so installed copies receive the corrections.
+
+The Cloudflare Worker source is intentionally not included in this website package.
