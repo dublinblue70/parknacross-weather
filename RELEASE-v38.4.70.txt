@@ -1,0 +1,12 @@
+Parknacross Weather v38.4.70
+Released: 24 September 2026
+
+Maintenance log simplification
+
+- Reduced the public log from twelve detailed entries to five key milestones.
+- Combined recent website changes into one short, visitor-friendly entry.
+- Kept the important station commissioning, firmware, archive and WH57 events.
+- Removed the redundant explanatory section from the page.
+- Shortened the page introduction and headings.
+
+Weather data, calculations and other website functionality are unchanged.

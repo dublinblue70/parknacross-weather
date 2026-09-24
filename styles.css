@@ -2240,7 +2240,7 @@ footer .footer-links a:focus-visible {
   .info-note,.monthly-note,.climate-card span,.climate-card small{color:#444!important}
 }
 
-/* v38.4.69 — final Weather Intelligence Lab hardening */
+/* v38.4.71 — Weather Intelligence Lab styling */
 .intelligence-feature{border-color:rgba(123,215,239,.3);background:linear-gradient(140deg,rgba(123,215,239,.055),rgba(101,209,154,.025))}
 .intelligence-timeline{display:grid;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .intelligence-timeline-group{margin:0;padding:12px 17px 8px;background:rgba(123,215,239,.09);border-bottom:1px solid var(--line);color:var(--accent);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase}

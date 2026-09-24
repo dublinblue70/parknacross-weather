@@ -1,0 +1,12 @@
+Parknacross Weather v38.4.71
+Released: 24 September 2026
+
+Lightning wording clarification
+
+- Renamed the Storm Mode card to “Lightning activity”.
+- Replaced the vague “Unavailable” state with “No data yet”.
+- Explained that the number represents detections in the last 24 hours.
+- Removed technical counter-reset wording from the visitor-facing page.
+
+The counter-reset protection remains active internally. Other weather logic and
+website functionality are unchanged.

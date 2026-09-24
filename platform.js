@@ -125,7 +125,7 @@
         set("contextForecastVerificationDetail", "Awaiting the completed Parknacross day before calculating forecast error.");
       } else {
         set("contextForecastVerification", "Awaiting first morning snapshot");
-        set("contextForecastVerificationDetail", `Next capture window ${verification.capture_window_local || "07:00–10:00 Europe/Dublin"} · forecast target ${dayLabel(verification.next_target_day)}.`);
+        set("contextForecastVerificationDetail", `Next capture window ${verification.capture_window_local || "07:00–10:00 Irish time"} · forecast target ${dayLabel(verification.next_target_day)}.`);
       }
     } else {
       set("contextForecastVerification", "Verification temporarily unavailable");

@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-69-final-hardening";
+const CACHE_NAME = "parknacross-v38-4-71-lightning-wording";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

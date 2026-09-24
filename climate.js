@@ -110,7 +110,7 @@
         set("verifyText", `Morning forecast saved. Comparison will appear after Parknacross observations for ${pending.target_day} are complete.`);
       } else {
         set("verifyTitle", "Awaiting first morning snapshot");
-        set("verifyText", `Next scheduled capture: ${verification.next_capture_day || "next morning"}, ${verification.capture_window_local || "07:00–10:00 Europe/Dublin"}. It will verify the forecast for ${verification.next_target_day || "the following day"}.`);
+        set("verifyText", `Next scheduled capture: ${verification.next_capture_day || "next morning"}, ${verification.capture_window_local || "07:00–10:00 Irish time"}. It will verify the forecast for ${verification.next_target_day || "the following day"}.`);
       }
     } else {
       set("verifyTitle", "Verification temporarily unavailable");
