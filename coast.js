@@ -16,7 +16,7 @@
    /* M2 is an observation but is about 110 km offshore; the coastal model is
       local but not a beach measurement. A range is more honest than an
       arbitrary weighted average presented with false 0.1°C precision. */
-   const low=Math.floor(Math.min(model,buoy)*2)/2,high=Math.ceil(Math.max(model,buoy)*2)/2;
+   const low=Math.round(Math.min(model,buoy)*10)/10,high=Math.round(Math.max(model,buoy)*10)/10;
    return{display:`${low.toFixed(1)}–${high.toFixed(1)} °C`,summary:`estimated ${low.toFixed(1)}–${high.toFixed(1)}°C`,confidence:"Low–moderate confidence · model and offshore observation range",crossChecked:true};
  }
  const swimState={wind:null,gust:null,direction:null,exposure:null,air:null,rain:null,observedAt:null,seaText:null,tide:null,warning:null};

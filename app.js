@@ -49,6 +49,8 @@ let charts = {};
 let deferredInstallPrompt = null;
 let latestObservationTime = null;
 let latestCurrent = null;
+let latestRainDetected = false;
+let latestForecastToday = "";
 
 const LOCAL_CACHE_PREFIX = "parknacross.dashboard.";
 const localCacheKey = name => `${LOCAL_CACHE_PREFIX}${name}.v1`;
@@ -850,15 +852,27 @@ function updateWhatToWear(current, rainDetected = false) {
   if((wind!==null&&wind>=20)||(gust!==null&&gust>=30))extras.push("add a windproof outer layer");
   if(rainDetected||(rain!==null&&rain>0))extras.push(`take a waterproof jacket${wind!==null&&wind<20?" or umbrella":""}`);
   if(uv!==null&&uv>=3)extras.push("use sun protection if you will be outside for long");
-  if(!extras.length)extras.push("no additional wind, rain or UV protection is indicated by the latest reading");
+  if(!extras.length)extras.push("No additional wind, rain or UV protection is indicated by the latest reading");
   set("wearClothing",clothing);
-  set("wearExtras",`${extras.join("; ")}.`);
+  const extrasText=extras.join("; ");
+  set("wearExtras",`${extrasText.charAt(0).toUpperCase()}${extrasText.slice(1)}.`);
   const details=[];
   if(air!==null)details.push(`${n(air)}°C`);
   if(feels!==null&&air!==null&&Math.abs(feels-air)>=.2)details.push(`feels like ${n(feels)}°C`);
   if(wind!==null)details.push(`wind ${n(wind)} km/h`);
   if(gust!==null)details.push(`gusts ${n(gust)} km/h`);
   set("wearContext",details.length?`Based on ${details.join(", ")} at Parknacross.`:"Recommendations will update when the latest observation is available.");
+  const forecastNote=$("wearForecast");
+  if(forecastNote){
+    const text=String(latestForecastToday||"");
+    const wet=/\brain\b|drizzl|shower|thunder|hail/i.test(text);
+    const windy=/\bwindy\b|\bgust|strong wind|fresh wind|gale/i.test(text);
+    const notes=[];
+    if(wet)notes.push("rain or showers are mentioned, so consider taking a waterproof");
+    if(windy)notes.push("stronger winds are mentioned, so a windproof layer may be useful");
+    forecastNote.hidden=!notes.length;
+    forecastNote.textContent=notes.length?`Later today · Official Leinster forecast: ${notes.join("; ")}.`:"";
+  }
 }
 
 function updateDashboard(current) {
@@ -946,7 +960,8 @@ function updateDashboard(current) {
   const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : correctedDailyRain(current);
   const isNight = updateSunInfo(current);
   const condition = conditionInfo(current, isNight);
-  updateWhatToWear(current, Boolean(condition.rainState?.isRaining));
+  latestRainDetected=Boolean(condition.rainState?.isRaining);
+  updateWhatToWear(current, latestRainDetected);
 
   if (currentTime) {
     latestObservationTime = currentTime;
@@ -1390,12 +1405,16 @@ async function getJSON(url, cacheMode = "default") {
 async function loadForecast() {
   try {
     const forecast = await getJSON(FORECAST_URL);
-    set("forecastToday", forecast.today || "Forecast unavailable.");
+    latestForecastToday=forecast.today || "";
+    set("forecastToday", latestForecastToday || "Forecast unavailable.");
     set("forecastTonight", forecast.tonight || "--");
     set("forecastTomorrow", forecast.tomorrow || "--");
+    if(latestCurrent)updateWhatToWear(latestCurrent,latestRainDetected);
   } catch (error) {
     console.warn("Met Éireann forecast:", error);
+    latestForecastToday="";
     set("forecastToday", "Official forecast temporarily unavailable.");
+    if(latestCurrent)updateWhatToWear(latestCurrent,latestRainDetected);
   }
 }
 
@@ -1649,8 +1668,9 @@ async function refreshLightning() {
     panel.style.display = "";
     set("lightningHeadline", "WH57 lightning detector");
     set("lightningStrikes", usable(data.strikes_today) ? Math.round(Number(data.strikes_today)).toLocaleString("en-IE") : "--");
-    set("lightningNearest", usable(data.nearest_24h_km) ? `${Number(data.nearest_24h_km).toFixed(0)} km` : "--");
-    set("lightningLast", usable(data.last_strike_epoch) ? lightningRelative(data.last_strike_epoch) : "--");
+    const strikesToday=usable(data.strikes_today)?Math.round(Number(data.strikes_today)):null;
+    set("lightningNearest", strikesToday===0?"None today":usable(data.nearest_24h_km)?`${Number(data.nearest_24h_km).toFixed(0)} km`:"Unavailable");
+    set("lightningLast", strikesToday===0?"None today":usable(data.last_strike_epoch)?lightningRelative(data.last_strike_epoch):"Unavailable");
     set(
       "lightningDetail",
       usable(data.distance_km)
