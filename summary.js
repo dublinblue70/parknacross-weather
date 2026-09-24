@@ -85,7 +85,7 @@ function maxGustReading(rows){
   return maxReading((rows||[]).filter(row=>!out.has(row)),"wind_gust_kmh");
 }
 function average(rows, field) { const values = rows.filter(row => usable(row[field])).map(row => Number(row[field])); return values.length ? values.reduce((a,b)=>a+b,0)/values.length : null; }
-const RAIN_CORRECTIONS_MM = { "2026-09-11": 0.1 };
+const RAIN_CORRECTIONS_MM = window.PARKNACROSS_DATA_CORRECTIONS?.dailyRainMm || {};
 function correctedRain(row) {
   if (!usable(row?.rain_daily_mm)) return null;
   const day = localDayKey(readingDate(row));
