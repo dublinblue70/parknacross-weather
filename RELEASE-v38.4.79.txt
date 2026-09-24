@@ -1,0 +1,8 @@
+Parknacross Weather v38.4.79
+Released: 24 September 2026
+
+- Corrected More-menu colours on the standalone Downloads and System Status pages.
+- Standardised normal, visited, hover, keyboard-focus and current-page states across every menu.
+- Prevented the active Downloads or System Status link changing colour when hovered.
+- Added regression checks for standalone-page menu styling.
+- Advanced the PWA cache so installed copies receive the correction.
