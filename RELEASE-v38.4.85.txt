@@ -1,0 +1,4 @@
+Parknacross Weather v38.4.85
+
+- Removes duplicate diary classifications when the same date and measured value are already shown as a station record.
+- Keeps genuine warm, wet, windy and other notable-day entries when they add information not represented by a record.
