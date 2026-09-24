@@ -1,0 +1,15 @@
+Parknacross Weather v38.4.84
+Released: 24 September 2026
+
+- Corrected the estimated coastal water-temperature range so its bounds are
+  the actual one-decimal source values and never extend beyond both inputs.
+- Replaced empty lightning fields with “None today” when the WH57 reports zero
+  strikes; unavailable wording remains reserved for missing data.
+- Prevented partial historical coverage from turning the overall System Status
+  amber while the website, feed and current services are healthy.
+- Reclassified older excluded gust readings as recorded historical quality
+  information; only a recent exclusion triggers review status.
+- Capitalised the clothing-protection recommendation correctly.
+- Added a separate “Later today” note when the official Leinster forecast
+  mentions rain, showers or stronger winds.
+- Advanced all asset versions and the installed-app cache to v38.4.84.

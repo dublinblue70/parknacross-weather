@@ -71,7 +71,7 @@ try {
 const requiredChecks = [
   ["history.js", "/coverage?days=371"],
   ["history.js", "Weather observations for"],
-  ["status.js", "flagged"],
+  ["status.js", "retained in the raw archive"],
   ["station.html", "Readings saved today"],
   ["navigation.js", "document.body.appendChild(menu)"],
   ["sitemap.xml", "2026-09-24"],
@@ -86,7 +86,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-83"],
+  ["service-worker.js", "parknacross-v38-4-84"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -153,9 +153,15 @@ if (/live camera feed/i.test(skyHtml) && !/not a continuous live camera feed/i.t
 const coastHtml = await readFile(join(root, "coast.html"), "utf8");
 if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("coast.html: land-based clothing guide must not appear on the Sea & Swim page");
 const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
-if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
-if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-83')) failures.push("index.html: shared data corrections must load before the dashboard application");
 const dashboardApp = await readFile(join(root, "app.js"), "utf8");
+if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
+if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-84')) failures.push("index.html: shared data corrections must load before the dashboard application");
+if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: forecast-aware clothing note is missing");
+if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
+const coastScript = await readFile(join(root, "coast.js"), "utf8");
+if (/Math\.(?:floor|ceil)\(Math\.(?:min|max)\(model,buoy\)\*2\)/.test(coastScript)) failures.push("coast.js: sea-temperature range still expands to half-degree bounds");
+const statusScript = await readFile(join(root, "status.js"), "utf8");
+if (!statusScript.includes("Informational historical coverage")) failures.push("status.js: partial historical coverage must be informational");
 if ((dashboardApp.match(/updateDashboard\(current\);/g)||[]).length < 3) failures.push("app.js: dashboard progressive rendering is missing");
 const archiveLogic = await readFile(join(root, "intelligence.js"), "utf8");
 if (archiveLogic.indexOf("if(/wettest month|most rain.*month/") > archiveLogic.indexOf("else if(/wettest|most rain/")) failures.push("intelligence.js: wettest-month question must be matched before generic wettest-day question");

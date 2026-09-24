@@ -234,14 +234,15 @@ async function runChecks() {
 
     const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):0;
     const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):0;
-    setBadge("gustQualityBadge","good",gustTotal>0?"CHECKED":"OK");
-    setText("gustQualityValue",gustTotal===0?"No anomalies":`${gustTotal} flagged${gust24>0?` · ${gust24} today`:""}`);
+    setBadge("gustQualityBadge",gust24>0?"warn":"good",gust24>0?"REVIEW":gustTotal>0?"RECORDED":"OK");
+    setText("gustQualityValue",gustTotal===0?"No anomalies":gust24>0?`${gust24} recent · ${gustTotal} total`:`${gustTotal} historical`);
     const lastGust=usableNumber(quality.last_gust_exclusion_epoch)
       ? new Date(Number(quality.last_gust_exclusion_epoch)*1000).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})
       : null;
     setText("gustQualityDetail",gustTotal>0
-      ? `${gustTotal} unusual wind reading${gustTotal===1?"":"s"} identified${lastGust?` · last ${lastGust}`:""}`
+      ? `${gustTotal} unusual wind reading${gustTotal===1?"":"s"} retained in the raw archive and excluded from derived peak-gust statistics${lastGust?` · last ${lastGust}`:""}`
       : "No unusual wind readings found");
+    if(gust24>0)states.push("warn");
   }
 
   if(reliability.__error || !usableNumber(reliability.archive_reliability_percent)) {
@@ -252,8 +253,7 @@ async function runChecks() {
     setBadge("reliabilityBadge",state,state==="good"?"COMPLETE":"PARTIAL");
     setText("reliabilityValue",`${pct.toFixed(1)}%`);
     const currentFeedLive=!current.__error&&usableNumber(current.epoch)&&(Date.now()/1000-Number(current.epoch))<600;
-    setText("reliabilityDetail",`Historical archive completeness · ${currentFeedLive?"current station feed is live · ":""}${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected five-minute slots saved`);
-    states.push(state);
+    setText("reliabilityDetail",`Informational historical coverage · ${currentFeedLive?"current station feed is live · ":""}${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected five-minute slots saved`);
   }
 
   if(backup.__error) {
