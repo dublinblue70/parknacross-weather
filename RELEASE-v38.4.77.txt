@@ -1,0 +1,7 @@
+Parknacross Weather v38.4.77
+Released: 24 September 2026
+
+- Fixed the Today’s Sky retry button being visible after a successful photo load.
+- Added a targeted CSS rule that preserves the button’s hidden state.
+- The retry control now appears only after the photo or photo service fails.
+- Advanced the PWA cache so installed copies receive the correction.

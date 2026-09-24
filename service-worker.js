@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-76-sky-clarity";
+const CACHE_NAME = "parknacross-v38-4-77-sky-retry-visibility";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
