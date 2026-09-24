@@ -1,0 +1,8 @@
+Parknacross Weather v38.4.80
+Released: 24 September 2026
+
+- Rebuilt the Quick installation check as six consistent diagnostic cards.
+- Separated every label, result and explanatory note clearly.
+- Improved card spacing, wrapping and responsive layout.
+- Preserved all diagnostic IDs and existing detection logic.
+- Advanced the PWA cache so installed copies receive the correction.

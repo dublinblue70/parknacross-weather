@@ -81,10 +81,12 @@ const requiredChecks = [
   ["maintenance.html", "noindex,follow"],
   ["privacy.html", "Privacy information"],
   ["install.html", "Install Parknacross Weather"],
+  ["install.html", "Home Screen or browser mode"],
+  ["install.html", "Version this page expects"],
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-79"],
+  ["service-worker.js", "parknacross-v38-4-80"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -147,6 +149,8 @@ const navigation = await readFile(join(root, "navigation.js"), "utf8");
 if (/window\.addEventListener\("scroll",\s*\(\)\s*=>\s*closeAll/.test(navigation)) {
   failures.push("navigation.js: scrolling must not immediately close the mobile More menu");
 }
+const installHtml = await readFile(join(root, "install.html"), "utf8");
+if (/class="info-card" role="listitem"/.test(installHtml)) failures.push("install.html: installation diagnostics must use the structured pwa-diagnostic card style");
 const styles = await readFile(join(root, "styles.css"), "utf8");
 if (/mask-image\s*:/.test(styles)) {
   failures.push("styles.css: mask-image can clip the mobile More popup");
