@@ -84,7 +84,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-77"],
+  ["service-worker.js", "parknacross-v38-4-78"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -109,6 +109,7 @@ const requiredChecks = [
   ["sky.html", "Retry loading photo"],
   ["sky.js", "showRetry(true)"],
   ["styles.css", "#skyRetryButton[hidden]{display:none!important}"],
+  ["styles.css", ".nav-more-menu a:visited"],
   ["intelligence.js", "timelineStamp"],
   ["navigation.js", "data-nav-more-popup"],
   ["package.json", "@playwright/test"]

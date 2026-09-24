@@ -2031,9 +2031,15 @@ html.is-offline .live-pill{opacity:.78}
 .nav-more-menu[hidden] { display:none !important; }
 .nav-more-menu a {
   display:flex; align-items:center; min-width:0; padding:8px 10px;
-  border-radius:8px; font-size:.82rem; line-height:1.2; white-space:normal;
+  border-radius:8px; color:#b9c9d3; text-decoration:none;
+  font-size:.82rem; line-height:1.2; white-space:normal;
+  transition:background .18s ease,color .18s ease;
 }
-.nav-more-menu a.active { background:rgba(123,215,239,.12); color:#fff; }
+.nav-more-menu a:visited { color:#b9c9d3; }
+.nav-more-menu a:hover,.nav-more-menu a:focus-visible {
+  background:rgba(123,215,239,.09); color:#fff;
+}
+.nav-more-menu a.active,.nav-more-menu a.active:visited { background:rgba(123,215,239,.12); color:#fff; }
 @media(max-width:900px){.nav-more-button{font-size:.82rem;padding:8px 10px}}
 @media(max-width:560px){.nav-more-button{font-size:.78rem;padding:7px 9px}}
 
