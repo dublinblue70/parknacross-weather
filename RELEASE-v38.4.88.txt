@@ -1,0 +1,5 @@
+Parknacross Weather v38.4.88
+
+- Extended the optional WH57 lightning proximity notification radius to 40 km.
+- Retained the existing 25 km, 15 km and 10 km choices.
+- Clarified that 40 km is an approximate sensor detection range, not a precise boundary.

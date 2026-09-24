@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-87-consolidated-weather-pages";
+const CACHE_NAME = "parknacross-v38-4-88-lightning-alert-range";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
