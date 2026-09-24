@@ -44,7 +44,7 @@ function fmtDurationMinutes(minutes) {
   const total=Math.round(n), h=Math.floor(total/60), m=total%60;
   return m ? `${h}h ${m}m` : `${h}h`;
 }
-async function fetchJSON(url, timeout=12000) {
+async function fetchJSON(url, timeout=20000) {
   const controller = new AbortController();
   const timer = setTimeout(()=>controller.abort(), timeout);
   try {
@@ -180,6 +180,7 @@ async function runChecks() {
   $("overall").className="overall";
 
   const sitePromise=checkSite();
+  const apiStarted=performance.now();
   const [health,current,quality,history,reliability,backup,social,site] = await Promise.all([
     fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e})),
@@ -191,13 +192,15 @@ async function runChecks() {
     sitePromise
   ]);
 
+  const apiElapsed=Math.round(performance.now()-apiStarted);
   let states=[site.state];
 
   if(health.__error) {
     setBadge("apiBadge","bad","DOWN"); setText("apiValue","Unavailable"); setText("apiDetail","Weather data service could not be reached"); states.push("bad");
   } else {
     const db=health.database==="connected"; const ok=health.status==="ok"&&db;
-    setBadge("apiBadge",ok?"good":"warn",ok?"OK":"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",db?"Weather data service connected":"Weather data service needs checking"); states.push(ok?"good":"warn");
+    const slow=ok&&apiElapsed>=8000;
+    setBadge("apiBadge",ok?(slow?"warn":"good"):"warn",ok?(slow?"SLOW":"OK"):"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",db?(slow?`Weather data checks completed slowly (${(apiElapsed/1000).toFixed(1)} sec)`:"Weather data service connected"):"Weather data service needs checking"); states.push(ok?(slow?"warn":"good"):"warn");
   }
 
   if(current.__error) {

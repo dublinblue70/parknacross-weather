@@ -9,7 +9,7 @@ const top = [
 ];
 const more = [
   ["climate.html", "Climate"], ["station.html", "Station"],
-  ["coast.html", "Coastal"], ["sky.html", "Sky camera"],
+  ["coast.html", "Coastal"], ["sky.html", "Today’s sky"],
   ["records.html", "Records"], ["monthly.html", "Monthly report"],
   ["annual.html", "Annual report"], ["downloads.html", "Downloads"],
   ["status.html", "System status"], ["install.html", "Install help"],

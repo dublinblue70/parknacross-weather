@@ -8,9 +8,5 @@ window.PARKNACROSS_CONFIG = {
   stationLabel: "Parknacross · Ardamine, Co. Wexford, Ireland",
   stationLat: 52.6,
   stationLon: -6.3,
-  tideStation: "Arklow",
-
-  // Future sky camera: add public URLs here when hardware is installed.
-  skycamImageUrl: "",
-  skycamTimelapseUrl: ""
+  tideStation: "Arklow"
 };

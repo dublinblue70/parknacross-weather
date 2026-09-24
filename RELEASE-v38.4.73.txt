@@ -1,0 +1,17 @@
+Parknacross Weather v38.4.73
+Released: 24 September 2026
+
+Final review corrections and usability improvements
+
+- Corrected Storm Mode to read the real WH57 lightning_strikes archive field.
+- Excluded counter resets and long archive gaps from Storm Mode lightning totals.
+- Removed Forecast verification from the Dashboard and Climate page, including its unused requests.
+- Replaced the Dashboard card with a useful saved-observation archive summary.
+- Replaced the unfinished Sky camera journey with Today’s sky and the latest manually uploaded photograph.
+- Added supported archive-question shortcuts and useful new archive queries.
+- Added refresh controls and updated times to Graphs and Weather Lab.
+- Renamed technical Storm Mode triggers as storm thresholds.
+- Clarified the lightning chart axis as detected events.
+- Increased System Status request tolerance and now distinguishes a slow response from an outage.
+
+Weather measurements, chart calculations outside the documented corrections, archive storage and alert thresholds are unchanged.

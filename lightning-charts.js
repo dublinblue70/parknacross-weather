@@ -94,7 +94,7 @@
   const plainAxis = unit => ({
     x: {grid:{color:'transparent'},ticks:{color:'#9fb3c1',maxTicksLimit:8}},
     y: {beginAtZero:true,grid:{color:'rgba(174,210,232,.09)'},
-      ticks:{color:'#9fb3c1',precision:unit === 'Strikes' ? 0 : undefined},
+      ticks:{color:'#9fb3c1',precision:unit === 'Detected events' ? 0 : undefined},
       title:{display:true,text:unit,color:'#9fb3c1'}}
   });
   function makeCharts() {
@@ -104,7 +104,7 @@
     activityChart = new Chart($('gLightningCount'), {type:'bar',data:{labels:[],datasets:[{
       label:'New detections',data:[],backgroundColor:'#f2bb68',borderRadius:2,barPercentage:1,
       categoryPercentage:1
-    }]},options:{...common,scales:plainAxis('Strikes')}});
+    }]},options:{...common,scales:plainAxis('Detected events')}});
     distanceChart = new Chart($('gLightningDistance'), {type:'line',data:{labels:[],datasets:[{
       label:'Lightning distance',data:[],borderColor:'#74ddff',backgroundColor:'#74ddff',
       showLine:false,pointRadius:4,pointHoverRadius:7,spanGaps:false

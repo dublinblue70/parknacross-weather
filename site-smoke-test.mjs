@@ -84,7 +84,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-72"],
+  ["service-worker.js", "parknacross-v38-4-73"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -99,6 +99,7 @@ const requiredChecks = [
   ["monthly.js", "shareMonthlyCard"],
   ["intelligence.html", "Weather Intelligence Lab"],
   ["intelligence.js", "loadStormMode"],
+  ["intelligence.js", "lightning_strikes"],
   ["intelligence.js", "setupArchiveQuestions"],
   ["intelligence.js", "timelineStamp"],
   ["navigation.js", "data-nav-more-popup"],
@@ -114,6 +115,16 @@ const intelligenceHtml = await readFile(join(root, "intelligence.html"), "utf8")
 for (const removedSection of ["Forecast accountability", "Recent weather stories", "Visual weather diary", "Microclimate explorer", "Open local weather"]) {
   if (intelligenceHtml.includes(removedSection)) failures.push(`intelligence.html: removed section still present: ${removedSection}`);
 }
+
+for (const name of ["index.html", "climate.html", "platform.js", "climate.js"]) {
+  const content = await readFile(join(root, name), "utf8");
+  if (/forecast[- ]verification/i.test(content)) failures.push(`${name}: removed forecast verification is still present`);
+}
+if (!intelligenceHtml.includes("Storm threshold")) failures.push("intelligence.html: plain-language storm threshold labels are missing");
+if (!intelligenceHtml.includes("data-archive-question")) failures.push("intelligence.html: archive question shortcuts are missing");
+const skyHtml = await readFile(join(root, "sky.html"), "utf8");
+if (!skyHtml.includes("manually uploaded photograph")) failures.push("sky.html: manual-photo disclosure is missing");
+if (/live camera feed/i.test(skyHtml) && !/not a continuous live camera feed/i.test(skyHtml)) failures.push("sky.html: unfinished live-camera claim is still present");
 
 const navigation = await readFile(join(root, "navigation.js"), "utf8");
 if (/window\.addEventListener\("scroll",\s*\(\)\s*=>\s*closeAll/.test(navigation)) {

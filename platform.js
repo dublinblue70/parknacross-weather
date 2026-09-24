@@ -13,13 +13,6 @@
     const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
     return `${map.year}-${map.month}-${map.day}`;
   };
-  const dayLabel = day => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(day || ""))) return "--";
-    return new Date(`${day}T12:00:00Z`).toLocaleDateString("en-IE", {
-      timeZone: STATION_TIME_ZONE, day: "numeric", month: "short"
-    });
-  };
-
   async function get(path) {
     const r = await fetch(`${API}${path}`, { cache: "no-store" });
     if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
@@ -43,9 +36,9 @@
   });
 
   async function loadContext() {
-    const [currentR, officialR, climateR, rainR, eventR, verifyR, storageR] = await Promise.allSettled([
+    const [currentR, officialR, climateR, rainR, eventR, storageR] = await Promise.allSettled([
       get("/current"), get("/met/johnstown"), get("/climate-summary"), get("/rain-summary"),
-      get("/events"), get("/forecast-verification"), get("/storage-stats")
+      get("/events"), get("/storage-stats")
     ]);
 
     // Compare recent observations only. The Met heading is a *report* time;
@@ -108,31 +101,17 @@
       set("contextMilestoneDetail", e.detail || "");
     }
 
-    if (verifyR.status === "fulfilled") {
-      const verification = verifyR.value || {};
-      if (verification.comparisons?.length) {
-        const v = verification.comparisons[0];
-        if (usable(v.high_error_c)) {
-          const d = Number(v.high_error_c);
-          set("contextForecastVerification", `High ${d >= 0 ? "+" : ""}${d.toFixed(1)}°C error`);
-        } else {
-          set("contextForecastVerification", "Comparison available");
-        }
-        set("contextForecastVerificationDetail", `${dayLabel(v.target_day)} · morning forecast compared with completed Parknacross observations.`);
-      } else if (verification.pending?.length) {
-        const p = verification.pending[0];
-        set("contextForecastVerification", `Snapshot captured for ${dayLabel(p.target_day)}`);
-        set("contextForecastVerificationDetail", "Awaiting the completed Parknacross day before calculating forecast error.");
-      } else {
-        set("contextForecastVerification", "Awaiting first morning snapshot");
-        set("contextForecastVerificationDetail", `Next capture window ${verification.capture_window_local || "07:00–10:00 Irish time"} · forecast target ${dayLabel(verification.next_target_day)}.`);
-      }
+    if (storageR.status === "fulfilled") {
+      const total = usable(storageR.value.total_samples) ? Number(storageR.value.total_samples) : null;
+      const firstEpoch = usable(storageR.value.first_epoch) ? Number(storageR.value.first_epoch) : null;
+      set("contextArchiveCount", total === null ? "Archive growing" : `${total.toLocaleString("en-IE")} observations`);
+      set("contextArchiveDetail", firstEpoch === null
+        ? "Saved observations are available in History."
+        : `Saved since ${new Date(firstEpoch * 1000).toLocaleDateString("en-IE", {timeZone:STATION_TIME_ZONE,day:"numeric",month:"short",year:"numeric"})}.`);
     } else {
-      set("contextForecastVerification", "Verification temporarily unavailable");
-      set("contextForecastVerificationDetail", "Forecast comparison is temporarily unavailable.");
+      set("contextArchiveCount", "Archive available");
+      set("contextArchiveDetail", "Open History to explore saved observations.");
     }
-
-    // Forecast snapshots are captured by the scheduled Worker only.
   }
 
   function shareSummary(current, high, low, rain, gust) {
