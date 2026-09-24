@@ -84,7 +84,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-75"],
+  ["service-worker.js", "parknacross-v38-4-76"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -106,6 +106,8 @@ const requiredChecks = [
   ["intelligence.js", "missing archive dates break the run"],
   ["records.js", "under 0.2 mm/day"],
   ["monthly.html", "Under 0.2 mm"],
+  ["sky.html", "Retry loading photo"],
+  ["sky.js", "showRetry(true)"],
   ["intelligence.js", "timelineStamp"],
   ["navigation.js", "data-nav-more-popup"],
   ["package.json", "@playwright/test"]

@@ -1,0 +1,8 @@
+Parknacross Weather v38.4.76
+Released: 24 September 2026
+
+- Simplified the Today’s Sky page’s repeated headings.
+- Renamed the photograph section clearly as “Latest photograph”.
+- Hid the photo retry control during normal operation.
+- The “Retry loading photo” button now appears only when loading fails.
+- Advanced the PWA cache so installed copies receive the correction.

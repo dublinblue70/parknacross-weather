@@ -11,6 +11,7 @@
     return `${item.year}-${item.month}-${item.day}`;
   };
   const uploadedLabel = value => new Date(value).toLocaleString("en-IE", {timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+  const showRetry = visible => { const button = $("skyRetryButton"); if (button) button.hidden = !visible; };
 
   function showMessage(title, detail) {
     const media = $("skyObservationMedia");
@@ -22,8 +23,9 @@
 
   async function loadObservation() {
     const status = $("skyObservationStatus"), button = $("skyRetryButton");
+    showRetry(false);
     if (button) button.disabled = true;
-    if (status) status.textContent = "Checking the latest visual observation…";
+    if (status) status.textContent = "Checking today’s photograph…";
     try {
       if (!API) throw new Error("Weather-data connection is not configured");
       const response = await fetch(`${API}/sky-photo/meta?_=${Date.now()}`, {cache:"no-store"});
@@ -31,7 +33,7 @@
       const data = await response.json();
       if (!data?.available || !data?.uploaded_at || stationDay(data.uploaded_at) !== stationDay()) {
         showMessage("No photo added today", "A new visual observation will appear here when today’s sky photo is uploaded.");
-        if (status) status.textContent = "No visual observation has been added for today yet.";
+        if (status) status.textContent = "No photograph has been added today.";
         return;
       }
       const image = new Image(); image.className = "sky-image"; image.alt = "Today’s sky over Parknacross, Ardamine";
@@ -45,15 +47,18 @@
         }
         $("skyObservationMedia")?.replaceChildren(figure);
         if (status) status.textContent = `Uploaded ${uploadedLabel(data.uploaded_at)} · Parknacross, Ardamine`;
+        showRetry(false);
       }, {once:true});
       image.addEventListener("error", () => {
         showMessage("Photo unavailable", "The latest sky photo could not be displayed just now.");
-        if (status) status.textContent = "The visual observation is temporarily unavailable.";
+        if (status) status.textContent = "The photograph could not be displayed.";
+        showRetry(true);
       }, {once:true});
       image.src = `${API}/sky-photo?v=${encodeURIComponent(data.uploaded_at)}`;
     } catch (_) {
       showMessage("Photo service unavailable", "The latest visual observation could not be loaded. Please try again.");
       if (status) status.textContent = "The photo service could not be reached just now.";
+      showRetry(true);
     } finally { if (button) button.disabled = false; }
   }
 
