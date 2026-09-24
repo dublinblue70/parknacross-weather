@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-78-menu-colours";
+const CACHE_NAME = "parknacross-v38-4-79-all-menu-colours";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

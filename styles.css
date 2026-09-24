@@ -2039,7 +2039,8 @@ html.is-offline .live-pill{opacity:.78}
 .nav-more-menu a:hover,.nav-more-menu a:focus-visible {
   background:rgba(123,215,239,.09); color:#fff;
 }
-.nav-more-menu a.active,.nav-more-menu a.active:visited { background:rgba(123,215,239,.12); color:#fff; }
+.nav-more-menu a.active,.nav-more-menu a.active:visited,
+.nav-more-menu a.active:hover,.nav-more-menu a.active:focus-visible { background:rgba(123,215,239,.12); color:#fff; }
 @media(max-width:900px){.nav-more-button{font-size:.82rem;padding:8px 10px}}
 @media(max-width:560px){.nav-more-button{font-size:.78rem;padding:7px 9px}}
 

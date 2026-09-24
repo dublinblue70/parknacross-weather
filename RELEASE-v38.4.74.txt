@@ -1,4 +1,4 @@
-Parknacross Weather v38.4.78
+Parknacross Weather v38.4.79
 Released: 24 September 2026
 
 Weather Lab refresh-button correction
