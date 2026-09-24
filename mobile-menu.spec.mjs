@@ -9,6 +9,9 @@ for (const pageName of ["index.html", "graphs.html", "privacy.html"]) {
     await expect(button).toHaveAttribute("aria-expanded", "true");
     const menu = page.getByRole("menu");
     await expect(menu).toBeVisible();
+    await expect(menu.getByText("Explore", { exact: true })).toBeVisible();
+    await expect(menu.getByText("Reports", { exact: true })).toBeVisible();
+    await expect(menu.getByText("Site & app", { exact: true })).toBeVisible();
     await expect(menu.getByRole("menuitem", { name: "Station" })).toBeVisible();
     const box = await menu.boundingBox();
     const viewport = page.viewportSize();
@@ -21,3 +24,13 @@ for (const pageName of ["index.html", "graphs.html", "privacy.html"]) {
     await expect(button).toHaveAttribute("aria-expanded", "false");
   });
 }
+
+test("reviewed clarity changes are visible", async ({ page }) => {
+  await page.goto("/index.html");
+  await expect(page.getByRole("heading", { name: "What to wear now" })).toBeVisible();
+  await page.goto("/coast.html");
+  await expect(page.getByText("Estimated coastal water temperature", { exact: true })).toBeVisible();
+  await expect(page.getByText(/not measured at Poulshone/i)).toBeVisible();
+  await page.goto("/intelligence.html");
+  await expect(page.getByRole("heading", { name: "Significant weather review" })).toBeVisible();
+});
