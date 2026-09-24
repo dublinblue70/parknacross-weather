@@ -28,10 +28,10 @@
     />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-82" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-83" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260924-v38-4-82" />
+    <link rel="stylesheet" href="styles.css?v=20260924-v38-4-83" />
 
     <meta name="parknacross-sky-build" content="v38.4.51" />
     <title>
@@ -751,9 +751,10 @@
               Checking for today’s photo…
             </p>
 
-            <div id="skyNameControls" class="sky-name-controls" hidden>
+            <details id="skyNameControls" class="sky-name-controls" hidden>
+              <summary>Optional display name</summary>
               <label for="skyDisplayName"
-                >Optional: show your name to the photo admin</label
+                >Name shown privately to the photo administrator when you like this photograph</label
               >
               <div class="sky-name-entry">
                 <input
@@ -771,7 +772,7 @@
                 class="sky-name-status"
                 aria-live="polite"
               ></span>
-            </div>
+            </details>
             <div id="skyAdminLikes" class="sky-admin-likes" hidden>
               <button id="skyViewLikes" type="button">
                 View who liked this photo
@@ -944,7 +945,7 @@
           <div class="section-heading compact-heading">
             <div>
               <span class="section-eyebrow">Outdoor clothing guide</span>
-              <h2 id="wearTodayHeading">What to wear today</h2>
+              <h2 id="wearTodayHeading">What to wear now</h2>
               <p id="wearContext">Building suggestions from the latest Parknacross observation…</p>
             </div>
           </div>
@@ -960,7 +961,7 @@
               <p id="wearExtras" class="info-note">Checking wind, rain and UV…</p>
             </article>
           </div>
-          <p class="source-note">Land-based clothing guidance from the latest local station reading. Personal comfort and conditions away from Parknacross may vary.</p>
+          <p class="source-note">Land-based clothing guidance from the latest local station reading—not a full-day forecast. Personal comfort and conditions away from Parknacross may vary.</p>
         </section>
 
         <section class="astronomy-strip" aria-label="Sunrise and sunset">
@@ -1467,10 +1468,11 @@
     <script src="wind-rose.js?v=20260923-radial-restore"></script>
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20260915-v36"></script>
-    <script src="app.js?v=20260923-v38-4-63"></script>
+    <script src="data-corrections.js?v=20260924-v38-4-83"></script>
+    <script src="app.js?v=20260924-v38-4-83"></script>
 
     <script src="site-config.js?v=20260912-mobile2"></script>
-    <script src="platform.js?v=20260924-v38-4-82"></script>
+    <script src="platform.js?v=20260924-v38-4-83"></script>
     <script>
       /* WH57 acquisition status; existing app.js remains responsible for displaying detections and alerts. */
       (() => {
@@ -2348,8 +2350,8 @@
       data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'
     ></script>
     <!-- End Cloudflare Web Analytics -->
-    <script src="pwa-update.js?v=20260924-v38-4-82"></script>
-    <script src="accessibility.js?v=20260924-v38-4-82"></script>
-    <script src="navigation.js?v=20260924-v38-4-82"></script>
+    <script src="pwa-update.js?v=20260924-v38-4-83"></script>
+    <script src="accessibility.js?v=20260924-v38-4-83"></script>
+    <script src="navigation.js?v=20260924-v38-4-83"></script>
   </body>
 </html>

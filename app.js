@@ -117,10 +117,7 @@ let lastObservedRainTotal = null;
 let lastObservedRainDay = null;
 let lastRainIncreaseTime = null;
 
-/* 0.1 mm on commissioning day was a test, not real rainfall. */
-const RAIN_CORRECTIONS_MM = {
-  "2026-09-11": 0.1
-};
+const RAIN_CORRECTIONS_MM = window.PARKNACROSS_DATA_CORRECTIONS?.dailyRainMm || {};
 
 function readingTime(reading) {
   if (reading?.received_at) {
@@ -1679,6 +1676,9 @@ async function loadEverything() {
     writeLocalCache("current", current);
     liveCurrent = true;
     markLiveMode();
+    // Do not hold the primary conditions behind slower archive/stat requests.
+    // The supporting panels update again as soon as those requests complete.
+    updateDashboard(current);
   } catch (error) {
     console.error("Current conditions:", error);
     const cached = readLocalCache("current");
@@ -1696,6 +1696,7 @@ async function loadEverything() {
     }
     latestCurrent = current;
     markOfflineMode(current);
+    updateDashboard(current);
   }
 
   const results = await Promise.allSettled([

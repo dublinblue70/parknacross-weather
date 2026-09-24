@@ -98,8 +98,9 @@
     chart.update();
 
     if (metaElement) {
+      const calmPercent = result.intervalCount ? result.calm / result.intervalCount * 100 : 0;
       metaElement.textContent = result.directional
-        ? `${result.directional.toLocaleString("en-IE")} five-minute directional intervals · percentages are of non-calm intervals · calm intervals omitted${result.calm ? ` (${result.calm.toLocaleString("en-IE")})` : ""}`
+        ? `${result.directional.toLocaleString("en-IE")} five-minute directional intervals · sectors use non-calm intervals only · calm below ${CALM_THRESHOLD_KMH} km/h: ${calmPercent.toFixed(1)}% (${result.calm.toLocaleString("en-IE")} intervals)`
         : "No usable wind-direction observations in this period.";
     }
 

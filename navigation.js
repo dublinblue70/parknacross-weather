@@ -4,15 +4,50 @@
   if (!buttons.length) return;
   const menuForButton = new Map();
 
+  const navStyle = document.createElement("style");
+  navStyle.textContent = `
+    .nav-more-menu{grid-template-columns:1fr!important;gap:7px!important}
+    .nav-menu-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 5px;padding-top:5px;border-top:1px solid rgba(190,220,238,.10)}
+    .nav-menu-group:first-child{padding-top:0;border-top:0}
+    .nav-menu-group-label{grid-column:1/-1;padding:2px 10px 1px;color:#7bd7ef;font-size:.69rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+    @media(max-width:360px){.nav-menu-group{grid-template-columns:1fr}}
+  `;
+  document.head.appendChild(navStyle);
+
+  function groupMenu(menu, menuIndex) {
+    if (menu.querySelector(".nav-menu-group")) return;
+    const links = [...menu.querySelectorAll(":scope > a")];
+    const groups = [
+      ["Explore", links.slice(0, 5)],
+      ["Reports", links.slice(5, 8)],
+      ["Site & app", links.slice(8)]
+    ];
+    groups.forEach(([label, items], groupIndex) => {
+      if (!items.length) return;
+      const wrapper = document.createElement("div");
+      const heading = document.createElement("span");
+      const headingId = `navMoreGroup${menuIndex}-${groupIndex}`;
+      wrapper.className = "nav-menu-group";
+      wrapper.setAttribute("role", "group");
+      wrapper.setAttribute("aria-labelledby", headingId);
+      heading.className = "nav-menu-group-label";
+      heading.id = headingId;
+      heading.textContent = label;
+      wrapper.append(heading, ...items);
+      menu.appendChild(wrapper);
+    });
+  }
+
   /*
    * Keep the popup outside the horizontally scrolling navigation and the
    * blurred, overflow-clipped page shell. Mobile Safari treats those
    * ancestors as the containing/clipping block for position:fixed children,
    * which made a correctly opened menu invisible on phones.
    */
-  buttons.forEach(button => {
+  buttons.forEach((button, menuIndex) => {
     const menu = button.parentElement?.querySelector(".nav-more-menu");
     if (!menu) return;
+    groupMenu(menu, menuIndex);
     menuForButton.set(button, menu);
     menu.dataset.navMorePopup = "true";
     document.body.appendChild(menu);

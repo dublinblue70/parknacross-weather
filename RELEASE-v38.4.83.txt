@@ -1,0 +1,22 @@
+Parknacross Weather v38.4.83
+Released: 24 September 2026
+
+- Replaced the falsely precise Poulshone water-temperature blend with a clearly
+  labelled range spanning the local coastal model and fresh M2 observation.
+- Clarified that neither temperature source is measured at Poulshone and added
+  an explicit confidence statement.
+- Made the Dashboard render current conditions as soon as the live reading
+  arrives, without waiting for slower charts and archive summaries.
+- Fixed offline matching for versioned same-origin assets on unvisited pages.
+- Centralised documented rainfall corrections in data-corrections.js.
+- Renamed “What to wear today” to “What to wear now” and clarified that it uses
+  the latest observation rather than a full-day forecast.
+- Renamed Storm Mode to “Significant weather review” and clearly identified its
+  thresholds as site-defined indicators rather than official warnings.
+- Grouped the More menu into Explore, Reports, and Site & app sections.
+- Added archive date coverage to Downloads and made the System Status check time
+  a live announced status.
+- Moved the optional sky-photo display name into a collapsed disclosure.
+- Added calm-wind percentage and threshold wording to wind-rose explanations.
+- Expanded privacy retention/removal wording and regression checks.
+- Standardised release query strings and advanced the PWA cache.

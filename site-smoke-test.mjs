@@ -86,7 +86,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-82"],
+  ["service-worker.js", "parknacross-v38-4-83"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -97,10 +97,13 @@ const requiredChecks = [
   ["tests/mobile-menu.spec.mjs", "More menu works"],
   ["coast.html", "Sea &amp; Swim Conditions"],
   ["coast.js", "renderSwimSummary"],
-  ["coast.js", "correctedLocalSeaEstimate"],
-  ["coast.js", "model*.65+buoy*.35"],
+  ["coast.js", "localSeaEstimate"],
+  ["coast.js", "A range is more honest"],
+  ["coast.html", "Estimated range · not measured at Poulshone"],
+  ["data-corrections.js", "PARKNACROSS_DATA_CORRECTIONS"],
+  ["service-worker.js", "ignoreSearch"],
   ["app.js", "updateWhatToWear"],
-  ["index.html", "What to wear today"],
+  ["index.html", "What to wear now"],
   ["index.html", "Outdoor clothing guide"],
   ["monthly.html", "shareMonthCard"],
   ["monthly.js", "shareMonthlyCard"],
@@ -123,6 +126,8 @@ const requiredChecks = [
   ["status.html", ".nav-more-menu a.active:hover"],
   ["intelligence.js", "timelineStamp"],
   ["navigation.js", "data-nav-more-popup"],
+  ["navigation.js", "Site & app"],
+  ["downloads.html", "archiveCoverage"],
   ["package.json", "@playwright/test"]
 ];
 
@@ -140,7 +145,7 @@ for (const name of ["index.html", "climate.html", "platform.js", "climate.js"]) 
   const content = await readFile(join(root, name), "utf8");
   if (/forecast[- ]verification/i.test(content)) failures.push(`${name}: removed forecast verification is still present`);
 }
-if (!intelligenceHtml.includes("Storm threshold")) failures.push("intelligence.html: plain-language storm threshold labels are missing");
+if (!intelligenceHtml.includes("Site indicator")) failures.push("intelligence.html: site-defined significant-weather indicator labels are missing");
 if (!intelligenceHtml.includes("data-archive-question")) failures.push("intelligence.html: archive question shortcuts are missing");
 const skyHtml = await readFile(join(root, "sky.html"), "utf8");
 if (!skyHtml.includes("manually uploaded photograph")) failures.push("sky.html: manual-photo disclosure is missing");
@@ -149,6 +154,9 @@ const coastHtml = await readFile(join(root, "coast.html"), "utf8");
 if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("coast.html: land-based clothing guide must not appear on the Sea & Swim page");
 const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
 if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
+if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-83')) failures.push("index.html: shared data corrections must load before the dashboard application");
+const dashboardApp = await readFile(join(root, "app.js"), "utf8");
+if ((dashboardApp.match(/updateDashboard\(current\);/g)||[]).length < 3) failures.push("app.js: dashboard progressive rendering is missing");
 const archiveLogic = await readFile(join(root, "intelligence.js"), "utf8");
 if (archiveLogic.indexOf("if(/wettest month|most rain.*month/") > archiveLogic.indexOf("else if(/wettest|most rain/")) failures.push("intelligence.js: wettest-month question must be matched before generic wettest-day question");
 const privacyHtml = await readFile(join(root, "privacy.html"), "utf8");

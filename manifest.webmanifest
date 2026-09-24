@@ -58,7 +58,7 @@
     {
       "name": "Weather Intelligence Lab",
       "short_name": "Weather Lab",
-      "description": "Open coastal intelligence, Storm Mode and archive questions",
+      "description": "Open coastal intelligence, significant-weather review and archive questions",
       "url": "./intelligence.html",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }

@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-82-dashboard-clothing";
+const CACHE_NAME = "parknacross-v38-4-83-reliability-and-clarity";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -24,6 +24,7 @@ const STATIC_ASSETS = [
   "./styles.css",
   "./chart.umd.min.js",
   "./app.js",
+  "./data-corrections.js",
   "./wind-rose.js",
   "./site-config.js",
   "./platform.js",
@@ -145,7 +146,12 @@ self.addEventListener("fetch", event => {
       const copy = response.clone();
       caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
       return response;
-    }).catch(() => caches.match(request))
+    }).catch(() => caches.match(request, {
+      // HTML references local assets with release query strings while the
+      // install cache stores their canonical paths. Ignore only that query
+      // component for same-origin fallback so unvisited pages work offline.
+      ignoreSearch: url.origin === self.location.origin
+    }))
   );
 });
 

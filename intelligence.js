@@ -40,9 +40,9 @@
       set("stormPressure",usable(pressureChange)?`${pressureChange>=0?"+":""}${n(pressureChange)} hPa`:"Unavailable");set("stormGust",usable(maxGust)?`${n(maxGust)} km/h`:"Unavailable");set("stormRain",usable(maxRain)?`${n(maxRain)} mm/h`:"Unavailable");set("stormLightning",usable(lightningChange)?String(Math.round(lightningChange)):"No data yet");set("stormLightningDetail",usable(lightningChange)?"Detections recorded in the last 24 hours":"Waiting for usable WH57 readings");
       const active=(usable(maxGust)&&maxGust>=50)||(usable(maxRain)&&maxRain>=7.5)||(usable(pressureChange)&&pressureChange<=-8)||(usable(lightningChange)&&lightningChange>0);
       const badge=$("stormModeBadge");badge.textContent=active?"Active weather":"No threshold reached";badge.classList.toggle("storm-active",active);
-      set("stormModeStatus",active?"One or more significant-weather thresholds were reached in the last 24 hours.":"No Storm Mode threshold was reached in the latest 24-hour archive.");
+      set("stormModeStatus",active?"One or more site-defined significant-weather indicators were reached in the last 24 hours.":"No site-defined significant-weather indicator was reached in the latest 24-hour archive.");
       const parts=[];if(usable(pressureChange))parts.push(`Pressure ${pressureChange<0?"fell":"rose"} ${Math.abs(pressureChange).toFixed(1)} hPa`);if(usable(maxGust))parts.push(`the strongest gust reached ${maxGust.toFixed(1)} km/h`);if(usable(maxRain))parts.push(maxRain>0?`the peak rain rate was ${maxRain.toFixed(1)} mm/h`:"no rain rate above zero was recorded");if(usable(lightningChange)&&lightningChange>0)parts.push(`${Math.round(lightningChange)} lightning-counter increase${lightningChange===1?"":"s"} occurred`);set("stormNarrative",`${parts.join(", ")}. Thresholds describe the archived observations; official warnings remain authoritative.`);return true;
-    }catch(error){set("stormModeStatus","Recent archive analysis is temporarily unavailable.");set("stormNarrative","Storm Mode could not analyse the latest observations.");return false;}
+    }catch(error){set("stormModeStatus","Recent archive analysis is temporarily unavailable.");set("stormNarrative","The significant-weather review could not analyse the latest observations.");return false;}
   }
 
   function answerArchive(rows,question){
@@ -83,6 +83,6 @@
     Promise.all([loadCoastalTimeline(),loadStormMode(),setupArchiveQuestions()]).then(()=>markRefreshed());
     const coastalButton=$("coastalRetry"),stormButton=$("stormRetry");
     coastalButton?.addEventListener("click",()=>refreshSection(coastalButton,loadCoastalTimeline,"Coastal overview"));
-    stormButton?.addEventListener("click",()=>refreshSection(stormButton,loadStormMode,"Storm Mode"));
+    stormButton?.addEventListener("click",()=>refreshSection(stormButton,loadStormMode,"Significant weather review"));
   });
 })();
