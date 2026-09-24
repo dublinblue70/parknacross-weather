@@ -832,6 +832,38 @@ function updateStatsPanel() {
   }
 }
 
+function updateWhatToWear(current, rainDetected = false) {
+  const air=usable(current?.temperature_c)?Number(current.temperature_c):null;
+  const feels=usable(current?.feels_like_c)?Number(current.feels_like_c):null;
+  const effective=feels!==null?feels:air;
+  const wind=usable(current?.wind_speed_kmh)?Number(current.wind_speed_kmh):null;
+  const gust=usable(current?.wind_gust_kmh)?Number(current.wind_gust_kmh):null;
+  const rain=usable(current?.rain_rate_mm_h)?Number(current.rain_rate_mm_h):null;
+  const uv=usable(current?.uv_index)?Number(current.uv_index):null;
+  let clothing="Waiting for the latest temperature…";
+  if(effective!==null){
+    if(effective>=22)clothing="Light clothing should be comfortable: a T-shirt with shorts or light trousers.";
+    else if(effective>=17)clothing="Light layers should work well: a T-shirt or light top with trousers, plus a thin layer to carry.";
+    else if(effective>=13)clothing="Wear a light jumper or fleece with trousers and bring a light jacket.";
+    else if(effective>=9)clothing="Choose warm layers, long trousers and a medium-weight jacket.";
+    else if(effective>=5)clothing="A warm coat with layered clothing is advisable.";
+    else clothing="Dress for cold conditions with an insulated coat, warm layers, a hat and gloves.";
+  }
+  const extras=[];
+  if((wind!==null&&wind>=20)||(gust!==null&&gust>=30))extras.push("add a windproof outer layer");
+  if(rainDetected||(rain!==null&&rain>0))extras.push(`take a waterproof jacket${wind!==null&&wind<20?" or umbrella":""}`);
+  if(uv!==null&&uv>=3)extras.push("use sun protection if you will be outside for long");
+  if(!extras.length)extras.push("no additional wind, rain or UV protection is indicated by the latest reading");
+  set("wearClothing",clothing);
+  set("wearExtras",`${extras.join("; ")}.`);
+  const details=[];
+  if(air!==null)details.push(`${n(air)}°C`);
+  if(feels!==null&&air!==null&&Math.abs(feels-air)>=.2)details.push(`feels like ${n(feels)}°C`);
+  if(wind!==null)details.push(`wind ${n(wind)} km/h`);
+  if(gust!==null)details.push(`gusts ${n(gust)} km/h`);
+  set("wearContext",details.length?`Based on ${details.join(", ")} at Parknacross.`:"Recommendations will update when the latest observation is available.");
+}
+
 function updateDashboard(current) {
   const now = new Date();
   const today = history24.filter(reading => {
@@ -917,6 +949,7 @@ function updateDashboard(current) {
   const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : correctedDailyRain(current);
   const isNight = updateSunInfo(current);
   const condition = conditionInfo(current, isNight);
+  updateWhatToWear(current, Boolean(condition.rainState?.isRaining));
 
   if (currentTime) {
     latestObservationTime = currentTime;
