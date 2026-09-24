@@ -1,0 +1,8 @@
+Parknacross Weather v38.4.82
+Released: 24 September 2026
+
+- Removed “What to wear today” from the Sea & Swim page.
+- Moved the land-based clothing guide to the main Dashboard directly after “At a glance”.
+- Connected it to the Dashboard’s live temperature, feels-like, wind, gust, rain and UV readings.
+- Kept all sea-temperature modelling and swim information separate from clothing advice.
+- Advanced the PWA cache so installed copies receive the correction.

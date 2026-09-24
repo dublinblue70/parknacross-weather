@@ -24,24 +24,6 @@
    return{value:Math.round(value*10)/10,crossChecked:true,adjusted:true};
  }
  const swimState={wind:null,gust:null,direction:null,exposure:null,air:null,rain:null,observedAt:null,sea:null,seaSource:null,tide:null,warning:null};
- function renderWhatToWear(){
-   const air=usable(swimState.air)?Number(swimState.air):null,wind=usable(swimState.wind)?Number(swimState.wind):null,gust=usable(swimState.gust)?Number(swimState.gust):null,rain=usable(swimState.rain)?Number(swimState.rain):null;
-   let clothing="Waiting for the latest air-temperature observation…";
-   if(air!==null){
-     if(air>=22)clothing="Light clothing should be comfortable: a T-shirt with shorts or light trousers.";
-     else if(air>=17)clothing="Light layers should work well: a T-shirt or light top with trousers, plus a thin layer to carry.";
-     else if(air>=13)clothing="Wear a light jumper or fleece with trousers and bring a light jacket.";
-     else if(air>=9)clothing="Choose warm layers, long trousers and a medium-weight jacket.";
-     else if(air>=5)clothing="A warm coat with layered clothing is advisable.";
-     else clothing="Dress for cold conditions with an insulated coat, warm layers, a hat and gloves.";
-   }
-   const extras=[];
-   if((wind!==null&&wind>=20)||(gust!==null&&gust>=30))extras.push("a windproof outer layer");
-   if(rain!==null&&rain>0)extras.push("a waterproof jacket and water-resistant footwear");
-   if(!extras.length)extras.push("no additional rain or strong-wind layer is indicated by the latest station reading");
-   set("wearClothing",clothing);set("wearExtras",`${extras.join("; ")}.`);
-   set("wearContext",air===null?"Recommendations will update when the local observation is available.":`Based on ${n(air)}°C at Parknacross${wind!==null?`, wind ${n(wind)} km/h`:""}${gust!==null?` and gusts ${n(gust)} km/h`:""}.`);
- }
  function renderSwimSummary(){
    const parts=[];
    if(usable(swimState.air))parts.push(`Air ${n(swimState.air)}°C`);
@@ -52,7 +34,6 @@
    if(swimState.warning)parts.push(swimState.warning);
    set("swimSummary",parts.length?`${parts.join(". ")}. Check the official forecast and assess conditions at the water yourself.`:"Conditions are temporarily unavailable. Check official forecasts before travelling.");
    if(swimState.observedAt){const d=new Date(swimState.observedAt);if(!Number.isNaN(d.getTime()))set("swimUpdated",`Latest local observation: ${d.toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})} Irish time.`);}
-   renderWhatToWear();
  }
  async function get(p){const r=await fetch(`${API}${p}`,{cache:"no-store"});if(!r.ok)throw new Error();return r.json()}
  async function loadCurrent(){try{const c=await get("/current");set("coastWind",usable(c.wind_speed_kmh)?`${n(c.wind_speed_kmh)} km/h`:"--");set("coastGust",usable(c.wind_gust_kmh)?`${n(c.wind_gust_kmh)} km/h`:"--");set("coastDir",usable(c.wind_direction_deg)?`${comp(c.wind_direction_deg)} · ${Math.round(Number(c.wind_direction_deg))}°`:"--");set("coastAirTemp",usable(c.temperature_c)?`${n(c.temperature_c)} °C`:"--");set("coastAirDetail",usable(c.humidity)?`Humidity ${Math.round(Number(c.humidity))}% · Parknacross`:"Parknacross observation");set("coastRain",usable(c.rain_rate_mm_h)?`${n(c.rain_rate_mm_h)} mm/h`:"--");set("coastRainDetail",usable(c.rain_daily_mm)?`${n(c.rain_daily_mm)} mm recorded today`:"Current station rain rate");Object.assign(swimState,{wind:c.wind_speed_kmh,gust:c.wind_gust_kmh,direction:c.wind_direction_deg,air:c.temperature_c,rain:c.rain_rate_mm_h,observedAt:c.received_at||c.timestamp||(usable(c.epoch)?Number(c.epoch)*1000:null)});if(usable(c.wind_direction_deg)){const d=((Number(c.wind_direction_deg)%360)+360)%360;let label,detail;if(d>=45&&d<165){label="Onshore";detail="Wind arriving from the Irish Sea";}else if(d>=225&&d<345){label="Offshore";detail="Wind arriving from inland";}else if(d>=165&&d<225){label="Alongshore · S";detail="Southerly component along the coast";}else{label="Alongshore · N";detail="Northerly component along the coast";}swimState.exposure=label;set("coastExposure",label);set("coastExposureDetail",`${detail} · ${comp(d)} ${Math.round(d)}°`);}renderSwimSummary();}catch{set("coastWind","--");set("coastGust","--");set("coastDir","--");set("coastExposure","--");renderSwimSummary();}}

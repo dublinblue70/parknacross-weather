@@ -86,7 +86,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-81"],
+  ["service-worker.js", "parknacross-v38-4-82"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -99,9 +99,9 @@ const requiredChecks = [
   ["coast.js", "renderSwimSummary"],
   ["coast.js", "correctedLocalSeaEstimate"],
   ["coast.js", "model*.65+buoy*.35"],
-  ["coast.js", "renderWhatToWear"],
-  ["coast.html", "What to wear today"],
-  ["coast.html", "Outdoor clothing guide"],
+  ["app.js", "updateWhatToWear"],
+  ["index.html", "What to wear today"],
+  ["index.html", "Outdoor clothing guide"],
   ["monthly.html", "shareMonthCard"],
   ["monthly.js", "shareMonthlyCard"],
   ["intelligence.html", "Weather Intelligence Lab"],
@@ -145,6 +145,10 @@ if (!intelligenceHtml.includes("data-archive-question")) failures.push("intellig
 const skyHtml = await readFile(join(root, "sky.html"), "utf8");
 if (!skyHtml.includes("manually uploaded photograph")) failures.push("sky.html: manual-photo disclosure is missing");
 if (/live camera feed/i.test(skyHtml) && !/not a continuous live camera feed/i.test(skyHtml)) failures.push("sky.html: unfinished live-camera claim is still present");
+const coastHtml = await readFile(join(root, "coast.html"), "utf8");
+if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("coast.html: land-based clothing guide must not appear on the Sea & Swim page");
+const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
+if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
 const archiveLogic = await readFile(join(root, "intelligence.js"), "utf8");
 if (archiveLogic.indexOf("if(/wettest month|most rain.*month/") > archiveLogic.indexOf("else if(/wettest|most rain/")) failures.push("intelligence.js: wettest-month question must be matched before generic wettest-day question");
 const privacyHtml = await readFile(join(root, "privacy.html"), "utf8");
