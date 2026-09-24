@@ -71,6 +71,7 @@ try {
 const requiredChecks = [
   ["history.js", "/coverage?days=371"],
   ["history.js", "Weather observations for"],
+  ["history.js", "withoutDuplicateDiaryEvents"],
   ["status.js", "retained in the raw archive"],
   ["station.html", "Readings saved today"],
   ["navigation.js", "document.body.appendChild(menu)"],
@@ -86,7 +87,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-84"],
+  ["service-worker.js", "parknacross-v38-4-85"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -155,7 +156,7 @@ if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("
 const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
 const dashboardApp = await readFile(join(root, "app.js"), "utf8");
 if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
-if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-84')) failures.push("index.html: shared data corrections must load before the dashboard application");
+if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-85')) failures.push("index.html: shared data corrections must load before the dashboard application");
 if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: forecast-aware clothing note is missing");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
 const coastScript = await readFile(join(root, "coast.js"), "utf8");
