@@ -1,0 +1,9 @@
+Parknacross Weather v38.4.81
+Released: 24 September 2026
+
+- Replaced the raw Poulshone sea-model display with a cross-checked estimate.
+- Fresh M2 observations now correct material warm or cold model bias while retaining most of the higher-resolution coastal model signal.
+- Added freshness, range and maximum-divergence safeguards.
+- Clearly labels the Poulshone value as an estimate, not a beach measurement.
+- Added a land-based “What to wear today” guide using live air temperature, wind, gust and rain readings.
+- Advanced the PWA cache so installed copies receive the changes.
