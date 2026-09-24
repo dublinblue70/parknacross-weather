@@ -1,7 +1,7 @@
 {
   "name": "parknacross-weather-site",
   "private": true,
-  "version": "38.4.71",
+  "version": "38.4.72",
   "scripts": {
     "test": "node site-smoke-test.mjs && playwright test",
     "test:smoke": "node site-smoke-test.mjs",

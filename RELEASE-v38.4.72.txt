@@ -1,0 +1,11 @@
+Parknacross Weather v38.4.72
+Released: 24 September 2026
+
+Graphs-page chart guide
+
+- Replaced the oversized single Tip with a concise three-point chart guide.
+- Explained how to reveal exact values.
+- Explained that longer ranges preserve genuine highs and lows.
+- Explained that missing archive periods are displayed as breaks.
+
+Chart data, calculations and rendering logic are unchanged.

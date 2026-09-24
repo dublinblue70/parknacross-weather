@@ -2224,6 +2224,7 @@ footer .footer-links a:focus-visible {
 .chart-highlights span,.chart-highlights strong{display:block}
 .chart-highlights span{color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
 .chart-highlights strong{margin-top:4px;font-size:.88rem}
+.chart-guide{align-self:start}.chart-guide h2{margin-bottom:12px}.chart-guide ul{display:grid;gap:8px;margin:0;padding-left:20px;color:var(--muted);line-height:1.55}.chart-guide li::marker{color:var(--accent)}
 @media(max-width:900px){.chart-highlights{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.chart-highlights{grid-template-columns:1fr}}
 
@@ -2240,7 +2241,7 @@ footer .footer-links a:focus-visible {
   .info-note,.monthly-note,.climate-card span,.climate-card small{color:#444!important}
 }
 
-/* v38.4.71 — Weather Intelligence Lab styling */
+/* v38.4.72 — Weather Intelligence Lab styling */
 .intelligence-feature{border-color:rgba(123,215,239,.3);background:linear-gradient(140deg,rgba(123,215,239,.055),rgba(101,209,154,.025))}
 .intelligence-timeline{display:grid;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .intelligence-timeline-group{margin:0;padding:12px 17px 8px;background:rgba(123,215,239,.09);border-bottom:1px solid var(--line);color:var(--accent);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase}
