@@ -8,7 +8,6 @@
   const localDate=value=>new Date(value).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
   const timelineStamp=value=>new Date(value).toLocaleString("en-IE",{timeZone:"Europe/Dublin",weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
   const dayLabel=day=>new Date(`${day}T12:00:00Z`).toLocaleDateString("en-IE",{timeZone:"UTC",day:"numeric",month:"short",year:"numeric"});
-  const isNextDay=(a,b)=>{if(!a||!b)return false;return new Date(`${b}T00:00:00Z`)-new Date(`${a}T00:00:00Z`)===86400000};
   const direction=degrees=>{if(!usable(degrees))return"";const labels=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return labels[Math.round((((Number(degrees)%360)+360)%360)/22.5)%16]};
 
   async function loadCoastalTimeline(){
@@ -45,27 +44,6 @@
     }catch(error){set("stormModeStatus","Recent archive analysis is temporarily unavailable.");set("stormNarrative","The significant-weather review could not analyse the latest observations.");return false;}
   }
 
-  function answerArchive(rows,question){
-    const q=question.toLowerCase(),max=(field)=>rows.reduce((best,row)=>usable(row[field])&&(!best||Number(row[field])>Number(best[field]))?row:best,null),min=(field)=>rows.reduce((best,row)=>usable(row[field])&&(!best||Number(row[field])<Number(best[field]))?row:best,null);
-    let row,label,value;
-    if(/wettest month|most rain.*month/.test(q)){const months=new Map();rows.forEach(item=>{if(item.day&&usable(item.rain_mm)){const key=item.day.slice(0,7);months.set(key,(months.get(key)||0)+Number(item.rain_mm));}});const result=[...months].sort((a,b)=>b[1]-a[1])[0];return result?`The wettest archived month is ${new Date(`${result[0]}-15T12:00:00Z`).toLocaleDateString("en-IE",{timeZone:"UTC",month:"long",year:"numeric"})} with ${n(result[1])} mm. Months with partial archive coverage may not be directly comparable.`:"No suitable archived rainfall values were found.";}
-    else if(/wettest|most rain/.test(q)){row=max("rain_mm");label="The wettest archived day";value=row?`${n(row.rain_mm)} mm`:null;}
-    else if(/warmest|hottest|highest temp/.test(q)){row=max("high_c");label="The warmest archived day";value=row?`${n(row.high_c)}°C`:null;}
-    else if(/coldest|lowest temp/.test(q)){row=min("low_c");label="The coldest archived day";value=row?`${n(row.low_c)}°C`:null;}
-    else if(/gust|windiest|strongest wind/.test(q)){row=max("peak_gust_kmh");label="The strongest archived gust";value=row?`${n(row.peak_gust_kmh)} km/h`:null;}
-    else if(/dry spell|consecutive dry/.test(q)){let best=0,current=0,end=null,previousDay=null;rows.slice().sort((a,b)=>String(a.day).localeCompare(String(b.day))).forEach(item=>{if(usable(item.rain_mm)&&Number(item.rain_mm)<0.2){current=previousDay&&isNextDay(previousDay,item.day)?current+1:1;if(current>best){best=current;end=item.day;}}else current=0;previousDay=item.day||null;});return best?`The longest archived dry spell is ${best} day${best===1?"":"s"}, ending ${dayLabel(end)}. A dry day here means less than 0.2 mm recorded; missing archive dates break the run.`:"No complete dry spell could be calculated from the archive.";}
-    else if(/average.*temperature|mean.*temperature/.test(q)){const values=rows.filter(item=>usable(item.mean_temperature_c)).map(item=>Number(item.mean_temperature_c));return values.length?`The average of the ${values.length} available archived daily mean temperatures is ${(values.reduce((a,b)=>a+b,0)/values.length).toFixed(1)}°C.`:"Daily mean temperature is not available in the archive yet.";}
-    else if(/frost|freez/.test(q)){const days=rows.filter(item=>usable(item.low_c)&&Number(item.low_c)<=0);return `${days.length} archived day${days.length===1?"":"s"} had a low of 0°C or below.`;}
-    else {const match=q.match(/(?:above|over|exceed(?:ed)?)\s*(-?\d+(?:\.\d+)?)\s*°?c?/);if(match){const threshold=Number(match[1]),days=rows.filter(item=>usable(item.high_c)&&Number(item.high_c)>threshold);return `${days.length} archived day${days.length===1?"":"s"} had a high above ${threshold}°C.`;}return"Choose an example or ask about the wettest day, warmest day, coldest day, strongest gust, wettest month, dry spell, frost days or days above a temperature.";}
-    return row&&value?`${label} was ${dayLabel(row.day)} with ${value}. Open History and choose that date for the detailed record.`:`No suitable archived value was found for that question.`;
-  }
-  async function setupArchiveQuestions(){
-    let rows=[];try{const data=await get("/daily?days=3660");rows=data.days||[];}catch{}
-    const ask=question=>{if($("archiveQuestion"))$("archiveQuestion").value=question;set("archiveAnswer",rows.length?answerArchive(rows,question):"The saved archive could not be loaded. Please try again later.");};
-    $("archiveQuestionForm")?.addEventListener("submit",event=>{event.preventDefault();const question=$("archiveQuestion").value.trim();if(question)ask(question);else set("archiveAnswer","Enter a question about the saved archive.");});
-    document.querySelectorAll("[data-archive-question]").forEach(button=>button.addEventListener("click",()=>ask(button.dataset.archiveQuestion||"")));
-  }
-
   const clock=()=>new Date().toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit",second:"2-digit"});
   function markRefreshed(message="Updated"){set("intelligenceUpdated",`${message} ${clock()} Irish time`);}
   async function refreshSection(button,loader,label){
@@ -80,7 +58,7 @@
   }
   document.addEventListener("DOMContentLoaded",()=>{
     set("year",new Date().getFullYear());
-    Promise.all([loadCoastalTimeline(),loadStormMode(),setupArchiveQuestions()]).then(()=>markRefreshed());
+    Promise.all([loadCoastalTimeline(),loadStormMode()]).then(()=>markRefreshed());
     const coastalButton=$("coastalRetry"),stormButton=$("stormRetry");
     coastalButton?.addEventListener("click",()=>refreshSection(coastalButton,loadCoastalTimeline,"Coastal overview"));
     stormButton?.addEventListener("click",()=>refreshSection(stormButton,loadStormMode,"Significant weather review"));
