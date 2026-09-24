@@ -1,0 +1,5 @@
+Parknacross Weather v38.4.86
+
+- Removed Ask the Archive because its limited results overlapped with the dedicated Records and History pages.
+- Removed the associated archive request, JavaScript handlers and unused styling.
+- Updated the Weather Lab description to reflect its remaining focused features.

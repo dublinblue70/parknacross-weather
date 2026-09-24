@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-85-diary-deduplication";
+const CACHE_NAME = "parknacross-v38-4-86-focused-weather-lab";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

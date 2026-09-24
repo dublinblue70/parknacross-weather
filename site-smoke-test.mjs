@@ -87,7 +87,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-85"],
+  ["service-worker.js", "parknacross-v38-4-86"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -113,8 +113,6 @@ const requiredChecks = [
   ["intelligence.js", "lightning_strikes"],
   ["intelligence.js", "refreshSection"],
   ["intelligence.js", "Refreshing…"],
-  ["intelligence.js", "setupArchiveQuestions"],
-  ["intelligence.js", "missing archive dates break the run"],
   ["records.js", "under 0.2 mm/day"],
   ["monthly.html", "Under 0.2 mm"],
   ["sky.html", "Retry loading photo"],
@@ -147,7 +145,7 @@ for (const name of ["index.html", "climate.html", "platform.js", "climate.js"]) 
   if (/forecast[- ]verification/i.test(content)) failures.push(`${name}: removed forecast verification is still present`);
 }
 if (!intelligenceHtml.includes("Site indicator")) failures.push("intelligence.html: site-defined significant-weather indicator labels are missing");
-if (!intelligenceHtml.includes("data-archive-question")) failures.push("intelligence.html: archive question shortcuts are missing");
+if (/Ask the archive|data-archive-question|archiveQuestionForm/.test(intelligenceHtml)) failures.push("intelligence.html: overlapping archive-question section is still present");
 const skyHtml = await readFile(join(root, "sky.html"), "utf8");
 if (!skyHtml.includes("manually uploaded photograph")) failures.push("sky.html: manual-photo disclosure is missing");
 if (/live camera feed/i.test(skyHtml) && !/not a continuous live camera feed/i.test(skyHtml)) failures.push("sky.html: unfinished live-camera claim is still present");
@@ -156,7 +154,7 @@ if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("
 const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
 const dashboardApp = await readFile(join(root, "app.js"), "utf8");
 if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
-if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-85')) failures.push("index.html: shared data corrections must load before the dashboard application");
+if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-86')) failures.push("index.html: shared data corrections must load before the dashboard application");
 if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: forecast-aware clothing note is missing");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
 const coastScript = await readFile(join(root, "coast.js"), "utf8");
@@ -164,8 +162,6 @@ if (/Math\.(?:floor|ceil)\(Math\.(?:min|max)\(model,buoy\)\*2\)/.test(coastScrip
 const statusScript = await readFile(join(root, "status.js"), "utf8");
 if (!statusScript.includes("Informational historical coverage")) failures.push("status.js: partial historical coverage must be informational");
 if ((dashboardApp.match(/updateDashboard\(current\);/g)||[]).length < 3) failures.push("app.js: dashboard progressive rendering is missing");
-const archiveLogic = await readFile(join(root, "intelligence.js"), "utf8");
-if (archiveLogic.indexOf("if(/wettest month|most rain.*month/") > archiveLogic.indexOf("else if(/wettest|most rain/")) failures.push("intelligence.js: wettest-month question must be matched before generic wettest-day question");
 const privacyHtml = await readFile(join(root, "privacy.html"), "utf8");
 if (/Sky Photo (?:identifier|likes)/.test(privacyHtml)) failures.push("privacy.html: outdated Sky Photo terminology remains");
 
