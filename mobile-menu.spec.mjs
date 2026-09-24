@@ -31,6 +31,8 @@ test("reviewed clarity changes are visible", async ({ page }) => {
   await page.goto("/coast.html");
   await expect(page.getByText("Estimated coastal water temperature", { exact: true })).toBeVisible();
   await expect(page.getByText(/not measured at Poulshone/i)).toBeVisible();
+  await page.goto("/summary.html");
+  await expect(page.getByRole("heading", { name: "Significant weather check" })).toBeVisible();
   await page.goto("/intelligence.html");
-  await expect(page.getByRole("heading", { name: "Significant weather review" })).toBeVisible();
+  await expect(page).toHaveURL(/summary\.html$/);
 });

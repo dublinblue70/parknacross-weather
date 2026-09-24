@@ -20,11 +20,11 @@ for (const name of htmlFiles) {
   if (!/<meta\s+name="description"/i.test(html)) failures.push(`${name}: missing meta description`);
   if (!/<link\s+rel="canonical"/i.test(html)) failures.push(`${name}: missing canonical URL`);
   if (!/<h1\b/i.test(html)) failures.push(`${name}: missing H1`);
-  if (name !== "offline.html") {
+  if (name !== "offline.html" && name !== "intelligence.html") {
     if (!html.includes('href="install.html">Install help</a>')) failures.push(`${name}: missing static Install help link`);
     if (!html.includes('href="privacy.html">Privacy</a>')) failures.push(`${name}: missing static Privacy link`);
     const menuItems = [...html.matchAll(/role="menuitem"/g)].length;
-    if (menuItems !== 12) failures.push(`${name}: expected 12 static More-menu destinations, found ${menuItems}`);
+    if (menuItems !== 11) failures.push(`${name}: expected 11 static More-menu destinations, found ${menuItems}`);
   }
 
   for (const match of html.matchAll(/(?:src|href)="([^"?#]+)(?:[?#][^"]*)?"/g)) {
@@ -87,7 +87,7 @@ const requiredChecks = [
   ["station.html", "diagInstalled"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-86"],
+  ["service-worker.js", "parknacross-v38-4-87"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -108,11 +108,10 @@ const requiredChecks = [
   ["index.html", "Outdoor clothing guide"],
   ["monthly.html", "shareMonthCard"],
   ["monthly.js", "shareMonthlyCard"],
-  ["intelligence.html", "Weather Intelligence Lab"],
-  ["intelligence.js", "loadStormMode"],
-  ["intelligence.js", "lightning_strikes"],
-  ["intelligence.js", "refreshSection"],
-  ["intelligence.js", "Refreshing…"],
+  ["intelligence.html", "window.location.replace(\"summary.html\")"],
+  ["summary.html", "Significant weather check"],
+  ["summary.js", "renderSignificantWeather"],
+  ["coast.html", "Water Safety Ireland"],
   ["records.js", "under 0.2 mm/day"],
   ["monthly.html", "Under 0.2 mm"],
   ["sky.html", "Retry loading photo"],
@@ -123,7 +122,6 @@ const requiredChecks = [
   ["status.html", ".nav-more-menu a:visited"],
   ["downloads.html", ".nav-more-menu a.active:hover"],
   ["status.html", ".nav-more-menu a.active:hover"],
-  ["intelligence.js", "timelineStamp"],
   ["navigation.js", "data-nav-more-popup"],
   ["navigation.js", "Site & app"],
   ["downloads.html", "archiveCoverage"],
@@ -136,16 +134,13 @@ for (const [name, text] of requiredChecks) {
 }
 
 const intelligenceHtml = await readFile(join(root, "intelligence.html"), "utf8");
-for (const removedSection of ["Forecast accountability", "Recent weather stories", "Visual weather diary", "Microclimate explorer", "Open local weather"]) {
-  if (intelligenceHtml.includes(removedSection)) failures.push(`intelligence.html: removed section still present: ${removedSection}`);
-}
+if (!/noindex,follow/.test(intelligenceHtml) || !/summary\.html/.test(intelligenceHtml)) failures.push("intelligence.html: retired page must redirect to Summary and remain out of search results");
 
 for (const name of ["index.html", "climate.html", "platform.js", "climate.js"]) {
   const content = await readFile(join(root, name), "utf8");
   if (/forecast[- ]verification/i.test(content)) failures.push(`${name}: removed forecast verification is still present`);
 }
-if (!intelligenceHtml.includes("Site indicator")) failures.push("intelligence.html: site-defined significant-weather indicator labels are missing");
-if (/Ask the archive|data-archive-question|archiveQuestionForm/.test(intelligenceHtml)) failures.push("intelligence.html: overlapping archive-question section is still present");
+if (files.includes("intelligence.js")) failures.push("intelligence.js: retired Weather Lab code must not ship");
 const skyHtml = await readFile(join(root, "sky.html"), "utf8");
 if (!skyHtml.includes("manually uploaded photograph")) failures.push("sky.html: manual-photo disclosure is missing");
 if (/live camera feed/i.test(skyHtml) && !/not a continuous live camera feed/i.test(skyHtml)) failures.push("sky.html: unfinished live-camera claim is still present");
@@ -154,7 +149,7 @@ if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("
 const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
 const dashboardApp = await readFile(join(root, "app.js"), "utf8");
 if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
-if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-86')) failures.push("index.html: shared data corrections must load before the dashboard application");
+if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-87')) failures.push("index.html: shared data corrections must load before the dashboard application");
 if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: forecast-aware clothing note is missing");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
 const coastScript = await readFile(join(root, "coast.js"), "utf8");

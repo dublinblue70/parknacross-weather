@@ -1,0 +1,8 @@
+Parknacross Weather v38.4.87
+
+- Consolidated the useful Weather Lab content into existing destination pages.
+- Added a compact, automatically refreshed 24-hour significant-weather check to Summary.
+- Added official water-safety links to Sea & Swim.
+- Removed Weather Lab from site navigation, the PWA shortcuts and the sitemap.
+- Retired its JavaScript and page-only styling.
+- Preserved the old intelligence.html address as a noindex redirect to Summary.

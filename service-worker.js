@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-86-focused-weather-lab";
+const CACHE_NAME = "parknacross-v38-4-87-consolidated-weather-pages";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -51,7 +51,6 @@ const STATIC_ASSETS = [
   "./alert-settings.js",
   "./pwa-update.js",
   "./pwa-diagnostics.js",
-  "./intelligence.js",
   "./manifest.webmanifest",
   "./favicon.svg",
   "./icon-192.png",

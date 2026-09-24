@@ -2252,22 +2252,13 @@ footer .footer-links a:focus-visible {
 }
 
 /* v38.4.73 — Weather Intelligence Lab styling */
-.intelligence-feature{border-color:rgba(123,215,239,.3);background:linear-gradient(140deg,rgba(123,215,239,.055),rgba(101,209,154,.025))}
-.intelligence-timeline{display:grid;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.intelligence-timeline-group{margin:0;padding:12px 17px 8px;background:rgba(123,215,239,.09);border-bottom:1px solid var(--line);color:var(--accent);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase}
-.intelligence-timeline-item{display:grid;grid-template-columns:minmax(165px,200px) 1fr;gap:18px;padding:15px 17px;background:rgba(7,19,31,.68);border-bottom:1px solid var(--line)}
-.intelligence-timeline-item:last-child{border-bottom:0}.intelligence-timeline-item time{color:var(--accent);font-weight:750;line-height:1.45}.intelligence-timeline-item strong,.intelligence-timeline-item small{display:block}.intelligence-timeline-item small{margin-top:4px;color:var(--muted)}
 .storm-active{color:#fff!important;background:rgba(241,127,127,.16)!important;border-color:rgba(241,127,127,.5)!important}
 .weather-story{margin-top:16px;padding:16px 18px;border-left:3px solid var(--accent);border-radius:0 12px 12px 0;background:rgba(123,215,239,.05);line-height:1.7}
 
 .sky-name-controls summary{cursor:pointer;color:var(--accent);font-weight:750;list-style-position:inside}
 .sky-name-controls[open] summary{margin-bottom:8px}
 .sky-name-controls label{display:block;color:var(--muted);font-size:.78rem;margin-bottom:6px}
-.compact-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
 .sky-observation-media{min-height:320px;display:grid;place-items:center}.sky-page-photo{width:min(100%,960px);margin:0 auto}.sky-page-photo .sky-image{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;border-radius:14px}
-.confidence-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.confidence-grid h3{margin:13px 0 7px}
-@media(max-width:900px){.confidence-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.intelligence-timeline-item{grid-template-columns:1fr;gap:5px}.confidence-grid{grid-template-columns:1fr}}
 @media (max-width: 390px) {
   footer {
     font-size: .68rem;
