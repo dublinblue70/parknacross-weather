@@ -22,8 +22,8 @@
       if(point?.target_day)items.push({group:"Official point forecast",time:`${dayLabel(point.target_day)} · all day`,dateTime:point.target_day,title:`${n(point.forecast_low_c)}–${n(point.forecast_high_c)}°C`,detail:`Forecast rain ${n(point.forecast_rain_mm)} mm · issued ${localDate(point.captured_at)}`});
       (tides.events||[]).filter(item=>Date.parse(item.time)>now).slice(0,4).forEach(item=>items.push({group:"Upcoming Arklow tides",time:timelineStamp(item.time),dateTime:new Date(item.time).toISOString(),title:`${item.type==="high"?"High":"Low"} water · Arklow prediction`,detail:usable(item.height_m)?`${n(item.height_m,2)} m OD Malin · Poulshone context only`:"Predicted tide event · Poulshone context only"}));
       const nodes=[];let lastGroup="";
-      for(const item of items){if(item.group!==lastGroup){const heading=document.createElement("h3");heading.className="intelligence-timeline-group";heading.textContent=item.group;nodes.push(heading);lastGroup=item.group;}const article=document.createElement("article");article.className="intelligence-timeline-item";const time=document.createElement("time");time.textContent=item.time;if(item.dateTime)time.dateTime=item.dateTime;const copy=document.createElement("div"),strong=document.createElement("strong"),small=document.createElement("small");strong.textContent=item.title;small.textContent=item.detail;copy.append(strong,small);article.append(time,copy);nodes.push(article);}host.replaceChildren(...nodes);
-    }catch(error){host.innerHTML='<div class="empty-state">Coastal conditions are temporarily unavailable.</div>';}
+      for(const item of items){if(item.group!==lastGroup){const heading=document.createElement("h3");heading.className="intelligence-timeline-group";heading.textContent=item.group;nodes.push(heading);lastGroup=item.group;}const article=document.createElement("article");article.className="intelligence-timeline-item";const time=document.createElement("time");time.textContent=item.time;if(item.dateTime)time.dateTime=item.dateTime;const copy=document.createElement("div"),strong=document.createElement("strong"),small=document.createElement("small");strong.textContent=item.title;small.textContent=item.detail;copy.append(strong,small);article.append(time,copy);nodes.push(article);}host.replaceChildren(...nodes);return true;
+    }catch(error){host.innerHTML='<div class="empty-state">Coastal conditions are temporarily unavailable.</div>';return false;}
   }
 
   async function loadStormMode(){
@@ -40,8 +40,8 @@
       const active=(usable(maxGust)&&maxGust>=50)||(usable(maxRain)&&maxRain>=7.5)||(usable(pressureChange)&&pressureChange<=-8)||(usable(lightningChange)&&lightningChange>0);
       const badge=$("stormModeBadge");badge.textContent=active?"Active weather":"No threshold reached";badge.classList.toggle("storm-active",active);
       set("stormModeStatus",active?"One or more significant-weather thresholds were reached in the last 24 hours.":"No Storm Mode threshold was reached in the latest 24-hour archive.");
-      const parts=[];if(usable(pressureChange))parts.push(`Pressure ${pressureChange<0?"fell":"rose"} ${Math.abs(pressureChange).toFixed(1)} hPa`);if(usable(maxGust))parts.push(`the strongest gust reached ${maxGust.toFixed(1)} km/h`);if(usable(maxRain))parts.push(maxRain>0?`the peak rain rate was ${maxRain.toFixed(1)} mm/h`:"no rain rate above zero was recorded");if(usable(lightningChange)&&lightningChange>0)parts.push(`${Math.round(lightningChange)} lightning-counter increase${lightningChange===1?"":"s"} occurred`);set("stormNarrative",`${parts.join(", ")}. Thresholds describe the archived observations; official warnings remain authoritative.`);
-    }catch(error){set("stormModeStatus","Recent archive analysis is temporarily unavailable.");set("stormNarrative","Storm Mode could not analyse the latest observations.");}
+      const parts=[];if(usable(pressureChange))parts.push(`Pressure ${pressureChange<0?"fell":"rose"} ${Math.abs(pressureChange).toFixed(1)} hPa`);if(usable(maxGust))parts.push(`the strongest gust reached ${maxGust.toFixed(1)} km/h`);if(usable(maxRain))parts.push(maxRain>0?`the peak rain rate was ${maxRain.toFixed(1)} mm/h`:"no rain rate above zero was recorded");if(usable(lightningChange)&&lightningChange>0)parts.push(`${Math.round(lightningChange)} lightning-counter increase${lightningChange===1?"":"s"} occurred`);set("stormNarrative",`${parts.join(", ")}. Thresholds describe the archived observations; official warnings remain authoritative.`);return true;
+    }catch(error){set("stormModeStatus","Recent archive analysis is temporarily unavailable.");set("stormNarrative","Storm Mode could not analyse the latest observations.");return false;}
   }
 
   function answerArchive(rows,question){
@@ -65,6 +65,23 @@
     document.querySelectorAll("[data-archive-question]").forEach(button=>button.addEventListener("click",()=>ask(button.dataset.archiveQuestion||"")));
   }
 
-  function markRefreshed(){set("intelligenceUpdated",`Updated ${new Date().toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"})} Irish time`);}
-  document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());Promise.allSettled([loadCoastalTimeline(),loadStormMode(),setupArchiveQuestions()]).then(markRefreshed);$("coastalRetry")?.addEventListener("click",()=>loadCoastalTimeline().then(markRefreshed));$("stormRetry")?.addEventListener("click",()=>loadStormMode().then(markRefreshed));});
+  const clock=()=>new Date().toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  function markRefreshed(message="Updated"){set("intelligenceUpdated",`${message} ${clock()} Irish time`);}
+  async function refreshSection(button,loader,label){
+    if(!button||button.disabled)return;
+    const original=button.textContent;
+    button.disabled=true;button.setAttribute("aria-busy","true");button.textContent="Refreshing…";
+    set("intelligenceUpdated",`Refreshing ${label.toLowerCase()}…`);
+    const success=await loader();
+    markRefreshed(success?`${label} refreshed`:`${label} could not be refreshed · last attempt`);
+    button.textContent=success?"Refreshed ✓":"Try again";
+    window.setTimeout(()=>{button.disabled=false;button.removeAttribute("aria-busy");button.textContent=original;},1200);
+  }
+  document.addEventListener("DOMContentLoaded",()=>{
+    set("year",new Date().getFullYear());
+    Promise.all([loadCoastalTimeline(),loadStormMode(),setupArchiveQuestions()]).then(()=>markRefreshed());
+    const coastalButton=$("coastalRetry"),stormButton=$("stormRetry");
+    coastalButton?.addEventListener("click",()=>refreshSection(coastalButton,loadCoastalTimeline,"Coastal overview"));
+    stormButton?.addEventListener("click",()=>refreshSection(stormButton,loadStormMode,"Storm Mode"));
+  });
 })();

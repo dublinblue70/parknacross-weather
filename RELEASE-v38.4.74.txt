@@ -1,0 +1,13 @@
+Parknacross Weather v38.4.74
+Released: 24 September 2026
+
+Weather Lab refresh-button correction
+
+- Fixed the Coastal conditions Refresh button.
+- Fixed the Storm Mode Refresh button.
+- Both buttons now show an immediate Refreshing state and block duplicate taps.
+- Successful refreshes display Refreshed confirmation and an exact Irish-local completion time.
+- Failed refreshes display Try again and report that the refresh attempt failed.
+- Increased the PWA cache version so installed Android and Apple apps receive the corrected script.
+
+Weather calculations, thresholds and all unrelated functionality are unchanged.
