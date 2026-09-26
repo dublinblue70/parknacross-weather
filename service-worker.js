@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-100-text-cleanup";
+const CACHE_NAME = "parknacross-v38-4-101-self-healing-text";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -76,6 +76,7 @@ self.addEventListener("install", event => {
         if (response.ok) await cache.put(request, response);
       } catch (_) {}
     }));
+    await self.skipWaiting();
   })());
 });
 

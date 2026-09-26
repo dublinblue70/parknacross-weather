@@ -1,0 +1,8 @@
+Parknacross Weather v38.4.101
+
+Self-healing text and immediate PWA cache activation
+
+- Normalises any legacy encoding prefix before dashboard text is displayed.
+- Adds a targeted battery-card observer that repairs text written later by an older resident script.
+- Activates the replacement service worker immediately after its new cache is prepared.
+- Retains the plain-colon battery wording introduced in v38.4.100.
