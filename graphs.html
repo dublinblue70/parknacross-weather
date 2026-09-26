@@ -11,10 +11,10 @@
       name="description"
       content="Live weather graphs and trends from Parknacross, Ardamine, Co. Wexford, including temperature, wind, pressure, rainfall and humidity."
     />
-    <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-88" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-90" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260924-v38-4-88" />
+    <link rel="stylesheet" href="styles.css?v=20260924-v38-4-90" />
 
     <title>Weather Graphs &amp; Trends | Parknacross, Co. Wexford</title>
     <link rel="canonical" href="https://parknacrossweather.ie/graphs.html" />
@@ -197,7 +197,7 @@
               <div class="chart-title">
                 <div>
                   <h3 id="lightningDistanceTitle">Lightning distance</h3>
-                  <p>Distance of distinct detected lightning events</p>
+                  <p>Approximate distance of distinct events · WH57 range 0–40 km</p>
                 </div>
                 <span>km</span>
               </div>
@@ -205,7 +205,7 @@
                 <canvas
                   id="gLightningDistance"
                   role="img"
-                  aria-label="Distance in kilometres of detected lightning events over time"
+                  aria-label="Approximate distance in kilometres of detected lightning events over time, on a zero to forty kilometre scale"
                 ></canvas>
               </div>
               <p
@@ -216,6 +216,22 @@
               >
                 Checking WH57 archive…
               </p>
+            </article>
+            <article class="chart-card" id="soilMoistureCard" hidden aria-labelledby="soilMoistureTitle">
+              <div class="chart-title">
+                <div><h3 id="soilMoistureTitle">Soil moisture</h3><p>WH52 reading at the probe location</p></div>
+                <span>%</span>
+              </div>
+              <div class="chart-wrap"><canvas id="gSoilMoisture" role="img" aria-label="Soil moisture over the selected period"></canvas></div>
+              <p id="soilMoistureStatus" class="info-note">Moisture is location-specific; compare the trend with this sensor’s normal range.</p>
+            </article>
+            <article class="chart-card" id="soilDetailCard" hidden aria-labelledby="soilDetailTitle">
+              <div class="chart-title">
+                <div><h3 id="soilDetailTitle">Soil temperature &amp; conductivity</h3><p>Root-zone temperature and dissolved-salt trend</p></div>
+                <span>WH52</span>
+              </div>
+              <div class="chart-wrap"><canvas id="gSoilDetail" role="img" aria-label="Soil temperature and electrical conductivity over the selected period"></canvas></div>
+              <p id="soilDetailStatus" class="info-note">Conductivity is not a direct fertiliser reading; changes against the established baseline are most useful.</p>
             </article>
             <article class="info-card chart-guide">
               <span class="section-eyebrow">Chart guide</span>
@@ -241,8 +257,8 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="wind-rose.js?v=20260923-radial-restore"></script>
     <script src="site-config.js?v=20260912-mobile2"></script>
-    <script src="graphs.js?v=20260924-v38-4-88"></script>
-    <script src="lightning-charts.js?v=20260924-v38-4-88"></script>
+    <script src="graphs.js?v=20260924-v38-4-90"></script>
+    <script src="lightning-charts.js?v=20260924-v38-4-90"></script>
     <!-- Cloudflare Web Analytics -->
     <script
       type="module"
@@ -250,9 +266,9 @@
       data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'
     ></script>
     <!-- End Cloudflare Web Analytics -->
-    <script src="pwa-update.js?v=20260924-v38-4-88"></script>
+    <script src="pwa-update.js?v=20260924-v38-4-90"></script>
     <script src="offline.js?v=20260915-v36"></script>
-    <script src="accessibility.js?v=20260924-v38-4-88"></script>
-    <script src="navigation.js?v=20260924-v38-4-88"></script>
+    <script src="accessibility.js?v=20260924-v38-4-90"></script>
+    <script src="navigation.js?v=20260924-v38-4-90"></script>
   </body>
 </html>

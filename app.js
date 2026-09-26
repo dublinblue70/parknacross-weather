@@ -875,6 +875,40 @@ function updateWhatToWear(current, rainDetected = false) {
   }
 }
 
+function updateSoilPanel(current) {
+  const panel = $("soilPanel");
+  if (!panel) return;
+  const moisture = usable(current?.soil_moisture_pct) ? Number(current.soil_moisture_pct) : null;
+  const temperature = usable(current?.soil_temperature_c) ? Number(current.soil_temperature_c) : null;
+  const ec = usable(current?.soil_ec_us_cm) ? Number(current.soil_ec_us_cm) : null;
+  if (moisture === null && temperature === null && ec === null) {
+    panel.hidden = true;
+    return;
+  }
+
+  panel.hidden = false;
+  set("soilMoisture", moisture === null ? "Unavailable" : `${moisture.toFixed(0)}%`);
+  set("soilTemperature", temperature === null ? "Unavailable" : `${temperature.toFixed(1)}°C`);
+  set("soilEc", ec === null ? "Unavailable" : `${Math.round(ec).toLocaleString("en-IE")} µS/cm`);
+
+  const nowEpoch = usable(current?.epoch) ? Number(current.epoch) : Date.now() / 1000;
+  const candidates = history24
+    .filter(row => usable(row?.soil_moisture_pct) && usable(row?.epoch))
+    .sort((a, b) => Number(a.epoch) - Number(b.epoch));
+  const baseline = candidates
+    .filter(row => Number(row.epoch) <= nowEpoch - 2 * 3600)
+    .sort((a, b) => Math.abs(Number(a.epoch) - (nowEpoch - 6 * 3600)) - Math.abs(Number(b.epoch) - (nowEpoch - 6 * 3600)))[0];
+  if (moisture !== null && baseline) {
+    const change = moisture - Number(baseline.soil_moisture_pct);
+    const direction = change >= 2 ? "Wetter" : change <= -2 ? "Drying" : "Steady";
+    set("soilMoistureTrend", `${direction} · ${change > 0 ? "+" : ""}${change.toFixed(0)} points since earlier`);
+  } else {
+    set("soilMoistureTrend", "Trend building from saved readings");
+  }
+  const channel = usable(current?.soil_channel) ? ` · WH52 channel ${Number(current.soil_channel)}` : "";
+  set("soilSummary", `Live root-zone observation${channel}. Open Graphs to see how moisture, temperature and conductivity change over time.`);
+}
+
 function updateDashboard(current) {
   const now = new Date();
   const today = history24.filter(reading => {
@@ -962,6 +996,7 @@ function updateDashboard(current) {
   const condition = conditionInfo(current, isNight);
   latestRainDetected=Boolean(condition.rainState?.isRaining);
   updateWhatToWear(current, latestRainDetected);
+  updateSoilPanel(current);
 
   if (currentTime) {
     latestObservationTime = currentTime;
@@ -1654,6 +1689,10 @@ function lightningRelative(epoch) {
   return `${d} day${d === 1 ? "" : "s"} ago`;
 }
 
+function lightningDistance(value) {
+  return usable(value) && Number(value) >= 0 && Number(value) <= 40 ? Number(value) : null;
+}
+
 async function refreshLightning() {
   const panel = $("lightningPanel");
   if (!panel) return;
@@ -1669,12 +1708,13 @@ async function refreshLightning() {
     set("lightningHeadline", "WH57 lightning detector");
     set("lightningStrikes", usable(data.strikes_today) ? Math.round(Number(data.strikes_today)).toLocaleString("en-IE") : "--");
     const strikesToday=usable(data.strikes_today)?Math.round(Number(data.strikes_today)):null;
-    set("lightningNearest", strikesToday===0?"None today":usable(data.nearest_24h_km)?`${Number(data.nearest_24h_km).toFixed(0)} km`:"Unavailable");
+    const nearestDistance=lightningDistance(data.nearest_24h_km),latestDistance=lightningDistance(data.distance_km);
+    set("lightningNearest", strikesToday===0?"None today":nearestDistance!==null?`${nearestDistance.toFixed(0)} km`:"Unavailable");
     set("lightningLast", strikesToday===0?"None today":usable(data.last_strike_epoch)?lightningRelative(data.last_strike_epoch):"Unavailable");
     set(
       "lightningDetail",
-      usable(data.distance_km)
-        ? `Latest detected lightning approximately ${Number(data.distance_km).toFixed(0)} km away`
+      latestDistance!==null
+        ? `Latest detected lightning approximately ${latestDistance.toFixed(0)} km away`
         : "Lightning sensor is online"
     );
     window.PWAlerts?.evaluateLightning?.(data);

@@ -4,6 +4,7 @@
   const SETTINGS_KEY = "parknacross.alerts.settings.v1";
   const STATE_KEY = "parknacross.alerts.state.v1";
   const COOLDOWN_KEY = "parknacross.alerts.cooldowns.v1";
+  const LIGHTNING_DISTANCES = new Set([0, 10, 15, 25, 40]);
 
   const defaults = {
     enabled: false,
@@ -28,7 +29,10 @@
   };
 
   function loadSettings() {
-    return { ...defaults, ...readJSON(SETTINGS_KEY, {}) };
+    const settings = { ...defaults, ...readJSON(SETTINGS_KEY, {}) };
+    const lightningKm = Number(settings.lightningKm || 0);
+    settings.lightningKm = LIGHTNING_DISTANCES.has(lightningKm) ? lightningKm : 0;
+    return settings;
   }
 
   function saveSettings(settings) {
@@ -169,14 +173,17 @@
 
   async function evaluateLightning(lightning) {
     const settings = loadSettings();
-    const threshold = Number(settings.lightningKm || 0);
+    const threshold = Math.min(40, Math.max(0, Number(settings.lightningKm || 0)));
     if (!settings.enabled || !canNotify() || threshold <= 0 || !lightning?.available) return;
 
-    const distance = usable(lightning.distance_km)
+    const reportedDistance = usable(lightning.distance_km)
       ? Number(lightning.distance_km)
       : usable(lightning.nearest_24h_km)
         ? Number(lightning.nearest_24h_km)
         : null;
+    const distance = reportedDistance !== null && reportedDistance >= 0 && reportedDistance <= 40
+      ? reportedDistance
+      : null;
     const strikeEpoch = usable(lightning.last_strike_epoch)
       ? Number(lightning.last_strike_epoch)
       : null;
@@ -259,7 +266,8 @@
     }
     document.getElementById("alertLightningDistance")?.addEventListener("change", event => {
       const settings = loadSettings();
-      settings.lightningKm = Number(event.target.value || 0);
+      const requested = Number(event.target.value || 0);
+      settings.lightningKm = LIGHTNING_DISTANCES.has(requested) ? requested : 0;
       saveSettings(settings);
     });
 

@@ -1,4 +1,4 @@
-/* Parknacross Weather · WH57 lightning charts · v38.4.44
+/* Parknacross Weather · WH57 lightning charts · v38.4.90
  * Additive frontend script: uses the existing /history readings without changing
  * the Worker, D1 schema, existing charts or other site functions.
  */
@@ -13,7 +13,7 @@
   });
   const valid = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
   const counter = value => valid(value) && Number(value) >= 0 && Number.isInteger(Number(value)) ? Number(value) : null;
-  const distance = value => valid(value) && Number(value) >= 0 && Number(value) <= 100 ? Number(value) : null;
+  const distance = value => valid(value) && Number(value) >= 0 && Number(value) <= 40 ? Number(value) : null;
   const epochOf = row => {
     if (valid(row?.epoch)) return Number(row.epoch);
     const n = Date.parse(row?.received_at || '');
@@ -93,8 +93,8 @@
   let activityChart, distanceChart, hours = 24, requestId = 0, lastRefresh = 0;
   const plainAxis = unit => ({
     x: {grid:{color:'transparent'},ticks:{color:'#9fb3c1',maxTicksLimit:8}},
-    y: {beginAtZero:true,grid:{color:'rgba(174,210,232,.09)'},
-      ticks:{color:'#9fb3c1',precision:unit === 'Detected events' ? 0 : undefined},
+    y: {beginAtZero:true,...(unit === 'km' ? {min:0,max:40} : {}),grid:{color:'rgba(174,210,232,.09)'},
+      ticks:{color:'#9fb3c1',precision:unit === 'Detected events' ? 0 : undefined,...(unit === 'km' ? {stepSize:5} : {})},
       title:{display:true,text:unit,color:'#9fb3c1'}}
   });
   function makeCharts() {

@@ -152,7 +152,8 @@ async function loadDay(day){
     set("dayPressure",usable(s.pressure_low_hpa)&&usable(s.pressure_high_hpa)?`${n(s.pressure_low_hpa)}–${n(s.pressure_high_hpa)} hPa`:"--");
     const strikes=usable(s.lightning_strikes)?Number(s.lightning_strikes):0;
     set("dayLightning",strikes>0?`${Math.round(strikes)} strike${strikes===1?"":"s"}`:"None");
-    set("dayLightningNote",strikes>0&&usable(s.lightning_nearest_km)?`Nearest ${n(s.lightning_nearest_km,0)} km`:"");
+    const nearestLightning=usable(s.lightning_nearest_km)&&Number(s.lightning_nearest_km)>=0&&Number(s.lightning_nearest_km)<=40?Number(s.lightning_nearest_km):null;
+    set("dayLightningNote",strikes>0&&nearestLightning!==null?`Nearest ${nearestLightning.toFixed(0)} km`:"");
     const plotted=renderDayChart(rows);
     if(data.available){
       set("archiveSearchStatus",plotted?`Showing ${longDay(day)} · ${plotted.toLocaleString("en-IE")} plotted observations.`:`Showing ${longDay(day)} · daily summary available; detailed graph unavailable.`);
