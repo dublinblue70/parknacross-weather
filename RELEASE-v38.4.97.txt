@@ -1,0 +1,7 @@
+Parknacross Weather v38.4.97
+
+Weather-card success wording
+- Treats a completed PNG download as an unqualified success.
+- Removes browser-specific sharing failure language from the visitor interface.
+- Keeps technical share errors in the developer console only.
+- Shows the same clear "Weather card downloaded—ready to share" confirmation for every download path.

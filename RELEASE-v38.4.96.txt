@@ -1,4 +1,4 @@
-Parknacross Weather v38.4.96
+Parknacross Weather v38.4.97
 
 Weather-card status correction
 - Separates successful PNG creation from the later native sharing step.

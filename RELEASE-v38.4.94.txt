@@ -1,4 +1,4 @@
-Parknacross Weather v38.4.96
+Parknacross Weather v38.4.97
 
 Intelligent visitor features
 - Adds a quiet "Since your last visit" comparison using browser-local data only.
