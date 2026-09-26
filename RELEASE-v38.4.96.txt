@@ -1,0 +1,8 @@
+Parknacross Weather v38.4.96
+
+Weather-card status correction
+- Separates successful PNG creation from the later native sharing step.
+- Falls back to a PNG download when a browser advertises file sharing but rejects the share operation.
+- Shows a neutral message when the visitor cancels the share sheet.
+- Prevents a successfully generated card from being described as a creation failure.
+- Allows the action-status message to wrap cleanly on narrow screens.

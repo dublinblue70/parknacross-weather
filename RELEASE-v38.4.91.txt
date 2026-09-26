@@ -1,4 +1,4 @@
-Parknacross Weather v38.4.95
+Parknacross Weather v38.4.96
 
 WH52 chart rendering fix
 
@@ -6,4 +6,4 @@ WH52 chart rendering fix
 - Displays individual WH52 observations as points while the new soil archive is still sparse.
 - Shows the number and start time of saved soil observations beneath each chart.
 - Preserves all v38.4.90 website features and the v38.4.89 lightning-distance changes.
-- Advances website assets and the installed-app cache to v38.4.95.
+- Advances website assets and the installed-app cache to v38.4.96.

@@ -1,4 +1,4 @@
-Parknacross Weather v38.4.95
+Parknacross Weather v38.4.96
 
 WH52 baseline and acceptance review
 - Adds a clearly dated 14-day "Early data" state from the WH52 installation date.

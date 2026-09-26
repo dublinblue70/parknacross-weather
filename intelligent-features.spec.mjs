@@ -27,6 +27,14 @@ test("weather card downloads when native file sharing is unavailable",async({pag
   await expect(page.getByText(/Weather card downloaded/)).toBeVisible();
 });
 
+test("native share failure falls back to a download without a false creation error",async({page})=>{
+  await page.addInitScript(()=>{navigator.canShare=()=>true;navigator.share=async()=>{const error=new Error("Share unavailable");error.name="NotAllowedError";throw error;};});
+  await mockDashboardApi(page);await page.goto("/index.html");
+  const downloadPromise=page.waitForEvent("download");await page.getByRole("button",{name:"Create weather card"}).click();await downloadPromise;
+  await expect(page.getByText(/downloaded instead/)).toBeVisible();
+  await expect(page.getByText(/could not be created/)).toHaveCount(0);
+});
+
 test("new panels do not create horizontal mobile overflow",async({page})=>{
   await mockDashboardApi(page);await page.goto("/index.html");
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
