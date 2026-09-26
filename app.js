@@ -20,9 +20,12 @@ const WH52_BASELINE_START_EPOCH = Date.parse("2026-09-26T00:00:00+01:00") / 1000
 const WH52_BASELINE_DAYS = 14;
 
 const $ = id => document.getElementById(id);
+const cleanDisplayText = value => String(value ?? "")
+  .replace(/Â[·•]?\s*/g, ": ")
+  .replace(/\s{2,}/g, " ");
 const set = (id, value) => {
   const element = $(id);
-  if (element) element.textContent = value;
+  if (element) element.textContent = cleanDisplayText(value);
 };
 const usable = value =>
   value !== null &&
