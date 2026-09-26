@@ -38,9 +38,9 @@ function batteryStatus(voltage) {
 
   const v = Number(voltage);
 
-  if (v >= 3.0) return `Normal · ${v.toFixed(2)} V`;
-  if (v >= 2.7) return `Check · ${v.toFixed(2)} V`;
-  return `Low · ${v.toFixed(2)} V`;
+  if (v >= 3.0) return `Normal: ${v.toFixed(2)} V`;
+  if (v >= 2.7) return `Check: ${v.toFixed(2)} V`;
+  return `Low: ${v.toFixed(2)} V`;
 }
 
 let history24 = [];
