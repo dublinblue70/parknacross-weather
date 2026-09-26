@@ -1,0 +1,17 @@
+Parknacross Weather v38.4.90
+
+WH52 garden-soil integration
+
+- Adds Ecowitt WH52 moisture, soil-temperature and electrical-conductivity fields to the Worker, D1 archive, current/history APIs and CSV exports.
+- Automatically recognises channels 1–16 and stores the active channel with each reading.
+- Adds a live Garden soil dashboard panel that remains hidden until genuine WH52 data is available.
+- Adds soil-moisture and soil-temperature/conductivity trends to Graphs, using the existing range controls.
+- Uses cautious, location-specific explanations so moisture percentage and conductivity are not presented as universal plant-health thresholds.
+- Adds the WH52 to the Station hardware and measurement summaries.
+- Advances the website and installed-app cache to v38.4.90.
+
+Deployment order
+
+1. Deploy Parknacross-worker-v38.4.54-WH52-NOTEPAD.txt.
+2. Confirm /current contains soil_moisture_pct, soil_temperature_c and soil_ec_us_cm after a new gateway observation.
+3. Upload the v38.4.90 website files.
