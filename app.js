@@ -1212,6 +1212,7 @@ async function weatherCardSkyImage(){
   const source=$("todaySkyMedia")?.querySelector("img")?.src;if(!source)return null;
   try{const response=await fetch(source,{cache:"no-store"});if(!response.ok)throw new Error();return await createImageBitmap(await response.blob());}catch(_){return null;}
 }
+function downloadWeatherCard(blob,filename){const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
 async function createWeatherCard(){
   const button=$("shareTodayButton");if(!latestCurrent){set("shareTodayStatus","Current conditions are not available yet.");return;}
   if(button){button.disabled=true;button.textContent="Creating…";}set("shareTodayStatus","Preparing your weather card…");
@@ -1227,8 +1228,13 @@ async function createWeatherCard(){
     ctx.font="500 25px system-ui";let y=292;for(const item of items){ctx.fillStyle="rgba(244,248,251,.92)";ctx.fillText(item,68,y);y+=43;}
     ctx.fillStyle="rgba(7,19,31,.78)";roundedRect(ctx,56,548,1088,50,15);ctx.fillStyle="#c9e7f4";ctx.font="600 20px system-ui";const stamp=new Date(Number(latestCurrent.epoch)*1000).toLocaleString("en-IE",{timeZone:STATION_TIME_ZONE,day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"});ctx.fillText(`${stamp} · Ardamine, Co. Wexford`,78,580);ctx.textAlign="right";ctx.fillText("parknacrossweather.ie",1120,580);ctx.textAlign="left";
     const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));if(!blob)throw new Error("Image creation failed");const file=new File([blob],`parknacross-weather-${stationDayKey(latestCurrent.epoch)}.png`,{type:"image/png"});
-    if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({title:"Parknacross Weather",text:"Live weather from Parknacross, Ardamine",files:[file]});set("shareTodayStatus","Weather card shared.");}
-    else{const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download=file.name;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);set("shareTodayStatus","Weather card downloaded—ready to share.");}
+    if(navigator.share&&navigator.canShare?.({files:[file]})){
+      try{await navigator.share({title:"Parknacross Weather",text:"Live weather from Parknacross, Ardamine",files:[file]});set("shareTodayStatus","Weather card shared.");}
+      catch(shareError){
+        if(shareError?.name==="AbortError"){set("shareTodayStatus","Sharing cancelled—the weather card was created.");}
+        else{console.warn("Native weather-card share:",shareError);downloadWeatherCard(blob,file.name);set("shareTodayStatus","Sharing was unavailable, so the weather card was downloaded instead.");}
+      }
+    }else{downloadWeatherCard(blob,file.name);set("shareTodayStatus","Weather card downloaded—ready to share.");}
   }catch(error){if(error?.name!=="AbortError"){console.warn("Weather card:",error);set("shareTodayStatus","The weather card could not be created. Please try again.");}}
   finally{if(button){button.disabled=false;button.textContent="Create weather card";}}
 }
