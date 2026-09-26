@@ -5,6 +5,7 @@ const HISTORY_7D_URL = `${API_BASE}/history?hours=168`;
 const STATS_URL = `${API_BASE}/stats`;
 const RAIN_SUMMARY_URL = `${API_BASE}/rain-summary`;
 const LIGHTNING_URL = `${API_BASE}/lightning`;
+const SOIL_STATUS_URL = `${API_BASE}/soil-status`;
 const DAILY_RECENT_URL = `${API_BASE}/daily?days=2`;
 const FORECAST_URL = `${API_BASE}/met/forecast`;
 const WARNINGS_URL = `${API_BASE}/met/warnings`;
@@ -51,6 +52,7 @@ let latestObservationTime = null;
 let latestCurrent = null;
 let latestRainDetected = false;
 let latestForecastToday = "";
+let visitComparisonRendered = false;
 
 const LOCAL_CACHE_PREFIX = "parknacross.dashboard.";
 const localCacheKey = name => `${LOCAL_CACHE_PREFIX}${name}.v1`;
@@ -905,8 +907,38 @@ function updateSoilPanel(current) {
   } else {
     set("soilMoistureTrend", "Trend building from saved readings");
   }
+  let eventText = "No distinct watering or rain response is identifiable yet.";
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const newer=candidates[i],older=candidates[i-1],minutes=(Number(newer.epoch)-Number(older.epoch))/60;
+    const rise=Number(newer.soil_moisture_pct)-Number(older.soil_moisture_pct);
+    if(minutes>0&&minutes<=90&&rise>=3){
+      const rainResponse=usable(newer.rain_rate_mm_h)&&Number(newer.rain_rate_mm_h)>0 || usable(newer.rain_daily_mm)&&usable(older.rain_daily_mm)&&Number(newer.rain_daily_mm)>Number(older.rain_daily_mm);
+      eventText=`${rainResponse?"Rain response":"Possible watering response"}: moisture rose ${rise.toFixed(0)} points over ${Math.round(minutes)} minutes.`;
+      break;
+    }
+  }
+  if(candidates.length<3)eventText="Trend building—more saved WH52 readings are needed to identify watering or rain responses.";
+  set("soilEvent",eventText);
   const channel = usable(current?.soil_channel) ? ` · WH52 channel ${Number(current.soil_channel)}` : "";
   set("soilSummary", `Live root-zone observation${channel}. Open Graphs to see how moisture, temperature and conductivity change over time.`);
+}
+
+function stationDayKey(epoch){return new Date(Number(epoch)*1000).toLocaleDateString("en-CA",{timeZone:STATION_TIME_ZONE});}
+function renderSinceLastVisit(current){
+  if(visitComparisonRendered||!usable(current?.epoch))return;visitComparisonRendered=true;
+  const key="parknacross.lastVisitSnapshot.v1";let previous=null;try{previous=JSON.parse(localStorage.getItem(key)||"null");}catch(_){}
+  const snapshot={epoch:Number(current.epoch),temperature_c:current.temperature_c,pressure_hpa:current.pressure_hpa,rain_daily_mm:current.rain_daily_mm,soil_moisture_pct:current.soil_moisture_pct,lightning_strikes:current.lightning_strikes};
+  try{localStorage.setItem(key,JSON.stringify(snapshot));}catch(_){}
+  if(!previous||!usable(previous.epoch)||snapshot.epoch-Number(previous.epoch)<5*60)return;
+  const changes=[];
+  const delta=(field,threshold,digits,unit,label)=>{if(!usable(snapshot[field])||!usable(previous[field]))return;const d=Number(snapshot[field])-Number(previous[field]);if(Math.abs(d)<threshold)changes.push(`${label} stayed steady`);else changes.push(`${label} ${d>0?"rose":"fell"} ${Math.abs(d).toFixed(digits)}${unit}`);};
+  delta("temperature_c",.3,1,"°C","temperature");delta("pressure_hpa",.5,1," hPa","pressure");
+  if(stationDayKey(snapshot.epoch)===stationDayKey(previous.epoch)){const rain=Math.max(0,Number(snapshot.rain_daily_mm||0)-Number(previous.rain_daily_mm||0));changes.push(rain>=.1?`${rain.toFixed(1)} mm of rain was recorded`:"no additional rain was recorded");delta("soil_moisture_pct",1,0," points","soil moisture");}
+  if(!changes.length)return;const panel=$("sinceVisitPanel");if(panel)panel.hidden=false;set("sinceVisitText",`${changes.slice(0,4).join("; ")}. Compared with your visit ${lightningRelative(previous.epoch)}.`);
+}
+
+async function refreshSoilFreshness(){
+  try{const data=await getJSON(SOIL_STATUS_URL,"no-store");if(!data?.wh52_detected||!usable(data.received_epoch)){set("soilFreshness","No recent WH52 upload detected");return;}set("soilFreshness",`Sensor upload received ${lightningRelative(data.received_epoch)} · channel ${data.channel||"--"}`);}catch(_){set("soilFreshness","Sensor freshness temporarily unavailable");}
 }
 
 function updateDashboard(current) {
@@ -1165,7 +1197,34 @@ function updateDashboard(current) {
 
   updateFreshness(current);
   updateStatsPanel();
+  renderSinceLastVisit(current);
   set("year", stationDateKeyFromTime(new Date())?.slice(0,4) || new Date().getFullYear());
+}
+
+function roundedRect(ctx,x,y,w,h,r){const q=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+q,y);ctx.arcTo(x+w,y,x+w,y+h,q);ctx.arcTo(x+w,y+h,x,y+h,q);ctx.arcTo(x,y+h,x,y,q);ctx.arcTo(x,y,x+w,y,q);ctx.closePath();ctx.fill();}
+async function weatherCardSkyImage(){
+  const source=$("todaySkyMedia")?.querySelector("img")?.src;if(!source)return null;
+  try{const response=await fetch(source,{cache:"no-store"});if(!response.ok)throw new Error();return await createImageBitmap(await response.blob());}catch(_){return null;}
+}
+async function createWeatherCard(){
+  const button=$("shareTodayButton");if(!latestCurrent){set("shareTodayStatus","Current conditions are not available yet.");return;}
+  if(button){button.disabled=true;button.textContent="Creating…";}set("shareTodayStatus","Preparing your weather card…");
+  try{
+    const canvas=document.createElement("canvas");canvas.width=1200;canvas.height=630;const ctx=canvas.getContext("2d",{alpha:false});
+    const sky=await weatherCardSkyImage();
+    if(sky){const scale=Math.max(canvas.width/sky.width,canvas.height/sky.height),w=sky.width*scale,h=sky.height*scale;ctx.drawImage(sky,(canvas.width-w)/2,(canvas.height-h)/2,w,h);sky.close?.();const shade=ctx.createLinearGradient(0,0,700,0);shade.addColorStop(0,"rgba(4,15,25,.94)");shade.addColorStop(.72,"rgba(4,15,25,.62)");shade.addColorStop(1,"rgba(4,15,25,.30)");ctx.fillStyle=shade;ctx.fillRect(0,0,canvas.width,canvas.height);}else{const bg=ctx.createLinearGradient(0,0,1200,630);bg.addColorStop(0,"#07131f");bg.addColorStop(.55,"#123149");bg.addColorStop(1,"#17617b");ctx.fillStyle=bg;ctx.fillRect(0,0,1200,630);}
+    ctx.fillStyle="#8fe4ff";ctx.font="700 24px system-ui";ctx.letterSpacing="3px";ctx.fillText("PARKNACROSS WEATHER",64,70);ctx.letterSpacing="0px";
+    ctx.fillStyle="#f4f8fb";ctx.font="800 74px system-ui";ctx.fillText(`${n(latestCurrent.temperature_c)}°C`,64,178);ctx.font="700 34px system-ui";ctx.fillText($("conditionsTag")?.textContent||"Live local conditions",64,226);
+    const cardRain=usable(rainSummary?.today_mm)?rainSummary.today_mm:latestCurrent.rain_daily_mm;
+    const items=[`Feels like ${n(latestCurrent.feels_like_c)}°C`,`Wind ${n(latestCurrent.wind_speed_kmh)} km/h · gust ${n(latestCurrent.wind_gust_kmh)} km/h`,`Rain today ${n(cardRain)} mm`,`Pressure ${n(latestCurrent.pressure_hpa)} hPa`];
+    if(usable(latestCurrent.soil_moisture_pct))items.push(`Garden soil ${n(latestCurrent.soil_moisture_pct,0)}% · ${n(latestCurrent.soil_temperature_c)}°C`);
+    ctx.font="500 25px system-ui";let y=292;for(const item of items){ctx.fillStyle="rgba(244,248,251,.92)";ctx.fillText(item,68,y);y+=43;}
+    ctx.fillStyle="rgba(7,19,31,.78)";roundedRect(ctx,56,548,1088,50,15);ctx.fillStyle="#c9e7f4";ctx.font="600 20px system-ui";const stamp=new Date(Number(latestCurrent.epoch)*1000).toLocaleString("en-IE",{timeZone:STATION_TIME_ZONE,day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"});ctx.fillText(`${stamp} · Ardamine, Co. Wexford`,78,580);ctx.textAlign="right";ctx.fillText("parknacrossweather.ie",1120,580);ctx.textAlign="left";
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));if(!blob)throw new Error("Image creation failed");const file=new File([blob],`parknacross-weather-${stationDayKey(latestCurrent.epoch)}.png`,{type:"image/png"});
+    if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({title:"Parknacross Weather",text:"Live weather from Parknacross, Ardamine",files:[file]});set("shareTodayStatus","Weather card shared.");}
+    else{const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download=file.name;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);set("shareTodayStatus","Weather card downloaded—ready to share.");}
+  }catch(error){if(error?.name!=="AbortError"){console.warn("Weather card:",error);set("shareTodayStatus","The weather card could not be created. Please try again.");}}
+  finally{if(button){button.disabled=false;button.textContent="Create weather card";}}
 }
 
 function scales(title, beginAtZero = false, timeBased = false) {
@@ -1717,6 +1776,7 @@ async function refreshLightning() {
         ? `Latest detected lightning approximately ${latestDistance.toFixed(0)} km away`
         : "Lightning sensor is online"
     );
+    set("lightningFreshness",`Sensor status checked ${new Date().toLocaleTimeString("en-IE",{timeZone:STATION_TIME_ZONE,hour:"2-digit",minute:"2-digit"})} Irish time`);
     window.PWAlerts?.evaluateLightning?.(data);
   } catch (error) {
     console.warn("Lightning refresh:", error);
@@ -1983,6 +2043,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadForecast();
   loadWarnings();
   refreshLightning();
+  refreshSoilFreshness();
+  $("shareTodayButton")?.addEventListener("click",createWeatherCard);
   setupPWA();
 
   setInterval(updateRelativeObservation, 15 * 1000);
@@ -1994,4 +2056,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(loadWarnings, 5 * 60 * 1000);
   setInterval(loadForecast, 30 * 60 * 1000);
   setInterval(refreshLightning, 60 * 1000);
+  setInterval(refreshSoilFreshness, 60 * 1000);
 });

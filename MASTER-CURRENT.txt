@@ -1,3 +1,3 @@
 Parknacross Weather MASTER CURRENT
-Version: v38.4.93
+Version: v38.4.94
 Date: 2026-09-24

@@ -28,10 +28,10 @@
     />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-93" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-94" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260924-v38-4-93" />
+    <link rel="stylesheet" href="styles.css?v=20260924-v38-4-94" />
 
     <meta name="parknacross-sky-build" content="v38.4.51" />
     <title>
@@ -736,6 +736,11 @@
           </div>
         </section>
 
+        <section id="sinceVisitPanel" class="since-visit-panel" hidden aria-labelledby="sinceVisitHeading">
+          <div><span class="section-eyebrow">Since your last visit</span><h2 id="sinceVisitHeading">What changed</h2></div>
+          <p id="sinceVisitText">Comparing the latest observation with your previous visit…</p>
+        </section>
+
         <section
           id="todaySkyPanel"
           class="today-sky-panel"
@@ -899,6 +904,7 @@
             <span class="section-eyebrow">Lightning</span>
             <strong id="lightningHeadline">WH57 lightning detector</strong>
             <small id="lightningDetail">Waiting for live sensor data</small>
+            <small id="lightningFreshness">Sensor status has not been checked yet</small>
           </div>
           <div class="lightning-stats">
             <span>Strikes today <strong id="lightningStrikes">--</strong></span>
@@ -1122,6 +1128,8 @@
             <span class="section-eyebrow">Garden sensor</span>
             <h2 id="soilHeading">Garden soil</h2>
             <p id="soilSummary">Waiting for the first WH52 observation…</p>
+            <p id="soilEvent" class="soil-event">Building a soil trend from saved readings…</p>
+            <small id="soilFreshness">Waiting for sensor freshness…</small>
           </div>
           <div class="soil-stats">
             <div><span>Moisture</span><strong id="soilMoisture">--</strong><small id="soilMoistureTrend">Trend building</small></div>
@@ -1208,9 +1216,7 @@
                 alongside the live Parknacross feed.
               </p>
             </div>
-            <button class="primary-button" id="shareTodayButton" type="button">
-              Share today
-            </button>
+            <div class="weather-card-action"><button class="primary-button" id="shareTodayButton" type="button">Create weather card</button><small id="shareTodayStatus" role="status" aria-live="polite">Share or download a branded snapshot</small></div>
           </div>
 
           <div class="context-grid">
@@ -1482,12 +1488,12 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="wind-rose.js?v=20260923-radial-restore"></script>
     <script src="offline.js?v=20260915-v36"></script>
-    <script src="alert-settings.js?v=20260926-v38-4-93"></script>
-    <script src="data-corrections.js?v=20260924-v38-4-93"></script>
-    <script src="app.js?v=20260924-v38-4-93"></script>
+    <script src="alert-settings.js?v=20260926-v38-4-94"></script>
+    <script src="data-corrections.js?v=20260924-v38-4-94"></script>
+    <script src="app.js?v=20260924-v38-4-94"></script>
 
     <script src="site-config.js?v=20260912-mobile2"></script>
-    <script src="platform.js?v=20260924-v38-4-93"></script>
+    <script src="platform.js?v=20260924-v38-4-94"></script>
     <script>
       /* WH57 acquisition status; existing app.js remains responsible for displaying detections and alerts. */
       (() => {
@@ -2365,8 +2371,8 @@
       data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'
     ></script>
     <!-- End Cloudflare Web Analytics -->
-    <script src="pwa-update.js?v=20260924-v38-4-93"></script>
-    <script src="accessibility.js?v=20260924-v38-4-93"></script>
-    <script src="navigation.js?v=20260924-v38-4-93"></script>
+    <script src="pwa-update.js?v=20260924-v38-4-94"></script>
+    <script src="accessibility.js?v=20260924-v38-4-94"></script>
+    <script src="navigation.js?v=20260924-v38-4-94"></script>
   </body>
 </html>
