@@ -252,7 +252,7 @@ function localTimestamp(date) {
 function csvCell(value){if(value===null||value===undefined)return"";const text=String(value);return /[",\r\n]/.test(text)?`"${text.replace(/"/g,'""')}"`:text;}
 function downloadTodayCsv(){
   if(!currentTodayRows.length||!currentTodayKey)return;
-  const columns=[["timestamp_local",r=>localTimestamp(readingDate(r))],["timestamp_utc",r=>readingDate(r)?.toISOString()||""],["temperature_c",r=>r.temperature_c],["feels_like_c",r=>r.feels_like_c],["humidity_pct",r=>r.humidity],["dew_point_c",r=>r.dew_point_c],["wind_speed_kmh",r=>r.wind_speed_kmh],["wind_gust_kmh",r=>r.wind_gust_kmh],["wind_direction_deg",r=>r.wind_direction_deg],["pressure_hpa",r=>r.pressure_hpa],["rain_rate_mm_h",r=>r.rain_rate_mm_h],["rain_daily_mm",r=>correctedRain(r)],["solar_w_m2",r=>r.solar_w_m2],["uv_index",r=>r.uv_index],["battery_v",r=>r.battery_v]];
+  const columns=[["timestamp_local",r=>localTimestamp(readingDate(r))],["timestamp_utc",r=>readingDate(r)?.toISOString()||""],["temperature_c",r=>r.temperature_c],["feels_like_c",r=>r.feels_like_c],["humidity_pct",r=>r.humidity],["dew_point_c",r=>r.dew_point_c],["wind_speed_kmh",r=>r.wind_speed_kmh],["wind_gust_kmh",r=>r.wind_gust_kmh],["wind_direction_deg",r=>r.wind_direction_deg],["pressure_hpa",r=>r.pressure_hpa],["rain_rate_mm_h",r=>r.rain_rate_mm_h],["rain_daily_mm",r=>correctedRain(r)],["solar_w_m2",r=>r.solar_w_m2],["uv_index",r=>r.uv_index],["battery_v",r=>r.battery_v],["soil_moisture_pct",r=>r.soil_moisture_pct],["soil_temperature_c",r=>r.soil_temperature_c],["soil_ec_us_cm",r=>r.soil_ec_us_cm],["soil_channel",r=>r.soil_channel]];
   const rows=[...currentTodayRows].sort((a,b)=>(readingDate(a)?.getTime()||0)-(readingDate(b)?.getTime()||0));
   const lines=[columns.map(([n])=>csvCell(n)).join(","),...rows.map(r=>columns.map(([,g])=>csvCell(g(r))).join(","))];
   const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"}); const url=URL.createObjectURL(blob); const link=document.createElement("a");
@@ -267,6 +267,17 @@ function shareText(){
   if(usable(row.wind_speed_kmh))parts.push(`wind ${cardinal(row.wind_direction_deg)} ${num(row.wind_speed_kmh)} km/h`.replace("wind  ","wind "));
   const todayRain=rainTotal(currentTodayRows); if(usable(todayRain))parts.push(`${num(todayRain)} mm rain today`);
   return parts.join(" · ");
+}
+function renderSoil(current){
+  const panel=$("summarySoilPanel");
+  const hasSoil=usable(current?.soil_moisture_pct)||usable(current?.soil_temperature_c)||usable(current?.soil_ec_us_cm);
+  if(panel) panel.hidden=!hasSoil;
+  if(!hasSoil)return;
+  set("summarySoilMoisture",usable(current.soil_moisture_pct)?`${num(current.soil_moisture_pct)}%`:"--");
+  set("summarySoilTemperature",usable(current.soil_temperature_c)?`${num(current.soil_temperature_c)}°C`:"--");
+  set("summarySoilEc",usable(current.soil_ec_us_cm)?`${Math.round(Number(current.soil_ec_us_cm)).toLocaleString("en-IE")} µS/cm`:"--");
+  const channel=usable(current.soil_channel)?` · WH52 channel ${Number(current.soil_channel)}`:"";
+  set("summarySoilUpdated",`Latest sensor observation${channel}. This represents only the probe's immediate soil or container; use trends against its own baseline.`);
 }
 async function shareCurrentWeather(){
   const text=shareText(); if(!text)return;
@@ -291,7 +302,7 @@ async function loadSummary(){
     const rainDisplay = {...rain, current_rate_mm_h: usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : rain?.current_rate_mm_h};
     set("summaryTitle",`Today in Parknacross · ${longDate(now)}`);set("summarySubtitle",todayRows.length?`Live day-so-far summary from ${todayRows.length.toLocaleString("en-IE")} stored observations.`:"Waiting for today's stored station observations.");
     const recentCompletedDays=(Array.isArray(daily?.days)?daily.days:[]).filter(row=>row.day!==todayKey).slice(-7);
-    renderToday(todayMetrics,yesterdayMetrics,recentCompletedDays);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);renderSignificantWeather(rows);
+    renderToday(todayMetrics,yesterdayMetrics,recentCompletedDays);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);renderSignificantWeather(rows);renderSoil(current);
     $("downloadCsvButton").disabled=!todayRows.length;$("shareWeatherButton").disabled=!latestShareRow;
     set("actionStatus",todayRows.length?`${todayRows.length.toLocaleString("en-IE")} observations ready. Download or share using the buttons above.`:"No observations are available yet.");
   }catch(error){console.error("Daily summary:",error);set("summarySubtitle","The daily summary is temporarily unavailable.");set("dayStory","Live station observations could not be loaded. Please try again shortly.");set("significantWeatherBadge","Unavailable");set("significantWeatherNarrative","The latest 24-hour observation review is temporarily unavailable.");currentTodayRows=[];currentTodayKey=null;latestShareRow=null;$("downloadCsvButton").disabled=true;$("shareWeatherButton").disabled=true;set("actionStatus","Summary tools are temporarily unavailable.");}

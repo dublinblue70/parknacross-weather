@@ -81,7 +81,8 @@ const LIMITS = {
   temperature_c:[-30,45,"Temperature"], feels_like_c:[-40,50,"Feels-like temperature"], humidity:[0,100,"Humidity"],
   dew_point_c:[-40,40,"Dew point"], wind_speed_kmh:[0,180,"Wind speed"], wind_gust_kmh:[0,220,"Wind gust"],
   wind_direction_deg:[0,360,"Wind direction"], pressure_hpa:[870,1085,"Pressure"], rain_rate_mm_h:[0,300,"Rain rate"],
-  rain_daily_mm:[0,500,"Daily rainfall"], solar_w_m2:[0,1600,"Solar radiation"], uv_index:[0,20,"UV index"], battery_v:[2.0,5.0,"Battery voltage"]
+  rain_daily_mm:[0,500,"Daily rainfall"], solar_w_m2:[0,1600,"Solar radiation"], uv_index:[0,20,"UV index"], battery_v:[2.0,5.0,"Battery voltage"],
+  soil_moisture_pct:[0,100,"Soil moisture"], soil_temperature_c:[-40,60,"Soil temperature"], soil_ec_us_cm:[0,10000,"Soil conductivity"]
 };
 
 function analyzeRows(rows) {
@@ -205,10 +206,21 @@ async function runChecks() {
 
   if(current.__error) {
     setBadge("feedBadge","bad","FAIL"); setText("feedValue","No reading"); setText("feedDetail","Current weather reading could not be reached"); states.push("bad");
+    setBadge("soilBadge","warn","CHECK"); setText("soilValue","Unavailable"); setText("soilDetail","The latest WH52 reading could not be checked.");
   } else {
     const age=usableNumber(current.epoch)?Math.max(0,Math.floor(Date.now()/1000)-Number(current.epoch)):null;
     const state=age===null?"warn":age<600?"good":age<1800?"warn":"bad";
     setBadge("feedBadge",state,age===null?"CHECK":state==="good"?"LIVE":state==="warn"?"DELAY":"STALE"); setText("feedValue",fmtAge(age)); setText("feedDetail",current.received_at?`Latest reading: ${fmtIrishDateTime(current.received_at)} Irish time`:"Latest weather reading time unavailable"); states.push(state);
+    const hasSoil=usableNumber(current.soil_moisture_pct)||usableNumber(current.soil_temperature_c)||usableNumber(current.soil_ec_us_cm);
+    if(hasSoil){
+      const soilState=age!==null&&age<600?"good":"warn";
+      setBadge("soilBadge",soilState,soilState==="good"?"LIVE":"CHECK");
+      setText("soilValue",usableNumber(current.soil_moisture_pct)?`${fmtNum(current.soil_moisture_pct,1)}% moisture`:"Sensor detected");
+      const details=[];if(usableNumber(current.soil_temperature_c))details.push(`${fmtNum(current.soil_temperature_c,1)}°C soil`);if(usableNumber(current.soil_ec_us_cm))details.push(`${Math.round(Number(current.soil_ec_us_cm)).toLocaleString("en-IE")} µS/cm`);if(usableNumber(current.soil_channel))details.push(`channel ${Number(current.soil_channel)}`);
+      setText("soilDetail",`${details.join(" · ")}. Reading represents the probe location only.`);states.push(soilState);
+    }else{
+      setBadge("soilBadge","warn","WAITING");setText("soilValue","No current value");setText("soilDetail","No WH52 fields were present in the latest gateway observation.");states.push("warn");
+    }
   }
 
   if(quality.__error) {

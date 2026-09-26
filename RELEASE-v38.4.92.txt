@@ -1,0 +1,10 @@
+Parknacross Weather v38.4.92
+
+WH52 soil-data coverage
+- Adds a live Garden soil section to Today's Summary when genuine WH52 fields are available.
+- Includes WH52 fields in the Summary page's day CSV export.
+- Documents soil moisture, soil temperature and electrical conductivity in archive downloads and dataset metadata.
+- Adds a WH52 status card and soil-value plausibility checks to System Health.
+- Adds accurate soil references to Graphs, History, Station, Dashboard and the Ardamine local guide.
+- Repeats the important limitation that one sensor describes only its immediate soil or container.
+- Does not add soil claims to regional, coastal, official-forecast or long-term daily-summary views where the reading would be irrelevant or unavailable.
