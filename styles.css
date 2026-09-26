@@ -1846,6 +1846,8 @@ canvas {
 .lightning-stats { display: flex; gap: 24px; flex-wrap: wrap; justify-content: flex-end; }
 .lightning-stats span { color: var(--muted); font-size: .78rem; }
 .lightning-stats span strong { display: inline; margin: 0 0 0 5px; color: var(--text); font-size: .88rem; }
+.since-visit-panel{display:grid;grid-template-columns:minmax(190px,.35fr) 1fr;gap:22px;align-items:center;margin:18px 0;padding:18px 22px;border:1px solid rgba(116,221,255,.24);border-radius:var(--radius);background:linear-gradient(110deg,rgba(116,221,255,.08),rgba(110,241,203,.035))}.since-visit-panel[hidden]{display:none!important}.since-visit-panel h2{margin:3px 0 0;font-size:1.1rem}.since-visit-panel p{margin:0;color:var(--muted);line-height:1.65}.soil-event{margin:.55rem 0 0;color:var(--accent);font-weight:650}.weather-card-action{display:grid;justify-items:end;gap:5px}.weather-card-action small{color:var(--muted);font-size:.72rem;text-align:right}
+@media(max-width:680px){.since-visit-panel{grid-template-columns:1fr;gap:8px}.weather-card-action{justify-items:stretch}.weather-card-action small{text-align:left}}
 @media(max-width:780px){
   .lightning-panel { align-items: flex-start; flex-direction: column; }
   .lightning-stats { justify-content: flex-start; gap: 12px 20px; }

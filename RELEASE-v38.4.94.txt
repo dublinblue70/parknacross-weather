@@ -1,0 +1,9 @@
+Parknacross Weather v38.4.94
+
+Intelligent visitor features
+- Adds a quiet "Since your last visit" comparison using browser-local data only.
+- Detects evidence of soil wetting from archived WH52 changes and distinguishes recorded rain from a possible watering response.
+- Adds exact WH52 upload freshness and lightning-status check times.
+- Adds a branded 1200 x 630 weather-card generator with current weather, soil context and today's sky photograph when browser image permissions allow it.
+- Shares the card through the device share sheet when supported; otherwise downloads a PNG.
+- Keeps all four additions contextual and avoids adding another navigation page.
