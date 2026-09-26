@@ -1,0 +1,8 @@
+Parknacross Weather v38.4.100
+
+Text and encoding cleanup
+
+- Replaces the battery-status middle-dot separator with a plain colon, preventing the visible stray encoding prefix.
+- Applies the correction consistently to Normal, Check and Low battery states.
+- Audits all website HTML, JavaScript, CSS and public text for common spelling errors and corrupted Unicode sequences.
+- Advances the installed-app cache so browsers and PWAs cannot retain the affected app.js file.

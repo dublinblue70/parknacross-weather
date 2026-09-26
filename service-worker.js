@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-99-triple-path-archive";
+const CACHE_NAME = "parknacross-v38-4-100-text-cleanup";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
