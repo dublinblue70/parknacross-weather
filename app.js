@@ -16,6 +16,8 @@ const ARDAMINE_LON = -6.25;
 const STATION_TIME_ZONE = "Europe/Dublin";
 const STALE_AFTER_MS = 10 * 60 * 1000;
 const OFFLINE_AFTER_MS = 30 * 60 * 1000;
+const WH52_BASELINE_START_EPOCH = Date.parse("2026-09-26T00:00:00+01:00") / 1000;
+const WH52_BASELINE_DAYS = 14;
 
 const $ = id => document.getElementById(id);
 const set = (id, value) => {
@@ -889,11 +891,15 @@ function updateSoilPanel(current) {
   }
 
   panel.hidden = false;
+  const nowEpoch = usable(current?.epoch) ? Number(current.epoch) : Date.now() / 1000;
+  const baselineDay=Math.max(1,Math.floor((nowEpoch-WH52_BASELINE_START_EPOCH)/86400)+1),baselineBuilding=baselineDay<=WH52_BASELINE_DAYS;
+  const baselineBadge=$("soilBaselineBadge"),baselineNote=$("soilBaselineNote");
+  if(baselineBadge){baselineBadge.hidden=!baselineBuilding;baselineBadge.textContent=baselineBuilding?`Early data · day ${baselineDay} of ${WH52_BASELINE_DAYS}`:"";}
+  if(baselineNote){baselineNote.hidden=!baselineBuilding;baselineNote.textContent=baselineBuilding?"The WH52 is still building its local baseline. Trend descriptions and event detection are provisional during this period.":"";}
   set("soilMoisture", moisture === null ? "Unavailable" : `${moisture.toFixed(0)}%`);
   set("soilTemperature", temperature === null ? "Unavailable" : `${temperature.toFixed(1)}°C`);
   set("soilEc", ec === null ? "Unavailable" : `${Math.round(ec).toLocaleString("en-IE")} µS/cm`);
 
-  const nowEpoch = usable(current?.epoch) ? Number(current.epoch) : Date.now() / 1000;
   const candidates = history24
     .filter(row => usable(row?.soil_moisture_pct) && usable(row?.epoch))
     .sort((a, b) => Number(a.epoch) - Number(b.epoch));

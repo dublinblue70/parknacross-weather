@@ -1,4 +1,4 @@
-Parknacross Weather v38.4.94
+Parknacross Weather v38.4.95
 
 Soil placement and integrity review
 - Moves Garden soil below the core current-weather content on Dashboard and Summary.
