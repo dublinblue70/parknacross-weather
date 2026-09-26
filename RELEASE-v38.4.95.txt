@@ -1,0 +1,7 @@
+Parknacross Weather v38.4.95
+
+WH52 baseline and acceptance review
+- Adds a clearly dated 14-day "Early data" state from the WH52 installation date.
+- Marks soil trend and event interpretation as provisional while the local baseline builds.
+- Automatically removes the early-data badge and note after day 14.
+- Extends release verification to the weather-card, responsive layout and browser feature-fallback paths.

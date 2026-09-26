@@ -1,4 +1,4 @@
-Parknacross Weather v38.4.94
+Parknacross Weather v38.4.95
 
 WH52 soil-data coverage
 - Adds a live Garden soil section to Today's Summary when genuine WH52 fields are available.

@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-94-wh52-soil-sensor";
+const CACHE_NAME = "parknacross-v38-4-95-wh52-soil-sensor";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
