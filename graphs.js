@@ -1,6 +1,7 @@
 (() => {
  const cfg=window.PARKNACROSS_CONFIG||{},API=cfg.apiBase,$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};let charts={},hours=24;
  const line=(label,color,axis="y")=>({label,data:[],borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.25,yAxisID:axis});
+ const soilLine=(label,color,axis="y")=>({label,data:[],borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:3,pointHoverRadius:6,pointHitRadius:10,tension:.2,spanGaps:false,yAxisID:axis});
  const tickTime=value=>{const d=new Date(Number(value));return hours<=48?d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})};
  const tooltipTime=items=>{const value=items?.[0]?.parsed?.x;return Number.isFinite(value)?new Date(value).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""};
  const timeAxis=()=>({type:"linear",grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:9,callback:tickTime}});
@@ -83,8 +84,8 @@
    }
  });
  charts.s=new Chart($("gSolar"),{type:"line",data:{datasets:[line("Solar","#ffd77a","y"),line("UV","#b594ff","y1")]},options:{...common,scales:{x:timeAxis(),y:{position:"left",beginAtZero:true,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:"W/m²",color:"#9fb3c1"}},y1:{position:"right",beginAtZero:true,grid:{drawOnChartArea:false},ticks:{color:"#9fb3c1"},title:{display:true,text:"UV index",color:"#9fb3c1"}}},plugins:{...common.plugins,legend:{position:"bottom"}}}});
- charts.sm=new Chart($("gSoilMoisture"),{type:"line",data:{datasets:[line("Soil moisture","#65d19a")]},options:{...common,scales:{x:timeAxis(),y:{min:0,max:100,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",callback:v=>`${v}%`},title:{display:true,text:"Moisture %",color:"#9fb3c1"}}},plugins:{...common.plugins,legend:{display:false}}}});
- charts.sd=new Chart($("gSoilDetail"),{type:"line",data:{datasets:[line("Soil temperature","#ffad66","y"),line("Conductivity","#b594ff","y1")]},options:{...common,scales:{x:timeAxis(),y:{position:"left",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:"°C",color:"#9fb3c1"}},y1:{position:"right",beginAtZero:true,grid:{drawOnChartArea:false},ticks:{color:"#9fb3c1"},title:{display:true,text:"µS/cm",color:"#9fb3c1"}}},plugins:{...common.plugins,legend:{position:"bottom"}}}});
+ charts.sm=new Chart($("gSoilMoisture"),{type:"line",data:{datasets:[soilLine("Soil moisture","#65d19a")]},options:{...common,scales:{x:timeAxis(),y:{min:0,max:100,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",callback:v=>`${v}%`},title:{display:true,text:"Moisture %",color:"#9fb3c1"}}},plugins:{...common.plugins,legend:{display:false}}}});
+ charts.sd=new Chart($("gSoilDetail"),{type:"line",data:{datasets:[soilLine("Soil temperature","#ffad66","y"),soilLine("Conductivity","#b594ff","y1")]},options:{...common,scales:{x:timeAxis(),y:{position:"left",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:"°C",color:"#9fb3c1"}},y1:{position:"right",beginAtZero:true,grid:{drawOnChartArea:false},ticks:{color:"#9fb3c1"},title:{display:true,text:"µS/cm",color:"#9fb3c1"}}},plugins:{...common.plugins,legend:{position:"bottom"}}}});
  }
  const GAP_SECONDS=20*60;
  function rowEpoch(x){
@@ -209,6 +210,13 @@
  const hasSoil=rows.some(x=>usable(x?.soil_moisture_pct)||usable(x?.soil_temperature_c)||usable(x?.soil_ec_us_cm));
  $("soilMoistureCard").hidden=!hasSoil;$("soilDetailCard").hidden=!hasSoil;
  charts.sm.data.datasets[0].data=r.map(x=>point(x,"soil_moisture_pct"));charts.sd.data.datasets[0].data=r.map(x=>point(x,"soil_temperature_c"));charts.sd.data.datasets[1].data=r.map(x=>point(x,"soil_ec_us_cm"));
+ const soilRows=rows.filter(x=>usable(x?.soil_moisture_pct)||usable(x?.soil_temperature_c)||usable(x?.soil_ec_us_cm));
+ if(hasSoil){
+   const firstSoil=new Date(Number(rowEpoch(soilRows[0]))*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+   set("soilMoistureStatus",`${soilRows.length.toLocaleString("en-IE")} saved WH52 reading${soilRows.length===1?"":"s"} since ${firstSoil}. Points remain visible while the new archive builds.`);
+   set("soilDetailStatus",`Soil temperature and conductivity from the same ${soilRows.length.toLocaleString("en-IE")} WH52 observation${soilRows.length===1?"":"s"}. Conductivity is best compared with this sensor’s own baseline.`);
+   requestAnimationFrame(()=>{charts.sm.resize();charts.sd.resize();charts.sm.update("none");charts.sd.update("none");});
+ }
  updateWindRose(rows,h,Math.floor(Date.now()/300000)*300);
  [charts.t,charts.w,charts.p,charts.r,charts.s,charts.sm,charts.sd].forEach(c=>c.update());
  updateHighlights(rows,temperatureOutliers,windGustOutliers);

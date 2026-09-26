@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#07131f">
-  <meta name="description" content="Download historical weather observations from Parknacross in Ardamine, Co. Wexford as CSV, including temperature, rain, wind, pressure, humidity, UV and solar data.">
+  <meta name="description" content="Download historical weather and WH52 garden-soil observations from Parknacross in Ardamine, Co. Wexford as CSV, including rain, wind, temperature, soil moisture and soil temperature.">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://parknacrossweather.ie/downloads.html">
   <title>Ardamine Weather Data Archive &amp; CSV Downloads | Parknacross</title>
@@ -14,7 +14,7 @@
   "@type": "Dataset",
   "@id": "https://parknacrossweather.ie/downloads.html#dataset",
   "name": "Parknacross Weather Observation Archive",
-  "description": "Historical personal weather station observations from Parknacross in Ardamine, Co. Wexford, including temperature, humidity, dew point, wind, gusts, direction, pressure, rainfall, solar radiation, UV, station battery and lightning data when available.",
+  "description": "Historical personal weather station observations from Parknacross in Ardamine, Co. Wexford, including weather, lightning and WH52 garden-soil readings when available.",
   "url": "https://parknacrossweather.ie/downloads.html",
   "isAccessibleForFree": true,
   "dateModified": "2026-09-17",
@@ -28,7 +28,7 @@
     "@type": "Place",
     "name": "Ardamine, Co. Wexford, Ireland"
   },
-  "measurementTechnique": "Ecowitt WS90 personal weather station with GW3001 gateway; WH57 lightning detector when installed",
+  "measurementTechnique": "Ecowitt WS90 personal weather station with GW3001 gateway, WH57 lightning detector and WH52 garden-soil sensor",
   "keywords": [
     "Ardamine weather",
     "North Wexford weather",
@@ -36,7 +36,9 @@
     "rainfall",
     "wind",
     "temperature",
-    "weather archive"
+    "weather archive",
+    "soil moisture",
+    "garden soil"
   ],
   "variableMeasured": [
     "Air temperature",
@@ -52,7 +54,10 @@
     "UV index",
     "WS90 battery voltage",
     "Lightning distance",
-    "Lightning strike count"
+    "Lightning strike count",
+    "Soil moisture",
+    "Soil temperature",
+    "Soil electrical conductivity"
   ],
   "distribution": [
     {
@@ -85,7 +90,7 @@
 <header><div class="brand"><strong>PARKNACROSS WEATHER</strong><span>Historical observation archive</span></div>
     <nav class="nav" aria-label="Main navigation"><a href="index.html">Dashboard</a><a href="summary.html">Summary</a><a href="radar.html">Radar</a><a href="graphs.html">Graphs</a><a href="rain.html">Rain</a><a href="history.html">History</a><div class="nav-more"><button class="nav-more-button nav-more-active" type="button" aria-expanded="false" aria-haspopup="menu">More <span aria-hidden="true">▾</span></button><div class="nav-more-menu" role="menu" hidden><a role="menuitem" href="climate.html">Climate</a><a role="menuitem" href="station.html">Station</a><a role="menuitem" href="coast.html">Sea &amp; swim</a><a role="menuitem" href="sky.html">Today’s sky</a><a role="menuitem" href="records.html">Records</a><a role="menuitem" href="monthly.html">Monthly report</a><a role="menuitem" href="annual.html">Annual report</a><a role="menuitem" href="downloads.html" class="active" aria-current="page">Downloads</a><a role="menuitem" href="status.html">System status</a><a role="menuitem" href="install.html">Install help</a><a role="menuitem" href="privacy.html">Privacy</a></div></div></nav></header>
 <main>
-  <section class="hero"><h1>Ardamine weather data archive</h1><p>Download historical observations from the Parknacross weather station in Ardamine, Co. Wexford as CSV. The archive includes temperature, humidity, wind, pressure, rainfall, solar radiation and UV measurements and grows as new station observations are stored.</p></section>
+  <section class="hero"><h1>Ardamine weather data archive</h1><p>Download historical observations from Parknacross in Ardamine, Co. Wexford as CSV. Alongside weather and lightning fields, newer readings include WH52 garden-soil moisture, temperature and electrical conductivity.</p></section>
   <div id="archiveCoverage" class="note" role="status" aria-live="polite">Checking available archive dates…</div>
   <section class="grid">
     <article class="card"><h2>Last 7 days</h2><p>A compact export for recent analysis.</p><button type="button" class="button export" data-days="7" data-name="7-days">Download CSV</button></article>
@@ -95,14 +100,14 @@
     <article class="card"><h2>Automatic archive backup</h2><p id="backupStatusText">Checking whether the separate archive backup is active…</p><a class="button" href="status.html">View backup health</a></article>
   </section>
   <div id="downloadStatus" class="status" aria-live="polite"></div>
-  <div class="note">CSV downloads include time, temperature, humidity, dew point, wind, gusts, wind direction, pressure, rainfall, solar radiation, UV and WS90 battery information. Choose 7, 30, 90 or 365 days; daily backups are kept separately from the live weather archive.</div>
+  <div class="note">CSV downloads include time, weather, WS90 battery, lightning and WH52 soil fields. Soil columns are blank for observations saved before the WH52 was installed or whenever the sensor did not report. Choose 7, 30, 90 or 365 days; daily backups are kept separately from the live archive.</div>
 </main>
 <footer><span>© 2026 Parknacross Weather</span><span>Weather data downloads</span><nav class="footer-links" aria-label="Parknacross Weather links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a><span aria-hidden="true">·</span><a href="install.html">Install help</a><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></nav></footer>
 </div>
-<script src="downloads.js?v=20260924-v38-4-90"></script>
-<script src="pwa-update.js?v=20260924-v38-4-90"></script>
+<script src="downloads.js?v=20260924-v38-4-92"></script>
+<script src="pwa-update.js?v=20260924-v38-4-92"></script>
 <script src="offline.js?v=20260915-v36"></script>
-<script src="accessibility.js?v=20260924-v38-4-90"></script>
-<script src="navigation.js?v=20260924-v38-4-90"></script>
+<script src="accessibility.js?v=20260924-v38-4-92"></script>
+<script src="navigation.js?v=20260924-v38-4-92"></script>
 </body>
 </html>
