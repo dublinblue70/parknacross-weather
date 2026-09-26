@@ -1232,7 +1232,7 @@ async function createWeatherCard(){
       try{await navigator.share({title:"Parknacross Weather",text:"Live weather from Parknacross, Ardamine",files:[file]});set("shareTodayStatus","Weather card shared.");}
       catch(shareError){
         if(shareError?.name==="AbortError"){set("shareTodayStatus","Sharing cancelled—the weather card was created.");}
-        else{console.warn("Native weather-card share:",shareError);downloadWeatherCard(blob,file.name);set("shareTodayStatus","Sharing was unavailable, so the weather card was downloaded instead.");}
+        else{console.warn("Native weather-card share:",shareError);downloadWeatherCard(blob,file.name);set("shareTodayStatus","Weather card downloaded—ready to share.");}
       }
     }else{downloadWeatherCard(blob,file.name);set("shareTodayStatus","Weather card downloaded—ready to share.");}
   }catch(error){if(error?.name!=="AbortError"){console.warn("Weather card:",error);set("shareTodayStatus","The weather card could not be created. Please try again.");}}

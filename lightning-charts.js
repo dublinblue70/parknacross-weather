@@ -1,4 +1,4 @@
-/* Parknacross Weather · WH57 lightning charts · v38.4.96
+/* Parknacross Weather · WH57 lightning charts · v38.4.97
  * Additive frontend script: uses the existing /history readings without changing
  * the Worker, D1 schema, existing charts or other site functions.
  */
