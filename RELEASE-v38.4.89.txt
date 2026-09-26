@@ -1,0 +1,7 @@
+Parknacross Weather v38.4.89
+
+- Fixed the lightning-distance chart axis at the WH57 supported 0–40 km range.
+- Added clear 5 km tick intervals.
+- The correct range now remains visible even when no timed lightning events exist.
+- Aligned Dashboard, History, Station and notification validation with the WH57's approximate 40 km range.
+- Values outside the supported 0–40 km range are no longer presented as valid WH57 distances.

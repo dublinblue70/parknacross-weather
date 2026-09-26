@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-88-lightning-alert-range";
+const CACHE_NAME = "parknacross-v38-4-90-wh52-soil-sensor";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

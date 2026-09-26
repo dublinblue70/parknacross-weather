@@ -41,9 +41,9 @@
           const strikes = usable(lightning.strikes_today) && Number(lightning.strikes_today) >= 0
             ? Math.round(Number(lightning.strikes_today)) : null;
           const countText = strikes === null ? "strike count unavailable" : `${strikes} strike${strikes === 1 ? "" : "s"} today`;
-          set("stationLightning", `Ecowitt WH57 · readings received · ${countText}`);
+          set("stationLightning", `Ecowitt WH57 · approximate range up to 40 km · ${countText}`);
         } else {
-          set("stationLightning", "Ecowitt WH57 · sensor acquired · awaiting live readings");
+          set("stationLightning", "Ecowitt WH57 · approximate range up to 40 km · awaiting live readings");
         }
         if (lightning?.available) {
           window.PWAlerts?.evaluateLightning?.(lightning);

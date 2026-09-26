@@ -86,9 +86,17 @@ const requiredChecks = [
   ["install.html", "Version this page expects"],
   ["station.html", "diagInstalled"],
   ["station.html", "<option value=\"40\">Within 40 km</option>"],
+  ["lightning-charts.js", "{min:0,max:40}"],
+  ["lightning-charts.js", "{stepSize:5}"],
+  ["lightning-charts.js", "Number(value) <= 40"],
+  ["graphs.html", "WH57 range 0–40 km"],
+  ["station-v2.js", "approximate range up to 40 km"],
+  ["alert-settings.js", "LIGHTNING_DISTANCES"],
+  ["alert-settings.js", "reportedDistance <= 40"],
+  ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-88"],
+  ["service-worker.js", "parknacross-v38-4-90"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],
@@ -150,7 +158,7 @@ if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("
 const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
 const dashboardApp = await readFile(join(root, "app.js"), "utf8");
 if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
-if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-88')) failures.push("index.html: shared data corrections must load before the dashboard application");
+if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-90')) failures.push("index.html: shared data corrections must load before the dashboard application");
 if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: forecast-aware clothing note is missing");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
 const coastScript = await readFile(join(root, "coast.js"), "utf8");
