@@ -28,10 +28,10 @@
     />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-92" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-93" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260924-v38-4-92" />
+    <link rel="stylesheet" href="styles.css?v=20260924-v38-4-93" />
 
     <meta name="parknacross-sky-build" content="v38.4.51" />
     <title>
@@ -907,20 +907,6 @@
           </div>
         </section>
 
-        <section id="soilPanel" class="soil-panel" hidden aria-labelledby="soilHeading">
-          <div class="soil-panel-copy">
-            <span class="section-eyebrow">Garden sensor</span>
-            <h2 id="soilHeading">Garden soil</h2>
-            <p id="soilSummary">Waiting for the first WH52 observation…</p>
-          </div>
-          <div class="soil-stats">
-            <div><span>Moisture</span><strong id="soilMoisture">--</strong><small id="soilMoistureTrend">Trend building</small></div>
-            <div><span>Root-zone temperature</span><strong id="soilTemperature">--</strong><small>Measured in the soil</small></div>
-            <div><span>Conductivity</span><strong id="soilEc">--</strong><small>Dissolved-salt trend</small></div>
-          </div>
-          <p class="soil-note">One WH52 sensor represents its immediate soil or container only. Moisture and conductivity are best compared with this sensor’s own baseline—not treated as universal plant-health targets.</p>
-        </section>
-
         <section class="today-section" aria-labelledby="todayHeading">
           <div class="section-heading compact-heading">
             <div>
@@ -1129,6 +1115,20 @@
               </div>
             </article>
           </div>
+        </section>
+
+        <section id="soilPanel" class="soil-panel" hidden aria-labelledby="soilHeading">
+          <div class="soil-panel-copy">
+            <span class="section-eyebrow">Garden sensor</span>
+            <h2 id="soilHeading">Garden soil</h2>
+            <p id="soilSummary">Waiting for the first WH52 observation…</p>
+          </div>
+          <div class="soil-stats">
+            <div><span>Moisture</span><strong id="soilMoisture">--</strong><small id="soilMoistureTrend">Trend building</small></div>
+            <div><span>Root-zone temperature</span><strong id="soilTemperature">--</strong><small>Measured in the soil</small></div>
+            <div><span>Conductivity</span><strong id="soilEc">--</strong><small>Dissolved-salt trend</small></div>
+          </div>
+          <p class="soil-note">One WH52 sensor represents its immediate soil or container only. Moisture and conductivity are best compared with this sensor’s own baseline—not treated as universal plant-health targets.</p>
         </section>
 
         <section class="forecast-section" id="forecast">
@@ -1482,12 +1482,12 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="wind-rose.js?v=20260923-radial-restore"></script>
     <script src="offline.js?v=20260915-v36"></script>
-    <script src="alert-settings.js?v=20260926-v38-4-92"></script>
-    <script src="data-corrections.js?v=20260924-v38-4-92"></script>
-    <script src="app.js?v=20260924-v38-4-92"></script>
+    <script src="alert-settings.js?v=20260926-v38-4-93"></script>
+    <script src="data-corrections.js?v=20260924-v38-4-93"></script>
+    <script src="app.js?v=20260924-v38-4-93"></script>
 
     <script src="site-config.js?v=20260912-mobile2"></script>
-    <script src="platform.js?v=20260924-v38-4-92"></script>
+    <script src="platform.js?v=20260924-v38-4-93"></script>
     <script>
       /* WH57 acquisition status; existing app.js remains responsible for displaying detections and alerts. */
       (() => {
@@ -2365,8 +2365,8 @@
       data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'
     ></script>
     <!-- End Cloudflare Web Analytics -->
-    <script src="pwa-update.js?v=20260924-v38-4-92"></script>
-    <script src="accessibility.js?v=20260924-v38-4-92"></script>
-    <script src="navigation.js?v=20260924-v38-4-92"></script>
+    <script src="pwa-update.js?v=20260924-v38-4-93"></script>
+    <script src="accessibility.js?v=20260924-v38-4-93"></script>
+    <script src="navigation.js?v=20260924-v38-4-93"></script>
   </body>
 </html>
