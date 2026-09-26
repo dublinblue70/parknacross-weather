@@ -1,0 +1,12 @@
+Parknacross Weather v38.4.99
+
+Triple-path, fault-tolerant weather archive
+
+- Primary: saves one complete authenticated GW3001 observation per five-minute slot directly to D1.
+- Secondary: retains the scheduled Ecowitt cloud sync.
+- Tertiary: retains stale-archive recovery through the Ecowitt cloud API.
+- Converts the gateway's Fahrenheit, mph, inches and inHg values into the site's existing metric units.
+- Rejects incomplete gateway weather packets instead of storing misleading partial observations.
+- Maintains existing temperature, pressure, rainfall, soil and daily-summary quality processing.
+- Reports direct-gateway, scheduled-sync and recovery-sync status independently.
+- Preserves duplicate protection and truthful graph gap reporting.

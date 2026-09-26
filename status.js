@@ -198,10 +198,23 @@ async function runChecks() {
 
   if(health.__error) {
     setBadge("apiBadge","bad","DOWN"); setText("apiValue","Unavailable"); setText("apiDetail","Weather data service could not be reached"); states.push("bad");
+    setBadge("ingestBadge","bad","UNKNOWN"); setText("ingestValue","Unavailable"); setText("ingestDetail","Archive collection status could not be reached.");
   } else {
-    const db=health.database==="connected"; const ok=health.status==="ok"&&db;
+    const db=health.database==="connected"; const ok=db&&["ok","warning"].includes(health.status);
     const slow=ok&&apiElapsed>=8000;
     setBadge("apiBadge",ok?(slow?"warn":"good"):"warn",ok?(slow?"SLOW":"OK"):"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",db?(slow?`Weather data checks completed slowly (${(apiElapsed/1000).toFixed(1)} sec)`:"Weather data service connected"):"Weather data service needs checking"); states.push(ok?(slow?"warn":"good"):"warn");
+
+    const ingest=health.archive_ingest;
+    const age=usableNumber(ingest?.latest_age_seconds)?Number(ingest.latest_age_seconds):null;
+    const ingestState=age===null?"warn":age<=600?"good":age<=1800?"warn":"bad";
+    setBadge("ingestBadge",ingestState,age===null?"CHECK":ingestState==="good"?"CURRENT":ingestState==="warn"?"DELAYED":"STALE");
+    setText("ingestValue",age===null?"No timestamp":fmtAge(age));
+    const direct=ingest?.gateway_direct?.last_success_at?`Direct gateway: ${fmtIrishDateTime(ingest.gateway_direct.last_success_at)}`:"direct gateway awaiting first save";
+    const scheduled=ingest?.scheduled?.last_success_at?`scheduled sync: ${fmtIrishDateTime(ingest.scheduled.last_success_at)}`:"scheduled sync awaiting first success";
+    const recovery=ingest?.gateway_recovery?.last_success_at?`recovery sync: ${fmtIrishDateTime(ingest.gateway_recovery.last_success_at)}`:"recovery sync ready";
+    const error=ingest?.gateway_direct?.last_error||ingest?.scheduled?.last_error||ingest?.gateway_recovery?.last_error;
+    setText("ingestDetail",`${direct} · ${scheduled} · ${recovery}${error?` · latest error: ${error}`:""}`);
+    states.push(ingestState);
   }
 
   if(current.__error) {
