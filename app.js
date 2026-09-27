@@ -528,7 +528,8 @@ function prevailingWind() {
 }
 
 function rainActivity(current) {
-  const rainRate = Number(current?.rain_rate_mm_h || 0);
+  const rainAvailable = usable(current?.rain_rate_mm_h) || usable(current?.rain_daily_mm);
+  const rainRate = usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : null;
   const currentTime = readingTime(current) || Date.now();
   const currentDay = stationDateKeyFromTime(currentTime);
   const currentTotal = correctedDailyRain(current);
@@ -582,6 +583,7 @@ function rainActivity(current) {
   const age = lastRainIncreaseTime ? Math.max(0, currentTime - lastRainIncreaseTime) : Infinity;
   return {
     rainRate,
+    rainAvailable,
     isRaining: rainRate > 0 || age <= RAIN_ACTIVE_WINDOW_MS,
     rainRecently: rainRate <= 0 && age > RAIN_ACTIVE_WINDOW_MS && age <= RAIN_RECENT_WINDOW_MS,
     lastIncreaseTime: Number.isFinite(age) ? lastRainIncreaseTime : null
@@ -606,6 +608,9 @@ function conditionInfo(current, isNight) {
   }
   if (rainState.rainRecently) {
     return { tag: "Rain recently", icon: "🌦️", story: "Rain was detected recently at Parknacross.", className: "weather-rain", rainState };
+  }
+  if (!rainState.rainAvailable) {
+    return { tag: "Rain data unavailable", icon: "☁️", story: "The latest observation is missing rain-sensor data, so conditions cannot be described reliably.", className: "weather-neutral", rainState };
   }
   if (wind >= 35) {
     return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy" };
