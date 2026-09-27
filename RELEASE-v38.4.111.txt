@@ -1,0 +1,15 @@
+PARKNACROSS WEATHER v38.4.111 — ENHANCED SUN & MOON PANEL
+
+Dashboard astronomy improvements
+- Reorganises the astronomy information into two clear cards: Sun & daylight and Moon tonight.
+- Replaces platform-dependent emoji with a consistent set of site-native SVG phase icons.
+- Shows the current daylight phase and a live countdown to the next transition.
+- Adds sunrise, sunset, day length and a daylight progress indicator.
+- Adds approximate moonrise, moonset and illumination for Parknacross.
+- Uses friendlier waxing/waning wording and shows the next major lunar phase.
+- Keeps technical lunar age out of the primary interface.
+- Clearly labels lunar calculations as approximate astronomical values.
+
+Release and compatibility
+- Website cache advanced to v38.4.111 so installed PWAs receive the new layout and scripts.
+- Companion Worker v38.4.67 keeps ingestion, archive, sensor and API behaviour unchanged.

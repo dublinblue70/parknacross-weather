@@ -336,19 +336,74 @@ main { padding: 30px; }
 .astronomy-strip {
   margin-top: 16px;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0,1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 14px;
 }
-.astro-item {
-  min-height: 72px;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 14px 16px;
-  border-radius: var(--radius-sm);
+.sky-cycle-card {
+  min-width: 0;
+  padding: 20px;
+  border-radius: var(--radius);
   background: rgba(255,255,255,.018);
   border: 1px solid var(--line);
 }
+.sky-cycle-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.sky-cycle-heading h3 { margin: 3px 0 0; font-size: 1.18rem; }
+.sky-cycle-heading p { margin: 4px 0 0; color: var(--muted); font-size: .76rem; }
+.phase-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sun-phase-icon g,
+.moon-phase-icon g { display: none; }
+.sun-phase-icon[data-phase="night"] .sun-night,
+.sun-phase-icon[data-phase="dawn"] .sun-dawn,
+.sun-phase-icon[data-phase="morning"] .sun-morning,
+.sun-phase-icon[data-phase="afternoon"] .sun-afternoon,
+.sun-phase-icon[data-phase="dusk"] .sun-dusk,
+.sun-phase-icon[data-phase="unavailable"] .sun-unavailable,
+.moon-phase-icon[data-phase="new"] .moon-new,
+.moon-phase-icon[data-phase="waxing-crescent"] .moon-waxing-crescent,
+.moon-phase-icon[data-phase="first-quarter"] .moon-first-quarter,
+.moon-phase-icon[data-phase="waxing-gibbous"] .moon-waxing-gibbous,
+.moon-phase-icon[data-phase="full"] .moon-full,
+.moon-phase-icon[data-phase="waning-gibbous"] .moon-waning-gibbous,
+.moon-phase-icon[data-phase="last-quarter"] .moon-last-quarter,
+.moon-phase-icon[data-phase="waning-crescent"] .moon-waning-crescent { display: block; }
+.moon-phase-icon { stroke: #b7dceb; }
+.moon-phase-icon .moon-disc { fill: rgba(183,220,235,.04); }
+.moon-phase-icon g { fill: #d9eff7; stroke: none; }
+.moon-phase-icon .moon-new,
+.moon-phase-icon .moon-shadow { fill: #102532; }
+.sky-cycle-facts {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--line);
+}
+.sky-cycle-facts > div { padding: 12px; background: #0a1b26; }
+.sky-cycle-facts span,
+.cycle-progress-copy span { display: block; color: var(--muted); font-size: .7rem; }
+.sky-cycle-facts strong { display: block; margin-top: 4px; font-size: .9rem; }
+.cycle-progress-copy { margin-top: 14px; display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.cycle-progress-copy strong { color: var(--muted); font-size: .72rem; font-weight: 600; }
+.cycle-progress { height: 7px; margin-top: 7px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.06); }
+.cycle-progress span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#f2bf67,var(--accent)); transition: width .45s ease; }
+.moon-next { margin: 14px 0 0; color: #d8e8ef; font-size: .78rem; }
+.astronomy-note { display: block; margin-top: 5px; color: var(--muted-2); font-size: .67rem; }
 .astro-item svg,
 .metric-head svg {
   width: 22px;
@@ -359,17 +414,6 @@ main { padding: 30px; }
   stroke-linecap: round;
   stroke-linejoin: round;
   flex: 0 0 auto;
-}
-.astro-item span { display: block; color: var(--muted); font-size: .75rem; }
-.astro-item strong { display: block; margin-top: 3px; font-size: .95rem; font-weight: 650; }
-.astro-item small { display: block; margin-top: 3px; color: var(--muted-2); font-size: .68rem; }
-.astro-item .astro-symbol {
-  width: 24px;
-  color: var(--accent);
-  font-size: 1.4rem;
-  line-height: 1;
-  text-align: center;
-  flex: 0 0 24px;
 }
 
 .trend-summary { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: .78rem; }
