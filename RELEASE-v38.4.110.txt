@@ -1,0 +1,12 @@
+PARKNACROSS WEATHER v38.4.110 — DYNAMIC SUN-PHASE ICONS
+
+- Adds a distinct icon for every calculated Sun phase.
+- Night: 🌌
+- Dawn: 🌅
+- Morning: ☀️
+- Afternoon: 🌤️
+- Dusk: 🌇
+- Unavailable: ◌
+- Icons update automatically with the existing Parknacross sun-phase calculation.
+- Retains all v38.4.109 Sun/Moon data and earlier weather-data integrity improvements.
+- Companion Worker v38.4.66 retains the latest complete ingestion logic unchanged.
