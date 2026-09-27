@@ -6,7 +6,14 @@
   let waitingWorker = null;
   let banner = null;
   let refreshRequested = false;
+  let reloadStarted = false;
   let hadController = Boolean(navigator.serviceWorker.controller);
+
+  function reloadOnce() {
+    if (reloadStarted) return;
+    reloadStarted = true;
+    location.reload();
+  }
 
   function isIOS() {
     const ua = navigator.userAgent || "";
@@ -39,6 +46,9 @@
       button.disabled = true;
       button.textContent = "Updating…";
 
+      /* Recover even if a browser misses the controllerchange event. */
+      window.setTimeout(reloadOnce, 4000);
+
       const workerToActivate = waitingWorker || registration?.waiting;
       if (workerToActivate) {
         workerToActivate.postMessage({ type: "SKIP_WAITING" });
@@ -47,7 +57,7 @@
         registration?.update().finally(() => {
           const lateWorker = registration?.waiting;
           if (lateWorker) lateWorker.postMessage({ type: "SKIP_WAITING" });
-          else location.reload();
+          else reloadOnce();
         });
       }
     });
@@ -99,12 +109,13 @@
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (refreshRequested) {
-      location.reload();
+      reloadOnce();
       return;
     }
 
-    /* Do not show an update banner for the first-ever service-worker install. */
-    if (hadController && navigator.serviceWorker.controller) showUpdateBanner();
+    /* A changed controller is already active: reload rather than showing a
+       second update prompt without a waiting worker behind it. */
+    if (hadController && navigator.serviceWorker.controller) reloadOnce();
     hadController = Boolean(navigator.serviceWorker.controller);
   });
 
