@@ -748,26 +748,33 @@ function updateSunInfo(current = latestCurrent) {
   const solarNoon = rise && setTime ? new Date((rise.getTime() + setTime.getTime()) / 2) : null;
   let sunPhase = "Unavailable";
   let sunPhaseDetail = "Sun times unavailable";
+  let sunPhaseIcon = "◌";
   if (civilDawn && rise && solarNoon && setTime && civilDusk) {
     if (now < civilDawn || now >= civilDusk) {
       sunPhase = "Night";
+      sunPhaseIcon = "🌌";
       sunPhaseDetail = now < civilDawn ? `Dawn ${fmt(civilDawn)}` : `Sunrise ${fmt(sunEvent(new Date(stationDate.getTime() + 86400000), ARDAMINE_LAT, ARDAMINE_LON, true, 90.833))}`;
     } else if (now < rise) {
       sunPhase = "Dawn";
+      sunPhaseIcon = "🌅";
       sunPhaseDetail = `Sunrise ${fmt(rise)}`;
     } else if (now < solarNoon) {
       sunPhase = "Morning";
+      sunPhaseIcon = "☀️";
       sunPhaseDetail = `Solar noon about ${fmt(solarNoon)}`;
     } else if (now < setTime) {
       sunPhase = "Afternoon";
+      sunPhaseIcon = "🌤️";
       sunPhaseDetail = `Sunset ${fmt(setTime)}`;
     } else {
       sunPhase = "Dusk";
+      sunPhaseIcon = "🌇";
       sunPhaseDetail = `Civil dusk ${fmt(civilDusk)}`;
     }
   }
   set("sunPhase", sunPhase);
   set("sunPhaseDetail", sunPhaseDetail);
+  set("sunPhaseIcon", sunPhaseIcon);
   updateMoonInfo(now);
 
   let isNight = !!(civilDawn && civilDusk && (now < civilDawn || now >= civilDusk));
