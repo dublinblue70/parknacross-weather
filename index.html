@@ -31,7 +31,7 @@
     <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260924-v38-4-97" />
+    <link rel="stylesheet" href="styles.css?v=20260927-v38-4-108" />
 
     <meta name="parknacross-sky-build" content="v38.4.51" />
     <title>
@@ -692,7 +692,8 @@
 
             <div class="hero-side" aria-label="Current weather summary">
               <div class="hero-stat">
-                <span>Wind</span><strong id="heroWind">--</strong>
+                <span>Wind</span><strong id="heroWind">--</strong
+                ><small id="heroGust">Gust --</small>
               </div>
               <div class="hero-stat">
                 <span>Rain today</span><strong id="heroRain">--</strong>
@@ -1492,7 +1493,7 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20260927-v38-4-105"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="app.js?v=20260927-v38-4-105"></script>
+    <script src="app.js?v=20260927-v38-4-108"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */

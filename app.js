@@ -1105,6 +1105,7 @@ function updateDashboard(current) {
   set("heroHumidity", `${n(current.humidity, 0)}%`);
   set("heroDew", `${n(current.dew_point_c)}°C`);
   set("heroWind", `${n(current.wind_speed_kmh)} km/h`);
+  set("heroGust", `Gust ${n(current.wind_gust_kmh)} km/h`);
   set("heroRain", `${n(rainToday)} mm`);
   set("heroPressure", `${n(current.pressure_hpa)} hPa`);
   set("heroTrend", pressure.trend === "--" ? "--" : `${pressure.trend} pressure`);
