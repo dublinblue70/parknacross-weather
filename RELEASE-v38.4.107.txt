@@ -1,0 +1,9 @@
+PARKNACROSS WEATHER v38.4.107 — OFFICIAL FEED FALLBACK
+
+- Replaces the ambiguous “Comparison unavailable” state with source-specific wording.
+- Confirms when Parknacross is reporting normally but Johnstown Castle is unavailable.
+- Keeps the last valid official reading with its original Met Éireann report time.
+- Labels cached official data clearly and never treats an old report as current.
+- Withholds temperature differences once either source exceeds its existing freshness limit.
+- Retries a failed official feed after one minute and continues the normal five-minute checks.
+- Retains the v38.4.106 app-update repair and v38.4.105 lightning/freshness fixes.

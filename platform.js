@@ -23,6 +23,26 @@
 
   const MAX_LOCAL_AGE_MS = 15 * 60 * 1000;
   const MAX_REPORT_AGE_MS = 2 * 60 * 60 * 1000;
+  const OFFICIAL_CACHE_KEY = "parknacross.official.johnstown.v1";
+  let officialRetryTimer = null;
+  const readOfficialCache = () => {
+    try {
+      const cached = JSON.parse(localStorage.getItem(OFFICIAL_CACHE_KEY) || "null");
+      return cached && typeof cached === "object" ? cached.value : null;
+    } catch (_) { return null; }
+  };
+  const saveOfficialCache = value => {
+    try {
+      localStorage.setItem(OFFICIAL_CACHE_KEY, JSON.stringify({saved_at:Date.now(),value}));
+    } catch (_) {}
+  };
+  const scheduleOfficialRetry = () => {
+    if (officialRetryTimer) return;
+    officialRetryTimer = window.setTimeout(() => {
+      officialRetryTimer = null;
+      loadContext();
+    }, 60 * 1000);
+  };
   const ageFrom = raw => {
     if (raw === null || raw === undefined || raw === "") return null;
     const parsed = typeof raw === "number" || /^\d{10,13}$/.test(String(raw))
@@ -41,31 +61,49 @@
       get("/events"), get("/storage-stats")
     ]);
 
+    const officialLive = officialR.status === "fulfilled" ? officialR.value : null;
+    if (officialLive && usable(officialLive.temperature_c) && officialLive.report_time) {
+      saveOfficialCache(officialLive);
+      if (officialRetryTimer) window.clearTimeout(officialRetryTimer);
+      officialRetryTimer = null;
+    } else {
+      scheduleOfficialRetry();
+    }
+    const official = officialLive || readOfficialCache();
+    const officialIsCached = !officialLive && Boolean(official);
+
     // Compare recent observations only. The Met heading is a *report* time;
     // individual station measurements may be earlier. Never treat fetch time
     // as the observation time or present an unverified difference as live.
-    if (currentR.status === "fulfilled" && officialR.status === "fulfilled") {
+    if (currentR.status === "fulfilled" && official) {
       const local = usable(currentR.value.temperature_c) ? Number(currentR.value.temperature_c) : null;
-      const official = usable(officialR.value.temperature_c) ? Number(officialR.value.temperature_c) : null;
+      const officialTemperature = usable(official.temperature_c) ? Number(official.temperature_c) : null;
       const localRawTime = currentR.value.received_at ?? currentR.value.timestamp ?? currentR.value.epoch;
-      const officialRawTime = officialR.value.report_time;
+      const officialRawTime = official.report_time;
       const localAge = ageFrom(localRawTime), reportAge = ageFrom(officialRawTime);
-      if (local !== null && official !== null && localAge !== null &&
+      if (local !== null && officialTemperature !== null && localAge !== null &&
           localAge <= MAX_LOCAL_AGE_MS && reportAge !== null && reportAge <= MAX_REPORT_AGE_MS) {
-        const d = local - official;
+        const d = local - officialTemperature;
+        set("contextComparisonSource", officialIsCached ? "Last official reading" : "Official comparison");
         set("contextTempDelta", `${d >= 0 ? "+" : ""}${d.toFixed(1)}°C`);
-        set("contextJohnstownTemp", `Johnstown Castle ${official.toFixed(1)}°C · Parknacross ${local.toFixed(1)}°C · Met report ${reportClock(officialRawTime)} (station reading may be older)`);
+        set("contextJohnstownTemp", `${officialIsCached ? "Last available " : ""}Johnstown Castle ${officialTemperature.toFixed(1)}°C · Parknacross ${local.toFixed(1)}°C · Met report ${reportClock(officialRawTime)}${officialIsCached ? " · official feed currently unavailable" : " (station reading may be older)"}`);
       } else {
-        set("contextTempDelta", "Comparison unavailable");
+        set("contextComparisonSource", officialIsCached ? "Last official reading" : "Official comparison");
+        set("contextTempDelta", officialIsCached ? "Official reading is old" : "Comparison unavailable");
         set("contextJohnstownTemp", reportAge === null
           ? "Met report time unavailable; temperature difference withheld."
           : reportAge > MAX_REPORT_AGE_MS
-            ? `Official report is old (${reportClock(officialRawTime)}); difference withheld.`
+            ? `${officialIsCached ? "Last available official report" : "Official report"} was ${reportClock(officialRawTime)}; it is too old for a fair comparison.`
             : "A recent local reading is unavailable; difference withheld.");
       }
+    } else if (currentR.status === "fulfilled") {
+      set("contextComparisonSource", "Official feed retrying");
+      set("contextTempDelta", "Official reading temporarily unavailable");
+      set("contextJohnstownTemp", "Parknacross is reporting normally. The Johnstown Castle feed could not be reached and will be checked again automatically.");
     } else {
-      set("contextTempDelta", "Comparison unavailable");
-      set("contextJohnstownTemp", "One or both weather data sources are unavailable.");
+      set("contextComparisonSource", "Data check");
+      set("contextTempDelta", "Local reading temporarily unavailable");
+      set("contextJohnstownTemp", "The Parknacross feed could not be reached, so no comparison is shown. The website will retry automatically.");
     }
 
     if (climateR.status === "fulfilled") {
