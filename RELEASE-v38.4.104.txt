@@ -1,0 +1,6 @@
+PARKNACROSS WEATHER v38.4.104 — SOIL CHART POLISH
+
+- Replaces overlapping five-minute WH52 point markers with clean continuous lines.
+- Retains visible points for short or sparse series and enlarges the active point on hover or tap.
+- Uses rounded line joins and caps for a cleaner appearance.
+- Preserves the original readings, archive gaps, axes and tooltip values without data smoothing.

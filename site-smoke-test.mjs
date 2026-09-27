@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-102"],
+  ["service-worker.js", "parknacross-v38-4-104"],
   ["service-worker.js", "./offline.html"],
   ["manifest.webmanifest", "icon-maskable-512.png"],
   ["manifest.webmanifest", "pwa-dashboard-narrow.jpg"],

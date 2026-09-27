@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-102-piezo-rain-repair";
+const CACHE_NAME = "parknacross-v38-4-104-soil-chart-polish";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

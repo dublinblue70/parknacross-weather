@@ -1,0 +1,7 @@
+PARKNACROSS WEATHER v38.4.103 — EXACT PIEZO RAIN
+
+- Updates the rain-chart asset version so the latest chart logic is loaded.
+- Explains partial rain-rate coverage directly below the chart.
+- Blank chart sections are explicitly identified as missing readings, not dry weather.
+
+Deploy this website package together with Worker v38.4.62.
