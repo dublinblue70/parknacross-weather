@@ -31,7 +31,24 @@
     <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260927-v38-4-111" />
+    <link rel="stylesheet" href="styles.css?v=20260927-v38-4-112" />
+    <!-- Critical astronomy styles stay with the markup so an older PWA cache
+         can never render the phase SVGs at their intrinsic page size. -->
+    <style id="astronomy-critical-styles">
+      .astronomy-strip{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+      .sky-cycle-card{min-width:0;padding:20px;border:1px solid var(--line,#263b49);border-radius:var(--radius,16px);background:linear-gradient(145deg,rgba(17,39,53,.88),rgba(8,25,36,.96));overflow:hidden}
+      .sky-cycle-heading{display:flex;align-items:center;gap:16px;min-width:0}.sky-cycle-heading>div{min-width:0}
+      .sky-cycle-heading h3{margin:3px 0 0;font-size:1.18rem}.sky-cycle-heading p{margin:4px 0 0;color:var(--muted,#a8b8c7);font-size:.76rem;line-height:1.4}
+      svg.phase-icon{display:block;width:48px!important;height:48px!important;max-width:48px;flex:0 0 48px;fill:none;stroke:var(--accent,#7bd7ef);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+      .sun-phase-icon g,.moon-phase-icon g{display:none}.sun-phase-icon[data-phase="night"] .sun-night,.sun-phase-icon[data-phase="dawn"] .sun-dawn,.sun-phase-icon[data-phase="morning"] .sun-morning,.sun-phase-icon[data-phase="afternoon"] .sun-afternoon,.sun-phase-icon[data-phase="dusk"] .sun-dusk,.sun-phase-icon[data-phase="unavailable"] .sun-unavailable,.moon-phase-icon[data-phase="new"] .moon-new,.moon-phase-icon[data-phase="waxing-crescent"] .moon-waxing-crescent,.moon-phase-icon[data-phase="first-quarter"] .moon-first-quarter,.moon-phase-icon[data-phase="waxing-gibbous"] .moon-waxing-gibbous,.moon-phase-icon[data-phase="full"] .moon-full,.moon-phase-icon[data-phase="waning-gibbous"] .moon-waning-gibbous,.moon-phase-icon[data-phase="last-quarter"] .moon-last-quarter,.moon-phase-icon[data-phase="waning-crescent"] .moon-waning-crescent{display:block}
+      .moon-phase-icon{stroke:#b7dceb!important}.moon-phase-icon .moon-disc{fill:rgba(183,220,235,.04)}.moon-phase-icon g{fill:#d9eff7;stroke:none}.moon-phase-icon .moon-new,.moon-phase-icon .moon-shadow{fill:#102532}
+      .sky-cycle-facts{margin-top:18px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;overflow:hidden;border:1px solid var(--line,#263b49);border-radius:10px;background:var(--line,#263b49)}
+      .sky-cycle-facts>div{min-width:0;padding:12px;background:#0a1b26}.sky-cycle-facts span,.cycle-progress-copy span{display:block;color:var(--muted,#a8b8c7);font-size:.7rem}.sky-cycle-facts strong{display:block;margin-top:4px;font-size:.9rem;overflow-wrap:anywhere}
+      .cycle-progress-copy{margin-top:14px;display:flex;justify-content:space-between;gap:12px;align-items:baseline}.cycle-progress-copy strong{color:var(--muted,#a8b8c7);font-size:.72rem;font-weight:600;text-align:right}
+      .cycle-progress{height:7px;margin-top:7px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.08)}.cycle-progress span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#f2bf67,var(--accent,#7bd7ef));transition:width .45s ease}
+      .moon-next{margin:14px 0 0;color:#d8e8ef;font-size:.78rem;line-height:1.45}.astronomy-note{display:block;margin-top:5px;color:var(--muted-2,#8194a4);font-size:.67rem;line-height:1.4}
+      @media(max-width:740px){.astronomy-strip{grid-template-columns:1fr}.sky-cycle-card{padding:17px}.sky-cycle-facts>div{padding:11px 9px}}
+    </style>
 
     <meta name="parknacross-sky-build" content="v38.4.51" />
     <title>
@@ -976,7 +993,7 @@
         <section class="astronomy-strip" aria-label="Sun and moon information">
           <article class="sky-cycle-card">
             <div class="sky-cycle-heading">
-              <svg id="sunPhaseIcon" class="phase-icon sun-phase-icon" data-phase="unavailable" viewBox="0 0 48 48" aria-hidden="true">
+              <svg id="sunPhaseIcon" class="phase-icon sun-phase-icon" data-phase="unavailable" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
                 <g class="sun-night"><path d="M32 8a16 16 0 1 0 8 27A17 17 0 0 1 32 8Z"/><path d="M10 10h.1M18 6h.1M39 16h.1"/></g>
                 <g class="sun-dawn"><path d="M5 35h38M9 29h30M24 13v6M11 19l5 4M37 19l-5 4M16 29a8 8 0 0 1 16 0"/></g>
                 <g class="sun-morning"><circle cx="24" cy="24" r="8"/><path d="M24 5v6M24 37v6M5 24h6M37 24h6M10.5 10.5l4.5 4.5M33 33l4.5 4.5M10.5 37.5L15 33M33 15l4.5-4.5"/></g>
@@ -997,7 +1014,7 @@
 
           <article class="sky-cycle-card">
             <div class="sky-cycle-heading">
-              <svg id="moonPhaseIcon" class="phase-icon moon-phase-icon" data-phase="new" viewBox="0 0 48 48" aria-hidden="true">
+              <svg id="moonPhaseIcon" class="phase-icon moon-phase-icon" data-phase="new" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
                 <circle class="moon-disc" cx="24" cy="24" r="17"/>
                 <g class="moon-new"><circle cx="24" cy="24" r="16"/></g>
                 <g class="moon-waxing-crescent"><path d="M24 8a16 16 0 0 1 0 32c8-6 8-26 0-32Z"/></g>
@@ -1509,7 +1526,7 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20260927-v38-4-105"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="app.js?v=20260927-v38-4-111"></script>
+    <script src="app.js?v=20260927-v38-4-112"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
