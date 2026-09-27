@@ -14,6 +14,7 @@ test("WH52 early-data state and freshness are clear",async({page})=>{
   await mockDashboardApi(page);await page.goto("/index.html");
   await expect(page.getByText("Latest saved observation",{exact:true})).toBeVisible();
   await expect(page.getByText(/Gateway received/)).toBeVisible();
+  await expect(page.getByText(/Parknacross is reporting normally/)).toBeVisible();
   await expect(page.getByRole("heading",{name:"Garden soil"})).toBeVisible();
   await expect(page.getByText(/Early data · day 1 of 14/)).toBeVisible();
   await expect(page.getByText(/still building its local baseline/)).toBeVisible();

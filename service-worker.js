@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-106-update-flow-repair";
+const CACHE_NAME = "parknacross-v38-4-107-official-feed-fallback";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -137,7 +137,8 @@ self.addEventListener("fetch", event => {
     (url.pathname.endsWith("/navigation.js") ||
       url.pathname.endsWith("/downloads.js") ||
       url.pathname.endsWith("/alert-settings.js") ||
-      url.pathname.endsWith("/pwa-update.js"));
+      url.pathname.endsWith("/pwa-update.js") ||
+      url.pathname.endsWith("/platform.js"));
 
   const networkRequest = forceFreshLocalAsset
     ? new Request(request, { cache: "reload" })
