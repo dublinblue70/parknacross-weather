@@ -54,6 +54,7 @@ let dailyRecent = [];
 let charts = {};
 let deferredInstallPrompt = null;
 let latestObservationTime = null;
+let latestGatewayUploadTime = null;
 let latestCurrent = null;
 let latestRainDetected = false;
 let latestForecastToday = "";
@@ -387,8 +388,15 @@ function relativeObservationAge(time) {
 }
 
 function updateRelativeObservation() {
-  if (!latestObservationTime) return;
-  set("lastUpdatedRelative", relativeObservationAge(latestObservationTime));
+  if (latestObservationTime) {
+    set("lastUpdatedRelative", relativeObservationAge(latestObservationTime));
+  }
+  if (latestGatewayUploadTime) {
+    set(
+      "gatewayReceived",
+      `Gateway received ${relativeObservationAge(latestGatewayUploadTime)}`
+    );
+  }
 }
 
 function dateLabel(value) {
@@ -952,7 +960,32 @@ function renderSinceLastVisit(current){
 }
 
 async function refreshSoilFreshness(){
-  try{const data=await getJSON(SOIL_STATUS_URL,"no-store");if(!data?.wh52_detected||!usable(data.received_epoch)){set("soilFreshness","No recent WH52 upload detected");return;}set("soilFreshness",`Sensor upload received ${lightningRelative(data.received_epoch)} · channel ${data.channel||"--"}`);}catch(_){set("soilFreshness","Sensor freshness temporarily unavailable");}
+  try {
+    const data = await getJSON(SOIL_STATUS_URL, "no-store");
+    if (usable(data?.received_epoch)) {
+      latestGatewayUploadTime = Number(data.received_epoch) * 1000;
+      set(
+        "gatewayReceived",
+        `Gateway received ${relativeObservationAge(latestGatewayUploadTime)}`
+      );
+    } else {
+      latestGatewayUploadTime = null;
+      set("gatewayReceived", "Gateway receipt time unavailable");
+    }
+
+    if (!data?.wh52_detected || !usable(data.received_epoch)) {
+      set("soilFreshness", "No recent WH52 upload detected");
+      return;
+    }
+    set(
+      "soilFreshness",
+      `Sensor upload received ${lightningRelative(data.received_epoch)} · channel ${data.channel || "--"}`
+    );
+  } catch (_) {
+    latestGatewayUploadTime = null;
+    set("gatewayReceived", "Gateway status temporarily unavailable");
+    set("soilFreshness", "Sensor freshness temporarily unavailable");
+  }
 }
 
 function updateDashboard(current) {
