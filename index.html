@@ -31,7 +31,7 @@
     <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260927-v38-4-108" />
+    <link rel="stylesheet" href="styles.css?v=20260927-v38-4-109" />
 
     <meta name="parknacross-sky-build" content="v38.4.51" />
     <title>
@@ -973,7 +973,7 @@
           <p class="source-note">Land-based clothing guidance from the latest local station reading—not a full-day forecast. Personal comfort and conditions away from Parknacross may vary.</p>
         </section>
 
-        <section class="astronomy-strip" aria-label="Sunrise and sunset">
+        <section class="astronomy-strip" aria-label="Sun and moon information">
           <div class="astro-item">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -1000,6 +1000,20 @@
             <div>
               <span>Daylight remaining</span
               ><strong id="daylightRemaining">--</strong>
+            </div>
+          </div>
+          <div class="astro-item">
+            <span class="astro-symbol" aria-hidden="true">☀</span>
+            <div>
+              <span>Sun phase</span><strong id="sunPhase">--</strong>
+              <small id="sunPhaseDetail">Calculating…</small>
+            </div>
+          </div>
+          <div class="astro-item">
+            <span class="astro-symbol" id="moonPhaseIcon" aria-hidden="true">◐</span>
+            <div>
+              <span>Moon phase</span><strong id="moonPhase">--</strong>
+              <small id="moonIllumination">Calculating…</small>
             </div>
           </div>
         </section>
@@ -1493,7 +1507,7 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20260927-v38-4-105"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="app.js?v=20260927-v38-4-108"></script>
+    <script src="app.js?v=20260927-v38-4-109"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */

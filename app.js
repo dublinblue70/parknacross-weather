@@ -689,6 +689,39 @@ function sunEvent(date, latitude, longitude, sunrise, zenith = 90.833) {
   ) + UT * 3600000);
 }
 
+/* Approximate lunar phase from a well-known new-moon epoch. The synodic
+ * cycle is deterministic, works offline and is sufficiently precise for a
+ * public phase/illumination display (not navigation or astronomical timing). */
+function moonPhaseInfo(date = new Date()) {
+  const synodicMonthDays = 29.530588853;
+  const referenceNewMoon = Date.UTC(2000, 0, 6, 18, 14);
+  const elapsedDays = (date.getTime() - referenceNewMoon) / 86400000;
+  const ageDays = ((elapsedDays % synodicMonthDays) + synodicMonthDays) % synodicMonthDays;
+  const fraction = ageDays / synodicMonthDays;
+  const illumination = Math.round((1 - Math.cos(2 * Math.PI * fraction)) * 50);
+
+  const phases = [
+    { limit: 0.0625, name: "New Moon", icon: "🌑" },
+    { limit: 0.1875, name: "Waxing Crescent", icon: "🌒" },
+    { limit: 0.3125, name: "First Quarter", icon: "🌓" },
+    { limit: 0.4375, name: "Waxing Gibbous", icon: "🌔" },
+    { limit: 0.5625, name: "Full Moon", icon: "🌕" },
+    { limit: 0.6875, name: "Waning Gibbous", icon: "🌖" },
+    { limit: 0.8125, name: "Last Quarter", icon: "🌗" },
+    { limit: 0.9375, name: "Waning Crescent", icon: "🌘" },
+    { limit: 1, name: "New Moon", icon: "🌑" }
+  ];
+  const phase = phases.find(item => fraction < item.limit) || phases.at(-1);
+  return { ...phase, illumination, ageDays };
+}
+
+function updateMoonInfo(now = new Date()) {
+  const moon = moonPhaseInfo(now);
+  set("moonPhase", moon.name);
+  set("moonIllumination", `${moon.illumination}% illuminated · age ${moon.ageDays.toFixed(1)} days`);
+  set("moonPhaseIcon", moon.icon);
+}
+
 function updateSunInfo(current = latestCurrent) {
   const now = new Date();
   const stationDate = stationCalendarDate(now);
@@ -711,6 +744,31 @@ function updateSunInfo(current = latestCurrent) {
 
   set("sunrise", fmt(rise));
   set("sunset", fmt(setTime));
+
+  const solarNoon = rise && setTime ? new Date((rise.getTime() + setTime.getTime()) / 2) : null;
+  let sunPhase = "Unavailable";
+  let sunPhaseDetail = "Sun times unavailable";
+  if (civilDawn && rise && solarNoon && setTime && civilDusk) {
+    if (now < civilDawn || now >= civilDusk) {
+      sunPhase = "Night";
+      sunPhaseDetail = now < civilDawn ? `Dawn ${fmt(civilDawn)}` : `Sunrise ${fmt(sunEvent(new Date(stationDate.getTime() + 86400000), ARDAMINE_LAT, ARDAMINE_LON, true, 90.833))}`;
+    } else if (now < rise) {
+      sunPhase = "Dawn";
+      sunPhaseDetail = `Sunrise ${fmt(rise)}`;
+    } else if (now < solarNoon) {
+      sunPhase = "Morning";
+      sunPhaseDetail = `Solar noon about ${fmt(solarNoon)}`;
+    } else if (now < setTime) {
+      sunPhase = "Afternoon";
+      sunPhaseDetail = `Sunset ${fmt(setTime)}`;
+    } else {
+      sunPhase = "Dusk";
+      sunPhaseDetail = `Civil dusk ${fmt(civilDusk)}`;
+    }
+  }
+  set("sunPhase", sunPhase);
+  set("sunPhaseDetail", sunPhaseDetail);
+  updateMoonInfo(now);
 
   let isNight = !!(civilDawn && civilDusk && (now < civilDawn || now >= civilDusk));
 
