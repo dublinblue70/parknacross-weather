@@ -1,0 +1,9 @@
+Parknacross Weather v38.4.102
+
+WS90 piezo-rain ingestion repair
+
+- Recognises the WS90/GW3001 piezo rain-rate and daily-rain upload aliases.
+- Allows an authoritative cloud observation to fill a five-minute slot when its direct gateway record has no rain fields.
+- Records gateway field names in soil-status diagnostics for exact future payload verification.
+- Never describes conditions as Calm when the current observation has no usable rain data.
+- Shows Rain data unavailable until a reliable rain value is received.
