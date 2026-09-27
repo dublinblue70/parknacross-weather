@@ -336,7 +336,7 @@ main { padding: 30px; }
 .astronomy-strip {
   margin-top: 16px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0,1fr));
+  grid-template-columns: repeat(5, minmax(0,1fr));
   gap: 10px;
 }
 .astro-item {
@@ -362,6 +362,15 @@ main { padding: 30px; }
 }
 .astro-item span { display: block; color: var(--muted); font-size: .75rem; }
 .astro-item strong { display: block; margin-top: 3px; font-size: .95rem; font-weight: 650; }
+.astro-item small { display: block; margin-top: 3px; color: var(--muted-2); font-size: .68rem; }
+.astro-item .astro-symbol {
+  width: 24px;
+  color: var(--accent);
+  font-size: 1.4rem;
+  line-height: 1;
+  text-align: center;
+  flex: 0 0 24px;
+}
 
 .trend-summary { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: .78rem; }
 .trend-summary strong { color: #eef7fa; margin-left: 4px; }

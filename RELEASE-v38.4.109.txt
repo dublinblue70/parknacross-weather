@@ -1,0 +1,9 @@
+PARKNACROSS WEATHER v38.4.109 — SUN AND MOON PHASES
+
+- Extends the existing dashboard astronomy strip with Sun phase and Moon phase cards.
+- Sun phase follows Irish local time and Parknacross sunrise, sunset and civil-twilight calculations.
+- Shows Night, Dawn, Morning, Afternoon or Dusk with the next relevant transition time.
+- Shows the standard eight-stage lunar phase, matching phase symbol, illumination percentage and lunar age.
+- Uses deterministic offline calculations rather than a third-party astronomy dependency.
+- Retains all v38.4.108 wind/gust, v38.4.107 official-feed and earlier reliability changes.
+- Companion Worker v38.4.65 retains the complete v38.4.64 ingestion and five-minute peak-gust logic unchanged.
