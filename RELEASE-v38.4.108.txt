@@ -1,0 +1,8 @@
+PARKNACROSS WEATHER v38.4.108 — WIND AND GUST CLARITY
+
+- Shows sustained wind and the latest gust together in the dashboard wind tile.
+- Keeps both values explicitly labelled so a lower sustained speed is not mistaken for the strongest gust.
+- Adds no artificial wind correction or calibration.
+- Pairs with Worker v38.4.64, which retains the highest valid direct-gateway gust received within each five-minute archive slot.
+- Keeps one archive row per five-minute slot and preserves all existing wind quality controls.
+- Retains the v38.4.107 official-feed fallback and v38.4.106 app-update repair.

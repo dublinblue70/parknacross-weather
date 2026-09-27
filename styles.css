@@ -238,6 +238,7 @@ main { padding: 30px; }
 .hero-stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
 .hero-stat span { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
 .hero-stat strong { margin-top: 8px; font-size: 1.05rem; font-weight: 660; }
+.hero-stat small { margin-top: 4px; color: var(--muted); font-size: .78rem; }
 
 .station-bar {
   margin-top: 14px;
