@@ -701,25 +701,137 @@ function moonPhaseInfo(date = new Date()) {
   const illumination = Math.round((1 - Math.cos(2 * Math.PI * fraction)) * 50);
 
   const phases = [
-    { limit: 0.0625, name: "New Moon", icon: "🌑" },
-    { limit: 0.1875, name: "Waxing Crescent", icon: "🌒" },
-    { limit: 0.3125, name: "First Quarter", icon: "🌓" },
-    { limit: 0.4375, name: "Waxing Gibbous", icon: "🌔" },
-    { limit: 0.5625, name: "Full Moon", icon: "🌕" },
-    { limit: 0.6875, name: "Waning Gibbous", icon: "🌖" },
-    { limit: 0.8125, name: "Last Quarter", icon: "🌗" },
-    { limit: 0.9375, name: "Waning Crescent", icon: "🌘" },
-    { limit: 1, name: "New Moon", icon: "🌑" }
+    { limit: 0.0625, name: "New Moon", slug: "new" },
+    { limit: 0.1875, name: "Waxing Crescent", slug: "waxing-crescent" },
+    { limit: 0.3125, name: "First Quarter", slug: "first-quarter" },
+    { limit: 0.4375, name: "Waxing Gibbous", slug: "waxing-gibbous" },
+    { limit: 0.5625, name: "Full Moon", slug: "full" },
+    { limit: 0.6875, name: "Waning Gibbous", slug: "waning-gibbous" },
+    { limit: 0.8125, name: "Last Quarter", slug: "last-quarter" },
+    { limit: 0.9375, name: "Waning Crescent", slug: "waning-crescent" },
+    { limit: 1, name: "New Moon", slug: "new" }
   ];
   const phase = phases.find(item => fraction < item.limit) || phases.at(-1);
-  return { ...phase, illumination, ageDays };
+  return { ...phase, illumination, ageDays, fraction };
+}
+
+const ASTRONOMY_RAD = Math.PI / 180;
+const JULIAN_1970 = 2440588;
+const JULIAN_2000 = 2451545;
+const EARTH_OBLIQUITY = 23.4397 * ASTRONOMY_RAD;
+
+function moonAltitude(date, latitude, longitude) {
+  const days = date.getTime() / 86400000 - 0.5 + JULIAN_1970 - JULIAN_2000;
+  const meanLongitude = ASTRONOMY_RAD * (218.316 + 13.176396 * days);
+  const meanAnomaly = ASTRONOMY_RAD * (134.963 + 13.064993 * days);
+  const meanDistance = ASTRONOMY_RAD * (93.272 + 13.229350 * days);
+  const longitudeEcliptic = meanLongitude + ASTRONOMY_RAD * 6.289 * Math.sin(meanAnomaly);
+  const latitudeEcliptic = ASTRONOMY_RAD * 5.128 * Math.sin(meanDistance);
+  const rightAscension = Math.atan2(
+    Math.sin(longitudeEcliptic) * Math.cos(EARTH_OBLIQUITY) -
+      Math.tan(latitudeEcliptic) * Math.sin(EARTH_OBLIQUITY),
+    Math.cos(longitudeEcliptic)
+  );
+  const declination = Math.asin(
+    Math.sin(latitudeEcliptic) * Math.cos(EARTH_OBLIQUITY) +
+      Math.cos(latitudeEcliptic) * Math.sin(EARTH_OBLIQUITY) * Math.sin(longitudeEcliptic)
+  );
+  const localSiderealTime = ASTRONOMY_RAD * (280.16 + 360.9856235 * days) + longitude * ASTRONOMY_RAD;
+  const hourAngle = localSiderealTime - rightAscension;
+  const latitudeRad = latitude * ASTRONOMY_RAD;
+  const altitude = Math.asin(
+    Math.sin(latitudeRad) * Math.sin(declination) +
+      Math.cos(latitudeRad) * Math.cos(declination) * Math.cos(hourAngle)
+  );
+  const refraction = ASTRONOMY_RAD * 0.017 /
+    Math.tan(altitude + ASTRONOMY_RAD * 10.26 / (altitude + ASTRONOMY_RAD * 5.10));
+  return altitude + (Number.isFinite(refraction) ? refraction : 0);
+}
+
+function stationInstant(year, monthIndex, day, hour = 0) {
+  const target = Date.UTC(year, monthIndex, day, hour);
+  let guess = target;
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: STATION_TIME_ZONE, hourCycle: "h23", year: "numeric",
+    month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"
+  });
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const parts = Object.fromEntries(formatter.formatToParts(new Date(guess)).map(part => [part.type, part.value]));
+    const represented = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
+    const adjustment = target - represented;
+    guess += adjustment;
+    if (Math.abs(adjustment) < 1000) break;
+  }
+  return new Date(guess);
+}
+
+function moonTimesForStationDay(now = new Date()) {
+  const stationDate = stationCalendarDate(now);
+  const year = stationDate.getFullYear(), month = stationDate.getMonth(), day = stationDate.getDate();
+  const start = stationInstant(year, month, day);
+  const following = new Date(year, month, day + 1, 12);
+  const end = stationInstant(following.getFullYear(), following.getMonth(), following.getDate());
+  const threshold = 0.133 * ASTRONOMY_RAD;
+  const step = 10 * 60 * 1000;
+  let previousTime = start.getTime();
+  let previous = moonAltitude(start, ARDAMINE_LAT, ARDAMINE_LON) - threshold;
+  let rise = null, setTime = null;
+
+  for (let time = previousTime + step; time <= end.getTime(); time += step) {
+    const value = moonAltitude(new Date(time), ARDAMINE_LAT, ARDAMINE_LON) - threshold;
+    if (!rise && previous <= 0 && value > 0) {
+      const fraction = previous / (previous - value);
+      rise = new Date(previousTime + fraction * (time - previousTime));
+    }
+    if (!setTime && previous >= 0 && value < 0) {
+      const fraction = previous / (previous - value);
+      setTime = new Date(previousTime + fraction * (time - previousTime));
+    }
+    previous = value;
+    previousTime = time;
+  }
+  return { rise, set: setTime };
+}
+
+function nextMajorMoonPhase(moon) {
+  const milestones = [
+    { fraction: 0.25, name: "First Quarter" },
+    { fraction: 0.5, name: "Full Moon" },
+    { fraction: 0.75, name: "Last Quarter" },
+    { fraction: 1, name: "New Moon" }
+  ];
+  const next = milestones.find(item => item.fraction > moon.fraction + 0.0001) || milestones.at(-1);
+  const days = (next.fraction - moon.fraction) * 29.530588853;
+  return { name: next.name, days };
+}
+
+function astronomyCountdown(milliseconds) {
+  const minutes = Math.max(0, Math.ceil(milliseconds / 60000));
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60), remainder = minutes % 60;
+  return remainder ? `${hours}h ${remainder}m` : `${hours}h`;
 }
 
 function updateMoonInfo(now = new Date()) {
   const moon = moonPhaseInfo(now);
+  const direction = moon.fraction < 0.5 ? "waxing" : "waning";
+  const moonTimes = moonTimesForStationDay(now);
+  const next = nextMajorMoonPhase(moon);
+  const nextTime = next.days < 1
+    ? astronomyCountdown(next.days * 86400000)
+    : `${Math.max(1, Math.round(next.days))} day${Math.round(next.days) === 1 ? "" : "s"}`;
+  const fmt = date => date
+    ? date.toLocaleTimeString("en-IE", { timeZone: STATION_TIME_ZONE, hour: "2-digit", minute: "2-digit" })
+    : "No event today";
+
   set("moonPhase", moon.name);
-  set("moonIllumination", `${moon.illumination}% illuminated · age ${moon.ageDays.toFixed(1)} days`);
-  set("moonPhaseIcon", moon.icon);
+  set("moonIllumination", `${moon.illumination}% illuminated · ${direction}`);
+  set("moonIlluminationValue", `${moon.illumination}%`);
+  set("moonrise", fmt(moonTimes.rise));
+  set("moonset", fmt(moonTimes.set));
+  set("moonNextPhase", `Next major phase: ${next.name} in about ${nextTime}`);
+  const icon = $("moonPhaseIcon");
+  if (icon) icon.dataset.phase = moon.slug;
 }
 
 function updateSunInfo(current = latestCurrent) {
@@ -748,33 +860,50 @@ function updateSunInfo(current = latestCurrent) {
   const solarNoon = rise && setTime ? new Date((rise.getTime() + setTime.getTime()) / 2) : null;
   let sunPhase = "Unavailable";
   let sunPhaseDetail = "Sun times unavailable";
-  let sunPhaseIcon = "◌";
+  let sunPhaseSlug = "unavailable";
+  let nextTransition = null;
+  let nextTransitionName = "";
   if (civilDawn && rise && solarNoon && setTime && civilDusk) {
     if (now < civilDawn || now >= civilDusk) {
       sunPhase = "Night";
-      sunPhaseIcon = "🌌";
-      sunPhaseDetail = now < civilDawn ? `Dawn ${fmt(civilDawn)}` : `Sunrise ${fmt(sunEvent(new Date(stationDate.getTime() + 86400000), ARDAMINE_LAT, ARDAMINE_LON, true, 90.833))}`;
+      sunPhaseSlug = "night";
+      if (now < civilDawn) {
+        nextTransition = civilDawn;
+        nextTransitionName = "Dawn";
+      } else {
+        const tomorrow = new Date(stationDate.getFullYear(), stationDate.getMonth(), stationDate.getDate() + 1, 12);
+        nextTransition = sunEvent(tomorrow, ARDAMINE_LAT, ARDAMINE_LON, true, 90.833);
+        nextTransitionName = "Sunrise";
+      }
     } else if (now < rise) {
       sunPhase = "Dawn";
-      sunPhaseIcon = "🌅";
-      sunPhaseDetail = `Sunrise ${fmt(rise)}`;
+      sunPhaseSlug = "dawn";
+      nextTransition = rise;
+      nextTransitionName = "Sunrise";
     } else if (now < solarNoon) {
       sunPhase = "Morning";
-      sunPhaseIcon = "☀️";
-      sunPhaseDetail = `Solar noon about ${fmt(solarNoon)}`;
+      sunPhaseSlug = "morning";
+      nextTransition = solarNoon;
+      nextTransitionName = "Solar noon";
     } else if (now < setTime) {
       sunPhase = "Afternoon";
-      sunPhaseIcon = "🌤️";
-      sunPhaseDetail = `Sunset ${fmt(setTime)}`;
+      sunPhaseSlug = "afternoon";
+      nextTransition = setTime;
+      nextTransitionName = "Sunset";
     } else {
       sunPhase = "Dusk";
-      sunPhaseIcon = "🌇";
-      sunPhaseDetail = `Civil dusk ${fmt(civilDusk)}`;
+      sunPhaseSlug = "dusk";
+      nextTransition = civilDusk;
+      nextTransitionName = "Night";
+    }
+    if (nextTransition) {
+      sunPhaseDetail = `${nextTransitionName} in ${astronomyCountdown(nextTransition - now)} · ${fmt(nextTransition)}`;
     }
   }
   set("sunPhase", sunPhase);
   set("sunPhaseDetail", sunPhaseDetail);
-  set("sunPhaseIcon", sunPhaseIcon);
+  const sunIcon = $("sunPhaseIcon");
+  if (sunIcon) sunIcon.dataset.phase = sunPhaseSlug;
   updateMoonInfo(now);
 
   let isNight = !!(civilDawn && civilDusk && (now < civilDawn || now >= civilDusk));
@@ -785,16 +914,25 @@ function updateSunInfo(current = latestCurrent) {
   }
 
   if (rise && setTime) {
+    const daylightMinutes = Math.max(0, Math.round((setTime - rise) / 60000));
+    set("dayLength", `${Math.floor(daylightMinutes / 60)}h ${daylightMinutes % 60}m`);
+    const daylightFraction = now <= rise ? 0 : now >= setTime ? 1 : (now - rise) / (setTime - rise);
+    const daylightPercent = Math.max(0, Math.min(100, daylightFraction * 100));
+    const progress = $("daylightProgress");
+    const progressBar = $("daylightProgressBar");
+    if (progress) progress.setAttribute("aria-valuenow", String(Math.round(daylightPercent)));
+    if (progressBar) progressBar.style.width = `${daylightPercent.toFixed(1)}%`;
     if (now >= rise && now < setTime) {
-      const mins = Math.max(0, Math.floor((setTime - now) / 60000));
-      set("daylightRemaining", `${Math.floor(mins / 60)}h ${mins % 60}m`);
-    } else if (civilDawn && now >= civilDawn && now < rise) {
-      set("daylightRemaining", "Dawn");
-    } else if (civilDusk && now >= setTime && now < civilDusk) {
-      set("daylightRemaining", "Dusk");
+      const mins = Math.max(0, Math.ceil((setTime - now) / 60000));
+      set("daylightRemaining", `${Math.floor(mins / 60)}h ${mins % 60}m remaining`);
+    } else if (now < rise) {
+      set("daylightRemaining", `Starts ${fmt(rise)}`);
     } else {
-      set("daylightRemaining", "Night");
+      set("daylightRemaining", "Complete");
     }
+  } else {
+    set("dayLength", "Unavailable");
+    set("daylightRemaining", "Unavailable");
   }
 
   document.body.classList.toggle("is-night", isNight);

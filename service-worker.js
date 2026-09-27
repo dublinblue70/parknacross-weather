@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-110-sun-phase-icons";
+const CACHE_NAME = "parknacross-v38-4-111-astronomy-panel";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

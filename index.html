@@ -31,7 +31,7 @@
     <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260927-v38-4-109" />
+    <link rel="stylesheet" href="styles.css?v=20260927-v38-4-111" />
 
     <meta name="parknacross-sky-build" content="v38.4.51" />
     <title>
@@ -974,48 +974,50 @@
         </section>
 
         <section class="astronomy-strip" aria-label="Sun and moon information">
-          <div class="astro-item">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M3 18h18M5 14h14M12 3v3M4.2 7.2l2.1 2.1M19.8 7.2l-2.1 2.1M8 14a4 4 0 0 1 8 0"
-              />
-            </svg>
-            <div><span>Sunrise</span><strong id="sunrise">--</strong></div>
-          </div>
-          <div class="astro-item">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M3 18h18M5 14h14M12 3v3M4.2 7.2l2.1 2.1M19.8 7.2l-2.1 2.1M8 14a4 4 0 0 1 8 0"
-              />
-            </svg>
-            <div><span>Sunset</span><strong id="sunset">--</strong></div>
-          </div>
-          <div class="astro-item">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="12" r="4" />
-              <path
-                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
-              />
-            </svg>
-            <div>
-              <span>Daylight remaining</span
-              ><strong id="daylightRemaining">--</strong>
+          <article class="sky-cycle-card">
+            <div class="sky-cycle-heading">
+              <svg id="sunPhaseIcon" class="phase-icon sun-phase-icon" data-phase="unavailable" viewBox="0 0 48 48" aria-hidden="true">
+                <g class="sun-night"><path d="M32 8a16 16 0 1 0 8 27A17 17 0 0 1 32 8Z"/><path d="M10 10h.1M18 6h.1M39 16h.1"/></g>
+                <g class="sun-dawn"><path d="M5 35h38M9 29h30M24 13v6M11 19l5 4M37 19l-5 4M16 29a8 8 0 0 1 16 0"/></g>
+                <g class="sun-morning"><circle cx="24" cy="24" r="8"/><path d="M24 5v6M24 37v6M5 24h6M37 24h6M10.5 10.5l4.5 4.5M33 33l4.5 4.5M10.5 37.5L15 33M33 15l4.5-4.5"/></g>
+                <g class="sun-afternoon"><circle cx="20" cy="19" r="7"/><path d="M20 4v5M6 19h5M29 19h5M9 8l4 4M27 12l4-4M8 36h31a8 8 0 0 0-13-6 10 10 0 0 0-18 6Z"/></g>
+                <g class="sun-dusk"><path d="M5 35h38M9 29h30M24 13v6M11 19l5 4M37 19l-5 4M16 29a8 8 0 0 1 16 0"/><path d="M12 40h24"/></g>
+                <g class="sun-unavailable"><circle cx="24" cy="24" r="16"/><path d="M18 18l12 12M30 18 18 30"/></g>
+              </svg>
+              <div><span class="section-eyebrow">Sun &amp; daylight</span><h3 id="sunPhase">Calculating…</h3><p id="sunPhaseDetail">Checking the next transition…</p></div>
             </div>
-          </div>
-          <div class="astro-item">
-            <span class="astro-symbol" id="sunPhaseIcon" aria-hidden="true">☀️</span>
-            <div>
-              <span>Sun phase</span><strong id="sunPhase">--</strong>
-              <small id="sunPhaseDetail">Calculating…</small>
+            <div class="sky-cycle-facts">
+              <div><span>Sunrise</span><strong id="sunrise">--</strong></div>
+              <div><span>Sunset</span><strong id="sunset">--</strong></div>
+              <div><span>Day length</span><strong id="dayLength">--</strong></div>
             </div>
-          </div>
-          <div class="astro-item">
-            <span class="astro-symbol" id="moonPhaseIcon" aria-hidden="true">◐</span>
-            <div>
-              <span>Moon phase</span><strong id="moonPhase">--</strong>
-              <small id="moonIllumination">Calculating…</small>
+            <div class="cycle-progress-copy"><span>Daylight progress</span><strong id="daylightRemaining">--</strong></div>
+            <div id="daylightProgress" class="cycle-progress" role="progressbar" aria-label="Daylight progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="daylightProgressBar"></span></div>
+          </article>
+
+          <article class="sky-cycle-card">
+            <div class="sky-cycle-heading">
+              <svg id="moonPhaseIcon" class="phase-icon moon-phase-icon" data-phase="new" viewBox="0 0 48 48" aria-hidden="true">
+                <circle class="moon-disc" cx="24" cy="24" r="17"/>
+                <g class="moon-new"><circle cx="24" cy="24" r="16"/></g>
+                <g class="moon-waxing-crescent"><path d="M24 8a16 16 0 0 1 0 32c8-6 8-26 0-32Z"/></g>
+                <g class="moon-first-quarter"><path d="M24 8a16 16 0 0 1 0 32Z"/></g>
+                <g class="moon-waxing-gibbous"><circle cx="24" cy="24" r="16"/><path class="moon-shadow" d="M24 8a16 16 0 0 0 0 32c-8-6-8-26 0-32Z"/></g>
+                <g class="moon-full"><circle cx="24" cy="24" r="16"/></g>
+                <g class="moon-waning-gibbous"><circle cx="24" cy="24" r="16"/><path class="moon-shadow" d="M24 8a16 16 0 0 1 0 32c8-6 8-26 0-32Z"/></g>
+                <g class="moon-last-quarter"><path d="M24 8a16 16 0 0 0 0 32Z"/></g>
+                <g class="moon-waning-crescent"><path d="M24 8a16 16 0 0 0 0 32c-8-6-8-26 0-32Z"/></g>
+              </svg>
+              <div><span class="section-eyebrow">Moon tonight</span><h3 id="moonPhase">Calculating…</h3><p id="moonIllumination">Checking illumination…</p></div>
             </div>
-          </div>
+            <div class="sky-cycle-facts">
+              <div><span>Moonrise</span><strong id="moonrise">--</strong></div>
+              <div><span>Moonset</span><strong id="moonset">--</strong></div>
+              <div><span>Illumination</span><strong id="moonIlluminationValue">--</strong></div>
+            </div>
+            <p class="moon-next" id="moonNextPhase">Calculating the next major phase…</p>
+            <small class="astronomy-note">Approximate astronomical values for Parknacross.</small>
+          </article>
         </section>
 
         <section class="metrics-section" aria-labelledby="observationsHeading">
@@ -1507,7 +1509,7 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20260927-v38-4-105"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="app.js?v=20260927-v38-4-110"></script>
+    <script src="app.js?v=20260927-v38-4-111"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
