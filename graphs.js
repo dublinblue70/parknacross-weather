@@ -1,7 +1,25 @@
 (() => {
  const cfg=window.PARKNACROSS_CONFIG||{},API=cfg.apiBase,$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};let charts={},hours=24;
  const line=(label,color,axis="y")=>({label,data:[],borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.25,yAxisID:axis});
- const soilLine=(label,color,axis="y")=>({label,data:[],borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:3,pointHoverRadius:6,pointHitRadius:10,tension:.2,spanGaps:false,yAxisID:axis});
+ const soilLine=(label,color,axis="y")=>({
+   label,
+   data:[],
+   borderColor:color,
+   backgroundColor:color,
+   borderWidth:2.25,
+   borderCapStyle:"round",
+   borderJoinStyle:"round",
+   pointRadius:context=>(context.dataset.data?.filter(point=>point?.y!==null).length||0)<=36?2:0,
+   pointHoverRadius:5,
+   pointHitRadius:12,
+   pointBorderWidth:0,
+   pointHoverBorderWidth:2,
+   pointHoverBorderColor:"#0b1622",
+   tension:.24,
+   spanGaps:false,
+   fill:false,
+   yAxisID:axis
+ });
  const tickTime=value=>{const d=new Date(Number(value));return hours<=48?d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})};
  const tooltipTime=items=>{const value=items?.[0]?.parsed?.x;return Number.isFinite(value)?new Date(value).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""};
  const timeAxis=()=>({type:"linear",grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:9,callback:tickTime}});
@@ -207,6 +225,14 @@
  charts.t.data.datasets[0].data=r.map(x=>point(x,"temperature_c",temperatureOutliers));charts.t.data.datasets[1].data=r.map(x=>point(x,"dew_point_c"));
  charts.w.data.datasets[0].data=r.map(x=>point(x,"wind_speed_kmh"));charts.w.data.datasets[1].data=r.map(x=>point(x,"wind_gust_kmh",windGustOutliers));charts.w.data.datasets[2].data=r.map(x=>({x:Number(rowEpoch(x))*1000,y:windGustOutliers.has(x)?value(x,"wind_gust_kmh"):null}));charts.p.data.datasets[0].data=r.map(x=>point(x,"pressure_hpa"));
  charts.r.data.datasets[0].data=rainRows.map(x=>point(x,"rain_rate_mm_h"));charts.s.data.datasets[0].data=r.map(x=>point(x,"solar_w_m2"));charts.s.data.datasets[1].data=r.map(x=>point(x,"uv_index"));
+ const timedRainRows=rows.filter(x=>rowEpoch(x)!==null&&usable(x?.rain_rate_mm_h));
+ const missingRainRows=rows.filter(x=>rowEpoch(x)!==null&&!usable(x?.rain_rate_mm_h)).length;
+ if(timedRainRows.length){
+   const firstRainReading=new Date(Number(rowEpoch(timedRainRows[0]))*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+   set("rainChartStatus",missingRainRows?`${timedRainRows.length.toLocaleString("en-IE")} saved rain-rate reading${timedRainRows.length===1?"":"s"} available from ${firstRainReading}. Blank sections are missing readings, not zero rainfall.`:`${timedRainRows.length.toLocaleString("en-IE")} saved rain-rate reading${timedRainRows.length===1?"":"s"}; no missing rain-rate values in this period.`);
+ }else{
+   set("rainChartStatus","No saved rain-rate readings are available for this period. The blank chart does not mean there was no rain.");
+ }
  const hasSoil=rows.some(x=>usable(x?.soil_moisture_pct)||usable(x?.soil_temperature_c)||usable(x?.soil_ec_us_cm));
  $("soilMoistureCard").hidden=!hasSoil;$("soilDetailCard").hidden=!hasSoil;
  charts.sm.data.datasets[0].data=r.map(x=>point(x,"soil_moisture_pct"));charts.sd.data.datasets[0].data=r.map(x=>point(x,"soil_temperature_c"));charts.sd.data.datasets[1].data=r.map(x=>point(x,"soil_ec_us_cm"));
