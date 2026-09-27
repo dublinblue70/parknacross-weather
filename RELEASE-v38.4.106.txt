@@ -1,0 +1,8 @@
+PARKNACROSS WEATHER v38.4.106 — UPDATE FLOW REPAIR
+
+- Fixes the update banner becoming stuck on “Updating…”.
+- Keeps an installed service worker waiting until the visitor accepts the update.
+- Reloads exactly once when the new worker takes control.
+- Adds a four-second recovery reload if a browser misses the controller change.
+- Forces the update controller itself to bypass stale browser caches.
+- Retains the v38.4.105 dual freshness display and lightning-notification persistence fix.

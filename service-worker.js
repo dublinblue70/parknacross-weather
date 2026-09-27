@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-105-dual-freshness-status";
+const CACHE_NAME = "parknacross-v38-4-106-update-flow-repair";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -76,7 +76,8 @@ self.addEventListener("install", event => {
         if (response.ok) await cache.put(request, response);
       } catch (_) {}
     }));
-    await self.skipWaiting();
+    /* Existing installations remain on the current release until the visitor
+       accepts the update prompt, which then sends SKIP_WAITING explicitly. */
   })());
 });
 
@@ -91,8 +92,6 @@ self.addEventListener("activate", event => {
     const keys = await caches.keys();
     await Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
     await self.clients.claim();
-    const clients = await self.clients.matchAll({type:"window",includeUncontrolled:true});
-    clients.forEach(client => client.postMessage({type:"PARKNACROSS_UPDATE_READY"}));
   })());
 });
 
@@ -137,7 +136,8 @@ self.addEventListener("fetch", event => {
     url.origin === self.location.origin &&
     (url.pathname.endsWith("/navigation.js") ||
       url.pathname.endsWith("/downloads.js") ||
-      url.pathname.endsWith("/alert-settings.js"));
+      url.pathname.endsWith("/alert-settings.js") ||
+      url.pathname.endsWith("/pwa-update.js"));
 
   const networkRequest = forceFreshLocalAsset
     ? new Request(request, { cache: "reload" })
