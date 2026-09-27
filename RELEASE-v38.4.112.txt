@@ -1,0 +1,12 @@
+PARKNACROSS WEATHER v38.4.112 — ASTRONOMY LAYOUT CORRECTION
+
+What was corrected
+- Fixes oversized black sun and moon artwork caused when new dashboard markup was displayed with an older cached stylesheet.
+- Restores two balanced astronomy cards with compact 48 px icons, bordered data cells and readable spacing.
+- Protects the critical astronomy presentation within the Dashboard document so this section remains usable during a PWA update.
+- Forces the primary stylesheet and Dashboard application script to refresh when a newer release is requested.
+- Retains the sunrise, sunset, daylight progress, moonrise, moonset, illumination and next-phase features from v38.4.111.
+
+Release and compatibility
+- Website and PWA cache advanced to v38.4.112.
+- Companion Worker v38.4.68 keeps ingestion, archive, sensor and API behaviour unchanged.

@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-111-astronomy-panel";
+const CACHE_NAME = "parknacross-v38-4-112-astronomy-layout";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -134,7 +134,9 @@ self.addEventListener("fetch", event => {
 
   const forceFreshLocalAsset =
     url.origin === self.location.origin &&
-    (url.pathname.endsWith("/navigation.js") ||
+    (url.pathname.endsWith("/styles.css") ||
+      url.pathname.endsWith("/app.js") ||
+      url.pathname.endsWith("/navigation.js") ||
       url.pathname.endsWith("/downloads.js") ||
       url.pathname.endsWith("/alert-settings.js") ||
       url.pathname.endsWith("/pwa-update.js") ||
