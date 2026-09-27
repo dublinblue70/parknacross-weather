@@ -1,0 +1,8 @@
+PARKNACROSS WEATHER v38.4.105 — DUAL FRESHNESS STATUS
+
+- Renames “Last observation” to “Latest saved observation” so the five-minute archive cadence is explicit.
+- Adds the separate, more frequent GW3001 gateway receipt age beneath Data feed.
+- Refreshes both relative ages automatically while the dashboard remains open.
+- Shows clear unavailable states without changing collection, archive, weather or chart logic.
+- Fixes the 40 km lightning-proximity choice being reset to Off by an older cached alert-settings script.
+- Forces notification settings code to refresh and verifies the lightning choice survives a page reload.

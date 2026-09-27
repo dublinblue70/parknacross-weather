@@ -12,6 +12,8 @@ async function mockDashboardApi(page){
 
 test("WH52 early-data state and freshness are clear",async({page})=>{
   await mockDashboardApi(page);await page.goto("/index.html");
+  await expect(page.getByText("Latest saved observation",{exact:true})).toBeVisible();
+  await expect(page.getByText(/Gateway received/)).toBeVisible();
   await expect(page.getByRole("heading",{name:"Garden soil"})).toBeVisible();
   await expect(page.getByText(/Early data · day 1 of 14/)).toBeVisible();
   await expect(page.getByText(/still building its local baseline/)).toBeVisible();
@@ -40,4 +42,13 @@ test("new panels do not create horizontal mobile overflow",async({page})=>{
   await mockDashboardApi(page);await page.goto("/index.html");
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
+});
+
+test("40 km lightning proximity choice persists after reload",async({page})=>{
+  await page.goto("/station.html");
+  const distance=page.locator("#alertLightningDistance");
+  await distance.selectOption("40");
+  await expect(distance).toHaveValue("40");
+  await page.reload();
+  await expect(distance).toHaveValue("40");
 });

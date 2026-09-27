@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-104-soil-chart-polish";
+const CACHE_NAME = "parknacross-v38-4-105-dual-freshness-status";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -135,7 +135,9 @@ self.addEventListener("fetch", event => {
 
   const forceFreshLocalAsset =
     url.origin === self.location.origin &&
-    (url.pathname.endsWith("/navigation.js") || url.pathname.endsWith("/downloads.js"));
+    (url.pathname.endsWith("/navigation.js") ||
+      url.pathname.endsWith("/downloads.js") ||
+      url.pathname.endsWith("/alert-settings.js"));
 
   const networkRequest = forceFreshLocalAsset
     ? new Request(request, { cache: "reload" })
