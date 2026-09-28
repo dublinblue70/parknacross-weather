@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const workerPath = resolve("../../worker-source/Parknacross-worker-v38.4.73-FINAL-VERIFIED-SENSOR-CSV-NOTEPAD.txt");
+const workerPath = resolve("../../worker-source/Parknacross-worker-v38.4.74-LIVE-VERIFIED-LONG-CSV-NOTEPAD.txt");
 const worker = await readFile(workerPath, "utf8");
 const start = worker.indexOf("async function exportRows(env, days)");
 const end = worker.indexOf("\nfunction exportCsv(", start);
@@ -43,12 +43,13 @@ function environmentWithArtificialPageCap(cap) {
           bind(...values) {
             return {
               async all() {
-                const [cutoff, cursor] = values;
-                return { results: source.filter(row => row.epoch >= cutoff && row.epoch > cursor).slice(0, cap) };
+                const [cursor, latestEpoch] = values;
+                return { results: source.filter(row => row.epoch > cursor && row.epoch <= latestEpoch).slice(0, cap) };
               },
               async first() {
                 const [cutoff] = values;
-                return [...source].reverse().find(row => row.epoch >= cutoff) || null;
+                const eligible = source.filter(row => row.epoch >= cutoff);
+                return sql.includes("ORDER BY epoch ASC") ? eligible[0] || null : eligible.at(-1) || null;
               }
             };
           }
