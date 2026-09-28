@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-115"],
+  ["service-worker.js", "parknacross-v38-4-116"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
   ["service-worker.js", "url.pathname.endsWith(\"/app.js\")"],
   ["service-worker.js", "./offline.html"],
@@ -142,6 +142,7 @@ const requiredChecks = [
   ["downloads.js", "&fresh=1"],
   ["downloads.js", "soil_moisture_pct"],
   ["downloads.js", "lightning_distance_km"],
+  ["downloads.js", "lightning_time_ireland"],
   ["package.json", "@playwright/test"]
 ];
 

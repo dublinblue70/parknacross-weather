@@ -1,0 +1,18 @@
+PARKNACROSS WEATHER v38.4.116 — COMPLETE SENSOR CSV EXPORTS
+
+Root-cause correction
+- Replaces the single unbounded oldest-first D1 export query with explicit keyset pagination.
+- Every export page advances by the unique observation epoch until the newest saved record is included.
+- This prevents 30, 90 and 365-day files from stopping among older, pre-sensor observations.
+- The same complete retrieval is used for 7-day files.
+
+Clearer CSV data
+- Adds observation_time_ireland as a readable local timestamp.
+- Adds lightning_time_ireland alongside the retained machine-readable lightning_time_epoch.
+- Lightning time is included only for rows that report a strike.
+- The download confirmation reports how many rows contain soil data and lightning data.
+- Soil and lightning readings remain blank before their sensors were installed; no historical values are invented.
+
+Release and compatibility
+- Website and PWA cache advanced to v38.4.116.
+- Worker advanced to v38.4.72; weather ingestion and stored observations remain unchanged.
