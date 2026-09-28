@@ -1,0 +1,12 @@
+PARKNACROSS WEATHER v38.4.113 — CORRECT LUNAR PHASE ORDER
+
+Lunar presentation corrections
+- Uses the standard eight-phase order: New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, Waning Gibbous, Last Quarter, Waning Crescent.
+- Narrows the Full Moon and other principal-phase windows so a 97% illuminated, waning Moon is correctly shown as Waning Gibbous.
+- Changes “Next major phase” to “Next milestone” to make clear that the countdown refers to the next principal lunar event, not the next intermediate description.
+- Suppresses redundant waxing/waning text beside the exact New Moon and Full Moon labels.
+- Adds an automated sequence test covering all eight phases and the September 2026 post-full case.
+
+Release and compatibility
+- Website and PWA cache advanced to v38.4.113.
+- Companion Worker v38.4.69 leaves ingestion, archive, sensor and API behaviour unchanged.

@@ -22,7 +22,7 @@ test("WH52 early-data state and freshness are clear",async({page})=>{
   await expect(page.locator("#moonPhase")).not.toHaveText("--");
   await expect(page.locator("#moonPhaseIcon")).toHaveAttribute("data-phase",/^(new|waxing-crescent|first-quarter|waxing-gibbous|full|waning-gibbous|last-quarter|waning-crescent)$/);
   await expect(page.locator("#moonIllumination")).toContainText("illuminated");
-  await expect(page.locator("#moonNextPhase")).toContainText("Next major phase:");
+  await expect(page.locator("#moonNextPhase")).toContainText("Next milestone:");
   await expect(page.getByText(/Parknacross is reporting normally/)).toBeVisible();
   await expect(page.getByRole("heading",{name:"Garden soil"})).toBeVisible();
   await expect(page.getByText(/Early data · day 1 of 14/)).toBeVisible();

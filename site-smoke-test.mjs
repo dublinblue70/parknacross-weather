@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-112"],
+  ["service-worker.js", "parknacross-v38-4-113"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
   ["service-worker.js", "url.pathname.endsWith(\"/app.js\")"],
   ["service-worker.js", "./offline.html"],
@@ -162,6 +162,36 @@ const coastHtml = await readFile(join(root, "coast.html"), "utf8");
 if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("coast.html: land-based clothing guide must not appear on the Sea & Swim page");
 const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
 const dashboardApp = await readFile(join(root, "app.js"), "utf8");
+const moonFunctionStart = dashboardApp.indexOf("function moonPhaseInfo");
+const moonFunctionEnd = dashboardApp.indexOf("\n\nconst ASTRONOMY_RAD", moonFunctionStart);
+if (moonFunctionStart < 0 || moonFunctionEnd < 0) {
+  failures.push("app.js: moon phase classifier could not be tested");
+} else {
+  try {
+    const moonPhaseForTest = Function(`return (${dashboardApp.slice(moonFunctionStart, moonFunctionEnd)})`)();
+    const reference = Date.UTC(2000, 0, 6, 18, 14);
+    const synodicMonthMs = 29.530588853 * 86400000;
+    const expectedSequence = [
+      [0, "New Moon"],
+      [0.1, "Waxing Crescent"],
+      [0.25, "First Quarter"],
+      [0.4, "Waxing Gibbous"],
+      [0.5, "Full Moon"],
+      [0.6, "Waning Gibbous"],
+      [0.75, "Last Quarter"],
+      [0.9, "Waning Crescent"],
+      [0.99, "New Moon"]
+    ];
+    for (const [fraction, expected] of expectedSequence) {
+      const actual = moonPhaseForTest(new Date(reference + fraction * synodicMonthMs)).name;
+      if (actual !== expected) failures.push(`app.js: lunar phase ${fraction} expected ${expected}, found ${actual}`);
+    }
+    const postFull = moonPhaseForTest(new Date("2026-09-28T05:44:00Z"));
+    if (postFull.name !== "Waning Gibbous") failures.push(`app.js: 97% post-full Moon should be Waning Gibbous, found ${postFull.name}`);
+  } catch (error) {
+    failures.push(`app.js: moon phase classifier test failed (${error.message})`);
+  }
+}
 if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
 if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-97')) failures.push("index.html: shared data corrections must load before the dashboard application");
 if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: forecast-aware clothing note is missing");
