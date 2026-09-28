@@ -1,0 +1,21 @@
+PARKNACROSS WEATHER v38.4.117 — VERIFIED COMPLETE SENSOR CSV EXPORTS
+
+Final root-cause correction
+- The previous pagination fix still stopped when a database response contained fewer rows than requested.
+- A short database page is not necessarily the end of the archive, so older-first exports could finish before reaching the newest WH52 soil and WH57 lightning observations.
+- Export pagination now continues until the next cursor query is genuinely empty.
+- A final newest-epoch comparison prevents the Worker from returning a silently incomplete CSV.
+
+CSV clarity and verification
+- All four download periods use the same verified export path: 7, 30, 90 and 365 days.
+- Every file includes WH52 channel, moisture, temperature and EC columns.
+- Every file includes WH57 distance, strike count, readable Irish-local last-strike time and original lightning epoch columns.
+- The Downloads page validates the sensor headers before saving the file.
+- The completion message reports the number of populated soil and lightning rows.
+- A permanent regression test simulates database pages capped below the requested size and verifies that 7, 30, 90 and 365-day exports all reach the newest WH52 and WH57 row.
+- Legitimately unavailable observations remain blank; missing readings are never converted to zero.
+
+Release and compatibility
+- Website and PWA cache advanced to v38.4.117.
+- Worker advanced to v38.4.73.
+- Weather ingestion, charts, station calculations and existing archive records are unchanged.
