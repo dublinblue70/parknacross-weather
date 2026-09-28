@@ -486,6 +486,11 @@ main { padding: 30px; }
 .chart-title p { margin: 4px 0 0; color: var(--muted); font-size: .76rem; }
 .chart-title > span { color: var(--muted); font-size: .72rem; border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; }
 .chart-wrap { position: relative; height: 285px; margin-top: 18px; }
+.solar-chart-stack { margin-top: 18px; display: grid; gap: 14px; }
+.solar-chart-panel { position: relative; padding: 12px 12px 8px; border: 1px solid rgba(163,209,255,.10); border-radius: 12px; background: rgba(4,18,29,.28); }
+.solar-chart-panel > strong { color: var(--text); font-size: .82rem; font-weight: 650; }
+.solar-chart-panel > span { float: right; color: var(--muted); font-size: .7rem; }
+.solar-chart-panel .solar-chart-wrap { height: 150px; margin-top: 8px; }
 .wind-card { min-height: 360px; }
 .wind-grid { margin-top: 16px; display: grid; grid-template-columns: 250px 1fr; gap: 24px; align-items: center; }
 .compass { position: relative; width: 230px; aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--line-strong); background: radial-gradient(circle, rgba(123,215,239,.035), transparent 65%); margin: auto; }
@@ -746,6 +751,7 @@ body.is-night .weather-orb::before {
   .climate-grid { grid-template-columns: 1fr 1fr; }
   .chart-grid { grid-template-columns: 1fr; }
   .chart-wrap { height: 255px; }
+  .solar-chart-panel .solar-chart-wrap { height: 145px; }
   .wind-grid { grid-template-columns: 1fr; }
   .records-columns { grid-template-columns: 1fr; }
   .install-strip { align-items: flex-start; flex-direction: column; }
@@ -1238,6 +1244,7 @@ canvas {
     height: 235px;
     min-width: 0;
   }
+  .solar-chart-panel .solar-chart-wrap { height: 140px; }
 
   .tall-chart {
     min-height: 280px;
@@ -1393,6 +1400,7 @@ canvas {
   .chart-wrap {
     height: 215px;
   }
+  .solar-chart-panel .solar-chart-wrap { height: 135px; }
 
   .station-spec,
   .station-health-item {

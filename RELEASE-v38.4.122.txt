@@ -1,0 +1,13 @@
+PARKNACROSS WEATHER v38.4.122
+
+Solar and UV chart redesign
+
+- Replaced the confusing dual-axis overlay with two separate aligned charts.
+- Solar radiation has its own W/m² scale and yellow filled plot.
+- UV has its own index scale and clearly distinguished violet plot.
+- Solar chart suppresses duplicate time labels; the aligned UV chart provides the shared timeline.
+- Improved chart headings, units, mobile spacing, tooltips and accessible descriptions.
+- Applied consistently to the Dashboard and Graphs page.
+- Retained the visitor-friendly garden-soil status wording from v38.4.121.
+
+No weather observations, calculations, collection logic or Worker code changed.
