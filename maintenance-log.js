@@ -3,7 +3,7 @@ window.PARKNACROSS_MAINTENANCE_LOG = [
     date: "2026-09-26",
     type: "Sensor expansion",
     title: "WH52 garden-soil sensor installed",
-    detail: "Added channel 1 soil moisture, root-zone temperature and electrical-conductivity observations."
+    detail: "Added garden soil moisture, root-zone temperature and conductivity readings."
   },
   {
     date: "2026-09-24",
