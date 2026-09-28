@@ -1,0 +1,11 @@
+PARKNACROSS WEATHER v38.4.114 — WEATHER-CARD FALSE ERROR FIX
+
+Correction
+- Removes the obsolete second click handler attached to Create weather card by platform.js.
+- Leaves app.js as the sole owner of weather-card creation, native sharing and download fallback.
+- Prevents Android from creating the card successfully and then showing a false error from a second background attempt.
+- Adds static and browser regression checks requiring exactly one active card workflow per click.
+
+Release and compatibility
+- Website and PWA cache advanced to v38.4.114, including a fresh platform.js request.
+- Companion Worker v38.4.70 leaves ingestion, archive, sensor and API behaviour unchanged.

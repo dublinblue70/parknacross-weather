@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-113-moon-phase-order";
+const CACHE_NAME = "parknacross-v38-4-114-single-card-handler";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

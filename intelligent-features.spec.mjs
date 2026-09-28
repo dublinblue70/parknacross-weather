@@ -48,6 +48,18 @@ test("native share failure falls back to a download without a false creation err
   await expect(page.getByText(/unavailable/)).toHaveCount(0);
 });
 
+test("one click starts exactly one weather-card workflow",async({page})=>{
+  await page.addInitScript(()=>{
+    window.__weatherShareCalls=0;
+    navigator.canShare=()=>true;
+    navigator.share=async()=>{window.__weatherShareCalls+=1;};
+  });
+  await mockDashboardApi(page);await page.goto("/index.html");
+  await page.getByRole("button",{name:"Create weather card"}).click();
+  await expect(page.locator("#shareTodayStatus")).toHaveText("Weather card shared.");
+  await expect.poll(()=>page.evaluate(()=>window.__weatherShareCalls)).toBe(1);
+});
+
 test("new panels do not create horizontal mobile overflow",async({page})=>{
   await mockDashboardApi(page);await page.goto("/index.html");
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);

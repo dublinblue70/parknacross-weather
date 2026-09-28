@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-113"],
+  ["service-worker.js", "parknacross-v38-4-114"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
   ["service-worker.js", "url.pathname.endsWith(\"/app.js\")"],
   ["service-worker.js", "./offline.html"],
@@ -162,6 +162,9 @@ const coastHtml = await readFile(join(root, "coast.html"), "utf8");
 if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("coast.html: land-based clothing guide must not appear on the Sea & Swim page");
 const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
 const dashboardApp = await readFile(join(root, "app.js"), "utf8");
+const platformApp = await readFile(join(root, "platform.js"), "utf8");
+if (platformApp.includes('$("shareTodayButton")?.addEventListener')) failures.push("platform.js: obsolete duplicate weather-card click handler remains");
+if ((dashboardApp.match(/\$\("shareTodayButton"\)\?\.addEventListener\("click",createWeatherCard\)/g) || []).length !== 1) failures.push("app.js: expected exactly one active weather-card click handler");
 const moonFunctionStart = dashboardApp.indexOf("function moonPhaseInfo");
 const moonFunctionEnd = dashboardApp.indexOf("\n\nconst ASTRONOMY_RAD", moonFunctionStart);
 if (moonFunctionStart < 0 || moonFunctionEnd < 0) {
