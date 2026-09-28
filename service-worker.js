@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-121-solar-uv-clarity";
+const CACHE_NAME = "parknacross-v38-4-122-split-solar-uv";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

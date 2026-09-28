@@ -14,7 +14,7 @@
     <link rel="manifest" href="manifest.webmanifest?v=20260926-v38-4-99" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260926-v38-4-99" />
+    <link rel="stylesheet" href="styles.css?v=20260928-v38-4-122" />
 
     <title>Weather Graphs &amp; Trends | Parknacross, Co. Wexford</title>
     <link rel="canonical" href="https://parknacrossweather.ie/graphs.html" />
@@ -159,11 +159,14 @@
               <div class="chart-title">
                 <div>
                   <h3>Solar & UV</h3>
-                  <p>Yellow area is solar radiation · dashed violet line is UV</p>
+                  <p>Separate aligned charts avoid confusing dual scales</p>
                 </div>
-                <span>W/m² · UV</span>
+                <span>Sunlight &amp; UV</span>
               </div>
-              <div class="chart-wrap"><canvas id="gSolar" role="img" aria-label="Solar radiation and UV chart for the selected period"></canvas></div>
+              <div class="solar-chart-stack">
+                <div class="solar-chart-panel"><strong>Solar radiation</strong><span>W/m²</span><div class="chart-wrap solar-chart-wrap"><canvas id="gSolar" role="img" aria-label="Solar radiation chart for the selected period"></canvas></div></div>
+                <div class="solar-chart-panel"><strong>UV index</strong><span>0–11+</span><div class="chart-wrap solar-chart-wrap"><canvas id="gUv" role="img" aria-label="UV index chart for the selected period"></canvas></div></div>
+              </div>
             </article>
             <article
               class="chart-card"
@@ -260,7 +263,7 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="wind-rose.js?v=20260923-radial-restore"></script>
     <script src="site-config.js?v=20260912-mobile2"></script>
-    <script src="graphs.js?v=20260928-v38-4-121"></script>
+    <script src="graphs.js?v=20260928-v38-4-122"></script>
     <script src="lightning-charts.js?v=20260926-v38-4-99"></script>
     <!-- Cloudflare Web Analytics -->
     <script

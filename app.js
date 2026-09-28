@@ -1578,7 +1578,7 @@ function uvDataset() {
     tension: 0.22,
     fill: false,
     spanGaps: false,
-    yAxisID: "y1",
+    yAxisID: "y",
     order: 1
   };
 }
@@ -1658,13 +1658,7 @@ function createCharts() {
 
   charts.solar = new Chart($("solarChart"), {
     type: "line",
-    data: {
-      labels: [],
-      datasets: [
-        solarRadiationDataset(),
-        uvDataset()
-      ]
-    },
+    data: { labels: [], datasets: [solarRadiationDataset()] },
     options: {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
@@ -1672,36 +1666,52 @@ function createCharts() {
         x: {
           type: "linear",
           grid: { color: "transparent" },
-          ticks: { color: "#a8bfd4", maxTicksLimit: 8, callback: value => new Date(Number(value)).toLocaleTimeString("en-IE", { timeZone: STATION_TIME_ZONE, hour: "2-digit", minute: "2-digit" }) }
+          ticks: { display: false }
         },
         y: {
           position: "left",
           beginAtZero: true,
           grid: { color: "rgba(163,209,255,.10)" },
           ticks: { color: "#d9bd68", maxTicksLimit: 6 },
-          title: { display: true, text: "Solar · W/m²", color: "#ffd56a" }
+          title: { display: true, text: "W/m²", color: "#ffd56a" }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: dashboardTooltipTime,
+            label: context => `Solar radiation: ${Math.round(Number(context.parsed.y))} W/m²`
+          }
+        }
+      }
+    }
+  });
+
+  charts.uv = new Chart($("uvChart"), {
+    type: "line",
+    data: { labels: [], datasets: [uvDataset()] },
+    options: {
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      scales: {
+        x: {
+          type: "linear",
+          grid: { color: "transparent" },
+          ticks: { color: "#a8bfd4", maxTicksLimit: 6, callback: value => new Date(Number(value)).toLocaleTimeString("en-IE", { timeZone: STATION_TIME_ZONE, hour: "2-digit", minute: "2-digit" }) }
         },
-        y1: {
-          position: "right",
+        y: {
+          position: "left",
           beginAtZero: true,
-          grid: { drawOnChartArea: false },
-          ticks: { color: "#c5a6f7", precision: 0, stepSize: 1, maxTicksLimit: 7 },
+          suggestedMax: 3,
+          grid: { color: "rgba(163,209,255,.10)" },
+          ticks: { color: "#c5a6f7", precision: 0, stepSize: 1, maxTicksLimit: 5 },
           title: { display: true, text: "UV index", color: "#bd91ff" }
         }
       },
       plugins: {
-        legend: {
-          position: "bottom",
-          labels: { usePointStyle: true, pointStyle: "line", boxWidth: 30, padding: 18 }
-        },
-        tooltip: {
-          callbacks: {
-            title: dashboardTooltipTime,
-            label: context => context.dataset.yAxisID === "y1"
-              ? `UV index: ${Number(context.parsed.y).toFixed(1)}`
-              : `Solar radiation: ${Math.round(Number(context.parsed.y))} W/m²`
-          }
-        }
+        legend: { display: false },
+        tooltip: { callbacks: { title: dashboardTooltipTime, label: context => `UV index: ${Number(context.parsed.y).toFixed(1)}` } }
       }
     }
   });
@@ -1786,8 +1796,10 @@ function updateCharts() {
 
   charts.solar.data.labels = [];
   charts.solar.data.datasets[0].data = rows.map(row => point(row, "solar_w_m2"));
-  charts.solar.data.datasets[1].data = rows.map(row => point(row, "uv_index"));
   charts.solar.update();
+  charts.uv.data.labels = [];
+  charts.uv.data.datasets[0].data = rows.map(row => point(row, "uv_index"));
+  charts.uv.update();
 
   const rainfall = dailyRainTotals();
   charts.rain.data.labels = rainfall.map(day =>
