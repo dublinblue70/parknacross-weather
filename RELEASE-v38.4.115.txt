@@ -1,0 +1,22 @@
+PARKNACROSS WEATHER v38.4.115 — FRESH SOIL & LIGHTNING CSV EXPORTS
+
+CSV corrections
+- Downloads now request a fresh database snapshot instead of accepting a potentially six-hour-old edge-cached export.
+- The Worker bypasses its CSV edge cache when fresh=1 is requested by the Downloads page.
+- Normal direct exports now expire after five minutes rather than six hours.
+- The Downloads page validates that all WH52 and WH57 columns exist before saving the file.
+- Successful downloads explicitly confirm that weather, lightning and soil columns are included.
+- Missing historical sensor readings remain blank; they are never converted into false zero measurements.
+
+Included sensor columns
+- lightning_distance_km
+- lightning_strikes
+- lightning_time_epoch
+- soil_channel
+- soil_moisture_pct
+- soil_temperature_c
+- soil_ec_us_cm
+
+Release and compatibility
+- Website and PWA cache advanced to v38.4.115.
+- Worker advanced to v38.4.71 with ingestion and archive storage behaviour preserved.
