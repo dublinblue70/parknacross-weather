@@ -1,6 +1,6 @@
 "use strict";
 const API="https://parknacross-weather.dave-s-carter.workers.dev/export.csv";
-const SENSOR_EXPORT_FIELDS=["lightning_distance_km","lightning_strikes","lightning_time_ireland","lightning_time_epoch","soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"];
+const SENSOR_EXPORT_FIELDS=["lightning_distance_km","lightning_strikes","lightning_last_strike_time_ireland","lightning_time_epoch","soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"];
 const $=id=>document.getElementById(id);
 function safeDate(){return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});}
 function status(text,state=""){const el=$("downloadStatus");if(!el)return;el.textContent=text;el.className=`status ${state}`.trim();}
@@ -23,7 +23,7 @@ async function download(days,label,button){
     const indices=Object.fromEntries(headers.map((field,index)=>[field,index]));
     const hasValue=(row,field)=>String(row[indices[field]]??"").trim()!=="";
     const soilRows=rows.filter(row=>hasValue(row,"soil_moisture_pct")||hasValue(row,"soil_temperature_c")||hasValue(row,"soil_ec_us_cm")).length;
-    const lightningRows=rows.filter(row=>Number(row[indices.lightning_strikes]||0)>0||hasValue(row,"lightning_distance_km")||hasValue(row,"lightning_time_ireland")).length;
+    const lightningRows=rows.filter(row=>Number(row[indices.lightning_strikes]||0)>0||hasValue(row,"lightning_distance_km")||hasValue(row,"lightning_last_strike_time_ireland")).length;
     const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
