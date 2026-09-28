@@ -1570,7 +1570,6 @@ function uvDataset() {
     borderColor: "#bd91ff",
     backgroundColor: "#bd91ff",
     borderWidth: 2.8,
-    borderDash: [7, 5],
     borderCapStyle: "round",
     pointRadius: 0,
     pointHoverRadius: 4,
@@ -1666,13 +1665,13 @@ function createCharts() {
         x: {
           type: "linear",
           grid: { color: "transparent" },
-          ticks: { display: false }
+          ticks: { color: "#a8bfd4", maxTicksLimit: 6, callback: value => new Date(Number(value)).toLocaleTimeString("en-IE", { timeZone: STATION_TIME_ZONE, hour: "2-digit", minute: "2-digit" }) }
         },
         y: {
           position: "left",
           beginAtZero: true,
           grid: { color: "rgba(163,209,255,.10)" },
-          ticks: { color: "#d9bd68", maxTicksLimit: 6 },
+          ticks: { color: "#a8bfd4", maxTicksLimit: 5 },
           title: { display: true, text: "W/m²", color: "#ffd56a" }
         }
       },
@@ -1705,7 +1704,7 @@ function createCharts() {
           beginAtZero: true,
           suggestedMax: 3,
           grid: { color: "rgba(163,209,255,.10)" },
-          ticks: { color: "#c5a6f7", precision: 0, stepSize: 1, maxTicksLimit: 5 },
+          ticks: { color: "#a8bfd4", precision: 0, stepSize: 1, maxTicksLimit: 5 },
           title: { display: true, text: "UV index", color: "#bd91ff" }
         }
       },
