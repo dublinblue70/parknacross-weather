@@ -1,5 +1,6 @@
 "use strict";
 const API="https://parknacross-weather.dave-s-carter.workers.dev/export.csv";
+const SENSOR_EXPORT_FIELDS=["lightning_distance_km","lightning_strikes","lightning_time_epoch","soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"];
 const $=id=>document.getElementById(id);
 function safeDate(){return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});}
 function status(text,state=""){const el=$("downloadStatus");if(!el)return;el.textContent=text;el.className=`status ${state}`.trim();}
@@ -11,15 +12,19 @@ async function download(days,label,button){
   if(button){button.disabled=true;button.textContent="Preparing…";}
   status(`Preparing ${n}-day download…`);
   try{
-    const r=await fetch(`${API}?days=${encodeURIComponent(n)}`,{cache:"no-store"});
+    const r=await fetch(`${API}?days=${encodeURIComponent(n)}&fresh=1`,{cache:"no-store"});
     if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const blob=await r.blob();
-    if(!blob.size) throw new Error("The export was empty");
+    const csv=await r.text();
+    if(!csv.trim()) throw new Error("The export was empty");
+    const headers=csv.split(/\r?\n/,1)[0].split(",").map(value=>value.trim().replace(/^"|"$/g,""));
+    const missing=SENSOR_EXPORT_FIELDS.filter(field=>!headers.includes(field));
+    if(missing.length) throw new Error(`Export is missing sensor fields: ${missing.join(", ")}`);
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
     a.href=url;a.download=`parknacross-weather-${label}-${safeDate()}.csv`;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
-    status(`CSV ready: ${label.replaceAll("-"," ")}.`,"good");
+    status(`CSV ready: ${label.replaceAll("-"," ")} · weather, lightning and soil columns included.`,"good");
   }catch(err){console.warn("Weather archive download:",err);status("Download failed. Please try again.","bad");}
   finally{if(button){button.disabled=false;button.textContent=original;}}
 }
