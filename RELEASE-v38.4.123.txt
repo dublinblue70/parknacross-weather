@@ -1,0 +1,11 @@
+PARKNACROSS WEATHER v38.4.123
+
+Solar and UV axis consistency
+
+- Solar radiation and UV now use matching visible time axes.
+- Both measurement axes are positioned on the left with consistent tick density, colour and grid styling.
+- UV is displayed as a continuous purple line rather than a dashed line.
+- The two measurements retain independent numeric ranges because W/m² and UV index are different units.
+- Applied consistently to the Dashboard and Graphs page.
+
+No weather data, calculations, collection logic or Worker code changed.
