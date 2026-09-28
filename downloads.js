@@ -1,6 +1,6 @@
 "use strict";
 const API="https://parknacross-weather.dave-s-carter.workers.dev/export.csv";
-const SENSOR_EXPORT_FIELDS=["lightning_distance_km","lightning_strikes","lightning_time_epoch","soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"];
+const SENSOR_EXPORT_FIELDS=["lightning_distance_km","lightning_strikes","lightning_time_ireland","lightning_time_epoch","soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"];
 const $=id=>document.getElementById(id);
 function safeDate(){return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});}
 function status(text,state=""){const el=$("downloadStatus");if(!el)return;el.textContent=text;el.className=`status ${state}`.trim();}
@@ -19,12 +19,17 @@ async function download(days,label,button){
     const headers=csv.split(/\r?\n/,1)[0].split(",").map(value=>value.trim().replace(/^"|"$/g,""));
     const missing=SENSOR_EXPORT_FIELDS.filter(field=>!headers.includes(field));
     if(missing.length) throw new Error(`Export is missing sensor fields: ${missing.join(", ")}`);
+    const rows=csv.trim().split(/\r?\n/).slice(1).map(line=>line.split(","));
+    const indices=Object.fromEntries(headers.map((field,index)=>[field,index]));
+    const hasValue=(row,field)=>String(row[indices[field]]??"").trim()!=="";
+    const soilRows=rows.filter(row=>hasValue(row,"soil_moisture_pct")||hasValue(row,"soil_temperature_c")||hasValue(row,"soil_ec_us_cm")).length;
+    const lightningRows=rows.filter(row=>Number(row[indices.lightning_strikes]||0)>0||hasValue(row,"lightning_distance_km")||hasValue(row,"lightning_time_ireland")).length;
     const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
     a.href=url;a.download=`parknacross-weather-${label}-${safeDate()}.csv`;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
-    status(`CSV ready: ${label.replaceAll("-"," ")} · weather, lightning and soil columns included.`,"good");
+    status(`CSV ready: ${label.replaceAll("-"," ")} · ${soilRows.toLocaleString("en-IE")} soil rows · ${lightningRows.toLocaleString("en-IE")} lightning rows.`,"good");
   }catch(err){console.warn("Weather archive download:",err);status("Download failed. Please try again.","bad");}
   finally{if(button){button.disabled=false;button.textContent=original;}}
 }
