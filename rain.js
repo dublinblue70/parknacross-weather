@@ -5,7 +5,7 @@
  const dt=v=>v?new Date(v).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"--";
  const dayKey=v=>{const d=v instanceof Date?v:new Date(v);if(Number.isNaN(d.getTime()))return null;const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d),get=t=>parts.find(p=>p.type===t)?.value;return `${get("year")}-${get("month")}-${get("day")}`};
  const correctedCurrentRain=c=>{if(!usable(c?.rain_daily_mm))return null;const when=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null),key=dayKey(when),correction=Number(window.PARKNACROSS_DATA_CORRECTIONS?.dailyRainMm?.[key]||0);return Math.round(Math.max(0,Number(c.rain_daily_mm)-correction)*10)/10};
- async function get(p){const r=await fetch(`${API}${p}`,{cache:"no-store"});if(!r.ok)throw new Error();return r.json()}
+ async function get(p){let last;for(let attempt=0;attempt<2;attempt++){try{const r=await fetch(`${API}${p}`,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);const data=await r.json();if(data?.error)throw new Error(data.error);return data;}catch(error){last=error;if(!attempt)await new Promise(resolve=>setTimeout(resolve,500));}}throw last;}
  const rainState=(summary,history,current)=>{
   const rate=usable(current?.rain_rate_mm_h)?Number(current.rain_rate_mm_h):usable(summary?.current_rate_mm_h)?Number(summary.current_rate_mm_h):null;
   const rows=Array.isArray(history?.readings)?history.readings:[],now=current?.received_at?new Date(current.received_at).getTime():(usable(current?.epoch)?Number(current.epoch)*1000:Date.now());let lastIncrease=null,prev=null;

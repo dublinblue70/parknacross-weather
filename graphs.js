@@ -1,5 +1,6 @@
 (() => {
  const cfg=window.PARKNACROSS_CONFIG||{},API=cfg.apiBase,$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};let charts={},hours=24;
+ const get=async(path,optional=false)=>{let last;for(let attempt=0;attempt<2;attempt++){try{const response=await fetch(`${API}${path}`,{cache:"no-store"});if(!response.ok)throw new Error(`HTTP ${response.status}`);const data=await response.json();if(data?.error)throw new Error(data.error);return data;}catch(error){last=error;if(!attempt)await new Promise(resolve=>setTimeout(resolve,500));}}if(optional)return null;throw last;};
  const line=(label,color,axis="y")=>({label,data:[],borderColor:color,backgroundColor:color,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.25,yAxisID:axis});
  const soilLine=(label,color,axis="y")=>({
    label,
@@ -20,7 +21,7 @@
    fill:false,
    yAxisID:axis
  });
- const tickTime=value=>{const d=new Date(Number(value));return hours<=48?d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})};
+ const tickTime=value=>{const d=new Date(Number(value)),time=d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"});if(hours<24)return time;if(hours<=48)return[d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"}),time];return d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})};
  const tooltipTime=items=>{const value=items?.[0]?.parsed?.x;return Number.isFinite(value)?new Date(value).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""};
  const timeAxis=()=>({type:"linear",grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:9,callback:tickTime}});
  const scales=(unit,zero=false)=>({x:timeAxis(),y:{beginAtZero:zero,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:unit,color:"#9fb3c1"}}});
@@ -209,6 +210,27 @@
    const values=rows.filter(row=>!excluded?.has(row)&&usable(row?.[key])).map(row=>Number(row[key]));
    return values.length?`${Math.max(...values).toFixed(digits)} ${unit}`:"Unavailable";
  }
+ function exactPeriod(rows){
+   const epochs=rows.map(rowEpoch).filter(Number.isFinite).sort((a,b)=>a-b);
+   if(!epochs.length)return null;
+   const text=epoch=>new Date(epoch*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+   return{first:epochs[0],last:epochs.at(-1),text:`${text(epochs[0])}–${text(epochs.at(-1))}`};
+ }
+ function applyExactTimeBounds(rows){
+   const period=exactPeriod(rows),bounded=[charts.t,charts.w,charts.p,charts.r,charts.s,charts.sm,charts.sd];
+   for(const chart of bounded){
+     if(!chart?.options?.scales?.x)continue;
+     if(period){chart.options.scales.x.min=period.first*1000;chart.options.scales.x.max=period.last*1000;}
+     else{delete chart.options.scales.x.min;delete chart.options.scales.x.max;}
+   }
+   return period;
+ }
+ function recentEventOutsideWindow(events,period){
+   if(!period||hours>24)return null;
+   return (Array.isArray(events)?events:[])
+     .filter(event=>usable(event?.end_epoch)&&Number(event.end_epoch)<period.first&&period.first-Number(event.end_epoch)<=86400&&(Number(event.total_mm||0)>=.05||Number(event.peak_rate_mm_h||0)>0))
+     .sort((a,b)=>Number(b.end_epoch)-Number(a.end_epoch))[0]||null;
+ }
  function updateHighlights(rows,tempExcluded,gustExcluded){
    set("highlightTemp",rangeText(rows,"temperature_c","°C",tempExcluded));
    set("highlightGust",maxText(rows,"wind_gust_kmh","km/h",gustExcluded));
@@ -221,15 +243,15 @@
    window.ParknacrossWindRose?.update(charts.rose,rows,$("windRoseMeta"),{hours,endEpoch});
  }
  async function load(h){hours=h;const periodLabel=({6:"Last 6 hours",24:"Last 24 hours",48:"Last 48 hours",168:"Last 7 days",720:"Last 30 days"})[h];set("graphRangeTitle",periodLabel);set("graphCoverage","Checking available coverage…");set("graphCount","Loading…");$("partialCoverageBadge")?.setAttribute("hidden","");
- try{const [d,c]=await Promise.all([fetch(`${API}/history?hours=${h}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error();return r.json()}),fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)]);let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const temperatureOutliers=temperatureOutlierRows(rows),windGustOutliers=gustOutlierRows(rows),gapData=withGapMarkers(rows),r=h<=24?gapData.rows:thinPreservingExtrema(gapData.rows,["temperature_c","dew_point_c","wind_speed_kmh","wind_gust_kmh","pressure_hpa","solar_w_m2","uv_index","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"]),rainRows=thinRain(gapData.rows);
+ try{const [d,c,recentRain]=await Promise.all([get(`/history?hours=${h}`),get("/current",true),h<=24?get("/rain-events?days=3",true):Promise.resolve(null)]);let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const temperatureOutliers=temperatureOutlierRows(rows),windGustOutliers=gustOutlierRows(rows),gapData=withGapMarkers(rows),r=h<=24?gapData.rows:thinPreservingExtrema(gapData.rows,["temperature_c","dew_point_c","wind_speed_kmh","wind_gust_kmh","pressure_hpa","solar_w_m2","uv_index","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"]),rainRows=thinRain(gapData.rows),period=applyExactTimeBounds(rows);
  charts.t.data.datasets[0].data=r.map(x=>point(x,"temperature_c",temperatureOutliers));charts.t.data.datasets[1].data=r.map(x=>point(x,"dew_point_c"));
  charts.w.data.datasets[0].data=r.map(x=>point(x,"wind_speed_kmh"));charts.w.data.datasets[1].data=r.map(x=>point(x,"wind_gust_kmh",windGustOutliers));charts.w.data.datasets[2].data=r.map(x=>({x:Number(rowEpoch(x))*1000,y:windGustOutliers.has(x)?value(x,"wind_gust_kmh"):null}));charts.p.data.datasets[0].data=r.map(x=>point(x,"pressure_hpa"));
  charts.r.data.datasets[0].data=rainRows.map(x=>point(x,"rain_rate_mm_h"));charts.s.data.datasets[0].data=r.map(x=>point(x,"solar_w_m2"));charts.s.data.datasets[1].data=r.map(x=>point(x,"uv_index"));
  const timedRainRows=rows.filter(x=>rowEpoch(x)!==null&&usable(x?.rain_rate_mm_h));
  const missingRainRows=rows.filter(x=>rowEpoch(x)!==null&&!usable(x?.rain_rate_mm_h)).length;
  if(timedRainRows.length){
-   const firstRainReading=new Date(Number(rowEpoch(timedRainRows[0]))*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
-   set("rainChartStatus",missingRainRows?`${timedRainRows.length.toLocaleString("en-IE")} saved rain-rate reading${timedRainRows.length===1?"":"s"} available from ${firstRainReading}. Blank sections are missing readings, not zero rainfall.`:`${timedRainRows.length.toLocaleString("en-IE")} saved rain-rate reading${timedRainRows.length===1?"":"s"}; no missing rain-rate values in this period.`);
+   const firstRainReading=new Date(Number(rowEpoch(timedRainRows[0]))*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}),outside=recentEventOutsideWindow(recentRain?.events,period),base=`Showing ${period?.text||`from ${firstRainReading}`}. ${timedRainRows.length.toLocaleString("en-IE")} saved rain-rate reading${timedRainRows.length===1?"":"s"}${missingRainRows?"; blank sections are missing readings, not zero rainfall":"; no missing rain-rate values in this period"}.`;
+   if(outside){const ended=new Date(Number(outside.end_epoch)*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}),minutes=Math.max(1,Math.round((period.first-Number(outside.end_epoch))/60)),amount=Number(outside.total_mm||0).toFixed(1),peak=Number(outside.peak_rate_mm_h||0).toFixed(1),range=hours<=6?"24h":"48h";set("rainChartStatus",`${base} A ${amount} mm rain event (peak ${peak} mm/h) ended ${minutes} min before this view starts, at ${ended}; select ${range} to see it.`);}else set("rainChartStatus",base);
  }else{
    set("rainChartStatus","No saved rain-rate readings are available for this period. The blank chart does not mean there was no rain.");
  }

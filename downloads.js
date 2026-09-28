@@ -1,6 +1,6 @@
 "use strict";
 const API="https://parknacross-weather.dave-s-carter.workers.dev/export.csv";
-const SENSOR_EXPORT_FIELDS=["lightning_distance_km","lightning_strikes","lightning_last_strike_time_ireland","lightning_time_epoch","soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"];
+const SENSOR_EXPORT_FIELDS=["soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm","lightning_distance_km","lightning_strikes","lightning_last_strike_time_ireland"];
 const $=id=>document.getElementById(id);
 function safeDate(){return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});}
 function status(text,state=""){const el=$("downloadStatus");if(!el)return;el.textContent=text;el.className=`status ${state}`.trim();}

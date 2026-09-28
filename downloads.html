@@ -100,11 +100,11 @@
     <article class="card"><h2>Automatic archive backup</h2><p id="backupStatusText">Checking whether the separate archive backup is active…</p><a class="button" href="status.html">View backup health</a></article>
   </section>
   <div id="downloadStatus" class="status" aria-live="polite"></div>
-  <div class="note">CSV downloads include readable Irish-local times, weather, WS90 battery, WH57 lightning and WH52 soil fields. The original epoch values are retained for technical analysis. Soil and lightning columns are blank before their sensors were installed or whenever a sensor did not report; no missing reading is changed to zero. Choose 7, 30, 90 or 365 days; every file includes all available recent sensor observations within that period.</div>
+  <div class="note">CSV downloads list the newest observations first and include readable Irish-local times, weather, WS90 battery, WH52 soil and genuine WH57 lightning-event fields. The observation epoch is retained for technical analysis; the confusing raw lightning epoch is not exported. Soil columns are blank before the WH52 was installed, and lightning columns are blank when no strike was detected—missing values are never changed to zero. Choose 7, 30, 90 or 365 days; every file includes all observations actually available within that period.</div>
 </main>
 <footer><span>© 2026 Parknacross Weather</span><span>Weather data downloads</span><nav class="footer-links" aria-label="Parknacross Weather links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a><span aria-hidden="true">·</span><a href="install.html">Install help</a><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></nav></footer>
 </div>
-<script src="downloads.js?v=20260928-v38-4-118"></script>
+<script src="downloads.js?v=20260928-v38-4-120"></script>
 <script src="pwa-update.js?v=20260927-v38-4-106"></script>
 <script src="offline.js?v=20260915-v36"></script>
 <script src="accessibility.js?v=20260924-v38-4-97"></script>

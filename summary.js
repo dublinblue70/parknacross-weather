@@ -36,11 +36,20 @@ function exactDateTime(date) {
 }
 
 async function getJSON(path, cache = "default") {
-  const response = await fetch(`${API_BASE}${path}`, { cache });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const data = await response.json();
-  if (data?.error) throw new Error(data.error);
-  return data;
+  let lastError;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetch(`${API_BASE}${path}`, { cache });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (data?.error) throw new Error(data.error);
+      return data;
+    } catch (error) {
+      lastError = error;
+      if (!attempt) await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+  throw lastError;
 }
 
 const TEMP_OUTLIER_DELTA_C=2.5,TEMP_OUTLIER_BASELINE_C=1.0,TEMP_OUTLIER_WINDOW_MS=30*60*1000,TEMP_OUTLIER_MIN_NEIGHBORS=3;

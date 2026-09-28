@@ -1754,11 +1754,20 @@ function updateCharts() {
 }
 
 async function getJSON(url, cacheMode = "default") {
-  const response = await fetch(url, { cache: cacheMode });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const data = await response.json();
-  if (data?.error) throw new Error(data.error);
-  return data;
+  let lastError;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetch(url, { cache: cacheMode });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (data?.error) throw new Error(data.error);
+      return data;
+    } catch (error) {
+      lastError = error;
+      if (!attempt) await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+  throw lastError;
 }
 
 async function loadForecast() {

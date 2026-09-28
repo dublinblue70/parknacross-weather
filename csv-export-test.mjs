@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const workerPath = resolve("../../worker-source/Parknacross-worker-v38.4.74-LIVE-VERIFIED-LONG-CSV-NOTEPAD.txt");
+const workerPath = resolve("../../worker-source/Parknacross-worker-v38.4.75-LIVE-FRESHNESS-RESILIENCE-NOTEPAD.txt");
 const worker = await readFile(workerPath, "utf8");
 const start = worker.indexOf("async function exportRows(env, days)");
 const end = worker.indexOf("\nfunction exportCsv(", start);
@@ -39,7 +39,10 @@ function environmentWithArtificialPageCap(cap) {
   return {
     DB: {
       prepare(sql) {
-        return {
+        const statement = {
+          async first() {
+            return sql.includes("ORDER BY epoch ASC") ? source[0] || null : source.at(-1) || null;
+          },
           bind(...values) {
             return {
               async all() {
@@ -47,16 +50,29 @@ function environmentWithArtificialPageCap(cap) {
                 return { results: source.filter(row => row.epoch > cursor && row.epoch <= latestEpoch).slice(0, cap) };
               },
               async first() {
-                const [cutoff] = values;
-                const eligible = source.filter(row => row.epoch >= cutoff);
-                return sql.includes("ORDER BY epoch ASC") ? eligible[0] || null : eligible.at(-1) || null;
+                return sql.includes("ORDER BY epoch ASC") ? source[0] || null : source.at(-1) || null;
               }
             };
           }
         };
+        return statement;
       }
     }
   };
+}
+
+const csvStart = worker.indexOf("function rowsToCsv(rows)");
+const csvEnd = worker.indexOf("\nasync function runDailyBackup", csvStart);
+if (csvStart < 0 || csvEnd < 0) throw new Error("Could not locate the Worker CSV formatter");
+const rowsToCsv = Function(`return (${worker.slice(csvStart, csvEnd)})`)();
+const legacyIdle = rowsToCsv([{epoch:now,lightning_distance_km:0,lightning_strikes:0,lightning_time_epoch:now,soil_channel:1,soil_moisture_pct:37,soil_temperature_c:13.2,soil_ec_us_cm:421}]);
+const [csvHeader,csvRow] = legacyIdle.split("\n").map(line=>line.split(","));
+if (csvHeader.includes("lightning_time_epoch")) throw new Error("Raw lightning epoch must not be exported");
+for (const field of ["soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"]) {
+  if (!csvHeader.includes(field) || !String(csvRow[csvHeader.indexOf(field)] || "").trim()) throw new Error(`Populated ${field} was omitted`);
+}
+for (const field of ["lightning_distance_km","lightning_strikes","lightning_last_strike_time_ireland"]) {
+  if (String(csvRow[csvHeader.indexOf(field)] || "").trim()) throw new Error(`Idle legacy ${field} was exported as a false lightning event`);
 }
 
 for (const days of [7, 30, 90, 365]) {
