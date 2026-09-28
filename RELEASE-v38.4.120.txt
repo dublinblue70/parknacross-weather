@@ -1,0 +1,24 @@
+PARKNACROSS WEATHER v38.4.120 — LIVE DATA FRESHNESS, RESILIENCE & CORRECT CSV EXPORTS
+
+Website changes
+- Renames the daily humidity statistic to “Average humidity since midnight”.
+- Explains that the average includes damp overnight and early-morning readings.
+- Retries one temporary API failure on the Dashboard, Summary, Graphs and Rain pages.
+- Activates a completely downloaded PWA update automatically so an installed app cannot remain indefinitely on an older application shell.
+
+Cloudflare Worker v38.4.75
+- Publishes the latest authenticated GW3001 packet through /current when it is no more than three minutes old.
+- Keeps the established five-minute D1 archive interval unchanged for charts, records, reports and storage control.
+- Falls back to the durable latest archive row when live gateway metadata is absent or delayed.
+- Reduces rain-event cache time from one hour to five minutes.
+- Keeps the private live-reading snapshot out of the public /soil-status diagnostic response.
+- Makes 90/365-day CSV bound queries start at the real archive instead of scanning an unnecessarily old requested window.
+- Lists public CSV observations newest-first so recently installed WH52 data is visible immediately.
+- Moves soil fields ahead of lightning fields and retains them across every export window.
+- Removes the confusing raw lightning epoch from public CSV files.
+- Exports lightning distance, strike count and readable Irish-local strike time only for a genuine strike event; legacy idle zero values remain blank.
+
+Deployment order
+1. Deploy Parknacross-worker-v38.4.75-LIVE-FRESHNESS-RESILIENCE-NOTEPAD.txt to Cloudflare Workers.
+2. Publish the complete v38.4.120 website folder to GitHub Pages.
+3. Wait for the next GW3001 upload (normally about one minute), then verify /current is newer than the latest five-minute chart point.

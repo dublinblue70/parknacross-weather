@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-118-bounded-sensor-csv";
+const CACHE_NAME = "parknacross-v38-4-120-live-freshness";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -76,8 +76,10 @@ self.addEventListener("install", event => {
         if (response.ok) await cache.put(request, response);
       } catch (_) {}
     }));
-    /* Existing installations remain on the current release until the visitor
-       accepts the update prompt, which then sends SKIP_WAITING explicitly. */
+    /* Activate a fully cached release immediately. This prevents installed
+       PWAs—especially iOS installations reopened after several days—from
+       remaining indefinitely on an older application shell. */
+    await self.skipWaiting();
   })());
 });
 
