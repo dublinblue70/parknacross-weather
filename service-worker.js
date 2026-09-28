@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-120-live-freshness";
+const CACHE_NAME = "parknacross-v38-4-121-solar-uv-clarity";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -138,6 +138,7 @@ self.addEventListener("fetch", event => {
     url.origin === self.location.origin &&
     (url.pathname.endsWith("/styles.css") ||
       url.pathname.endsWith("/app.js") ||
+      url.pathname.endsWith("/graphs.js") ||
       url.pathname.endsWith("/navigation.js") ||
       url.pathname.endsWith("/downloads.js") ||
       url.pathname.endsWith("/alert-settings.js") ||

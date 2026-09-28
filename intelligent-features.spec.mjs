@@ -27,7 +27,7 @@ test("WH52 early-data state and freshness are clear",async({page})=>{
   await expect(page.getByRole("heading",{name:"Garden soil"})).toBeVisible();
   await expect(page.getByText(/Early data · day 1 of 14/)).toBeVisible();
   await expect(page.getByText(/still building its local baseline/)).toBeVisible();
-  await expect(page.getByText(/Sensor upload received/)).toBeVisible();
+  await expect(page.getByText(/Garden soil sensor updated/)).toBeVisible();
 });
 
 test("weather card downloads when native file sharing is unavailable",async({page})=>{

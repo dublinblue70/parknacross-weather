@@ -1140,20 +1140,21 @@ function updateSoilPanel(current) {
   } else {
     set("soilMoistureTrend", "Trend building from saved readings");
   }
-  let eventText = "No distinct watering or rain response is identifiable yet.";
+  let eventText = "Soil moisture has not changed enough to show recent rain or watering.";
   for (let i = candidates.length - 1; i > 0; i--) {
     const newer=candidates[i],older=candidates[i-1],minutes=(Number(newer.epoch)-Number(older.epoch))/60;
     const rise=Number(newer.soil_moisture_pct)-Number(older.soil_moisture_pct);
     if(minutes>0&&minutes<=90&&rise>=3){
       const rainResponse=usable(newer.rain_rate_mm_h)&&Number(newer.rain_rate_mm_h)>0 || usable(newer.rain_daily_mm)&&usable(older.rain_daily_mm)&&Number(newer.rain_daily_mm)>Number(older.rain_daily_mm);
-      eventText=`${rainResponse?"Rain response":"Possible watering response"}: moisture rose ${rise.toFixed(0)} points over ${Math.round(minutes)} minutes.`;
+      eventText=rainResponse
+        ? `Rain increased soil moisture by ${rise.toFixed(0)} percentage points over ${Math.round(minutes)} minutes.`
+        : `Soil moisture rose by ${rise.toFixed(0)} percentage points over ${Math.round(minutes)} minutes, possibly after watering.`;
       break;
     }
   }
-  if(candidates.length<3)eventText="Trend building—more saved WH52 readings are needed to identify watering or rain responses.";
+  if(candidates.length<3)eventText="Learning the normal soil pattern. More readings are needed to recognise rain or watering.";
   set("soilEvent",eventText);
-  const channel = usable(current?.soil_channel) ? ` · WH52 channel ${Number(current.soil_channel)}` : "";
-  set("soilSummary", `Live root-zone observation${channel}. Open Graphs to see how moisture, temperature and conductivity change over time.`);
+  set("soilSummary", "Live garden soil reading. Open Graphs to see how moisture, temperature and conductivity change over time.");
 }
 
 function stationDayKey(epoch){return new Date(Number(epoch)*1000).toLocaleDateString("en-CA",{timeZone:STATION_TIME_ZONE});}
@@ -1185,17 +1186,17 @@ async function refreshSoilFreshness(){
     }
 
     if (!data?.wh52_detected || !usable(data.received_epoch)) {
-      set("soilFreshness", "No recent WH52 upload detected");
+      set("soilFreshness", "Waiting for a recent garden soil reading");
       return;
     }
     set(
       "soilFreshness",
-      `Sensor upload received ${lightningRelative(data.received_epoch)} · channel ${data.channel || "--"}`
+      `Garden soil sensor updated ${lightningRelative(data.received_epoch)}`
     );
   } catch (_) {
     latestGatewayUploadTime = null;
     set("gatewayReceived", "Gateway status temporarily unavailable");
-    set("soilFreshness", "Sensor freshness temporarily unavailable");
+    set("soilFreshness", "Garden soil update time is temporarily unavailable");
   }
 }
 
@@ -1544,6 +1545,44 @@ function line(label, colour, axis = "y") {
   };
 }
 
+function solarRadiationDataset() {
+  return {
+    label: "Solar radiation",
+    data: [],
+    borderColor: "#ffd56a",
+    backgroundColor: "rgba(255, 213, 106, .18)",
+    borderWidth: 2.4,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    pointHitRadius: 10,
+    tension: 0.22,
+    fill: "origin",
+    spanGaps: false,
+    yAxisID: "y",
+    order: 2
+  };
+}
+
+function uvDataset() {
+  return {
+    label: "UV index",
+    data: [],
+    borderColor: "#bd91ff",
+    backgroundColor: "#bd91ff",
+    borderWidth: 2.8,
+    borderDash: [7, 5],
+    borderCapStyle: "round",
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    pointHitRadius: 10,
+    tension: 0.22,
+    fill: false,
+    spanGaps: false,
+    yAxisID: "y1",
+    order: 1
+  };
+}
+
 function createCharts() {
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
     Chart.defaults.animation = false;
@@ -1622,8 +1661,8 @@ function createCharts() {
     data: {
       labels: [],
       datasets: [
-        line("Solar W/m²", "#ffd77a", "y"),
-        line("UV index", "#b594ff", "y1")
+        solarRadiationDataset(),
+        uvDataset()
       ]
     },
     options: {
@@ -1639,18 +1678,31 @@ function createCharts() {
           position: "left",
           beginAtZero: true,
           grid: { color: "rgba(163,209,255,.10)" },
-          ticks: { color: "#a8bfd4" },
-          title: { display: true, text: "W/m²", color: "#a8bfd4" }
+          ticks: { color: "#d9bd68", maxTicksLimit: 6 },
+          title: { display: true, text: "Solar · W/m²", color: "#ffd56a" }
         },
         y1: {
           position: "right",
           beginAtZero: true,
           grid: { drawOnChartArea: false },
-          ticks: { color: "#a8bfd4" },
-          title: { display: true, text: "UV", color: "#a8bfd4" }
+          ticks: { color: "#c5a6f7", precision: 0, stepSize: 1, maxTicksLimit: 7 },
+          title: { display: true, text: "UV index", color: "#bd91ff" }
         }
       },
-      plugins: timeChartPlugins({ position: "bottom" })
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { usePointStyle: true, pointStyle: "line", boxWidth: 30, padding: 18 }
+        },
+        tooltip: {
+          callbacks: {
+            title: dashboardTooltipTime,
+            label: context => context.dataset.yAxisID === "y1"
+              ? `UV index: ${Number(context.parsed.y).toFixed(1)}`
+              : `Solar radiation: ${Math.round(Number(context.parsed.y))} W/m²`
+          }
+        }
+      }
     }
   });
 }
