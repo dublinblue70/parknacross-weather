@@ -700,15 +700,21 @@ function moonPhaseInfo(date = new Date()) {
   const fraction = ageDays / synodicMonthDays;
   const illumination = Math.round((1 - Math.cos(2 * Math.PI * fraction)) * 50);
 
+  /*
+   * Principal phases are instants, not week-long bands. Keep a narrow,
+   * visitor-friendly window around New, Quarter and Full Moon; the rest of
+   * the cycle uses its correct waxing/waning intermediate name. This avoids
+   * describing a clearly waning 97% Moon as still being the Full Moon.
+   */
   const phases = [
-    { limit: 0.0625, name: "New Moon", slug: "new" },
-    { limit: 0.1875, name: "Waxing Crescent", slug: "waxing-crescent" },
-    { limit: 0.3125, name: "First Quarter", slug: "first-quarter" },
-    { limit: 0.4375, name: "Waxing Gibbous", slug: "waxing-gibbous" },
-    { limit: 0.5625, name: "Full Moon", slug: "full" },
-    { limit: 0.6875, name: "Waning Gibbous", slug: "waning-gibbous" },
-    { limit: 0.8125, name: "Last Quarter", slug: "last-quarter" },
-    { limit: 0.9375, name: "Waning Crescent", slug: "waning-crescent" },
+    { limit: 0.02, name: "New Moon", slug: "new" },
+    { limit: 0.23, name: "Waxing Crescent", slug: "waxing-crescent" },
+    { limit: 0.27, name: "First Quarter", slug: "first-quarter" },
+    { limit: 0.48, name: "Waxing Gibbous", slug: "waxing-gibbous" },
+    { limit: 0.52, name: "Full Moon", slug: "full" },
+    { limit: 0.73, name: "Waning Gibbous", slug: "waning-gibbous" },
+    { limit: 0.77, name: "Last Quarter", slug: "last-quarter" },
+    { limit: 0.98, name: "Waning Crescent", slug: "waning-crescent" },
     { limit: 1, name: "New Moon", slug: "new" }
   ];
   const phase = phases.find(item => fraction < item.limit) || phases.at(-1);
@@ -814,7 +820,9 @@ function astronomyCountdown(milliseconds) {
 
 function updateMoonInfo(now = new Date()) {
   const moon = moonPhaseInfo(now);
-  const direction = moon.fraction < 0.5 ? "waxing" : "waning";
+  const direction = moon.slug === "new" || moon.slug === "full"
+    ? ""
+    : moon.fraction < 0.5 ? " · waxing" : " · waning";
   const moonTimes = moonTimesForStationDay(now);
   const next = nextMajorMoonPhase(moon);
   const nextTime = next.days < 1
@@ -825,11 +833,11 @@ function updateMoonInfo(now = new Date()) {
     : "No event today";
 
   set("moonPhase", moon.name);
-  set("moonIllumination", `${moon.illumination}% illuminated · ${direction}`);
+  set("moonIllumination", `${moon.illumination}% illuminated${direction}`);
   set("moonIlluminationValue", `${moon.illumination}%`);
   set("moonrise", fmt(moonTimes.rise));
   set("moonset", fmt(moonTimes.set));
-  set("moonNextPhase", `Next major phase: ${next.name} in about ${nextTime}`);
+  set("moonNextPhase", `Next milestone: ${next.name} in about ${nextTime}`);
   const icon = $("moonPhaseIcon");
   if (icon) icon.dataset.phase = moon.slug;
 }
