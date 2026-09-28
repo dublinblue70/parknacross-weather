@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-117-verified-sensor-csv";
+const CACHE_NAME = "parknacross-v38-4-118-bounded-sensor-csv";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

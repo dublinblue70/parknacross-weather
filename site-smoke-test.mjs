@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-117"],
+  ["service-worker.js", "parknacross-v38-4-118"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
   ["service-worker.js", "url.pathname.endsWith(\"/app.js\")"],
   ["service-worker.js", "./offline.html"],
