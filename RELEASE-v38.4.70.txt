@@ -5,7 +5,7 @@ Maintenance log simplification
 
 - Reduced the public log from twelve detailed entries to five key milestones.
 - Combined recent website changes into one short, visitor-friendly entry.
-- Kept the important station commissioning, firmware, archive and WH57 events.
+- Kept the important station commissioning, firmware, archive and lightning detector events.
 - Removed the redundant explanatory section from the page.
 - Shortened the page introduction and headings.
 
