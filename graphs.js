@@ -264,10 +264,10 @@
  const soilRows=rows.filter(x=>usable(x?.soil_moisture_pct)||usable(x?.soil_temperature_c)||usable(x?.soil_ec_us_cm));
  if(hasSoil){
    const firstSoil=new Date(Number(rowEpoch(soilRows[0]))*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
-   set("soilMoistureStatus",`${soilRows.length.toLocaleString("en-IE")} saved WH52 reading${soilRows.length===1?"":"s"} since ${firstSoil}. Points remain visible while the new archive builds.`);
-   set("soilDetailStatus",`Soil temperature and conductivity from the same ${soilRows.length.toLocaleString("en-IE")} WH52 observation${soilRows.length===1?"":"s"}. Conductivity is best compared with this sensor’s own baseline.`);
-   $("gSoilMoisture")?.setAttribute("aria-label",`Soil moisture for ${periodLabel.toLowerCase()}, based on ${soilRows.length.toLocaleString("en-IE")} saved WH52 observations.`);
-   $("gSoilDetail")?.setAttribute("aria-label",`Soil temperature and conductivity for ${periodLabel.toLowerCase()}, based on ${soilRows.length.toLocaleString("en-IE")} saved WH52 observations.`);
+   set("soilMoistureStatus",`${soilRows.length.toLocaleString("en-IE")} saved soil-sensor reading${soilRows.length===1?"":"s"} since ${firstSoil}. Points remain visible while the new archive builds.`);
+   set("soilDetailStatus",`Soil temperature and conductivity from the same ${soilRows.length.toLocaleString("en-IE")} soil-sensor observation${soilRows.length===1?"":"s"}. Conductivity is best compared with this sensor’s own baseline.`);
+   $("gSoilMoisture")?.setAttribute("aria-label",`Soil moisture for ${periodLabel.toLowerCase()}, based on ${soilRows.length.toLocaleString("en-IE")} saved soil-sensor observations.`);
+   $("gSoilDetail")?.setAttribute("aria-label",`Soil temperature and conductivity for ${periodLabel.toLowerCase()}, based on ${soilRows.length.toLocaleString("en-IE")} saved soil-sensor observations.`);
    requestAnimationFrame(()=>{charts.sm.resize();charts.sd.resize();charts.sm.update("none");charts.sd.update("none");});
  }
  updateWindRose(rows,h,Math.floor(Date.now()/300000)*300);

@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#07131f" />
     <meta
       name="description"
-      content="Live Ardamine weather and WH52 garden-soil readings from Parknacross near Courtown, Co. Wexford, with rain, wind, radar, coastal conditions and weather history."
+      content="Live Ardamine weather and garden-soil readings from Parknacross near Courtown, Co. Wexford, with rain, wind, radar, coastal conditions and weather history."
     />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta
@@ -730,7 +730,7 @@
           <strong>Live weather in Ardamine, Courtown and North Wexford.</strong>
           Parknacross Weather is an independent personal weather station in
           Ardamine, providing local temperature, rainfall, wind, pressure,
-          humidity, UV and solar observations, plus a location-specific WH52
+          humidity, UV and solar observations, plus a location-specific garden soil
           garden-soil reading, radar, coastal conditions and a growing archive.
         </section>
 
@@ -901,12 +901,12 @@
         <section
           id="lightningSetupNotice"
           class="lightning-panel"
-          aria-label="WH57 sensor status"
+          aria-label="Ecowitt lightning detector status"
           aria-live="polite"
         >
           <div>
             <span class="section-eyebrow">Lightning</span>
-            <strong>Ecowitt WH57 sensor</strong>
+            <strong>Ecowitt lightning detector</strong>
             <small id="lightningSetupStatus"
               >Sensor acquired · awaiting live readings from the gateway</small
             >
@@ -921,7 +921,7 @@
         >
           <div>
             <span class="section-eyebrow">Lightning</span>
-            <strong id="lightningHeadline">WH57 lightning detector</strong>
+            <strong id="lightningHeadline">Ecowitt lightning detector</strong>
             <small id="lightningDetail">Waiting for live sensor data</small>
             <small id="lightningFreshness">Sensor status has not been checked yet</small>
           </div>
@@ -1162,7 +1162,7 @@
           <div class="soil-panel-copy">
             <span class="section-eyebrow">Garden sensor</span>
             <div class="soil-heading-row"><h2 id="soilHeading">Garden soil</h2><span id="soilBaselineBadge" class="coverage-badge">Early data</span></div>
-            <p id="soilSummary">Waiting for the first WH52 observation…</p>
+            <p id="soilSummary">Waiting for the first garden soil reading…</p>
             <p id="soilBaselineNote" class="soil-baseline-note">The sensor is building its 14-day local baseline.</p>
             <p id="soilEvent" class="soil-event">Building a soil trend from saved readings…</p>
             <small id="soilFreshness">Waiting for sensor freshness…</small>
@@ -1172,7 +1172,7 @@
             <div><span>Root-zone temperature</span><strong id="soilTemperature">--</strong><small>Measured in the soil</small></div>
             <div><span>Conductivity</span><strong id="soilEc">--</strong><small>Dissolved-salt trend</small></div>
           </div>
-          <p class="soil-note">One WH52 sensor represents its immediate soil or container only. Moisture and conductivity are best compared with this sensor’s own baseline—not treated as universal plant-health targets.</p>
+          <p class="soil-note">One Ecowitt soil sensor represents its immediate soil or container only. Moisture and conductivity are best compared with this sensor’s own baseline—not treated as universal plant-health targets.</p>
         </section>
 
         <section class="forecast-section" id="forecast">
@@ -1529,7 +1529,7 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20260927-v38-4-105"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="app.js?v=20260928-v38-4-123"></script>
+    <script src="app.js?v=20260929-v38-4-124"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
@@ -1548,7 +1548,7 @@
     <script src="site-config.js?v=20260912-mobile2"></script>
     <script src="platform.js?v=20260928-v38-4-120"></script>
     <script>
-      /* WH57 acquisition status; existing app.js remains responsible for displaying detections and alerts. */
+      /* Lightning detector acquisition status; existing app.js displays detections and alerts. */
       (() => {
         const notice = document.getElementById("lightningSetupNotice");
         const status = document.getElementById("lightningSetupStatus");

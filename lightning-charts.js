@@ -1,4 +1,4 @@
-/* Parknacross Weather · WH57 lightning charts · v38.4.97
+/* Parknacross Weather · Ecowitt lightning detector charts · v38.4.97
  * Additive frontend script: uses the existing /history readings without changing
  * the Worker, D1 schema, existing charts or other site functions.
  */
@@ -124,8 +124,8 @@
       distanceStatus.textContent = 'Waiting for the weather-data connection.';
       return;
     }
-    countStatus.textContent = 'Checking WH57 archive…';
-    distanceStatus.textContent = 'Checking WH57 archive…';
+    countStatus.textContent = 'Checking lightning archive…';
+    distanceStatus.textContent = 'Checking lightning archive…';
     try {
       const response = await fetch(`${API}/history?hours=${hours}`, {cache:'default'});
       if (!response.ok) throw new Error(`History HTTP ${response.status}`);
@@ -141,7 +141,7 @@
       activityChart.update(); distanceChart.update();
       const periodLabel=({6:'6-hour',24:'24-hour',48:'48-hour',168:'7-day',720:'30-day'})[hours]||`${hours}-hour`;
       if (!series.observed) {
-        countStatus.textContent = 'No WH57 strike-counter readings in this period yet. Missing data is not zero lightning.';
+        countStatus.textContent = 'No lightning strike-counter readings are available for this period. Missing data does not mean zero lightning.';
       } else if (series.counted) {
         countStatus.textContent = `${series.counted.toLocaleString('en-IE')} counter increase${series.counted===1?'':'s'} observed · ${series.interval} intervals${series.skippedIntervals?' · archive gaps excluded':''}. First reading sets the baseline.`;
       } else {

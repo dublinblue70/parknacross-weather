@@ -81,10 +81,10 @@ for (const days of [7, 30, 90, 365]) {
     throw new Error(`${days}-day export did not reach the newest archived row`);
   }
   if (!rows.some(row => row.soil_moisture_pct !== null)) {
-    throw new Error(`${days}-day export omitted populated WH52 data`);
+    throw new Error(`${days}-day export omitted populated soil-sensor data`);
   }
   if (!rows.some(row => Number(row.lightning_strikes) > 0)) {
-    throw new Error(`${days}-day export omitted populated WH57 data`);
+    throw new Error(`${days}-day export omitted populated lightning detector data`);
   }
   console.log(`${days}-day CSV pagination passed (${rows.length} rows)`);
 }
