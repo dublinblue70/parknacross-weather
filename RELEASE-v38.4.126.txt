@@ -1,0 +1,7 @@
+PARKNACROSS WEATHER v38.4.126
+
+Station lightning wording
+
+- Removes the live “0 strikes today” or strike-count suffix from the Station specification.
+- The Station page now consistently shows: “Ecowitt WH57 lightning detector · approximate range up to 40 km”.
+- Lightning collection, charts, alerts and calculations are unchanged.

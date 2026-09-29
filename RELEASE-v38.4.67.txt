@@ -6,7 +6,7 @@ WEATHER INTELLIGENCE LAB
 - Coastal timeline combines current Parknacross observations, upcoming Arklow
   tide events, the available official point forecast and marine warning state.
 - Storm Mode analyses the latest 24 hours for pressure change, peak gust,
-  peak rain rate and available WH57 lightning-counter change.
+  peak rain rate and available lightning-counter change.
 - Ask the Archive answers common plain-language questions from saved daily data.
 - Recent automatically identified weather events are presented as stories.
 - Today’s sky can be downloaded with a branded weather overlay when browser

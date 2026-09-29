@@ -37,14 +37,7 @@
           ? `${Number(reliability.actual_samples).toLocaleString("en-IE")} of ${Number(reliability.expected_samples).toLocaleString("en-IE")} expected 5-minute readings saved this month`
           : "Percentage of expected 5-minute readings successfully saved this month";
         set("qualityReliabilityNote", reliability?.label ? `${reliability.label} · ${reliabilityDetail}` : reliabilityDetail);
-        if (lightning?.available) {
-          const strikes = usable(lightning.strikes_today) && Number(lightning.strikes_today) >= 0
-            ? Math.round(Number(lightning.strikes_today)) : null;
-          const countText = strikes === null ? "strike count unavailable" : `${strikes} strike${strikes === 1 ? "" : "s"} today`;
-          set("stationLightning", `Ecowitt WH57 lightning detector · approximate range up to 40 km);
-        } else {
-          set("stationLightning", "Ecowitt WH57 lightning detector · approximate range up to 40 km · awaiting live readings");
-        }
+        set("stationLightning", "Ecowitt WH57 lightning detector · approximate range up to 40 km");
         if (lightning?.available) {
           window.PWAlerts?.evaluateLightning?.(lightning);
         }
