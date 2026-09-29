@@ -55,10 +55,11 @@ function render(year) {
     low = minRow(rows, "low_c"),
     gust = maxRow(rows, "peak_gust_kmh"),
     wettest = maxRow(rows, "rain_mm");
-  const rain = rows.reduce(
-    (s, r) => s + (usable(r.rain_mm) ? Number(r.rain_mm) : 0),
-    0,
-  );
+  const rainRows = rows.filter((r) => usable(r.rain_mm));
+  const missingRainDays = rows.length - rainRows.length;
+  const rain = rainRows.length
+    ? rainRows.reduce((s, r) => s + Number(r.rain_mm), 0)
+    : null;
   const wetDays = rows.filter(
     (r) => usable(r.rain_mm) && Number(r.rain_mm) > 0,
   ).length;
@@ -71,8 +72,10 @@ function render(year) {
       ? `${year === String(dublinYear()) ? "Year-to-date" : "Annual"} report based on ${rows.length} archived day${rows.length === 1 ? "" : "s"}.`
       : "No archived days are available for this year.",
   );
-  set("annualRain", `${n(rain)} mm`);
-  set("annualWetDays", `${wetDays} wet day${wetDays === 1 ? "" : "s"}`);
+  set("annualRain", usable(rain) ? `${n(rain)} mm` : "Unavailable");
+  set("annualWetDays", rainRows.length
+    ? `${wetDays} wet day${wetDays === 1 ? "" : "s"} · ${rainRows.length}/${rows.length} archived days with rainfall data`
+    : "No archived rainfall values");
   set("annualHigh", usable(high?.high_c) ? `${n(high.high_c)} °C` : "--");
   set("annualHighDate", high ? dateLabel(high.day) : "--");
   set("annualLow", usable(low?.low_c) ? `${n(low.low_c)} °C` : "--");
@@ -93,7 +96,7 @@ function render(year) {
   set(
     "annualPeriod",
     rows.length
-      ? `${dateLabel(rows[0].day)} to ${dateLabel(rows[rows.length - 1].day)}`
+      ? `${dateLabel(rows[0].day)} to ${dateLabel(rows[rows.length - 1].day)}${missingRainDays ? ` · rainfall incomplete for ${missingRainDays} day${missingRainDays === 1 ? "" : "s"}` : ""}`
       : "--",
   );
   const story = [];
@@ -101,14 +104,14 @@ function render(year) {
     story.push(
       `Temperatures ranged from ${n(low.low_c)}°C to ${n(high.high_c)}°C`,
     );
-  story.push(
-    `${n(rain)} mm of rain was recorded across ${wetDays} wet day${wetDays === 1 ? "" : "s"}`,
+  if (usable(rain)) story.push(
+    `${n(rain)} mm of rain was recorded across ${wetDays} wet day${wetDays === 1 ? "" : "s"}${missingRainDays ? `, based on ${rainRows.length} of ${rows.length} archived days with rainfall values` : ""}`,
   );
   if (usable(gust?.peak_gust_kmh))
     story.push(`the strongest gust reached ${n(gust.peak_gust_kmh)} km/h`);
   set(
     "annualStory",
-    rows.length
+    rows.length && story.length
       ? `${story.join(", ")}.`
       : "Annual observations are still building.",
   );
@@ -118,14 +121,15 @@ function render(year) {
   );
   const totals = months.map((m) => {
     const monthRows = rows.filter((r) => String(r.day || "").startsWith(m));
-    return monthRows.length
-      ? monthRows.reduce((s, r) => s + (usable(r.rain_mm) ? Number(r.rain_mm) : 0), 0)
+    const monthRainRows = monthRows.filter((r) => usable(r.rain_mm));
+    return monthRainRows.length
+      ? monthRainRows.reduce((s, r) => s + Number(r.rain_mm), 0)
       : null;
   });
   const periodType=year===String(dublinYear())?"year-to-date":"annual";
   const annualCanvas=$("annualRainChart");
   annualCanvas?.setAttribute("role","img");
-  annualCanvas?.setAttribute("aria-label",`Monthly rainfall totals for ${year}. This is a ${periodType} report based on ${rows.length} archived day${rows.length===1?"":"s"}. Months without archived data are unavailable, not zero.`);
+  annualCanvas?.setAttribute("aria-label",`Monthly rainfall totals for ${year}. This is a ${periodType} report based on ${rows.length} archived day${rows.length===1?"":"s"}. Months without rainfall data are unavailable, not zero.${missingRainDays?` ${missingRainDays} archived day${missingRainDays===1?" has":"s have"} no rainfall value.`:""}`);
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
     Chart.defaults.animation = false;
   if (chart) chart.destroy();
