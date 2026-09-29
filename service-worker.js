@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-126-station-lightning-copy";
+const CACHE_NAME = "parknacross-v38-4-127-accuracy-consistency";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -21,6 +21,10 @@ const STATIC_ASSETS = [
   "./privacy.html",
   "./intelligence.html",
   "./offline.html",
+  "./ardamine-weather.html",
+  "./courtown-weather.html",
+  "./north-wexford-weather.html",
+  "./north-wexford-coastal-weather.html",
   "./styles.css",
   "./chart.umd.min.js",
   "./app.js",

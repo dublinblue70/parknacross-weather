@@ -71,11 +71,11 @@ try {
 const requiredChecks = [
   ["history.js", "/coverage?days=371"],
   ["history.js", "Weather observations for"],
-  ["history.js", "withoutDuplicateDiaryEvents"],
+  ["history.js", "No lightning count stored for this day"],
   ["status.js", "retained in the raw archive"],
   ["station.html", "Readings saved today"],
   ["navigation.js", "document.body.appendChild(menu)"],
-  ["sitemap.xml", "2026-09-24"],
+  ["sitemap.xml", "2026-09-29"],
   ["app.js", "dashboardTooltipTime"],
   ["graphs.js", "Partial archive"],
   ["history.html", "previousArchiveDay"],
@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-126"],
+  ["service-worker.js", "parknacross-v38-4-127"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -124,6 +124,14 @@ const requiredChecks = [
   ["index.html", "class=\"phase-icon moon-phase-icon\""],
   ["monthly.html", "shareMonthCard"],
   ["monthly.js", "shareMonthlyCard"],
+  ["monthly.js", "missingRainDays"],
+  ["annual.js", "missingRainDays"],
+  ["history.js", "Rain-day count unavailable"],
+  ["status.js", "Wind-reading quality counters could not be retrieved"],
+  ["downloads.html", "rel=\"manifest\""],
+  ["status.html", "rel=\"manifest\""],
+  ["service-worker.js", "./ardamine-weather.html"],
+  ["service-worker.js", "./north-wexford-coastal-weather.html"],
   ["intelligence.html", "window.location.replace(\"summary.html\")"],
   ["summary.html", "Significant weather check"],
   ["summary.js", "renderSignificantWeather"],
@@ -168,6 +176,10 @@ if (/live camera feed/i.test(skyHtml) && !/not a continuous live camera feed/i.t
 const coastHtml = await readFile(join(root, "coast.html"), "utf8");
 if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("coast.html: land-based clothing guide must not appear on the Sea & Swim page");
 const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
+const historyHtml = await readFile(join(root, "history.html"), "utf8");
+const historyApp = await readFile(join(root, "history.js"), "utf8");
+if (/Weather diary|weatherDiary|Notable Parknacross weather/.test(historyHtml + historyApp)) failures.push("history: removed Weather Diary content remains");
+if (/garden soil\s+garden-soil/i.test(dashboardHtml)) failures.push("index.html: duplicated garden-soil wording remains");
 const dashboardApp = await readFile(join(root, "app.js"), "utf8");
 const platformApp = await readFile(join(root, "platform.js"), "utf8");
 if (platformApp.includes('$("shareTodayButton")?.addEventListener')) failures.push("platform.js: obsolete duplicate weather-card click handler remains");

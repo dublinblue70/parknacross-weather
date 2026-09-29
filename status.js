@@ -257,17 +257,24 @@ async function runChecks() {
     setText("batteryDetail",battery.detail);
     states.push(battery.state);
 
-    const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):0;
-    const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):0;
-    setBadge("gustQualityBadge",gust24>0?"warn":"good",gust24>0?"REVIEW":gustTotal>0?"RECORDED":"OK");
-    setText("gustQualityValue",gustTotal===0?"No anomalies":gust24>0?`${gust24} recent · ${gustTotal} total`:`${gustTotal} historical`);
-    const lastGust=usableNumber(quality.last_gust_exclusion_epoch)
-      ? new Date(Number(quality.last_gust_exclusion_epoch)*1000).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})
-      : null;
-    setText("gustQualityDetail",gustTotal>0
-      ? `${gustTotal} unusual wind reading${gustTotal===1?"":"s"} retained in the raw archive and excluded from derived peak-gust statistics${lastGust?` · last ${lastGust}`:""}`
-      : "No unusual wind readings found");
-    if(gust24>0)states.push("warn");
+    const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):null;
+    const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):null;
+    if(gust24===null||gustTotal===null){
+      setBadge("gustQualityBadge","warn","CHECK");
+      setText("gustQualityValue","Unavailable");
+      setText("gustQualityDetail","Wind-reading quality counters could not be retrieved");
+      states.push("warn");
+    }else{
+      setBadge("gustQualityBadge",gust24>0?"warn":"good",gust24>0?"REVIEW":gustTotal>0?"RECORDED":"OK");
+      setText("gustQualityValue",gustTotal===0?"No anomalies":gust24>0?`${gust24} recent · ${gustTotal} total`:`${gustTotal} historical`);
+      const lastGust=usableNumber(quality.last_gust_exclusion_epoch)
+        ? new Date(Number(quality.last_gust_exclusion_epoch)*1000).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})
+        : null;
+      setText("gustQualityDetail",gustTotal>0
+        ? `${gustTotal} unusual wind reading${gustTotal===1?"":"s"} retained in the raw archive and excluded from derived peak-gust statistics${lastGust?` · last ${lastGust}`:""}`
+        : "No unusual wind readings found");
+      if(gust24>0)states.push("warn");
+    }
   }
 
   if(reliability.__error || !usableNumber(reliability.archive_reliability_percent)) {

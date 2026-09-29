@@ -1,0 +1,17 @@
+PARKNACROSS WEATHER v38.4.127
+
+Accuracy and consistency release
+
+- Corrects duplicated “garden soil garden-soil” wording on the Dashboard.
+- Distinguishes unavailable archived lightning counts from a confirmed zero.
+- Distinguishes unavailable monthly rain-day counts from zero rain days.
+- Monthly and annual reports no longer convert missing daily rainfall into zero.
+- Reports disclose how many archived days contain valid rainfall totals.
+- System Status no longer describes missing gust-quality counters as “No anomalies”.
+- Archive-storage percentage is derived from bytes when the percentage field is absent.
+- Removes the Weather Diary section and its redundant events request from History.
+- Adds PWA manifests to Downloads and System Status.
+- Adds all four local weather landing pages to the offline application cache.
+- Refreshes sitemap modification dates for the current release.
+
+The Worker, sensor ingestion and raw archive storage are unchanged. Only report handling of missing values has been corrected.
