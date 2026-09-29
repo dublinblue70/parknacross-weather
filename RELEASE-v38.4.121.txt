@@ -10,7 +10,7 @@ Solar radiation and UV chart clarity
 - Dashboard and Graphs page use the same visual treatment.
 - Descriptive chart text explains the visual encoding.
 - Garden-soil activity and freshness messages now use plain, visitor-friendly language.
-- The technical WH52 channel number is no longer shown in the public dashboard summary.
+- The technical soil-sensor channel number is no longer shown in the public dashboard summary.
 - Service-worker cache updated so the revised chart scripts load promptly.
 
 No weather data, calculations, collection logic or Worker code changed.

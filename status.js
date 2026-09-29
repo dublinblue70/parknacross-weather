@@ -219,7 +219,7 @@ async function runChecks() {
 
   if(current.__error) {
     setBadge("feedBadge","bad","FAIL"); setText("feedValue","No reading"); setText("feedDetail","Current weather reading could not be reached"); states.push("bad");
-    setBadge("soilBadge","warn","CHECK"); setText("soilValue","Unavailable"); setText("soilDetail","The latest WH52 reading could not be checked.");
+    setBadge("soilBadge","warn","CHECK"); setText("soilValue","Unavailable"); setText("soilDetail","The latest soil-sensor reading could not be checked.");
   } else {
     const age=usableNumber(current.epoch)?Math.max(0,Math.floor(Date.now()/1000)-Number(current.epoch)):null;
     const state=age===null?"warn":age<600?"good":age<1800?"warn":"bad";
@@ -232,7 +232,7 @@ async function runChecks() {
       const details=[];if(usableNumber(current.soil_temperature_c))details.push(`${fmtNum(current.soil_temperature_c,1)}°C soil`);if(usableNumber(current.soil_ec_us_cm))details.push(`${Math.round(Number(current.soil_ec_us_cm)).toLocaleString("en-IE")} µS/cm`);if(usableNumber(current.soil_channel))details.push(`channel ${Number(current.soil_channel)}`);
       setText("soilDetail",`${details.join(" · ")}. Reading represents the probe location only.`);states.push(soilState);
     }else{
-      setBadge("soilBadge","warn","WAITING");setText("soilValue","No current value");setText("soilDetail","No WH52 fields were present in the latest gateway observation.");states.push("warn");
+      setBadge("soilBadge","warn","WAITING");setText("soilValue","No current value");setText("soilDetail","No soil-sensor fields were present in the latest gateway observation.");states.push("warn");
     }
   }
 

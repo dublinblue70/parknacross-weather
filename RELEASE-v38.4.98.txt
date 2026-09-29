@@ -3,7 +3,7 @@ Parknacross Weather v38.4.98
 Archive resilience and transparent gap reporting
 
 - Adds scheduled Ecowitt-sync attempt, success and error telemetry to Worker health output.
-- Uses authenticated GW3001 WH52 uploads as a throttled recovery signal whenever the main archive is more than ten minutes behind.
+- Uses authenticated GW3001 soil-sensor uploads as a throttled recovery signal whenever the main archive is more than ten minutes behind.
 - Retains the existing Ecowitt cloud parser, units, quality controls and duplicate-epoch write guard.
 - Adds an Archive collection card to System status.
 - Changes graph coverage from first-to-last span to actual unique five-minute slots, so internal data gaps can no longer look complete.

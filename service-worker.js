@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-123-consistent-solar-uv";
+const CACHE_NAME = "parknacross-v38-4-124-friendly-sensor-names";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

@@ -285,8 +285,7 @@ function renderSoil(current){
   set("summarySoilMoisture",usable(current.soil_moisture_pct)?`${num(current.soil_moisture_pct)}%`:"--");
   set("summarySoilTemperature",usable(current.soil_temperature_c)?`${num(current.soil_temperature_c)}°C`:"--");
   set("summarySoilEc",usable(current.soil_ec_us_cm)?`${Math.round(Number(current.soil_ec_us_cm)).toLocaleString("en-IE")} µS/cm`:"--");
-  const channel=usable(current.soil_channel)?` · WH52 channel ${Number(current.soil_channel)}`:"";
-  set("summarySoilUpdated",`Latest sensor observation${channel}. This represents only the probe's immediate soil or container; use trends against its own baseline.`);
+  set("summarySoilUpdated","Latest soil-sensor observation. This represents only the probe's immediate soil or container; use trends against its own baseline.");
 }
 async function shareCurrentWeather(){
   const text=shareText(); if(!text)return;

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#07131f">
-  <meta name="description" content="About Parknacross Weather in Ardamine, Co. Wexford: Ecowitt WS90 weather observations, WH57 lightning detection and WH52 garden-soil readings via a GW3001 gateway.">
+  <meta name="description" content="About Parknacross Weather in Ardamine, Co. Wexford: Ecowitt WS90 weather observations, lightning detection and garden-soil readings via a GW3001 gateway.">
   <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -147,8 +147,8 @@
         <div class="station-spec"><span>Approx. coordinates</span><strong>52.6°N · 6.3°W</strong></div>
         <div class="station-spec"><span>Elevation</span><strong>35 m above sea level</strong></div>
         <div class="station-spec"><span>Coastal setting</span><strong>Approx. 500 m from the Irish Sea</strong></div>
-        <div class="station-spec"><span>Lightning</span><strong id="stationLightning">Ecowitt WH57 · approximate range up to 40 km · awaiting live readings</strong></div>
-        <div class="station-spec"><span>Garden soil</span><strong>Ecowitt WH52 · moisture, root-zone temperature and electrical conductivity</strong></div>
+        <div class="station-spec"><span>Lightning</span><strong id="stationLightning">Ecowitt lightning detector · approximate range up to 40 km · awaiting live readings</strong></div>
+        <div class="station-spec"><span>Garden soil</span><strong>Ecowitt soil sensor · moisture, root-zone temperature and electrical conductivity</strong></div>
         <div class="station-spec"><span>Time zone</span><strong>Irish local time · GMT/IST</strong></div>
         <div class="station-spec"><span>Contact</span><strong><a href="mailto:info@parknacrossweather.ie" style="color:inherit;text-decoration:none">info@parknacrossweather.ie</a></strong></div>
       </div>
@@ -175,7 +175,7 @@
           <div class="info-item"><span>Data processing</span><strong>Secure cloud processing</strong></div>
           <div class="info-item"><span>Live dashboard</span><strong>Updated approximately every 60 seconds</strong></div>
           <div class="info-item"><span>Weather history</span><strong>Readings archived approximately every 5 minutes</strong></div>
-          <div class="info-item"><span>Garden soil feed</span><strong>WH52 readings received through the GW3001 gateway</strong></div>
+          <div class="info-item"><span>Garden soil feed</span><strong>Soil-sensor readings received through the GW3001 gateway</strong></div>
           <div class="info-item"><span>Website</span><strong>Parknacrossweather.ie</strong></div>
           <div class="info-item"><span>Official forecast</span><strong>Met Éireann</strong></div>
         </div>
@@ -255,7 +255,7 @@
           <label><input id="alertGust" type="checkbox"> <span><strong>Strong gust</strong><small>Notify when a gust reaches 50 km/h.</small></span></label>
           <label><input id="alertFrost" type="checkbox"> <span><strong>Freezing temperature</strong><small>Notify when the outdoor temperature reaches 0°C or below.</small></span></label>
           <label><input id="alertHeavyRain" type="checkbox"> <span><strong>Heavy rain</strong><small>Notify when the rain rate reaches 10 mm/h.</small></span></label>
-          <label class="alert-lightning-option"><span><strong>Lightning proximity</strong><small>Choose a notification radius up to the WH57’s approximate 40 km detection range. Alerts only operate after a genuine detection is received.</small></span>
+          <label class="alert-lightning-option"><span><strong>Lightning proximity</strong><small>Choose a notification radius up to the detector’s approximate 40 km range. Alerts only operate after a genuine detection is received.</small></span>
             <select id="alertLightningDistance" aria-label="Lightning alert distance">
               <option value="0">Off</option>
               <option value="40">Within 40 km</option>
@@ -314,7 +314,7 @@
         <div class="pwa-diagnostics">
           <div class="pwa-diagnostic"><span>Running as an app</span><strong id="diagInstalled">Checking…</strong><small>Standalone display mode</small></div>
           <div class="pwa-diagnostic"><span>Service worker</span><strong id="diagWorker">Checking…</strong><small>Offline and update support</small></div>
-          <div class="pwa-diagnostic"><span>App cache</span><strong id="diagCache">v38.4.123</strong><small>Expected website release</small></div>
+          <div class="pwa-diagnostic"><span>App cache</span><strong id="diagCache">v38.4.124</strong><small>Expected website release</small></div>
           <div class="pwa-diagnostic"><span>Notifications</span><strong id="diagNotifications">Checking…</strong><small id="diagNotificationPermission">Browser capability</small></div>
           <div class="pwa-diagnostic"><span>Platform</span><strong id="diagPlatform">Checking…</strong><small>Detected browser platform</small></div>
           <div class="pwa-diagnostic"><span>Network</span><strong id="diagNetwork">Checking…</strong><small>Current browser connection</small></div>
@@ -532,7 +532,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<script src="offline.js?v=20260915-v36"></script><script src="alert-settings.js?v=20260927-v38-4-105"></script><script src="site-config.js?v=20260912-batteryrestore1"></script><script src="station-v2.js?v=20260926-v38-4-97"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="offline.js?v=20260915-v36"></script><script src="alert-settings.js?v=20260927-v38-4-105"></script><script src="site-config.js?v=20260912-batteryrestore1"></script><script src="station-v2.js?v=20260929-v38-4-124"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20260927-v38-4-106"></script>
 <script src="pwa-diagnostics.js?v=20260924-v38-4-97"></script>
 <script src="accessibility.js?v=20260924-v38-4-97"></script>

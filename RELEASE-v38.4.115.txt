@@ -4,7 +4,7 @@ CSV corrections
 - Downloads now request a fresh database snapshot instead of accepting a potentially six-hour-old edge-cached export.
 - The Worker bypasses its CSV edge cache when fresh=1 is requested by the Downloads page.
 - Normal direct exports now expire after five minutes rather than six hours.
-- The Downloads page validates that all WH52 and WH57 columns exist before saving the file.
+- The Downloads page validates that all soil and lightning columns exist before saving the file.
 - Successful downloads explicitly confirm that weather, lightning and soil columns are included.
 - Missing historical sensor readings remain blank; they are never converted into false zero measurements.
 

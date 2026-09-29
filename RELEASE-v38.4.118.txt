@@ -3,7 +3,7 @@ PARKNACROSS WEATHER v38.4.118 — LIVE-VERIFIED LONG CSV REPAIR
 Live fault reproduced
 - The deployed v38.4.117 website and Worker successfully returned populated 7 and 30-day CSV files.
 - The live 90 and 365-day requests failed before returning a response.
-- This proved that the remaining issue was long-window Worker execution, not browser caching, CSV headings or missing WH52/WH57 archive values.
+- This proved that the remaining issue was long-window Worker execution, not browser caching, CSV headings or missing soil/lightning archive values.
 
 Final Worker correction
 - Resolves the first and newest real archive epochs once at the start of an export.
@@ -14,7 +14,7 @@ Final Worker correction
 
 Verification
 - Regression coverage runs the exact Worker export function with artificially short database pages.
-- 7, 30, 90 and 365-day exports must all reach the newest WH52 and WH57 observation.
+- 7, 30, 90 and 365-day exports must all reach the newest soil and lightning observation.
 - Website smoke tests, JavaScript syntax checks and Worker syntax checks pass.
 
 Deployment pair

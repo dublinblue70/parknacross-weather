@@ -2,7 +2,7 @@ window.PARKNACROSS_MAINTENANCE_LOG = [
   {
     date: "2026-09-26",
     type: "Sensor expansion",
-    title: "WH52 garden-soil sensor installed",
+    title: "Garden soil sensor installed",
     detail: "Added garden soil moisture, root-zone temperature and conductivity readings."
   },
   {
@@ -14,8 +14,8 @@ window.PARKNACROSS_MAINTENANCE_LOG = [
   {
     date: "2026-09-21",
     type: "Sensor expansion",
-    title: "WH57 lightning sensor acquired",
-    detail: "The Ecowitt WH57 lightning sensor was added to the station setup."
+    title: "Lightning detector added",
+    detail: "The Ecowitt lightning detector was added to the station setup."
   },
   {
     date: "2026-09-15",

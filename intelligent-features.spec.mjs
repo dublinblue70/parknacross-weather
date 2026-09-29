@@ -10,7 +10,7 @@ async function mockDashboardApi(page){
   });
 }
 
-test("WH52 early-data state and freshness are clear",async({page})=>{
+test("soil-sensor early-data state and freshness are clear",async({page})=>{
   await mockDashboardApi(page);await page.goto("/index.html");
   await expect(page.getByText("Latest saved observation",{exact:true})).toBeVisible();
   await expect(page.getByText(/Gateway received/)).toBeVisible();

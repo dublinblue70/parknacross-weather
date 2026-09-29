@@ -1,0 +1,14 @@
+PARKNACROSS WEATHER v38.4.124
+
+Visitor-friendly sensor names
+
+- Replaces visitor-facing model-code references with plain-language names.
+- Lightning hardware is identified as the Ecowitt lightning detector.
+- Soil hardware is identified as the Ecowitt soil sensor.
+- General content refers simply to lightning events and garden-soil readings.
+- Removes technical soil channel details from public summaries.
+- Updates page descriptions, structured data, charts, System Health, Station,
+  Downloads, History, maintenance entries and accessibility labels consistently.
+
+Internal API field names remain unchanged for compatibility. No observations,
+calculations, collection logic or Worker code changed.

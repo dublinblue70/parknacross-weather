@@ -6,7 +6,7 @@ Final hardening release
 - Replaced the mixed coastal timeline with clearly grouped current, warning,
   forecast and tide information.
 - Kept explicit Irish-local dates and times on every time-specific entry.
-- Made WH57 lightning totals resilient to counter resets.
+- Made lightning detector totals resilient to counter resets.
 - Displayed the four Storm Mode activation thresholds.
 - Moved the System Status “last checked” time beside its heading.
 - Added accessible names to current and historical sky-photo admin controls.
