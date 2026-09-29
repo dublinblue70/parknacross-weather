@@ -1,0 +1,10 @@
+PARKNACROSS WEATHER v38.4.125
+
+Station hardware model names
+
+- Restores WH57 beside the Ecowitt lightning detector in the Station specification grid.
+- Restores WH52 beside the Ecowitt soil sensor in the Station specification grid.
+- Keeps model codes removed everywhere else for visitor-friendly wording.
+- Live lightning status retains the WH57 model name within this section only.
+
+No data, calculations, collection logic or Worker code changed.
