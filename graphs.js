@@ -26,6 +26,12 @@
  const tickTime=value=>{const d=new Date(Number(value)),time=d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"});if(hours<24)return time;if(hours<=48)return[d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"}),time];return d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})};
  const tooltipTime=items=>{const value=items?.[0]?.parsed?.x;return Number.isFinite(value)?new Date(value).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""};
  const timeAxis=()=>({type:"linear",grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:9,callback:tickTime}});
+ // Keep stacked solar/UV charts aligned, including labels and plotting width.
+ const solarTimeAxis=()=>({...timeAxis(),ticks:{...timeAxis().ticks,autoSkip:false,maxRotation:0,minRotation:0},afterBuildTicks:axis=>{
+   if(!Number.isFinite(axis.min)||!Number.isFinite(axis.max)||axis.max<=axis.min)return;
+   axis.ticks=Array.from({length:4},(_,i)=>({value:axis.min+(axis.max-axis.min)*i/3}));
+ }});
+ const alignSolarYAxis=axis=>{axis.width=64;};
  const scales=(unit,zero=false)=>({x:timeAxis(),y:{beginAtZero:zero,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:unit,color:"#9fb3c1"}}});
  const windLine=(label,colour,axis="y")=>({
    label,
@@ -104,8 +110,8 @@
      }
    }
  });
- charts.s=new Chart($("gSolar"),{type:"line",data:{datasets:[solarLine()]},options:{...common,scales:{x:timeAxis(),y:{position:"left",beginAtZero:true,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",maxTicksLimit:5},title:{display:true,text:"W/m²",color:"#ffd56a"}}},plugins:{legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`Solar radiation: ${Math.round(Number(ctx.parsed.y))} W/m²`}}}}});
- charts.uv=new Chart($("gUv"),{type:"line",data:{datasets:[uvLine()]},options:{...common,scales:{x:timeAxis(),y:{position:"left",beginAtZero:true,suggestedMax:3,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",precision:0,stepSize:1,maxTicksLimit:5},title:{display:true,text:"UV index",color:"#bd91ff"}}},plugins:{legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`UV index: ${Number(ctx.parsed.y).toFixed(1)}`}}}}});
+ charts.s=new Chart($("gSolar"),{type:"line",data:{datasets:[solarLine()]},options:{...common,scales:{x:solarTimeAxis(),y:{afterFit:alignSolarYAxis,position:"left",beginAtZero:true,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",maxTicksLimit:5},title:{display:true,text:"W/m²",color:"#ffd56a"}}},plugins:{legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`Solar radiation: ${Math.round(Number(ctx.parsed.y))} W/m²`}}}}});
+ charts.uv=new Chart($("gUv"),{type:"line",data:{datasets:[uvLine()]},options:{...common,scales:{x:solarTimeAxis(),y:{afterFit:alignSolarYAxis,position:"left",beginAtZero:true,suggestedMax:3,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",precision:0,stepSize:1,maxTicksLimit:5},title:{display:true,text:"UV index",color:"#bd91ff"}}},plugins:{legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`UV index: ${Number(ctx.parsed.y).toFixed(1)}`}}}}});
  charts.sm=new Chart($("gSoilMoisture"),{type:"line",data:{datasets:[soilLine("Soil moisture","#65d19a")]},options:{...common,scales:{x:timeAxis(),y:{min:0,max:100,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",callback:v=>`${v}%`},title:{display:true,text:"Moisture %",color:"#9fb3c1"}}},plugins:{...common.plugins,legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>usable(ctx.parsed.y)?`Soil moisture: ${Number(ctx.parsed.y).toFixed(0)}%`:"Soil moisture unavailable"}}}}});
  charts.sd=new Chart($("gSoilDetail"),{type:"line",data:{datasets:[soilLine("Soil temperature","#ffad66","y"),soilLine("Conductivity","#b594ff","y1")]},options:{...common,scales:{x:timeAxis(),y:{position:"left",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:"°C",color:"#9fb3c1"}},y1:{position:"right",beginAtZero:true,grid:{drawOnChartArea:false},ticks:{color:"#9fb3c1"},title:{display:true,text:"µS/cm",color:"#9fb3c1"}}},plugins:{...common.plugins,legend:{position:"bottom"},tooltip:{callbacks:{title:tooltipTime,label:ctx=>ctx.dataset.yAxisID==="y1"?`Conductivity: ${Math.round(Number(ctx.parsed.y)).toLocaleString("en-IE")} µS/cm`:`Soil temperature: ${Number(ctx.parsed.y).toFixed(1)}°C`}}}}});
  }
@@ -220,7 +226,7 @@
    return{first:epochs[0],last:epochs.at(-1),text:`${text(epochs[0])}–${text(epochs.at(-1))}`};
  }
  function applyExactTimeBounds(rows){
-   const period=exactPeriod(rows),bounded=[charts.t,charts.w,charts.p,charts.r,charts.s,charts.sm,charts.sd];
+   const period=exactPeriod(rows),bounded=[charts.t,charts.w,charts.p,charts.r,charts.s,charts.uv,charts.sm,charts.sd];
    for(const chart of bounded){
      if(!chart?.options?.scales?.x)continue;
      if(period){chart.options.scales.x.min=period.first*1000;chart.options.scales.x.max=period.last*1000;}
