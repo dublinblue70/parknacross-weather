@@ -1,4 +1,4 @@
 Parknacross Weather MASTER CURRENT
-Version: v38.4.127
-Date: 2026-09-29
+Version: v38.4.128
+Date: 2026-09-30
 Worker: v38.4.75 — live gateway freshness, resilient reads and corrected sensor CSV exports

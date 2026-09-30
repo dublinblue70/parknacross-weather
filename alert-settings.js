@@ -50,6 +50,17 @@
     return "Permission not requested";
   }
 
+  function statusText(settings = loadSettings()) {
+    if (!settings.enabled) {
+      return canNotify()
+        ? "Alerts are off on this device · browser permission remains allowed"
+        : permissionText();
+    }
+    return canNotify()
+      ? "Alerts are on · choose the observations you want below"
+      : permissionText();
+  }
+
   async function showNotification(title, body, tag) {
     if (!canNotify()) return false;
     const options = {
@@ -222,13 +233,13 @@
     if (lightning) lightning.value = String(settings.lightningKm || 0);
 
     const status = document.getElementById("alertsPermission");
-    if (status) status.textContent = permissionText();
+    if (status) status.textContent = statusText(settings);
 
     const button = document.getElementById("alertsEnableButton");
     if (button) {
-      button.textContent = settings.enabled && canNotify()
-        ? "Notifications enabled"
-        : "Enable notifications";
+      const enabled = settings.enabled && canNotify();
+      button.textContent = enabled ? "Turn off notifications" : "Enable notifications";
+      button.setAttribute("aria-pressed", String(enabled));
     }
   }
 
@@ -239,16 +250,19 @@
         refreshUI();
         return;
       }
+      const settings = loadSettings();
+      if (settings.enabled && canNotify()) {
+        settings.enabled = false;
+        saveSettings(settings);
+        refreshUI();
+        return;
+      }
+
       let permission = Notification.permission;
       if (permission === "default") permission = await Notification.requestPermission();
-      const settings = loadSettings();
       settings.enabled = permission === "granted";
       saveSettings(settings);
       refreshUI();
-      const status = document.getElementById("alertsPermission");
-      if (status && permission === "granted") {
-        status.textContent = "Notifications allowed · choose the alerts you want below";
-      }
     });
 
     const mapping = {
