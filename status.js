@@ -129,37 +129,25 @@ function analyzeRows(rows) {
 // telling users with new batteries that their batteries need replacing.
 function describeWs90Battery(quality) {
   const voltage=quality?.battery_voltage_v;
-  // First-seen time comes from dedicated provenance, never from the latest
-  // weather observation. A successful cloud check is NOT a battery reading time.
   const archivedAt=quality?.battery_first_seen_at ?? quality?.battery_last_archived_at;
-  const age=quality?.battery_archive_age_seconds;
-  const cloudCheckedAt=quality?.battery_last_checked_at;
   const lastReportedAt=quality?.battery_last_reported_at;
   if(!usableNumber(voltage) || Number(voltage)<1.5 || Number(voltage)>4.0) {
-    return {state:"warn",label:"UNAVAILABLE",value:"--",detail:"No reliable WS90 AA battery voltage is available. Check the Battery reading in Ecowitt; do not confuse it with the solar capacitor."};
+    return {state:"warn",label:"UNAVAILABLE",value:"--",detail:"Battery reading unavailable. Check Ecowitt."};
   }
   const volts=Number(voltage);
   const value=`${volts.toFixed(2)} V`;
-  const ageValid=usableNumber(age) && Number(age)>=0;
   const archivedDate=archivedAt ? new Date(archivedAt) : null;
   const validDate=archivedDate && Number.isFinite(archivedDate.getTime());
-  const timeText=validDate ? archivedDate.toLocaleString("en-IE",{timeZone:"Europe/Dublin",dateStyle:"medium",timeStyle:"short"}) : "time unavailable";
-  const archiveText=`Voltage first seen: ${timeText}${ageValid ? ` (${fmtAge(age)} ago)` : ""}.`;
-  const checkedDate=cloudCheckedAt ? new Date(cloudCheckedAt) : null;
-  const checkTimeText=checkedDate && Number.isFinite(checkedDate.getTime())
-    ? ` Last cloud battery check: ${checkedDate.toLocaleString("en-IE",{timeZone:"Europe/Dublin",dateStyle:"medium",timeStyle:"short"})}.` : "";
   const reportedDate=lastReportedAt ? new Date(lastReportedAt) : null;
   const reportedValid=reportedDate && Number.isFinite(reportedDate.getTime());
   const reportedAge=reportedValid ? (Date.now()-reportedDate.getTime())/1000 : null;
-  const reportedText=reportedValid ? ` Battery voltage last returned by Ecowitt: ${reportedDate.toLocaleString("en-IE",{timeZone:"Europe/Dublin",dateStyle:"medium",timeStyle:"short"})}.` : "";
-  const caution=`${checkTimeText}${reportedText} Ecowitt may cache the voltage; none of these times proves when the batteries were measured.`;
   if(!validDate || !reportedValid || reportedAge>30*60 || reportedAge<0) {
-    return {state:"warn",label:"LAST KNOWN",value,detail:`${archiveText} ${caution} Confirm the present reading in Ecowitt before assessing newly fitted batteries.`};
+    return {state:"warn",label:"LAST KNOWN",value,detail:"Last known voltage. Check Ecowitt for the latest reading."};
   }
   if(volts>=3.0) {
-    return {state:"good",label:"REPORTED",value,detail:`${archiveText} This voltage is in the site's normal range. ${caution}`};
+    return {state:"good",label:"REPORTED",value,detail:"Voltage is in the normal range. Reading may be cached."};
   }
-  return {state:"warn",label:"VERIFY",value,detail:`${archiveText} This recorded voltage is below the site's usual range, but may pre-date a battery change. ${caution} Compare with Ecowitt's current WS90 AA battery reading.`};
+  return {state:"warn",label:"VERIFY",value,detail:"Reported voltage is below the usual range. Check the latest reading in Ecowitt."};
 }
 
 function renderIssues(issues) {
