@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-127-accuracy-consistency";
+const CACHE_NAME = "parknacross-v38-4-128-notification-off-fix";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

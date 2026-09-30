@@ -1,0 +1,14 @@
+PARKNACROSS WEATHER v38.4.128
+
+Notification control fix
+
+- Changes the notification button into a genuine on/off control.
+- “Turn off notifications” now immediately disables every Parknacross weather alert on that device.
+- The off choice is stored locally and remains off after the page is refreshed or the PWA is reopened.
+- Keeps individual alert choices so they are ready if the user later enables notifications again.
+- Clarifies that browser permission can remain allowed while Parknacross alerts are switched off.
+- Adds accessible pressed-state information to the control.
+- Adds regression coverage for disabling alerts and retaining the off state after reload.
+- Advances the PWA cache so installed apps receive the corrected notification code.
+
+The Cloudflare Worker, weather calculations, sensor ingestion and archived observations are unchanged.

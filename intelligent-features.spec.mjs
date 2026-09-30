@@ -74,3 +74,19 @@ test("40 km lightning proximity choice persists after reload",async({page})=>{
   await page.reload();
   await expect(distance).toHaveValue("40");
 });
+
+test("notifications can be turned off and remain off after reload",async({context,page})=>{
+  await context.grantPermissions(["notifications"]);
+  await page.goto("/station.html");
+  const button=page.locator("#alertsEnableButton");
+  await button.click();
+  await expect(button).toHaveText("Turn off notifications");
+  await expect(button).toHaveAttribute("aria-pressed","true");
+  await button.click();
+  await expect(button).toHaveText("Enable notifications");
+  await expect(button).toHaveAttribute("aria-pressed","false");
+  await expect(page.locator("#alertsPermission")).toContainText("Alerts are off on this device");
+  await page.reload();
+  await expect(button).toHaveText("Enable notifications");
+  await expect(button).toHaveAttribute("aria-pressed","false");
+});

@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-127"],
+  ["service-worker.js", "parknacross-v38-4-128"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -184,6 +184,10 @@ const dashboardApp = await readFile(join(root, "app.js"), "utf8");
 const platformApp = await readFile(join(root, "platform.js"), "utf8");
 if (platformApp.includes('$("shareTodayButton")?.addEventListener')) failures.push("platform.js: obsolete duplicate weather-card click handler remains");
 if ((dashboardApp.match(/\$\("shareTodayButton"\)\?\.addEventListener\("click",createWeatherCard\)/g) || []).length !== 1) failures.push("app.js: expected exactly one active weather-card click handler");
+const alertSettings = await readFile(join(root, "alert-settings.js"), "utf8");
+if (!alertSettings.includes('settings.enabled = false')) failures.push("alert-settings.js: notification disable branch is missing");
+if (!alertSettings.includes('"Turn off notifications"')) failures.push("alert-settings.js: enabled notification control does not offer an off action");
+if (!alertSettings.includes('button.setAttribute("aria-pressed", String(enabled))')) failures.push("alert-settings.js: notification control state is not exposed accessibly");
 const moonFunctionStart = dashboardApp.indexOf("function moonPhaseInfo");
 const moonFunctionEnd = dashboardApp.indexOf("\n\nconst ASTRONOMY_RAD", moonFunctionStart);
 if (moonFunctionStart < 0 || moonFunctionEnd < 0) {
