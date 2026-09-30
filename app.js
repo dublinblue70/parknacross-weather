@@ -588,10 +588,19 @@ function rainActivity(current) {
 
   if (rainRate > 0) lastRainIncreaseTime = currentTime;
 
+  // A single 0.1 mm piezo detection can leave a low calculated rain rate
+  // showing for several minutes. Use a second increment within 20 minutes
+  // before describing light rain as a confirmed local condition.
+  const recentBaseline = rows.find(row => readingTime(row) >= currentTime - 20 * 60 * 1000);
+  const recentIncreaseMm = recentBaseline && usable(currentTotal)
+    ? Math.max(0, Number(currentTotal) - Number(correctedDailyRain(recentBaseline)))
+    : 0;
+
   const age = lastRainIncreaseTime ? Math.max(0, currentTime - lastRainIncreaseTime) : Infinity;
   return {
     rainRate,
     rainAvailable,
+    recentIncreaseMm,
     isRaining: rainRate > 0 || age <= RAIN_ACTIVE_WINDOW_MS,
     rainRecently: rainRate <= 0 && age > RAIN_ACTIVE_WINDOW_MS && age <= RAIN_RECENT_WINDOW_MS,
     lastIncreaseTime: Number.isFinite(age) ? lastRainIncreaseTime : null
@@ -609,12 +618,21 @@ function conditionInfo(current, isNight) {
     return { tag: "Rainy", icon: "🌧️", story: `Rain is falling at ${n(rain)} mm/h.`, className: "weather-rain", rainState };
   }
   if (rain > 0) {
+    if (rainState.recentIncreaseMm < 0.2 - 1e-6) {
+      return { tag: "Possible light rain", icon: "🌦️", story: `Possible light rain detected by the station (${n(rain)} mm/h). It may be dry at your location.`, className: "weather-neutral", rainState };
+    }
     return { tag: "Light rain", icon: "🌦️", story: `Light rain is falling at ${n(rain)} mm/h.`, className: "weather-rain", rainState };
   }
   if (rainState.isRaining) {
+    if (rainState.recentIncreaseMm < 0.2 - 1e-6) {
+      return { tag: "Possible recent rain", icon: "🌦️", story: "The station registered a small amount of rain within the last few minutes.", className: "weather-neutral", rainState };
+    }
     return { tag: "Raining", icon: "🌧️", story: "Rain has been detected within the last few minutes.", className: "weather-rain", rainState };
   }
   if (rainState.rainRecently) {
+    if (rainState.recentIncreaseMm < 0.2 - 1e-6) {
+      return { tag: "Possible rain recently", icon: "🌦️", story: "The station registered a small amount of rain recently.", className: "weather-neutral", rainState };
+    }
     return { tag: "Rain recently", icon: "🌦️", story: "Rain was detected recently at Parknacross.", className: "weather-rain", rainState };
   }
   if (!rainState.rainAvailable) {
