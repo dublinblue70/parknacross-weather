@@ -105,6 +105,16 @@
     return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
   }
 
+  function freshObservation(current) {
+    const epoch = usable(current?.epoch)
+      ? Number(current.epoch)
+      : current?.received_at
+        ? Date.parse(current.received_at) / 1000
+        : NaN;
+    const ageSeconds = Date.now() / 1000 - epoch;
+    return Number.isFinite(epoch) && ageSeconds >= -90 && ageSeconds <= RAIN_MAX_OBSERVATION_AGE_SECONDS;
+  }
+
   function stationDayKey(epochSeconds) {
     if (!Number.isFinite(epochSeconds)) return null;
     const parts = new Intl.DateTimeFormat("en-GB", {
@@ -160,7 +170,9 @@
 
   async function evaluateCurrent(current) {
     const settings = loadSettings();
-    if (!settings.enabled || !canNotify() || !current) return;
+    // All alerts based on the current station sample need the same freshness
+    // gate. Otherwise a delayed high rain rate could notify long after it fell.
+    if (!settings.enabled || !canNotify() || !current || !freshObservation(current)) return;
 
     const previous = readJSON(STATE_KEY, {});
     const rate = usable(current.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : 0;

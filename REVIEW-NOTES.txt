@@ -1,0 +1,8 @@
+PARKNACROSS WEATHER v38.4.129 — WEBSITE REVIEW PATCH
+
+- Align rain-start notification confirmation with the dashboard: >= 2.5 mm/h or >= 0.2 mm cumulative increase in 20 minutes.
+- Reject station observations older than 10 minutes or more than 90 seconds in the future before sending current-weather notifications. This also prevents delayed heavy-rain alerts.
+- Align displayed PWA/site version indicators and package metadata at v38.4.129.
+- Add a regression test for light rain confirmation, one-off sensor pulses, resumed/stale data, and stale heavy-rain alerts.
+
+This patch is not deployed. It contains no Cloudflare Worker source or changes.
