@@ -5,6 +5,13 @@
   const STATE_KEY = "parknacross.alerts.state.v1";
   const COOLDOWN_KEY = "parknacross.alerts.cooldowns.v1";
   const LIGHTNING_DISTANCES = new Set([0, 10, 15, 25, 40]);
+  // Keep rain-start alerts aligned with the dashboard's rainActivity thresholds.
+  const RAIN_ACTIVE_WINDOW_MS = 5 * 60 * 1000;
+  const RAIN_CONFIRM_WINDOW_MS = 20 * 60 * 1000;
+  const RAIN_INCREMENT_EPSILON_MM = 0.05;
+  const RAIN_CONFIRM_INCREMENT_MM = 0.2;
+  const RAIN_CONFIRMED_RATE_MM_H = 2.5;
+  const RAIN_MAX_OBSERVATION_AGE_SECONDS = 10 * 60;
 
   const defaults = {
     enabled: false,
@@ -98,6 +105,59 @@
     return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
   }
 
+  function stationDayKey(epochSeconds) {
+    if (!Number.isFinite(epochSeconds)) return null;
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Dublin",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(new Date(epochSeconds * 1000));
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
+  }
+
+  function rainEvidence(current, previous, rate, total) {
+    const epoch = usable(current.epoch)
+      ? Number(current.epoch)
+      : (current.received_at ? Date.parse(current.received_at) / 1000 : NaN);
+    const ageSeconds = Date.now() / 1000 - epoch;
+    const previousEpoch = usable(previous.epoch) ? Number(previous.epoch) : NaN;
+    const chronological = !Number.isFinite(previousEpoch) || epoch >= previousEpoch;
+    const fresh = Number.isFinite(epoch) && chronological && ageSeconds >= -90 && ageSeconds <= RAIN_MAX_OBSERVATION_AGE_SECONDS;
+    const day = stationDayKey(epoch);
+    const saved = Array.isArray(previous.rain_samples) ? previous.rain_samples : [];
+    const samples = fresh && day
+      ? saved.filter(sample => sample && sample.day === day && Number.isFinite(Number(sample.epoch)) &&
+          Number(sample.epoch) <= epoch && epoch - Number(sample.epoch) <= RAIN_CONFIRM_WINDOW_MS / 1000)
+      : [];
+
+    if (fresh && day) {
+      const last = samples[samples.length - 1];
+      if (!last || Number(last.epoch) < epoch) {
+        samples.push({ epoch, day, total, rate });
+      } else if (Number(last.epoch) === epoch) {
+        samples[samples.length - 1] = { epoch, day, total, rate };
+      }
+    }
+
+    const totalSamples = samples.filter(sample => usable(sample.total));
+    const increaseSince = (windowMs) => {
+      const baseline = totalSamples.find(sample => epoch - Number(sample.epoch) <= windowMs / 1000);
+      if (!baseline || total === null) return 0;
+      return Math.max(0, total - Number(baseline.total));
+    };
+    const recentIncreaseMm = fresh ? increaseSince(RAIN_CONFIRM_WINDOW_MS) : 0;
+    const activeIncreaseMm = fresh ? increaseSince(RAIN_ACTIVE_WINDOW_MS) : 0;
+    const active = fresh && (rate > 0 || activeIncreaseMm >= RAIN_INCREMENT_EPSILON_MM);
+    const confirmed = active && (
+      rate >= RAIN_CONFIRMED_RATE_MM_H ||
+      recentIncreaseMm >= RAIN_CONFIRM_INCREMENT_MM - 1e-6
+    );
+
+    return { epoch, day, fresh, samples, recentIncreaseMm, active, confirmed };
+  }
+
   async function evaluateCurrent(current) {
     const settings = loadSettings();
     if (!settings.enabled || !canNotify() || !current) return;
@@ -109,24 +169,22 @@
     const temp = usable(current.temperature_c) ? Number(current.temperature_c) : null;
 
     const previousRate = usable(previous.rain_rate_mm_h) ? Number(previous.rain_rate_mm_h) : 0;
-    const previousTotal = usable(previous.rain_daily_mm) ? Number(previous.rain_daily_mm) : null;
     const previousGust = usable(previous.wind_gust_kmh) ? Number(previous.wind_gust_kmh) : null;
     const previousTemp = usable(previous.temperature_c) ? Number(previous.temperature_c) : null;
-
-    const rainIncremented =
-      total !== null && previousTotal !== null && total >= previousTotal + 0.05;
-    const rainNow = rate > 0 || rainIncremented;
-    const rainWasActive = previousRate > 0;
+    const rain = rainEvidence(current, previous, rate, total);
 
     if (
       settings.rainStart &&
-      rainNow &&
-      !rainWasActive &&
+      rain.confirmed &&
+      !Boolean(previous.rain_confirmed) &&
       cooldownReady("rain-start", 3 * 60 * 60 * 1000)
     ) {
+      const body = rate >= RAIN_CONFIRMED_RATE_MM_H
+        ? `Confirmed rain is falling at ${rate.toFixed(1)} mm/h.`
+        : `Confirmed rainfall has increased by at least ${RAIN_CONFIRM_INCREMENT_MM.toFixed(1)} mm in the last 20 minutes.`;
       await showNotification(
         "Rain starting at Parknacross",
-        rate > 0 ? `Current rain rate ${rate.toFixed(1)} mm/h.` : "The WS90 daily rain counter has started increasing.",
+        body,
         "parknacross-rain-start"
       );
     }
@@ -178,7 +236,10 @@
       temperature_c: temp,
       wind_gust_kmh: gust,
       rain_rate_mm_h: rate,
-      rain_daily_mm: total
+      rain_daily_mm: total,
+      rain_day: rain.day,
+      rain_samples: rain.samples,
+      rain_confirmed: rain.confirmed
     });
   }
 
