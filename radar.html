@@ -8,10 +8,16 @@
   <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20260924-v38-4-97">
+    <link rel="stylesheet" href="styles.css?v=20261005-v38-4-134">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <title>North Wexford Rain Radar | Parknacross Weather</title>
   <link rel="canonical" href="https://parknacrossweather.ie/radar.html">
+  <style>
+    .satellite-jump-links,.satellite-source-links{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:14px}.satellite-jump-links a,.satellite-source-links a{color:var(--accent);font-size:.83rem;font-weight:650;text-decoration:none}.satellite-jump-links a:hover,.satellite-source-links a:hover{text-decoration:underline}
+    .satellite-section .section-heading{align-items:center}.satellite-section .section-heading p{margin:5px 0 0;color:var(--muted);font-size:.82rem}.satellite-image-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.satellite-image-card{min-width:0}.satellite-image-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.satellite-image-heading h3{margin:0;font-size:1rem}.satellite-image-heading span{color:var(--muted);font-size:.68rem;text-align:right}
+    .satellite-image-card figure{margin:12px 0 0}.satellite-image-link{display:block;overflow:hidden;border-radius:10px;background:#07131f}.satellite-image-card img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;background:#07131f}.satellite-image-card figcaption{min-height:2.6em;margin-top:7px;color:var(--muted);font-size:.7rem;line-height:1.4}.satellite-credit{margin:7px 0 0;color:var(--muted);font-size:.7rem}.satellite-credit a{color:var(--accent)}.satellite-source-links{margin-top:16px}
+    @media(max-width:680px){.satellite-image-grid{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
 <div class="shell">
@@ -26,13 +32,31 @@
     <nav class="nav" aria-label="Main navigation"><a href="index.html">Dashboard</a><a href="summary.html">Summary</a><a href="radar.html" class="active" aria-current="page">Radar</a><a href="graphs.html">Graphs</a><a href="rain.html">Rain</a><a href="history.html">History</a><div class="nav-more"><button class="nav-more-button" type="button" aria-expanded="false" aria-haspopup="menu">More <span aria-hidden="true">▾</span></button><div class="nav-more-menu" role="menu" hidden><a role="menuitem" href="climate.html">Climate</a><a role="menuitem" href="station.html">Station</a><a role="menuitem" href="coast.html">Sea &amp; swim</a><a role="menuitem" href="sky.html">Today’s sky</a><a role="menuitem" href="records.html">Records</a><a role="menuitem" href="monthly.html">Monthly report</a><a role="menuitem" href="annual.html">Annual report</a><a role="menuitem" href="downloads.html">Downloads</a><a role="menuitem" href="status.html">System status</a><a role="menuitem" href="install.html">Install help</a><a role="menuitem" href="privacy.html">Privacy</a></div></div></nav>
   </header>
   <main>
-    <section class="page-hero"><span class="section-eyebrow">Rain radar</span><h1>North Wexford radar</h1>
-      <p>Animated recent precipitation centred on North Wexford. The map marks an approximate area, not the station’s precise location.</p></section>
-    <section class="page-section radar-shell">
+    <section class="page-hero"><span class="section-eyebrow">Radar &amp; satellite</span><h1>North Wexford radar and satellite</h1>
+      <p>Track recent precipitation on the radar, then use satellite imagery to see cloud patterns over Ireland and Europe.</p><div class="satellite-jump-links"><a href="#radarSection">Rain radar ↓</a><a href="#satelliteImagery">Satellite images ↓</a></div></section>
+    <section class="page-section radar-shell" id="radarSection" aria-labelledby="radarHeading">
+      <h2 class="visually-hidden" id="radarHeading">Recent rain radar</h2>
       <div class="radar-toolbar"><div><strong id="radarTime">Loading radar…</strong><span id="radarStatus">Retrieving recent frames</span></div>
         <div class="radar-controls"><button type="button" class="secondary-button" id="radarPlay">Pause</button><input id="radarSlider" type="range" min="0" max="0" value="0" aria-label="Radar frame time"></div></div>
       <div id="radarMap" class="radar-map"></div>
       <div class="source-note">Radar tiles: RainViewer. Map © OpenStreetMap contributors. Official warnings and forecasts remain Met Éireann.</div>
+    </section>
+    <section class="page-section satellite-section" id="satelliteImagery" aria-labelledby="satelliteHeading">
+      <div class="section-heading"><div><span class="section-eyebrow">Satellite imagery</span><h2 id="satelliteHeading">Clouds over Ireland</h2><p>Images load as you reach this section and refresh every 15 minutes while it is visible.</p></div><button class="secondary-button" type="button" id="satelliteRefresh">Refresh images</button></div>
+      <div class="satellite-image-grid">
+        <article class="info-card satellite-image-card">
+          <div class="satellite-image-heading"><h3>Enhanced satellite view</h3><span>Visible / enhanced</span></div>
+          <figure><a class="satellite-image-link" href="https://view.eumetsat.int/" target="_blank" rel="noopener noreferrer" aria-label="Open EUMETSAT EUMETView"><img data-satellite-image data-satellite-src="https://eumetview.eumetsat.int/static-images/latestImages/EUMETSAT_MSG_RGBEView_segment4.jpg" alt="Latest enhanced EUMETSAT satellite image showing clouds across Europe and nearby regions" loading="lazy" decoding="async"></a><figcaption data-satellite-status role="status" aria-live="polite">Satellite image will load when you reach this section.</figcaption></figure>
+          <p class="satellite-credit">Satellite image: ©EUMETSAT 2026 · <a href="https://view.eumetsat.int/" target="_blank" rel="noopener noreferrer">EUMETView source</a></p>
+        </article>
+        <article class="info-card satellite-image-card">
+          <div class="satellite-image-heading"><h3>Natural-colour view</h3><span>Central Europe</span></div>
+          <figure><a class="satellite-image-link" href="https://view.eumetsat.int/" target="_blank" rel="noopener noreferrer" aria-label="Open EUMETSAT EUMETView"><img data-satellite-image data-satellite-src="https://eumetview.eumetsat.int/static-images/latestImages/EUMETSAT_MSG_RGBNatColourEnhncd_CentralEurope.jpg" alt="Latest EUMETSAT natural-colour satellite image for Central Europe, including Ireland" loading="lazy" decoding="async"></a><figcaption data-satellite-status role="status" aria-live="polite">Satellite image will load when you reach this section.</figcaption></figure>
+          <p class="satellite-credit">Satellite image: ©EUMETSAT 2026 · <a href="https://view.eumetsat.int/" target="_blank" rel="noopener noreferrer">EUMETView source</a></p>
+        </article>
+      </div>
+      <div class="satellite-source-links"><a href="https://www.met.ie/latest-reports/satellites/ireland-visible" target="_blank" rel="noopener noreferrer">Met Éireann satellite imagery for Ireland ↗</a><a href="https://www.meteociel.fr/observations-meteo/satellite.php?mode=animation-truecolor-composition-mtg" target="_blank" rel="noopener noreferrer">Meteociel satellite animations ↗</a></div>
+      <p class="source-note">Visible satellite imagery uses reflected sunlight and is clearest in daylight; natural-colour and enhanced products may look different from an ordinary photograph. The satellite scans about every 15 minutes. Image times and availability depend on the provider. Satellite imagery shows cloud patterns, not rainfall measured at Parknacross.</p>
     </section>
     <section class="page-section two-column-cards">
       <article class="info-card"><span class="section-eyebrow">At Parknacross</span><h2>Current rainfall</h2><div class="mini-data-grid">
@@ -45,7 +69,7 @@
     <span>Hyperlocal weather observations · Ardamine, Co. Wexford, Ireland</span>
   <nav class="footer-links" aria-label="Parknacross Weather links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a><span aria-hidden="true">·</span><a href="install.html">Install help</a><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></nav></footer>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script><script src="site-config.js?v=20260920-v38-4-36"></script><script src="radar.js?v=20260920-v38-4-36"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script><script src="site-config.js?v=20260920-v38-4-36"></script><script src="radar.js?v=20261005-v38-4-134"></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20260927-v38-4-106"></script>
 <script src="offline.js?v=20260915-v36"></script>

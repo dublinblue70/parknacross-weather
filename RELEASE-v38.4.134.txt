@@ -1,0 +1,18 @@
+Parknacross Weather v38.4.134
+Satellite imagery on the radar page
+
+GitHub website files only. No Cloudflare Worker change is required.
+
+Changes:
+- The Radar page now includes two current EUMETSAT satellite views and direct links to Met Éireann and Meteociel satellite products.
+- Satellite images load only when the viewer scrolls near the section, refresh every 15 minutes while visible, and retain the previous image until a refreshed copy finishes downloading.
+- Added refresh error handling, image credits, mobile layout, image descriptions and guidance that satellite imagery shows cloud patterns rather than measured local rainfall.
+- Preserves all included v38.4.133 astronomy, warning-colour, dashboard clarity and Today’s Sky landscape/caption changes.
+- Bumped the service-worker cache and radar script URL to v38.4.134.
+
+Verification:
+- JavaScript syntax checks passed for app.js, radar.js, summary.js and site-smoke-test.mjs.
+- Site smoke, official warning colour, satellite lazy-load, CSV pagination, freshness/resilience, rain-alert and coast-data checks passed against Parknacross-worker-v38.4.80-SITE-AUDIT-FIXES.js.
+- Zip archive integrity checked.
+
+Apply the included files to the root of the GitHub website repository and let GitHub Pages publish them. The changes are not live until that publish completes.

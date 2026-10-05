@@ -1,0 +1,13 @@
+If these retired or duplicate files are still in the root of the GitHub website repository, delete them when applying this patch:
+
+- cloudflare-worker.js
+- worker.js
+- worker-v38.4.47-photo-likes.js
+- Parknacross-worker-v38.4.47-photo-likes.txt
+- Parknacross-worker-v38.4.48-like-once.txt
+- Parknacross-worker-v38.4.78-MARINE-FEED-FAILOVER.js
+- intelligence.js
+- intelligent-features.spec.mjs
+- mobile-menu.spec.mjs
+
+These are retired/duplicate copies. The weather API remains hosted in Cloudflare; no Worker update is part of this website patch.
