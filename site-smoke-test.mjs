@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-132-display-clarity-sky-landscape"],
+  ["service-worker.js", "parknacross-v38-4-133-astronomy-warning-colours"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -221,6 +221,8 @@ if (moonFunctionStart < 0 || moonFunctionEnd < 0) {
 if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
 if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-97')) failures.push("index.html: shared data corrections must load before the dashboard application");
 if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: forecast-aware clothing note is missing");
+if (!dashboardHtml.includes('aria-label="Daily sun phases"') || !dashboardHtml.includes('aria-label="Eight phases of the Moon"')) failures.push("index.html: visual sun and moon phase cycles are missing");
+if (!dashboardHtml.includes('id="seasonNextMarker"') || !dashboardHtml.includes("Typical dates for Ireland")) failures.push("index.html: approximate annual equinox and solstice outlook is missing");
 if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
 if (dashboardHtml.indexOf('id="wearForecast"') > dashboardHtml.indexOf('id="todaySkyPanel"')) failures.push("index.html: forecast-only rain context must be near current conditions");
 if (!dashboardApp.includes("This is a forecast, not rain measured at Parknacross")) failures.push("app.js: forecast rain must be distinguished from measured local rain");
@@ -230,6 +232,27 @@ if (/Math\.(?:floor|ceil)\(Math\.(?:min|max)\(model,buoy\)\*2\)/.test(coastScrip
 const statusScript = await readFile(join(root, "status.js"), "utf8");
 if (!statusScript.includes("Overall archive completeness is shown on the History page")) failures.push("status.js: monthly coverage must be distinguished from full-archive completeness");
 if (!statusScript.includes("coverage · ${reliability.actual_samples")) failures.push("status.js: archive coverage detail must name the current month scope");
+const summaryHtml = await readFile(join(root, "summary.html"), "utf8");
+const summaryApp = await readFile(join(root, "summary.js"), "utf8");
+if (!summaryHtml.includes('id="officialWarningBadge"') || !summaryApp.includes('function renderOfficialWarningStatus')) failures.push("summary: official warning colour status is missing");
+if (!summaryApp.includes('warning-green') || !summaryApp.includes('warning-yellow') || !summaryApp.includes('warning-orange') || !summaryApp.includes('warning-red') || !summaryApp.includes('warning-white')) failures.push("summary.js: official warning colour states are incomplete");
+try {
+  const start = summaryApp.indexOf("function renderOfficialWarningStatus(");
+  const end = summaryApp.indexOf("\n\nasync function loadOfficialWarningStatus", start);
+  const nodes = new Map();
+  for (const id of ["officialWarningBadge", "officialWarningDetail"]) nodes.set(id, { textContent: "", classList: { values: new Set(), add(value) { this.values.add(value); }, remove(...values) { values.forEach(value => this.values.delete(value)); } } });
+  const render = Function("$", "TIME_ZONE", `${summaryApp.slice(start, end)}; return renderOfficialWarningStatus;`)(id => nodes.get(id), "Europe/Dublin");
+  render({ warnings: [{ level: "Yellow", type: "Rain", expires: new Date(Date.now() + 3600000).toISOString() }] });
+  if (!nodes.get("officialWarningBadge").classList.values.has("warning-yellow")) failures.push("summary.js: official yellow warnings do not receive the yellow colour");
+  render({ warnings: [{ level: "Yellow" }, { level: "Orange" }, { level: "Red" }] });
+  if (!nodes.get("officialWarningBadge").classList.values.has("warning-red")) failures.push("summary.js: highest official warning level is not selected");
+  render({ warnings: [] });
+  if (!nodes.get("officialWarningBadge").classList.values.has("warning-green")) failures.push("summary.js: empty official feed does not show green/no warning");
+  render(null);
+  if (!nodes.get("officialWarningBadge").classList.values.has("warning-white")) failures.push("summary.js: unavailable official feed does not show white/unavailable");
+} catch (error) {
+  failures.push(`summary.js: official warning status checks failed (${error.message})`);
+}
 const skyPageHtml = await readFile(join(root, "sky.html"), "utf8");
 const skyStyles = await readFile(join(root, "styles.css"), "utf8");
 if (!skyStyles.includes(".sky-page-photo{position:relative;width:min(100%,960px);aspect-ratio:3/2")) failures.push("styles.css: Today’s Sky page photo must use the landscape dashboard format");

@@ -256,6 +256,46 @@ function renderSignificantWeather(rows){
   set("significantWeatherNarrative",indicators.length?`In the latest 24 hours, ${indicators.join(", ")}. Check Met Éireann for official warnings.`:"No site-defined significant-weather indicator was reached in the latest 24 hours.");
 }
 
+function renderOfficialWarningStatus(payload){
+  const badge=$("officialWarningBadge"),detail=$("officialWarningDetail");
+  if(!badge||!detail)return;
+  badge.classList.remove("warning-green","warning-yellow","warning-orange","warning-red","warning-white");
+  const warnings=Array.isArray(payload?.warnings)?payload.warnings:null;
+  if(!warnings){badge.classList.add("warning-white");badge.textContent="Status unavailable";detail.textContent="The Met Éireann warning feed could not be checked. Open the official warnings page for the current status.";return;}
+  const now=Date.now();
+  const valid=warnings.filter(warning=>{
+    const expiry=warning?.expires||warning?.expiry;
+    const expiryTime=expiry?new Date(expiry).getTime():NaN;
+    if(Number.isFinite(expiryTime)&&expiryTime<now)return false;
+    const words=[warning?.type,warning?.event,warning?.status,warning?.headline,warning?.description].filter(Boolean).join(" ").toLowerCase();
+    return !/potato|blight|farming|agricultur|environmental advisory/.test(words);
+  }).map(warning=>{
+    const text=String(warning?.level||warning?.severity||warning?.status||"").toLowerCase();
+    const level=text.includes("red")?"red":text.includes("orange")?"orange":text.includes("yellow")?"yellow":"unknown";
+    const onset=warning?.onset?new Date(warning.onset):null;
+    return {...warning,level,onset:Number.isFinite(onset?.getTime())?onset:null};
+  });
+  const severity={red:3,orange:2,yellow:1,unknown:0};
+  valid.sort((a,b)=>severity[b.level]-severity[a.level]||(a.onset?.getTime()||0)-(b.onset?.getTime()||0));
+  if(!valid.length){badge.classList.add("warning-green");badge.textContent="Green · no warning in force";detail.textContent="No current Wexford land warning is listed in the latest official feed.";return;}
+  const warning=valid[0];
+  if(warning.level==="unknown"){
+    badge.classList.add("warning-white");badge.textContent="Status unavailable";detail.textContent="A warning is listed, but its colour level could not be identified. Check the official details.";return;
+  }
+  badge.classList.add(`warning-${warning.level}`);
+  const startsLater=warning.onset&&warning.onset.getTime()>now;
+  const title=String(warning.type||warning.event||"Weather").trim();
+  badge.textContent=`${warning.level[0].toUpperCase()+warning.level.slice(1)} · ${startsLater?"upcoming":"warning in force"}`;
+  const expires=warning.expires||warning.expiry;
+  const expiryText=expires&&!Number.isNaN(new Date(expires).getTime())?` Valid until ${new Intl.DateTimeFormat("en-IE",{timeZone:TIME_ZONE,weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(expires))}.`:"";
+  detail.textContent=`Wexford · ${title} warning.${expiryText} Follow Met Éireann for the affected areas and safety advice.`;
+}
+
+async function loadOfficialWarningStatus(){
+  try{renderOfficialWarningStatus(await getJSON("/met/warnings","no-store"));}
+  catch(error){console.warn("Official warning status:",error);renderOfficialWarningStatus(null);}
+}
+
 function localTimestamp(date) {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
   const parts=new Intl.DateTimeFormat("en-CA",{timeZone:TIME_ZONE,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(date);
@@ -319,4 +359,4 @@ async function loadSummary(){
   }catch(error){console.error("Daily summary:",error);set("summarySubtitle","The daily summary is temporarily unavailable.");set("dayStory","Live station observations could not be loaded. Please try again shortly.");set("significantWeatherBadge","Unavailable");set("significantWeatherNarrative","The latest 24-hour observation review is temporarily unavailable.");currentTodayRows=[];currentTodayKey=null;latestShareRow=null;$("downloadCsvButton").disabled=true;$("shareWeatherButton").disabled=true;set("actionStatus","Summary tools are temporarily unavailable.");}
 }
 
-document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("downloadCsvButton")?.addEventListener("click",downloadTodayCsv);$("shareWeatherButton")?.addEventListener("click",shareCurrentWeather);loadSummary();setInterval(loadSummary,60*1000);});
+document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("downloadCsvButton")?.addEventListener("click",downloadTodayCsv);$("shareWeatherButton")?.addEventListener("click",shareCurrentWeather);loadSummary();loadOfficialWarningStatus();setInterval(loadSummary,60*1000);setInterval(loadOfficialWarningStatus,60*1000);});

@@ -403,6 +403,33 @@ main { padding: 30px; }
 .cycle-progress { height: 7px; margin-top: 7px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.06); }
 .cycle-progress span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#f2bf67,var(--accent)); transition: width .45s ease; }
 .moon-next { margin: 14px 0 0; color: #d8e8ef; font-size: .78rem; }
+.sun-phase-track,.moon-phase-track,.season-markers { list-style:none; margin:14px 0 0; padding:0; display:grid; gap:6px; }
+.sun-phase-track { grid-template-columns:repeat(5,minmax(0,1fr)); }
+.sun-phase-track li,.moon-phase-track li { text-align:center; color:var(--muted); font-size:.62rem; line-height:1.3; }
+.sun-phase-track li:before { content:""; display:block; height:5px; margin-bottom:7px; border-radius:99px; background:rgba(255,255,255,.12); }
+.sun-phase-track li[aria-current="step"] { color:#fff; font-weight:700; }
+.sun-phase-track li[aria-current="step"]:before { background:linear-gradient(90deg,#f2bf67,var(--accent)); box-shadow:0 0 10px rgba(123,215,239,.3); }
+.moon-phase-track { grid-template-columns:repeat(8,minmax(0,1fr)); gap:3px; }
+.moon-phase-track li { padding:5px 1px; border-radius:8px; }
+.moon-phase-track li[aria-current="step"] { background:rgba(123,215,239,.12); color:#fff; outline:1px solid rgba(123,215,239,.45); }
+.moon-phase-symbol { display:block; margin-bottom:3px; color:#d9eff7; font-size:1.15rem; line-height:1; }
+.season-card { grid-column:1/-1; }
+.season-heading { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.season-heading h3 { margin:3px 0 0; font-size:1.05rem; }
+.season-heading p { margin:0; color:var(--muted); font-size:.76rem; text-align:right; }
+.season-markers { grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+.season-markers li { padding:12px 10px; border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.018); }
+.season-markers strong,.season-markers span { display:block; }
+.season-markers strong { font-size:.78rem; }
+.season-markers span { margin-top:4px; color:var(--muted); font-size:.7rem; }
+.season-next { margin:11px 0 0; color:#d8e8ef; font-size:.78rem; }
+@media(max-width:420px) {
+  .moon-phase-track li { font-size:.53rem; }
+  .moon-phase-symbol { font-size:1rem; }
+  .season-markers { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .season-heading { align-items:flex-start; flex-direction:column; }
+  .season-heading p { text-align:left; }
+}
 .astronomy-note { display: block; margin-top: 5px; color: var(--muted-2); font-size: .67rem; }
 .astro-item svg,
 .metric-head svg {

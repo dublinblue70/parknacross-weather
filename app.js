@@ -858,6 +858,37 @@ function updateMoonInfo(now = new Date()) {
   set("moonNextPhase", `Next milestone: ${next.name} in about ${nextTime}`);
   const icon = $("moonPhaseIcon");
   if (icon) icon.dataset.phase = moon.slug;
+  document.querySelectorAll("[data-moon-step]").forEach(step => {
+    if (step.dataset.moonStep === moon.slug) step.setAttribute("aria-current", "step");
+    else step.removeAttribute("aria-current");
+  });
+}
+
+function updateSeasonInfo(now = new Date()) {
+  const stationDate = stationCalendarDate(now);
+  const yearNode = $("seasonYear");
+  if (yearNode) yearNode.textContent = String(stationDate.getFullYear());
+  const markers = [
+    { month: 2, day: 20, name: "Spring equinox", dateLabel: "around 20 March" },
+    { month: 5, day: 21, name: "Summer solstice", dateLabel: "around 21 June" },
+    { month: 8, day: 22, name: "Autumn equinox", dateLabel: "around 22 September" },
+    { month: 11, day: 21, name: "Winter solstice", dateLabel: "around 21 December" }
+  ];
+  let nextMarker = null;
+  for (let year = stationDate.getFullYear(); year <= stationDate.getFullYear() + 1 && !nextMarker; year += 1) {
+    nextMarker = markers
+      .map(marker => ({ ...marker, instant: stationInstant(year, marker.month, marker.day, 12) }))
+      .find(marker => marker.instant > now) || null;
+  }
+  const nextNode = $("seasonNextMarker");
+  if (nextNode) {
+    if (!nextMarker) {
+      nextNode.textContent = "Seasonal date unavailable.";
+    } else {
+      const days = Math.max(1, Math.ceil((nextMarker.instant.getTime() - now.getTime()) / 86400000));
+      nextNode.textContent = `Next typical marker: ${nextMarker.name} ${nextMarker.dateLabel} · about ${days} day${days === 1 ? "" : "s"} away.`;
+    }
+  }
 }
 
 function updateSunInfo(current = latestCurrent) {
@@ -930,7 +961,12 @@ function updateSunInfo(current = latestCurrent) {
   set("sunPhaseDetail", sunPhaseDetail);
   const sunIcon = $("sunPhaseIcon");
   if (sunIcon) sunIcon.dataset.phase = sunPhaseSlug;
+  document.querySelectorAll("[data-sun-step]").forEach(step => {
+    if (step.dataset.sunStep === sunPhaseSlug) step.setAttribute("aria-current", "step");
+    else step.removeAttribute("aria-current");
+  });
   updateMoonInfo(now);
+  updateSeasonInfo(now);
 
   let isNight = !!(civilDawn && civilDusk && (now < civilDawn || now >= civilDusk));
 

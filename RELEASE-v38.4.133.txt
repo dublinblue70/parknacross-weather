@@ -1,0 +1,18 @@
+Parknacross Weather v38.4.133
+Astronomy cycles and official warning colours
+
+GitHub website files only. No Cloudflare Worker change is required.
+
+Changes:
+- Dashboard sun and moon cards now show all five daily sun stages and all eight Moon phases, with the current phase highlighted.
+- Added typical annual equinox and solstice markers for Ireland, plus a countdown to the next marker. Dates are labeled approximate because they shift slightly from year to year.
+- Daily Summary now shows the current Wexford Met Éireann warning level using the green, yellow, orange and red warning colours. White indicates that the feed or warning colour could not be verified.
+- Added an accessible warning-colour key and link to Met Éireann's official warnings page. Failure of that feed does not interrupt the station summary.
+- Kept the earlier v38.4.132 dashboard clarity, forecast/rain distinction, archive coverage wording and landscape Today’s Sky photo/caption changes in this complete patch.
+- Bumped service-worker and asset cache versions to v38.4.133.
+
+Verification:
+- JavaScript syntax checks passed for app.js, summary.js and site-smoke-test.mjs.
+- Site smoke, lunar phase, official warning colour, CSV pagination, freshness/resilience, rain-alert and coast-data checks passed against Parknacross-worker-v38.4.80-SITE-AUDIT-FIXES.js.
+
+Apply the included files to the root of the GitHub website repository and let GitHub Pages publish them. The changes are not live until that publish completes.

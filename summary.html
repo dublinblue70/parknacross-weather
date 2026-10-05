@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20261005-v38-4-132">
+  <link rel="stylesheet" href="styles.css?v=20261005-v38-4-133">
   <title>Today's Ardamine Weather Summary | Parknacross Weather</title>
   <link rel="canonical" href="https://parknacrossweather.ie/summary.html">
 
@@ -25,6 +25,8 @@
     .report-link{text-decoration:none;color:inherit}
     .report-link strong{display:block;margin-bottom:5px}.report-link span{color:var(--muted);font-size:.84rem;line-height:1.45}
     .share-status{min-height:1.2em}
+    .official-warning-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:12px 0 4px}.official-warning-label{color:var(--muted);font-size:.78rem}.official-warning-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid transparent;border-radius:999px;font-size:.72rem;font-weight:800;letter-spacing:.025em}.official-warning-badge:before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}.official-warning-badge.warning-green{background:#18c964;color:#052515}.official-warning-badge.warning-yellow{background:#ffeb3b;color:#282400}.official-warning-badge.warning-orange{background:#ff9800;color:#281300}.official-warning-badge.warning-red{background:#ed1c24;color:#fff}.official-warning-badge.warning-white{background:#fff;color:#35424c;border-color:#aab5bd}.official-warning-detail{margin:6px 0 0;color:var(--muted);font-size:.78rem;line-height:1.45}.official-warning-link{color:var(--accent);font-size:.78rem;font-weight:650}
+    .official-warning-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:12px 0 2px;padding:0;list-style:none;color:var(--muted);font-size:.68rem}.official-warning-legend li{display:flex;align-items:center;gap:5px}.official-warning-legend i{width:9px;height:9px;border-radius:50%;background:var(--legend-color);border:1px solid rgba(255,255,255,.25)}
     @media(max-width:900px){.compare-grid,.rain-detail-grid,.report-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:600px){.compare-grid,.rain-detail-grid,.report-links{grid-template-columns:1fr}}
   </style>
@@ -68,6 +70,10 @@
           <span id="significantWeatherBadge" class="coverage-badge">Checking</span>
         </div>
         <p id="significantWeatherNarrative" class="weather-story" role="status" aria-live="polite">Reviewing the latest 24 hours of station observations…</p>
+        <div class="official-warning-row"><span class="official-warning-label">Official Wexford warning</span><span id="officialWarningBadge" class="official-warning-badge warning-white" role="status" aria-live="polite">Checking status</span></div>
+        <p id="officialWarningDetail" class="official-warning-detail">Checking the latest Met Éireann warning feed…</p>
+        <a class="official-warning-link" href="https://www.met.ie/warnings" target="_blank" rel="noopener noreferrer">View official Met Éireann warnings ↗</a>
+        <ul class="official-warning-legend" aria-label="Weather warning colour key"><li><i style="--legend-color:#18c964"></i>Green · no warning</li><li><i style="--legend-color:#ffeb3b"></i>Yellow · localised risk</li><li><i style="--legend-color:#ff9800"></i>Orange · dangerous</li><li><i style="--legend-color:#ed1c24"></i>Red · very dangerous</li><li><i style="--legend-color:#fff"></i>White · status unavailable</li></ul>
         <p class="source-note">This uses site-defined indicators: pressure falling by at least 8 hPa, gusts reaching 50 km/h, a rain rate of 7.5 mm/h or lightning activity. It is not an official storm classification or warning.</p>
       </article>
     </section>
@@ -169,7 +175,7 @@
 </div>
 
 <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-<script src="summary.js?v=20261005-v38-4-132"></script>
+<script src="summary.js?v=20261005-v38-4-133"></script>
 <script src="site-config.js?v=20260912-mobile2"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script>
 <script src="pwa-update.js?v=20260927-v38-4-106"></script>
