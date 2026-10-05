@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-135-satellite-stream-fix";
+const CACHE_NAME = "parknacross-v38-4-136-radar-enhancements";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

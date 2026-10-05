@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-135-satellite-stream-fix"],
+  ["service-worker.js", "parknacross-v38-4-136-radar-enhancements"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -266,6 +266,9 @@ const radarScript = await readFile(join(root, "radar.js"), "utf8");
 if (!radarHtml.includes('data-satellite-stream') || !radarHtml.includes('nigtvuOspmM')) failures.push("radar.html: official EUMETSAT live stream embed is missing");
 if (!radarHtml.includes('href="#satelliteImagery"') || !radarScript.includes("new IntersectionObserver")) failures.push("satellite stream must be discoverable and lazy-loaded");
 if (!radarScript.includes("stream.src=stream.dataset.streamSrc") || radarHtml.includes("eumetview.eumetsat.int/static-images")) failures.push("satellite stream must replace the retired static-image URLs");
+if (!radarHtml.includes('id="radarCenter"') || !radarScript.includes('map.setView(coords,Math.max(7,map.getZoom()))')) failures.push("radar map must have a control to centre on Parknacross");
+if (!radarHtml.includes("not a still image") || !radarHtml.includes("Open EUMETSAT stream directly") || !radarHtml.includes("player is blank or blocked")) failures.push("satellite stream must be clearly labelled and include a direct fallback link");
+if (!radarScript.includes("Latest frame captured") || !radarScript.includes("Radar frames are stale") || !radarScript.includes("Radar feed may be delayed")) failures.push("radar must show latest frame time and stale-feed warnings");
 const rainScript = await readFile(join(root, "rain.js"), "utf8");
 if (!rainScript.includes("Rain-free calendar days · includes today so far")) failures.push("rain.js: dry spell must identify the current partial day");
 if ((dashboardApp.match(/updateDashboard\(current\);/g)||[]).length < 3) failures.push("app.js: dashboard progressive rendering is missing");

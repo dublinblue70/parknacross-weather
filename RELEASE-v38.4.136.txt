@@ -1,0 +1,20 @@
+Parknacross Weather v38.4.136
+Radar and satellite usability improvements
+
+GitHub website files only. No Cloudflare Worker change is required.
+
+Changes:
+- Clearly labels the EUMETSAT content as a near-real-time satellite video stream, not a still image.
+- Adds an always-visible direct EUMETSAT stream link if the embedded player is blank or blocked.
+- Shows the newest RainViewer frame capture time and age, and warns when radar data may be delayed or stale.
+- Keeps the last loaded radar frames visible if a refresh fails and reports the refresh problem.
+- Adds a Centre map button to return to Parknacross while preserving a useful zoom level.
+- Retains lazy loading of the satellite player to keep initial page loading light.
+- Bumps the service-worker cache and radar asset versions to v38.4.136.
+
+Verification:
+- JavaScript syntax checks passed.
+- Site smoke, CSV, freshness, rain-alert and coast-data tests passed.
+- Zip archive integrity checked.
+
+Apply the included files to the root of the GitHub website repository and let GitHub Pages publish them. The changes are not live until that publish completes.

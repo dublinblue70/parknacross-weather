@@ -8,13 +8,13 @@
   <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <link rel="stylesheet" href="styles.css?v=20261005-v38-4-135">
+    <link rel="stylesheet" href="styles.css?v=20261005-v38-4-136">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <title>North Wexford Rain Radar | Parknacross Weather</title>
   <link rel="canonical" href="https://parknacrossweather.ie/radar.html">
   <style>
     .satellite-jump-links,.satellite-source-links{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:14px}.satellite-jump-links a,.satellite-source-links a{color:var(--accent);font-size:.83rem;font-weight:650;text-decoration:none}.satellite-jump-links a:hover,.satellite-source-links a:hover{text-decoration:underline}
-    .satellite-section .section-heading p{margin:5px 0 0;color:var(--muted);font-size:.82rem}.satellite-stream-frame{display:block;width:100%;aspect-ratio:16/9;margin-top:14px;border:0;border-radius:12px;background:#07131f}.satellite-stream-status{margin:8px 0 0;color:var(--muted);font-size:.74rem;line-height:1.45}.satellite-source-links{margin-top:12px}
+    .satellite-section .section-heading p{margin:5px 0 0;color:var(--muted);font-size:.82rem}.satellite-stream-frame{display:block;width:100%;aspect-ratio:16/9;margin-top:14px;border:0;border-radius:12px;background:#07131f}.satellite-stream-status{margin:8px 0 0;color:var(--muted);font-size:.74rem;line-height:1.45}.satellite-source-links{margin-top:12px}.satellite-direct-link{display:inline-flex;align-items:center;gap:6px;margin-top:10px;color:var(--accent);font-size:.85rem;font-weight:700;text-decoration:none}.satellite-direct-link:hover{text-decoration:underline}.radar-controls .radar-center-button{white-space:nowrap}
   </style>
 </head>
 <body>
@@ -35,14 +35,15 @@
     <section class="page-section radar-shell" id="radarSection" aria-labelledby="radarHeading">
       <h2 class="visually-hidden" id="radarHeading">Recent rain radar</h2>
       <div class="radar-toolbar"><div><strong id="radarTime">Loading radar…</strong><span id="radarStatus">Retrieving recent frames</span></div>
-        <div class="radar-controls"><button type="button" class="secondary-button" id="radarPlay">Pause</button><input id="radarSlider" type="range" min="0" max="0" value="0" aria-label="Radar frame time"></div></div>
+        <div class="radar-controls"><button type="button" class="secondary-button radar-center-button" id="radarCenter" aria-label="Centre radar map on Parknacross">Centre map</button><button type="button" class="secondary-button" id="radarPlay">Pause</button><input id="radarSlider" type="range" min="0" max="0" value="0" aria-label="Radar frame time"></div></div>
       <div id="radarMap" class="radar-map"></div>
       <div class="source-note">Radar tiles: RainViewer. Map © OpenStreetMap contributors. Official warnings and forecasts remain Met Éireann.</div>
     </section>
     <section class="page-section satellite-section" id="satelliteImagery" aria-labelledby="satelliteHeading">
-      <div class="section-heading"><div><span class="section-eyebrow">Satellite imagery</span><h2 id="satelliteHeading">Clouds over Europe</h2><p>Near-real-time imagery from EUMETSAT’s Meteosat-12 stream.</p></div></div>
+      <div class="section-heading"><div><span class="section-eyebrow">Satellite stream</span><h2 id="satelliteHeading">Live cloud view over Europe</h2><p>A near-real-time video stream from EUMETSAT’s Meteosat-12 satellite (not a still image).</p></div></div>
       <iframe class="satellite-stream-frame" title="EUMETSAT Meteosat-12 live satellite view over Europe" data-satellite-stream data-stream-src="https://www.youtube-nocookie.com/embed/nigtvuOspmM?autoplay=0&amp;mute=1&amp;playsinline=1&amp;rel=0" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-      <p class="satellite-stream-status" data-satellite-status role="status" aria-live="polite">The satellite stream loads when you scroll near this section. EUMETSAT updates imagery every 10 minutes; processing can add around 30 minutes of delay.</p>
+      <p class="satellite-stream-status" data-satellite-status role="status" aria-live="polite">The player loads when you scroll near it. EUMETSAT updates imagery every 10 minutes; processing can add around 30 minutes of delay. If the player is blank or blocked, open the stream directly below.</p>
+      <a class="satellite-direct-link" data-satellite-direct href="https://www.youtube.com/watch?v=nigtvuOspmM" target="_blank" rel="noopener noreferrer">Open EUMETSAT stream directly ↗</a>
       <div class="satellite-source-links"><a href="https://www.eumetsat.int/new-satellites-eye-views-europe-and-africa-streaming-online" target="_blank" rel="noopener noreferrer">EUMETSAT stream details ↗</a><a href="https://www.met.ie/latest-reports/satellites/ireland-visible" target="_blank" rel="noopener noreferrer">Met Éireann satellite imagery for Ireland ↗</a><a href="https://www.meteociel.fr/observations-meteo/satellite.php?mode=animation-truecolor-composition-mtg" target="_blank" rel="noopener noreferrer">Meteociel satellite animations ↗</a></div>
       <p class="source-note">Source: EUMETSAT Meteosat-12 Earth view. This stream shows cloud patterns, not rainfall measured at Parknacross; use the radar above for precipitation.</p>
     </section>
@@ -57,7 +58,7 @@
     <span>Hyperlocal weather observations · Ardamine, Co. Wexford, Ireland</span>
   <nav class="footer-links" aria-label="Parknacross Weather links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a><span aria-hidden="true">·</span><a href="install.html">Install help</a><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></nav></footer>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script><script src="site-config.js?v=20260920-v38-4-36"></script><script src="radar.js?v=20261005-v38-4-135"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script><script src="site-config.js?v=20260920-v38-4-36"></script><script src="radar.js?v=20261005-v38-4-136"></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20260927-v38-4-106"></script>
 <script src="offline.js?v=20260915-v36"></script>
