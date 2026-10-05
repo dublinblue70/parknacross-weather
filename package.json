@@ -1,13 +1,14 @@
 {
   "name": "parknacross-weather-site",
   "private": true,
-  "version": "38.4.136",
+  "version": "38.4.137",
   "scripts": {
     "test": "node site-smoke-test.mjs && node csv-export-test.mjs && node freshness-resilience-test.mjs && node rain-alert-test.mjs && node coast-data-test.mjs && playwright test",
     "test:smoke": "node site-smoke-test.mjs && node csv-export-test.mjs && node freshness-resilience-test.mjs && node rain-alert-test.mjs && node coast-data-test.mjs",
     "test:csv": "node csv-export-test.mjs",
     "test:browser": "playwright test",
     "test:coast": "node coast-data-test.mjs",
+    "test:worker-export-range": "node tests/custom-export-range.test.mjs",
     "test:install-browsers": "playwright install chromium webkit"
   },
   "devDependencies": {

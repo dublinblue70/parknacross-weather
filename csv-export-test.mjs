@@ -8,7 +8,7 @@ catch {
   console.log("CSV Worker regression checks skipped: set PARKNACROSS_WORKER_SOURCE to the current Cloudflare Worker source.");
   process.exit(0);
 }
-const start = worker.indexOf("async function exportRows(env, days)");
+const start = worker.indexOf("async function exportRows(env, days, range = null)");
 const end = worker.indexOf("\nfunction exportCsv(", start);
 if (start < 0 || end < 0) throw new Error("Could not locate the Worker CSV exporter");
 

@@ -1,7 +1,7 @@
 (() => {
  const cfg=window.PARKNACROSS_CONFIG||{},$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
  const API=cfg.apiBase,coords=[Number(cfg.stationLat),Number(cfg.stationLon)],usable=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v));
- let map,frames=[],layer=null,i=0,playing=true,timer,feedWarning="";
+ let map,frames=[],layer=null,i=0,playing=false,timer,feedWarning="";
  const frameTime=seconds=>new Date(seconds*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",weekday:"short",hour:"2-digit",minute:"2-digit"});
  function updateRadarStatus(){
   if(!frames.length)return;
@@ -20,6 +20,8 @@
   layer=L.tileLayer(`${f.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`,{opacity:.72,maxNativeZoom:7,maxZoom:12}).addTo(map);
   $("radarSlider").value=i;set("radarTime",frameTime(f.time));updateRadarStatus();
  }
+ function startAnimation(){clearInterval(timer);if(frames.length>1)timer=setInterval(()=>show((i+1)%frames.length),1500);}
+ function stopAnimation(){clearInterval(timer);timer=null;}
  async function loadRadar(){
   try{
    const response=await fetch("https://api.rainviewer.com/public/weather-maps.json",{cache:"no-store"});
@@ -27,7 +29,7 @@
    const data=await response.json(),next=(data.radar?.past||[]).filter(frame=>frame.path&&Number.isFinite(Number(frame.time))).map(frame=>({...frame,host:data.host}));
    if(!data.host||!next.length)throw new Error("No radar frames returned");
    frames=next;feedWarning="";$("radarSlider").max=Math.max(0,frames.length-1);show(frames.length-1);
-   clearInterval(timer);if(frames.length>1)timer=setInterval(()=>{if(playing)show((i+1)%frames.length)},1500);
+   if(playing)startAnimation();else stopAnimation();
   }catch(error){
    feedWarning=frames.length?"Radar refresh failed; showing the last loaded frames":"Radar feed temporarily unavailable";
    if(frames.length)updateRadarStatus();else set("radarTime","Radar temporarily unavailable");
@@ -46,8 +48,8 @@
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);
   L.circleMarker(coords,{radius:7,color:"#fff",weight:2,fillColor:"#7bd7ef",fillOpacity:1}).addTo(map).bindTooltip("Approximate station area · North Wexford (not an exact location)");
   $("radarCenter").addEventListener("click",()=>map.setView(coords,Math.max(7,map.getZoom())));
-  $("radarSlider").addEventListener("input",event=>{playing=false;set("radarPlay","Play");show(Number(event.target.value))});
-  $("radarPlay").addEventListener("click",()=>{playing=!playing;set("radarPlay",playing?"Pause":"Play")});
+  $("radarSlider").addEventListener("input",event=>{playing=false;stopAnimation();set("radarPlay","Play");show(Number(event.target.value))});
+  $("radarPlay").addEventListener("click",()=>{playing=!playing;set("radarPlay",playing?"Pause":"Play");if(playing)startAnimation();else stopAnimation()});
   startSatelliteStream();loadRadar();loadRain();setInterval(loadRain,60*1000);setInterval(loadRadar,5*60*1000);setInterval(updateRadarStatus,60*1000);
  });
 })();

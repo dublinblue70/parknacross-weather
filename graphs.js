@@ -96,7 +96,8 @@
      pointHitRadius:10,
      stepped:"before",
      fill:"origin",
-     tension:0
+     tension:0,
+     spanGaps:false
    }]},
    options:{
      ...common,

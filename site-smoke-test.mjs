@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-136-radar-enhancements"],
+  ["service-worker.js", "parknacross-v38-4-137-site-usability-updates"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -153,6 +153,10 @@ const requiredChecks = [
   ["downloads.js", "soil_moisture_pct"],
   ["downloads.js", "lightning_distance_km"],
   ["downloads.js", "lightning_last_strike_time_ireland"],
+  ["downloads.js", "?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&fresh=1"],
+  ["downloads.html", "Choose a date range"],
+  ["downloads.html", "id=\"exportFrom\""],
+  ["downloads.html", "id=\"exportTo\""],
   ["csv-export-test.mjs", "environmentWithArtificialPageCap"],
   ["package.json", "@playwright/test"]
 ];
@@ -269,6 +273,17 @@ if (!radarScript.includes("stream.src=stream.dataset.streamSrc") || radarHtml.in
 if (!radarHtml.includes('id="radarCenter"') || !radarScript.includes('map.setView(coords,Math.max(7,map.getZoom()))')) failures.push("radar map must have a control to centre on Parknacross");
 if (!radarHtml.includes("not a still image") || !radarHtml.includes("Open EUMETSAT stream directly") || !radarHtml.includes("player is blank or blocked")) failures.push("satellite stream must be clearly labelled and include a direct fallback link");
 if (!radarScript.includes("Latest frame captured") || !radarScript.includes("Radar frames are stale") || !radarScript.includes("Radar feed may be delayed")) failures.push("radar must show latest frame time and stale-feed warnings");
+if (!radarScript.includes("playing=false") || !radarHtml.includes("Frames start paused")) failures.push("radar animation must start paused to reduce motion and loading");
+if (!coastHtml.includes('id="coastLocalFreshness"') || !coastScript.includes("Parknacross local readings · observed") || !coastScript.includes("formatSourceStamp(m.issued)")) failures.push("coastal observations and official marine forecasts must show source freshness");
+if (!coastHtml.includes('id="marineForecastUpdated"')) failures.push("coast.html: marine forecast issue time must have a visible status field");
+const graphHtml = await readFile(join(root, "graphs.html"), "utf8");
+const graphScript = await readFile(join(root, "graphs.js"), "utf8");
+const historyScript = await readFile(join(root, "history.js"), "utf8");
+if (!graphHtml.includes("Units are printed on the axes") || !graphHtml.includes("Blank sections mean readings are missing, not zero") || !graphScript.includes("spanGaps:false")) failures.push("graphs must explain units and show archive gaps without connecting lines");
+if (!historyScript.includes("Daily high °C") || !historyScript.includes("Daily low °C") || !historyScript.includes("spanGaps:false") || !historyScript.includes("no archived summary") || !historyHtml.includes('id="historyChartStatus"')) failures.push("history charts must leave missing calendar days visible as gaps");
+const downloadsHtml = await readFile(join(root, "downloads.html"), "utf8");
+const downloadsScript = await readFile(join(root, "downloads.js"), "utf8");
+if (!downloadsHtml.includes('id="exportFrom"') || !downloadsHtml.includes('id="exportTo"') || !downloadsScript.includes("Date.parse(`${to}T12:00:00Z`)") || !downloadsScript.includes("&to=${encodeURIComponent(to)}&fresh=1")) failures.push("downloads must provide validated custom Irish-local date ranges");
 const rainScript = await readFile(join(root, "rain.js"), "utf8");
 if (!rainScript.includes("Rain-free calendar days · includes today so far")) failures.push("rain.js: dry spell must identify the current partial day");
 if ((dashboardApp.match(/updateDashboard\(current\);/g)||[]).length < 3) failures.push("app.js: dashboard progressive rendering is missing");

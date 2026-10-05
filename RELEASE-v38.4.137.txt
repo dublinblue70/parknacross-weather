@@ -1,0 +1,28 @@
+Parknacross Weather v38.4.137
+Site-wide clarity and custom archive exports
+
+This release includes GitHub Pages files and a Cloudflare Worker update. The custom date-range download requires both parts.
+
+Website changes:
+- Sea & Swim now shows local observation age and the timestamps/ages supplied by model, buoy and Met Éireann sources.
+- Graph guidance states the units and clarifies that blank areas mean missing readings. Time-series charts explicitly break across missing data.
+- Radar starts paused; visitors choose when to animate, reducing motion and unnecessary map-tile requests.
+- Downloads now offers custom Irish-local start/end dates for any available period up to 365 days. Existing 7/30/90/365-day buttons remain.
+- Bumped the website service-worker cache to v38.4.137.
+
+Cloudflare Worker v38.4.81 changes:
+- Adds /export.csv?from=YYYY-MM-DD&to=YYYY-MM-DD with inclusive Europe/Dublin calendar dates.
+- Validates real calendar dates, date order, future dates and the 365-day maximum.
+- Uses indexed epoch bounds and keyset pagination, with correct 23/25-hour daylight-saving day boundaries.
+- Preserves the existing fixed-duration CSV exports.
+
+Verification:
+- JavaScript syntax checks passed.
+- Site smoke, CSV, freshness, rain-alert and coast-data tests passed.
+- Worker export test passed invalid-date validation and the Irish autumn clock-change boundary.
+- Zip archive integrity checked.
+
+Deployment:
+1. Replace the website files in the GitHub repository with those in this package and let GitHub Pages publish.
+2. Open the included Worker text file in a text editor, replace the Cloudflare Worker code with it, and deploy the Worker.
+3. Custom date-range downloads work once both deployments have completed. The fixed-duration downloads continue to work with the previous Worker.
