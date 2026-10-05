@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-137-site-usability-updates"],
+  ["service-worker.js", "parknacross-v38-4-138-weather-window"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -228,6 +228,8 @@ if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: for
 if (!dashboardHtml.includes('aria-label="Daily sun phases"') || !dashboardHtml.includes('aria-label="Eight phases of the Moon"')) failures.push("index.html: visual sun and moon phase cycles are missing");
 if (!dashboardHtml.includes('id="seasonNextMarker"') || !dashboardHtml.includes("Typical dates for Ireland")) failures.push("index.html: approximate annual equinox and solstice outlook is missing");
 if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
+if (!dashboardHtml.includes('id="weatherWindowScene"') || !dashboardHtml.includes('id="weatherSoundToggle"') || !dashboardHtml.includes("starts only when you press Play")) failures.push("index.html: local weather illustration and opt-in soundscape controls are missing");
+if (!dashboardHtml.includes('weather-window.css?v=20261005-v38-4-138') || !dashboardHtml.includes('weather-window.js?v=20261005-v38-4-138')) failures.push("index.html: isolated weather window assets must be versioned and loaded");
 if (dashboardHtml.indexOf('id="wearForecast"') > dashboardHtml.indexOf('id="todaySkyPanel"')) failures.push("index.html: forecast-only rain context must be near current conditions");
 if (!dashboardApp.includes("This is a forecast, not rain measured at Parknacross")) failures.push("app.js: forecast rain must be distinguished from measured local rain");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
@@ -287,6 +289,24 @@ if (!downloadsHtml.includes('id="exportFrom"') || !downloadsHtml.includes('id="e
 const rainScript = await readFile(join(root, "rain.js"), "utf8");
 if (!rainScript.includes("Rain-free calendar days · includes today so far")) failures.push("rain.js: dry spell must identify the current partial day");
 if ((dashboardApp.match(/updateDashboard\(current\);/g)||[]).length < 3) failures.push("app.js: dashboard progressive rendering is missing");
+if (!dashboardApp.includes('parknacross:weather-window-observation') || !dashboardApp.includes('publishWeatherWindowObservation(current, latestRainDetected, isNight)')) failures.push("app.js: optional weather-window update must use an isolated event");
+try {
+  const start = dashboardApp.indexOf("function publishWeatherWindowObservation(");
+  const end = dashboardApp.indexOf("\n}\n", start) + 2;
+  const events = [];
+  const publish = Function("window", "CustomEvent", `${dashboardApp.slice(start, end)}; return publishWeatherWindowObservation;`)({ dispatchEvent: event => events.push(event) }, class CustomEvent { constructor(type, options) { this.type = type; this.detail = options.detail; } });
+  const observation = { epoch: 1 };
+  publish(observation, true, false);
+  if (events.length !== 1 || events[0].detail.current !== observation || !events[0].detail.rainDetected) failures.push("app.js: isolated weather-window event must carry readings without transforming them");
+  const failureSafePublish = Function("window", "CustomEvent", `${dashboardApp.slice(start, end)}; return publishWeatherWindowObservation;`)({ dispatchEvent: () => { throw new Error("optional listener failure"); } }, class CustomEvent { constructor(type, options) { this.type = type; this.detail = options.detail; } });
+  try { failureSafePublish(observation, false, false); } catch { failures.push("app.js: optional weather-window failures must not escape into existing dashboard rendering"); }
+} catch (error) {
+  failures.push(`app.js: weather-window isolation check failed (${error.message})`);
+}
+const weatherWindowScript = await readFile(join(root, "weather-window.js"), "utf8");
+if (!weatherWindowScript.includes("AudioContext") || !weatherWindowScript.includes("createBufferSource") || !weatherWindowScript.includes("visibilitychange")) failures.push("weather-window.js: sound must be generated locally, opt-in, and paused when the page is hidden");
+const weatherWindowStyles = await readFile(join(root, "weather-window.css"), "utf8");
+if (!weatherWindowStyles.includes("prefers-reduced-motion")) failures.push("weather window must respect reduced-motion preferences");
 const privacyHtml = await readFile(join(root, "privacy.html"), "utf8");
 if (/Sky Photo (?:identifier|likes)/.test(privacyHtml)) failures.push("privacy.html: outdated Sky Photo terminology remains");
 

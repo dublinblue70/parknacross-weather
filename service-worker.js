@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-137-site-usability-updates";
+const CACHE_NAME = "parknacross-v38-4-138-weather-window";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -26,8 +26,10 @@ const STATIC_ASSETS = [
   "./north-wexford-weather.html",
   "./north-wexford-coastal-weather.html",
   "./styles.css",
+  "./weather-window.css",
   "./chart.umd.min.js",
   "./app.js",
+  "./weather-window.js",
   "./data-corrections.js",
   "./wind-rose.js",
   "./site-config.js",

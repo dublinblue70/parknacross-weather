@@ -1263,6 +1263,16 @@ async function refreshSoilFreshness(){
   }
 }
 
+function publishWeatherWindowObservation(current, rainDetected, isNight) {
+  try {
+    window.dispatchEvent(new CustomEvent("parknacross:weather-window-observation", {
+      detail: { current, rainDetected, isNight }
+    }));
+  } catch (_) {
+    /* The optional illustration must never interrupt the established UI. */
+  }
+}
+
 function updateDashboard(current) {
   const now = new Date();
   const today = history24.filter(reading => {
@@ -1527,6 +1537,8 @@ function updateDashboard(current) {
   updateStatsPanel();
   renderSinceLastVisit(current);
   set("year", stationDateKeyFromTime(new Date())?.slice(0,4) || new Date().getFullYear());
+  /* Optional dashboard art/audio updates only after established rendering. */
+  publishWeatherWindowObservation(current, latestRainDetected, isNight);
 }
 
 function roundedRect(ctx,x,y,w,h,r){const q=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+q,y);ctx.arcTo(x+w,y,x+w,y+h,q);ctx.arcTo(x+w,y+h,x,y+h,q);ctx.arcTo(x,y+h,x,y,q);ctx.arcTo(x,y,x+w,y,q);ctx.closePath();ctx.fill();}

@@ -1,0 +1,27 @@
+Parknacross Weather v38.4.138
+The Ardamine Weather Window and opt-in soundscape
+
+New dashboard additions:
+- Added a lightweight illustrated scene driven by current Parknacross wind direction/speed/gust, measured rain rate, solar radiation and day/night state.
+- The scene labels unavailable readings, distinguishes current rain rate from recent rain detection, and does not infer cloud cover or forecasts.
+- Added an optional browser-generated ambient soundscape based on measured wind and rain. It starts only after the visitor presses Play, has a volume control, and pauses when the page is hidden.
+- Added reduced-motion styling. No image or audio service is requested; audio is generated locally by Web Audio after user interaction.
+
+Isolation and compatibility:
+- Added the illustration and audio in dedicated weather-window.js and weather-window.css assets.
+- The existing dashboard dispatches one guarded observation event only after its existing rendering finishes. Failures in the optional module are contained and do not interrupt the established readings, charts, alerts, forecasts or other dashboard functions.
+- The custom date-range CSV feature from v38.4.137 remains included. Its matching Cloudflare Worker v38.4.81 is bundled; it is not changed by this release.
+- Updated the service-worker cache to v38.4.138 and added both new assets to its precache.
+
+Verification:
+- JavaScript syntax checks passed.
+- Existing site smoke, CSV pagination, freshness/resilience, rain-alert and coast-data regression tests passed.
+- Custom CSV range validation and Irish daylight-saving boundary test passed.
+- Weather Window behavior test passed for data labels, rain distinction, unavailable readings and tap-to-play audio.
+- ZIP integrity checked.
+- Playwright browser tests could not run because the Playwright CLI is not installed in this workspace.
+
+Deployment:
+1. Replace the GitHub Pages website files with the files in the ZIP and publish.
+2. The Weather Window and soundscape require no Cloudflare Worker change.
+3. If you also want custom CSV date-range downloads, deploy the included Worker text file to Cloudflare as described in README-DEPLOY-v38.4.138.txt.

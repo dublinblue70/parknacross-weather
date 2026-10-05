@@ -32,6 +32,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261005-v38-4-133" />
+    <link rel="stylesheet" href="weather-window.css?v=20261005-v38-4-138" />
     <!-- Critical astronomy styles stay with the markup so an older PWA cache
          can never render the phase SVGs at their intrinsic page size. -->
     <style id="astronomy-critical-styles">
@@ -906,6 +907,80 @@
           </figure>
         </section>
 
+        <section class="weather-window-section" aria-labelledby="weatherWindowHeading">
+          <div class="section-heading compact-heading">
+            <div>
+              <span class="section-eyebrow">A live local portrait</span>
+              <h2 id="weatherWindowHeading">The Ardamine Weather Window</h2>
+              <p>A small illustration shaped by what the Parknacross station is measuring now.</p>
+            </div>
+          </div>
+          <div class="weather-window-card">
+            <div id="weatherWindowScene" class="weather-window-scene" data-light="unknown" data-rain="unknown" role="img" aria-label="Waiting for the latest local weather observation">
+              <svg viewBox="0 0 720 300" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                  <linearGradient id="weatherWindowSky" x1="0" y1="0" x2="0" y2="1">
+                    <stop class="ww-sky-top" offset="0" />
+                    <stop class="ww-sky-bottom" offset="1" />
+                  </linearGradient>
+                  <linearGradient id="weatherWindowGround" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#305a50" />
+                    <stop offset="1" stop-color="#142f31" />
+                  </linearGradient>
+                </defs>
+                <rect width="720" height="300" fill="url(#weatherWindowSky)" />
+                <circle class="ww-sun" cx="555" cy="82" r="34" />
+                <circle class="ww-night-light" cx="555" cy="82" r="25" />
+                <path class="ww-distant-hill" d="M0 214 Q145 176 278 216 T540 206 T720 204 V300 H0Z" />
+                <path class="ww-ground" d="M0 242 Q158 215 300 242 T720 226 V300 H0Z" />
+                <g class="ww-wind-lines" fill="none" stroke="rgba(235,248,255,.54)" stroke-width="2" stroke-linecap="round">
+                  <path d="M46 88h130q16 0 16-10t-16-10h-24" />
+                  <path d="M86 120h82q13 0 13-8t-13-8h-14" />
+                  <path d="M427 147h122q12 0 12-8t-12-8h-20" />
+                </g>
+                <g class="ww-house">
+                  <path d="M470 204 561 147l91 57v72H470Z" fill="#34464a" />
+                  <path d="m454 207 107-72 107 72-8 10-99-65-99 65Z" fill="#26363b" />
+                  <rect x="494" y="216" width="31" height="34" rx="2" fill="#f0c77c" />
+                  <rect x="582" y="216" width="44" height="60" fill="#202f34" />
+                  <path d="M502 216v34m-8-17h31" stroke="#9b8055" stroke-width="2" />
+                </g>
+                <g class="ww-tree-trunk">
+                  <path d="M167 269 Q177 222 174 182 Q169 147 141 127 M174 185 Q202 155 211 126 M170 209 Q143 185 119 181" fill="none" stroke="#513e31" stroke-width="12" stroke-linecap="round" />
+                  <g fill="#395b49">
+                    <circle cx="139" cy="123" r="35"/><circle cx="179" cy="108" r="43"/><circle cx="215" cy="131" r="31"/><circle cx="123" cy="160" r="27"/><circle cx="190" cy="151" r="35"/>
+                  </g>
+                  <g fill="#54745a" opacity=".72"><circle cx="158" cy="96" r="21"/><circle cx="210" cy="113" r="19"/><circle cx="133" cy="145" r="17"/></g>
+                </g>
+                <g class="ww-rain" fill="none" stroke="#d8f2ff" stroke-width="3" stroke-linecap="round">
+                  <path d="m287 165-8 17m37-28-8 17m40 3-8 17m39-36-8 17m38 12-8 17m36-36-8 17m42 3-8 17m-197-12-8 17" />
+                </g>
+                <path d="M0 276 Q99 262 198 276 T396 276 T594 276 T792 276" fill="none" stroke="#73926b" stroke-width="3" opacity=".7" />
+              </svg>
+              <span class="weather-window-art-label">Illustrated from local readings</span>
+            </div>
+            <div class="weather-window-details">
+              <p id="weatherWindowObservation" class="weather-window-observation" role="status" aria-live="polite">Waiting for the latest Parknacross observation…</p>
+              <div class="weather-window-readings" aria-label="Readings used in this illustration">
+                <span>Wind <strong id="weatherWindowWind">--</strong></span>
+                <span>Rain rate <strong id="weatherWindowRain">--</strong></span>
+                <span>Solar <strong id="weatherWindowSolar">--</strong></span>
+              </div>
+              <p class="weather-window-note">Wind gives the scene a directional cue; only measured rain and sunlight are shown. The illustration does not infer cloud cover or forecast conditions.</p>
+              <div class="weather-sound-controls">
+                <div>
+                  <span class="section-eyebrow">Optional sound</span>
+                  <h3>Hear the weather</h3>
+                </div>
+                <button id="weatherSoundToggle" class="weather-sound-button" type="button" aria-pressed="false" disabled>▶ Play the Parknacross soundscape</button>
+                <label for="weatherSoundVolume">Volume</label>
+                <input id="weatherSoundVolume" type="range" min="0" max="100" value="35" aria-label="Soundscape volume" />
+                <p id="weatherSoundStatus" class="weather-sound-status" role="status" aria-live="polite">Sound is created in your browser and starts only when you press Play.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section
           id="lightningSetupNotice"
           class="lightning-panel"
@@ -1560,7 +1635,8 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20261004-v38-4-130-coastal-fallbacks"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="app.js?v=20261005-v38-4-133"></script>
+    <script src="weather-window.js?v=20261005-v38-4-138"></script>
+    <script src="app.js?v=20261005-v38-4-138"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
