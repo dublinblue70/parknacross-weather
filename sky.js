@@ -3,6 +3,75 @@
   const cfg = window.PARKNACROSS_CONFIG || {};
   const API = String(cfg.apiBase || "").replace(/\/$/, "");
   const $ = id => document.getElementById(id);
+  const likeRow = () => $("skyLikeRow");
+  const likeButton = () => $("skyLikeButton");
+  const likeCount = () => $("skyLikeCount");
+  let currentPhotoId = "";
+  const likeKey = id => `parknacrossSkyLiked:${id}`;
+  function visitorId() {
+    const key = "parknacrossSkyVisitorId:v1";
+    let id = localStorage.getItem(key);
+    if (!/^[0-9a-f]{32}$/i.test(id || "")) {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      id = Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
+      localStorage.setItem(key, id);
+    }
+    return id;
+  }
+  function renderLikeState(count, liked) {
+    const button = likeButton(), label = likeCount(), row = likeRow();
+    if (!button || !label || !row) return;
+    row.hidden = false;
+    button.classList.toggle("is-liked", liked);
+    button.setAttribute("aria-pressed", liked ? "true" : "false");
+    button.textContent = liked ? "♥ Liked" : "♡ Like";
+    button.disabled = liked;
+    const n = Math.max(0, Number(count) || 0);
+    label.textContent = `${n} ${n === 1 ? "like" : "likes"}`;
+  }
+  async function loadLikes(photoId) {
+    const button = likeButton(), label = likeCount();
+    try {
+      const id = visitorId();
+      const response = await fetch(`${API}/sky-photo/likes?photo_id=${encodeURIComponent(photoId)}&visitor_id=${encodeURIComponent(id)}&_=${Date.now()}`, {cache:"no-store"});
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (photoId !== currentPhotoId) return;
+      if (data.liked) localStorage.setItem(likeKey(photoId), "1");
+      else localStorage.removeItem(likeKey(photoId));
+      renderLikeState(data.likes, Boolean(data.liked));
+    } catch (_) {
+      if (photoId !== currentPhotoId) return;
+      if (label) label.textContent = "Likes unavailable";
+      if (button) button.disabled = true;
+      if (likeRow()) likeRow().hidden = false;
+    }
+  }
+  async function submitLike() {
+    const photoId = currentPhotoId, button = likeButton();
+    if (!photoId || !button) return;
+    try {
+      if (localStorage.getItem(likeKey(photoId)) === "1") {
+        button.disabled = true;
+        return;
+      }
+      button.disabled = true;
+      const response = await fetch(`${API}/sky-photo/likes`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({photo_id:photoId,visitor_id:visitorId()})
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+      localStorage.setItem(likeKey(photoId), "1");
+      if (photoId === currentPhotoId) renderLikeState(data.likes, true);
+    } catch (_) {
+      if (photoId === currentPhotoId) {
+        button.disabled = false;
+        if (likeCount()) likeCount().textContent = "Could not save like · try again";
+      }
+    }
+  }
   const stationDay = value => {
     const date = value ? new Date(value) : new Date();
     if (Number.isNaN(date.getTime())) return "";
@@ -14,6 +83,8 @@
   const showRetry = visible => { const button = $("skyRetryButton"); if (button) button.hidden = !visible; };
 
   function showMessage(title, detail) {
+    currentPhotoId = "";
+    if (likeRow()) likeRow().hidden = true;
     const media = $("skyObservationMedia");
     if (!media) return;
     const card = document.createElement("div"); card.className = "camera-placeholder";
@@ -47,6 +118,11 @@
         }
         $("skyObservationMedia")?.replaceChildren(figure);
         if (status) status.textContent = `Uploaded ${uploadedLabel(data.uploaded_at)} · Parknacross, Ardamine`;
+        currentPhotoId = String(data.uploaded_at);
+        if (likeRow()) likeRow().hidden = false;
+        if (likeButton()) { likeButton().disabled = true; likeButton().textContent = "♡ Like"; }
+        if (likeCount()) likeCount().textContent = "Loading likes…";
+        loadLikes(currentPhotoId);
         showRetry(false);
       }, {once:true});
       image.addEventListener("error", () => {
@@ -65,6 +141,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     $("year").textContent = new Date().getFullYear();
     $("skyRetryButton")?.addEventListener("click", loadObservation);
+    $("skyLikeButton")?.addEventListener("click", submitLike);
     loadObservation();
   });
 })();

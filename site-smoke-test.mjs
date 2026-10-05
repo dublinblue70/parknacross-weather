@@ -8,7 +8,7 @@ const htmlFiles = files.filter(name => name.endsWith(".html"));
 const failures = [];
 const offlineReferences = new Set();
 
-for (const obsoleteWorker of ["worker.js", "cloudflare-worker.js", "worker-v38.4.47-photo-likes.js", "Parknacross-worker-v38.4.47-photo-likes.txt", "Parknacross-worker-v38.4.48-like-once.txt"]) {
+for (const obsoleteWorker of ["worker.js", "cloudflare-worker.js", "worker-v38.4.47-photo-likes.js", "Parknacross-worker-v38.4.47-photo-likes.txt", "Parknacross-worker-v38.4.48-like-once.txt", "Parknacross-worker-v38.4.78-MARINE-FEED-FAILOVER.js"]) {
   if (files.includes(obsoleteWorker)) failures.push(`${obsoleteWorker}: obsolete Cloudflare Worker copy must not ship with the website`);
 }
 
@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-128"],
+  ["service-worker.js", "parknacross-v38-4-131-site-audit-fixes"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],

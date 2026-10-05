@@ -170,7 +170,7 @@ async function runChecks() {
 
   const sitePromise=checkSite();
   const apiStarted=performance.now();
-  const [health,current,quality,history,reliability,backup,social,site] = await Promise.all([
+  const [health,current,quality,history,reliability,backup,social,tides,m2,site] = await Promise.all([
     fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e})),
@@ -178,11 +178,49 @@ async function runChecks() {
     fetchJSON(`${API_BASE}/reliability`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/backup-status`).catch(e=>({__error:e})),
     fetchJSON(`${API_BASE}/social-status`).catch(e=>({__error:e})),
+    // Unique query values bypass the Worker's long marine cache TTLs so this
+    // health check can detect an upstream outage instead of only checking cache.
+    fetchJSON(`${API_BASE}/marine/tides?station=Arklow&healthcheck=${Date.now()}`,10000).catch(e=>({__error:e})),
+    fetchJSON(`${API_BASE}/marine/sea-temperature?healthcheck=${Date.now()}`,10000).catch(e=>({__error:e})),
     sitePromise
   ]);
 
   const apiElapsed=Math.round(performance.now()-apiStarted);
   let states=[site.state];
+
+  const tideEvents=Array.isArray(tides?.events)?tides.events:[];
+  const validTideEvents=tideEvents.filter(event=>event&&Number.isFinite(Date.parse(event.time))&&
+    (String(event.type).toLowerCase()==="high"||String(event.type).toLowerCase()==="low"));
+  if(tides.__error||!validTideEvents.length){
+    setBadge("tideBadge","warn","UNAVAILABLE");
+    setText("tideValue","No predictions");
+    setText("tideDetail",tides.__error?`Arklow prediction check failed: ${tides.__error.message||"request failed"}`:"The tide service returned no usable Arklow predictions.");
+    states.push("warn");
+  }else{
+    const next=validTideEvents.map(event=>({event,at:Date.parse(event.time)})).filter(item=>item.at>=Date.now()).sort((a,b)=>a.at-b.at)[0];
+    setBadge("tideBadge","good","LIVE");
+    setText("tideValue",`${validTideEvents.length} predictions`);
+    setText("tideDetail",next?`Next ${String(next.event.type).toLowerCase()} water: ${fmtIrishDateTime(next.event.time)} · Marine Institute Arklow`:`${tides.station||"Arklow"} predictions received; no later event in this window.`);
+  }
+
+  const buoy=m2?.m2_buoy;
+  const m2Value=buoy?.sea_surface_temperature_c;
+  const m2Time=buoy?.observation_time||buoy?.timestamp;
+  const m2Age=usableNumber(buoy?.observation_age_minutes)?Number(buoy.observation_age_minutes):
+    m2Time&&Number.isFinite(Date.parse(m2Time))?Math.max(0,(Date.now()-Date.parse(m2Time))/60000):null;
+  if(m2.__error||m2?.m2_observation_available!==true||!usableNumber(m2Value)||m2Age===null||m2Age>12*60){
+    setBadge("m2Badge","warn","UNAVAILABLE");
+    setText("m2Value","No current reading");
+    const reason=m2.__error?.message||m2?.errors?.m2_buoy||"No fresh M2 observation was returned";
+    setText("m2Detail",`${reason}. The local model may still be available on the coast page.`);
+    states.push("warn");
+  }else{
+    const m2State=m2Age<=180?"good":"warn";
+    setBadge("m2Badge",m2State,m2State==="good"?"LIVE":"AGING");
+    setText("m2Value",`${fmtNum(m2Value,1)} °C`);
+    setText("m2Detail",`M2 buoy observation ${fmtAge(m2Age*60)} old${m2Time?` · ${fmtIrishDateTime(m2Time)}`:""} · about 110 km offshore`);
+    if(m2State==="warn")states.push("warn");
+  }
 
   if(health.__error) {
     setBadge("apiBadge","bad","DOWN"); setText("apiValue","Unavailable"); setText("apiDetail","Weather data service could not be reached"); states.push("bad");
