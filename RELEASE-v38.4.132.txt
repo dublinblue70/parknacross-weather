@@ -1,0 +1,19 @@
+Parknacross Weather v38.4.132
+Dashboard clarity and Today’s Sky layout
+
+GitHub site files only. No Cloudflare Worker change is required.
+
+Changes:
+- Dashboard labels the live daily high/low separately and shows the latest saved daily high/low for comparison.
+- The Met Éireann rain/wind note now appears directly below current conditions and explicitly distinguishes the forecast from locally measured rain.
+- Rain Centre and Daily Summary clarify that the consecutive dry-day count includes today so far.
+- System Status names the metric as this month’s archive coverage and points to History for overall archive completeness.
+- Daily Summary describes its row count as station readings including the latest live update, rather than implying all rows are already saved.
+- Today’s Sky photo uses a wide 3:2 landscape frame with a cover crop like the Dashboard. Its caption is a compact dark pill at the top-right of the image and wraps within the photo on narrow screens.
+- Bumped the service-worker cache and affected asset URLs to v38.4.132.
+
+Verification:
+- JavaScript syntax checks passed for app.js, rain.js, summary.js, status.js and sky.js.
+- Site smoke, CSV pagination, freshness/resilience, rain-alert and coast-data tests passed against Parknacross-worker-v38.4.80-SITE-AUDIT-FIXES.js.
+
+Apply the included files to the root of the GitHub website repository and let GitHub Pages publish them. The changes are not live until that publish completes.

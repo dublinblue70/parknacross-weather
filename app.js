@@ -1120,7 +1120,16 @@ function updateWhatToWear(current, rainDetected = false) {
     if(wet)notes.push("rain or showers are mentioned, so consider taking a waterproof");
     if(windy)notes.push("stronger winds are mentioned, so a windproof layer may be useful");
     forecastNote.hidden=!notes.length;
-    forecastNote.textContent=notes.length?`Later today · Official Leinster forecast: ${notes.join("; ")}.`:"";
+    if(!notes.length){
+      forecastNote.textContent="";
+    }else{
+      const rainRate=usable(current?.rain_rate_mm_h)?Number(current.rain_rate_mm_h):null;
+      const localRain=rainRate!==null&&rainRate>0?`Rain is currently being measured at Parknacross at ${n(rainRate)} mm/h.`
+        :rainDetected?"Rain was detected at Parknacross within the last few minutes; the current rate is 0.0 mm/h."
+        :rainRate!==null?`The Parknacross station currently reports ${n(rainRate)} mm/h.`:"The current local rain reading is unavailable.";
+      const scopeNote=wet?`This is a forecast, not rain measured at Parknacross. ${localRain}`:"This is an official forecast, separate from the latest local station readings.";
+      forecastNote.textContent=`Met Éireann forecast · ${notes.join("; ")}. ${scopeNote}`;
+    }
   }
 }
 
@@ -1258,9 +1267,9 @@ function updateDashboard(current) {
   const solarReading = recordReading(today, "solar_w_m2", "max");
 
   /*
-   * At a Glance should use the Worker's compact today-only daily summary as
-   * the authoritative source. This avoids stale rolling-history extrema and
-   * keeps Dashboard, Daily Summary and Archive figures aligned.
+   * Dashboard extrema use today's validated archive readings plus the newest
+   * live station observation. The saved daily summary is shown separately;
+   * it can trail the live result until the next scheduled save.
    */
   const todayKey = stationDateKeyFromTime(now);
   const dailyToday = dailyRecent.find(row => row?.day === todayKey) || null;
@@ -1298,6 +1307,11 @@ function updateDashboard(current) {
   const solarPeak = extrema(dailyToday?.solar_peak_w_m2, solarReading?.solar_w_m2, current.solar_w_m2, "max");
   const todayHighReading = highReading && usable(todayHigh) && Math.abs(Number(highReading.temperature_c) - todayHigh) < 0.05 ? highReading : null;
   const todayLowReading = lowReading && usable(todayLow) && Math.abs(Number(lowReading.temperature_c) - todayLow) < 0.05 ? lowReading : null;
+  const archiveHigh = usable(dailyToday?.high_c) ? Number(dailyToday.high_c) : null;
+  const archiveLow = usable(dailyToday?.low_c) ? Number(dailyToday.low_c) : null;
+  set("todayTempArchive", archiveHigh !== null || archiveLow !== null
+    ? `Latest saved daily summary: ${archiveHigh === null ? "--" : `${n(archiveHigh)}°`} / ${archiveLow === null ? "--" : `${n(archiveLow)}°`}`
+    : "Latest saved daily summary is still building");
   const pressure = pressureStats(current);
   const direction = compass(current.wind_direction_deg);
   const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : correctedDailyRain(current);

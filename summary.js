@@ -229,6 +229,9 @@ function renderRainSummary(rain, todayRain) {
   set("rainTodayPanel",usable(todayRain)?`${num(todayRain)} mm`:"--");
   const dry=usable(rain?.consecutive_dry_days)?Number(rain.consecutive_dry_days):null;
   set("drySpell",dry===null?"--":`${rain?.consecutive_dry_days_complete===false?"≥":""}${dry} day${dry===1?"":"s"}`);
+  set("drySpellNote",rain?.consecutive_dry_days_complete===false
+    ? "Rain-free calendar days · includes today so far; count stops at the first missing archive day"
+    : "Rain-free calendar days · includes today so far");
 }
 
 function renderSignificantWeather(rows){
@@ -308,7 +311,7 @@ async function loadSummary(){
     if (usable(current?.rain_daily_mm) && localDayKey(readingDate(current)) === todayKey) todayMetrics.rain = correctedRain(current);
     else if (usable(rain?.today_mm)) todayMetrics.rain = Number(rain.today_mm);
     const rainDisplay = {...rain, current_rate_mm_h: usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : rain?.current_rate_mm_h};
-    set("summaryTitle",`Today in Parknacross · ${longDate(now)}`);set("summarySubtitle",todayRows.length?`Live day-so-far summary from ${todayRows.length.toLocaleString("en-IE")} stored observations.`:"Waiting for today's stored station observations.");
+    set("summaryTitle",`Today in Parknacross · ${longDate(now)}`);set("summarySubtitle",todayRows.length?`Live day-so-far summary from ${todayRows.length.toLocaleString("en-IE")} station readings, including the latest live update.`:"Waiting for today's station readings.");
     const recentCompletedDays=(Array.isArray(daily?.days)?daily.days:[]).filter(row=>row.day!==todayKey).slice(-7);
     renderToday(todayMetrics,yesterdayMetrics,recentCompletedDays);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);renderSignificantWeather(rows);renderSoil(current);
     $("downloadCsvButton").disabled=!todayRows.length;$("shareWeatherButton").disabled=!latestShareRow;

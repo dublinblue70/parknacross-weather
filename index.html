@@ -31,7 +31,7 @@
     <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260928-v38-4-123" />
+    <link rel="stylesheet" href="styles.css?v=20261005-v38-4-132" />
     <!-- Critical astronomy styles stay with the markup so an older PWA cache
          can never render the phase SVGs at their intrinsic page size. -->
     <style id="astronomy-critical-styles">
@@ -707,7 +707,7 @@
               </div>
             </div>
 
-            <div class="hero-side" aria-label="Current weather summary">
+          <div class="hero-side" aria-label="Current weather summary">
               <div class="hero-stat">
                 <span>Wind</span><strong id="heroWind">--</strong
                 ><small id="heroGust">Gust --</small>
@@ -725,6 +725,8 @@
             </div>
           </div>
         </section>
+
+        <p id="wearForecast" class="info-note wear-forecast-note" role="status" aria-live="polite" hidden></p>
 
         <section class="local-search-intro" aria-label="Local weather coverage">
           <strong>Live weather in Ardamine, Courtown and North Wexford.</strong>
@@ -942,11 +944,12 @@
 
           <div class="today-grid">
             <article class="today-item">
-              <span>High / Low</span>
+              <span>Live high / low</span>
               <strong
                 ><span id="todayHigh">--</span>° /
                 <span id="todayLow">--</span>°</strong
               >
+              <small id="todayTempArchive">Latest saved daily summary: -- / --</small>
               <small id="todayTempCompare">Yesterday comparison building</small>
             </article>
             <article class="today-item">
@@ -986,7 +989,6 @@
               <p id="wearExtras" class="info-note">Checking wind, rain and UV…</p>
             </article>
           </div>
-          <p id="wearForecast" class="info-note wear-forecast-note" hidden></p>
           <p class="source-note">Land-based clothing guidance from the latest local station reading—not a full-day forecast. Personal comfort and conditions away from Parknacross may vary.</p>
         </section>
 
@@ -1529,7 +1531,7 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20261004-v38-4-130-coastal-fallbacks"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="app.js?v=20260930-rain-label-fix"></script>
+    <script src="app.js?v=20261005-v38-4-132"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */

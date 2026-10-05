@@ -311,7 +311,8 @@ async function runChecks() {
     setBadge("reliabilityBadge",state,state==="good"?"COMPLETE":"PARTIAL");
     setText("reliabilityValue",`${pct.toFixed(1)}%`);
     const currentFeedLive=!current.__error&&usableNumber(current.epoch)&&(Date.now()/1000-Number(current.epoch))<600;
-    setText("reliabilityDetail",`Informational historical coverage · ${currentFeedLive?"current station feed is live · ":""}${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected five-minute slots saved`);
+    const monthLabel=new Intl.DateTimeFormat("en-IE",{timeZone:"Europe/Dublin",month:"long",year:"numeric"}).format(new Date());
+    setText("reliabilityDetail",`${monthLabel} coverage · ${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected five-minute slots saved${currentFeedLive?" · station feed currently live":""}. Overall archive completeness is shown on the History page.`);
   }
 
   if(backup.__error) {

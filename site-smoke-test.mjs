@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-131-site-audit-fixes"],
+  ["service-worker.js", "parknacross-v38-4-132-display-clarity-sky-landscape"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -221,11 +221,25 @@ if (moonFunctionStart < 0 || moonFunctionEnd < 0) {
 if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
 if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-97')) failures.push("index.html: shared data corrections must load before the dashboard application");
 if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: forecast-aware clothing note is missing");
+if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
+if (dashboardHtml.indexOf('id="wearForecast"') > dashboardHtml.indexOf('id="todaySkyPanel"')) failures.push("index.html: forecast-only rain context must be near current conditions");
+if (!dashboardApp.includes("This is a forecast, not rain measured at Parknacross")) failures.push("app.js: forecast rain must be distinguished from measured local rain");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
 const coastScript = await readFile(join(root, "coast.js"), "utf8");
 if (/Math\.(?:floor|ceil)\(Math\.(?:min|max)\(model,buoy\)\*2\)/.test(coastScript)) failures.push("coast.js: sea-temperature range still expands to half-degree bounds");
 const statusScript = await readFile(join(root, "status.js"), "utf8");
-if (!statusScript.includes("Informational historical coverage")) failures.push("status.js: partial historical coverage must be informational");
+if (!statusScript.includes("Overall archive completeness is shown on the History page")) failures.push("status.js: monthly coverage must be distinguished from full-archive completeness");
+if (!statusScript.includes("coverage · ${reliability.actual_samples")) failures.push("status.js: archive coverage detail must name the current month scope");
+const skyPageHtml = await readFile(join(root, "sky.html"), "utf8");
+const skyStyles = await readFile(join(root, "styles.css"), "utf8");
+if (!skyStyles.includes(".sky-page-photo{position:relative;width:min(100%,960px);aspect-ratio:3/2")) failures.push("styles.css: Today’s Sky page photo must use the landscape dashboard format");
+if (!skyStyles.includes(".sky-page-photo .today-sky-caption-pill")) failures.push("styles.css: Today’s Sky caption pill must be styled on the photo");
+if (!skyPageHtml.includes("sky.js?v=20261005-photo-layout-v132")) failures.push("sky.html: landscape photo and caption fix cache version is missing");
+const summaryScript = await readFile(join(root, "summary.js"), "utf8");
+if (!summaryScript.includes("including the latest live update")) failures.push("summary.js: live readings must not be labelled as stored-only observations");
+if (!summaryScript.includes("includes today so far")) failures.push("summary.js: dry spell must identify the current partial day");
+const rainScript = await readFile(join(root, "rain.js"), "utf8");
+if (!rainScript.includes("Rain-free calendar days · includes today so far")) failures.push("rain.js: dry spell must identify the current partial day");
 if ((dashboardApp.match(/updateDashboard\(current\);/g)||[]).length < 3) failures.push("app.js: dashboard progressive rendering is missing");
 const privacyHtml = await readFile(join(root, "privacy.html"), "utf8");
 if (/Sky Photo (?:identifier|likes)/.test(privacyHtml)) failures.push("privacy.html: outdated Sky Photo terminology remains");
