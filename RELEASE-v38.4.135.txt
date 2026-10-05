@@ -1,0 +1,18 @@
+Parknacross Weather v38.4.135
+Satellite imagery source fix
+
+GitHub website files only. No Cloudflare Worker change is required.
+
+Changes:
+- Replaced the unavailable EUMETView static-image URLs. Those legacy URLs now redirect to the EUMETView web app rather than returning the image files expected by the page.
+- The Radar page now embeds EUMETSAT's official Meteosat-12 Europe stream. EUMETSAT provides instructions for embedding the stream on websites.
+- The player is lazy-loaded when the visitor scrolls near it, so the satellite stream does not delay the initial dashboard/radar load.
+- The page states that the stream updates every 10 minutes and processed frames may be around 30 minutes behind real time; the page also keeps links to Met Éireann and Meteociel imagery.
+- Preserves all included v38.4.134 and earlier astronomy, warning-colour, dashboard clarity and Today’s Sky changes.
+- Bumped service-worker and radar asset versions to v38.4.135.
+
+Verification:
+- JavaScript syntax checks and site smoke/lazy-load assertions passed.
+- Zip archive integrity checked.
+
+Apply the included files to the root of the GitHub website repository and let GitHub Pages publish them. The changes are not live until that publish completes.

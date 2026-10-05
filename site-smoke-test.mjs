@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-134-satellite-imagery"],
+  ["service-worker.js", "parknacross-v38-4-135-satellite-stream-fix"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -263,9 +263,9 @@ if (!summaryScript.includes("including the latest live update")) failures.push("
 if (!summaryScript.includes("includes today so far")) failures.push("summary.js: dry spell must identify the current partial day");
 const radarHtml = await readFile(join(root, "radar.html"), "utf8");
 const radarScript = await readFile(join(root, "radar.js"), "utf8");
-if ((radarHtml.match(/data-satellite-image/g) || []).length !== 2 || !radarHtml.includes("©EUMETSAT 2026")) failures.push("radar.html: two credited satellite images are required");
-if (!radarHtml.includes('href="#satelliteImagery"') || !radarScript.includes("new IntersectionObserver")) failures.push("satellite section must be discoverable and lazy-loaded");
-if (!radarScript.includes("15*60*1000") || !radarScript.includes("keeping the current view until it is ready")) failures.push("satellite refresh must be periodic and preserve the displayed image during refresh");
+if (!radarHtml.includes('data-satellite-stream') || !radarHtml.includes('nigtvuOspmM')) failures.push("radar.html: official EUMETSAT live stream embed is missing");
+if (!radarHtml.includes('href="#satelliteImagery"') || !radarScript.includes("new IntersectionObserver")) failures.push("satellite stream must be discoverable and lazy-loaded");
+if (!radarScript.includes("stream.src=stream.dataset.streamSrc") || radarHtml.includes("eumetview.eumetsat.int/static-images")) failures.push("satellite stream must replace the retired static-image URLs");
 const rainScript = await readFile(join(root, "rain.js"), "utf8");
 if (!rainScript.includes("Rain-free calendar days · includes today so far")) failures.push("rain.js: dry spell must identify the current partial day");
 if ((dashboardApp.match(/updateDashboard\(current\);/g)||[]).length < 3) failures.push("app.js: dashboard progressive rendering is missing");
