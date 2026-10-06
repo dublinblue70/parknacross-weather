@@ -19,7 +19,7 @@ for (const marker of [
   "readGatewayLiveReading(env, nowEpoch)",
   "source: \"gw3001_direct_live\"",
   "cachedJson(request, ctx, 300, () => buildRainEvents(env, url))",
-  "v38.4.81-CUSTOM-CSV-DATE-RANGE",
+  "v38.4.82-NONBLOCKING-CURRENT",
   "const johnstownLtaByMonth = { 9: 72.3, 10: 126.5 }",
   "const validatedTemps = day === todayKey"
 ]) {

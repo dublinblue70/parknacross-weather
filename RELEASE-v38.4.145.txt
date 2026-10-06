@@ -1,0 +1,22 @@
+Parknacross Weather v38.4.145
+Weather request resilience
+
+Website changes:
+- Dashboard API requests now have a 12-second timeout and one retry, so a stalled request cannot leave the live conditions on an endless loading screen.
+- The service-worker cache and Dashboard app script are versioned for v38.4.145.
+- The Quick Installation Check continues to derive its displayed version from the active service-worker cache.
+
+Cloudflare Worker change (v38.4.82):
+- The live /current endpoint no longer waits for the optional Ecowitt battery API.
+- It returns current weather and the last known battery voltage immediately, then refreshes battery provenance in background work.
+- A focused regression test proves current readings return while the optional battery service is stalled.
+
+Verification:
+- Website smoke and regression tests passed.
+- Worker /current fast-response test passed.
+- Custom CSV range tests passed.
+- ZIP integrity checked.
+
+Deployment:
+- Upload the website ZIP to the parknacross-weather GitHub repository.
+- Deploy Parknacross-worker-v38.4.82-NONBLOCKING-CURRENT.js to the existing Cloudflare Worker separately.

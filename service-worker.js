@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-144-live-install-version";
+const CACHE_NAME = "parknacross-v38-4-145-weather-request-timeout";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

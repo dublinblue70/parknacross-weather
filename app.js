@@ -1896,18 +1896,24 @@ function updateCharts() {
   set("dashboardChartSummary", `Dashboard weather charts cover ${period} using ${usableRows.length.toLocaleString("en-IE")} observations. Large archive gaps are shown as breaks; isolated suspect readings are not joined into the valid trend lines.`);
 }
 
-async function getJSON(url, cacheMode = "default") {
+async function getJSON(url, cacheMode = "default", timeoutMs = 12000) {
   let lastError;
   for (let attempt = 0; attempt < 2; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(url, { cache: cacheMode });
+      const response = await fetch(url, { cache: cacheMode, signal: controller.signal });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (data?.error) throw new Error(data.error);
       return data;
     } catch (error) {
-      lastError = error;
+      lastError = controller.signal.aborted
+        ? new Error(`Weather request timed out after ${Math.ceil(timeoutMs / 1000)} seconds`)
+        : error;
       if (!attempt) await new Promise(resolve => setTimeout(resolve, 500));
+    } finally {
+      clearTimeout(timer);
     }
   }
   throw lastError;
