@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-141-weather-audio-removed";
+const CACHE_NAME = "parknacross-v38-4-142-weather-window-detail";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

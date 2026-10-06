@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-141-weather-audio-removed"],
+  ["service-worker.js", "parknacross-v38-4-142-weather-window-detail"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -229,7 +229,8 @@ if (!dashboardHtml.includes('aria-label="Daily sun phases"') || !dashboardHtml.i
 if (!dashboardHtml.includes('id="seasonNextMarker"') || !dashboardHtml.includes("Typical dates for Ireland")) failures.push("index.html: approximate annual equinox and solstice outlook is missing");
 if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
 if (!dashboardHtml.includes('id="weatherWindowScene"') || !dashboardHtml.includes('id="weatherWindowObservation"') || dashboardHtml.includes("weatherSoundToggle") || dashboardHtml.includes("weather-sound-controls") || dashboardHtml.includes("Illustrated from local readings")) failures.push("index.html: Weather Window should remain while all sound controls and the removed caption stay absent");
-if (!dashboardHtml.includes('weather-window.css?v=20261006-v38-4-141') || !dashboardHtml.includes('weather-window.js?v=20261006-v38-4-141')) failures.push("index.html: isolated weather window assets must be versioned and loaded");
+if (!dashboardHtml.includes('weather-window.css?v=20261006-v38-4-142') || !dashboardHtml.includes('weather-window.js?v=20261006-v38-4-142')) failures.push("index.html: isolated weather window assets must be versioned and loaded");
+if (!dashboardHtml.includes('class="ww-coastline"') || !dashboardHtml.includes('class="ww-sea-lines"') || !dashboardHtml.includes('class="ww-garden"')) failures.push("index.html: Ardamine Weather Window should include the added coastal, sea and garden illustration details");
 if (dashboardHtml.indexOf('id="wearForecast"') > dashboardHtml.indexOf('id="todaySkyPanel"')) failures.push("index.html: forecast-only rain context must be near current conditions");
 if (!dashboardApp.includes("This is a forecast, not rain measured at Parknacross")) failures.push("app.js: forecast rain must be distinguished from measured local rain");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");

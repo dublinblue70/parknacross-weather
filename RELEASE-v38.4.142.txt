@@ -1,0 +1,19 @@
+Parknacross Weather v38.4.142
+Ardamine Weather Window illustration detail
+
+Changes:
+- Added a subtle Irish Sea and coastline, layered shore and field shapes, small garden flowers, roof details, sun rays, and a crescent moon with stars at night.
+- Added day, dusk, and night styling for the sea and house window.
+- Kept the scene limited to visual details; it still does not suggest measured cloud cover or forecast conditions.
+- Kept the live wind, rain, solar, and night/day behavior and all existing dashboard functionality.
+- Weather audio remains removed.
+- Updated page asset versions and service-worker cache to v38.4.142.
+
+Verification:
+- Site smoke tests confirm the enhanced scene markup and cache versions.
+- Weather Window regression tests confirm live readings still render and audio controls and implementation remain absent.
+- Full smoke and CSV export regression suite passed.
+- ZIP archive integrity checked.
+
+Deployment:
+- Publish the website files from the matching ZIP to GitHub Pages. No Cloudflare Worker update is required.
