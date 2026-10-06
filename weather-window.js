@@ -35,13 +35,52 @@
     if (!audio || !latest) return;
     const speed = numberOrNull(latest.current.wind_speed_kmh);
     const rate = numberOrNull(latest.current.rain_rate_mm_h);
-    /* Compensate for filtered noise losing energy through mobile speakers. */
-    const wind = speed === null ? 0 : Math.min(0.9, 0.24 + Math.min(80, Math.max(0, speed)) * 0.008);
-    const rain = rate === null || rate <= 0 ? 0 : Math.min(0.62, 0.08 + Math.sqrt(Math.max(0, rate)) * 0.12);
+    /* Filtered noise loses energy on phone speakers. A compressor on the
+       output catches peaks while these source gains keep the ambience audible. */
+    const wind = speed === null ? 0 : Math.min(3.2, 1.6 + Math.min(64, Math.max(0, speed)) * 0.025);
+    const rain = rate === null || rate <= 0 ? 0 : Math.min(1.35, 0.42 + Math.sqrt(Math.max(0, rate)) * 0.42);
+    const hour = stationHour(latest.current.epoch);
+    const birds = hour !== null && hour >= 5 && hour < 12 ? 0.46 : 0;
     const at = audio.context.currentTime;
     audio.wind.gain.setTargetAtTime(wind, at, 0.45);
     audio.rain.gain.setTargetAtTime(rain, at, 0.45);
+    audio.birds.gain.setTargetAtTime(birds, at, 0.7);
     audio.windFilter.frequency.setTargetAtTime(600 + Math.min(80, Math.max(0, speed || 0)) * 45, at, 0.55);
+  }
+
+  function stationHour(epoch) {
+    const value = numberOrNull(epoch);
+    if (value === null) return null;
+    const date = new Date(value * 1000);
+    if (!Number.isFinite(date.getTime())) return null;
+    const hour = Number(new Intl.DateTimeFormat("en-IE", {
+      timeZone: "Europe/Dublin", hour: "2-digit", hourCycle: "h23"
+    }).format(date));
+    return Number.isFinite(hour) ? hour : null;
+  }
+
+  function makeBirdsongBuffer(context) {
+    const seconds = 4;
+    const buffer = context.createBuffer(1, Math.max(1, context.sampleRate * seconds), context.sampleRate);
+    const samples = buffer.getChannelData(0);
+    const chirps = [
+      [0.22, 0.13, 2450, 3550], [0.43, 0.12, 2850, 3900],
+      [1.08, 0.14, 2600, 3700], [1.31, 0.13, 3050, 4100],
+      [2.24, 0.15, 2500, 3600], [2.50, 0.13, 2900, 4000],
+      [3.26, 0.12, 2700, 3850], [3.48, 0.12, 3150, 4250]
+    ];
+    for (const [start, duration, low, high] of chirps) {
+      const first = Math.floor(start * context.sampleRate);
+      const count = Math.floor(duration * context.sampleRate);
+      const sweep = high - low;
+      for (let index = 0; index < count && first + index < samples.length; index++) {
+        const time = index / context.sampleRate;
+        const envelope = Math.sin(Math.PI * index / count) ** 2;
+        const phase = 2 * Math.PI * (low * time + (sweep * time * time) / (2 * duration));
+        samples[first + index] += Math.sin(phase) * envelope * 0.28;
+      }
+    }
+    return buffer;
   }
 
   function render(detail) {
@@ -110,6 +149,18 @@
     const master = context.createGain();
     master.gain.value = Number(soundVolume.value) / 100;
     master.connect(context.destination);
+    const compressor = typeof context.createDynamicsCompressor === "function"
+      ? context.createDynamicsCompressor()
+      : null;
+    if (compressor) {
+      compressor.threshold.value = -8;
+      compressor.knee.value = 6;
+      compressor.ratio.value = 8;
+      compressor.attack.value = 0.004;
+      compressor.release.value = 0.16;
+      compressor.connect(master);
+    }
+    const output = compressor || master;
 
     const windSource = context.createBufferSource();
     const windFilter = context.createBiquadFilter();
@@ -121,7 +172,7 @@
     windGain.gain.value = 0;
     windSource.connect(windFilter);
     windFilter.connect(windGain);
-    windGain.connect(master);
+    windGain.connect(output);
     windSource.start();
 
     const rainSource = context.createBufferSource();
@@ -134,10 +185,19 @@
     rainGain.gain.value = 0;
     rainSource.connect(rainFilter);
     rainFilter.connect(rainGain);
-    rainGain.connect(master);
+    rainGain.connect(output);
     rainSource.start();
 
-    audio = { context, resumePromise, master, wind: windGain, rain: rainGain, windFilter };
+    const birdSource = context.createBufferSource();
+    const birdGain = context.createGain();
+    birdSource.buffer = makeBirdsongBuffer(context);
+    birdSource.loop = true;
+    birdGain.gain.value = 0;
+    birdSource.connect(birdGain);
+    birdGain.connect(output);
+    birdSource.start();
+
+    audio = { context, resumePromise, master, wind: windGain, rain: rainGain, birds: birdGain, windFilter };
     updateAudioLevels();
   }
 
@@ -159,7 +219,11 @@
       await audio.resumePromise;
       if (audio.context.state !== "running") await audio.context.resume();
       updateAudioLevels();
-      setPlaying(true, "Playing a locally generated sound from the latest measured wind and rain. It stops when you press Stop or hide this page.");
+      const hour = stationHour(latest?.current?.epoch);
+      const birdNote = hour !== null && hour >= 5 && hour < 12
+        ? " Soft synthetic birdlike chirps play during the Irish morning (05:00–12:00)."
+        : " Synthetic birdlike chirps are limited to the Irish morning (05:00–12:00).";
+      setPlaying(true, `Playing locally generated wind and rain ambience.${birdNote} It stops when you press Stop or hide this page.`);
     } catch (error) {
       setPlaying(false, "Your browser blocked the sound. Tap Play again or check your phone’s media volume. Weather readings are unaffected.");
       console.info("Parknacross soundscape unavailable:", error);

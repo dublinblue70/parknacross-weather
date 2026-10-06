@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-139-mobile-sound-fix"],
+  ["service-worker.js", "parknacross-v38-4-140-morning-birds-mobile-audio"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -228,8 +228,8 @@ if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: for
 if (!dashboardHtml.includes('aria-label="Daily sun phases"') || !dashboardHtml.includes('aria-label="Eight phases of the Moon"')) failures.push("index.html: visual sun and moon phase cycles are missing");
 if (!dashboardHtml.includes('id="seasonNextMarker"') || !dashboardHtml.includes("Typical dates for Ireland")) failures.push("index.html: approximate annual equinox and solstice outlook is missing");
 if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
-if (!dashboardHtml.includes('id="weatherWindowScene"') || !dashboardHtml.includes('id="weatherSoundToggle"') || !dashboardHtml.includes("Press Play; check your phone’s media volume") || dashboardHtml.includes("Illustrated from local readings")) failures.push("index.html: local weather illustration, mobile sound guidance or caption removal is missing");
-if (!dashboardHtml.includes('weather-window.css?v=20261006-v38-4-139') || !dashboardHtml.includes('weather-window.js?v=20261006-v38-4-139')) failures.push("index.html: isolated weather window assets must be versioned and loaded");
+if (!dashboardHtml.includes('id="weatherWindowScene"') || !dashboardHtml.includes('id="weatherSoundToggle"') || !dashboardHtml.includes("birdlike chirps from 05:00 to noon Irish time") || dashboardHtml.includes("Illustrated from local readings")) failures.push("index.html: local weather illustration, morning birdsong note or caption removal is missing");
+if (!dashboardHtml.includes('weather-window.css?v=20261006-v38-4-140') || !dashboardHtml.includes('weather-window.js?v=20261006-v38-4-140')) failures.push("index.html: isolated weather window assets must be versioned and loaded");
 if (dashboardHtml.indexOf('id="wearForecast"') > dashboardHtml.indexOf('id="todaySkyPanel"')) failures.push("index.html: forecast-only rain context must be near current conditions");
 if (!dashboardApp.includes("This is a forecast, not rain measured at Parknacross")) failures.push("app.js: forecast rain must be distinguished from measured local rain");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
@@ -304,7 +304,7 @@ try {
   failures.push(`app.js: weather-window isolation check failed (${error.message})`);
 }
 const weatherWindowScript = await readFile(join(root, "weather-window.js"), "utf8");
-if (!weatherWindowScript.includes("AudioContext") || !weatherWindowScript.includes("createBufferSource") || !weatherWindowScript.includes("visibilitychange") || !weatherWindowScript.includes("const resumePromise = context.resume()") || !weatherWindowScript.includes("Math.min(0.9")) failures.push("weather-window.js: mobile audio must unlock immediately on tap, use audible levels, and pause when the page is hidden");
+if (!weatherWindowScript.includes("AudioContext") || !weatherWindowScript.includes("createBufferSource") || !weatherWindowScript.includes("visibilitychange") || !weatherWindowScript.includes("const resumePromise = context.resume()") || !weatherWindowScript.includes("stationHour") || !weatherWindowScript.includes("createDynamicsCompressor")) failures.push("weather-window.js: mobile audio must unlock immediately on tap, use controlled audible levels, and add time-limited synthetic morning birdsong");
 const weatherWindowStyles = await readFile(join(root, "weather-window.css"), "utf8");
 if (!weatherWindowStyles.includes("prefers-reduced-motion")) failures.push("weather window must respect reduced-motion preferences");
 const privacyHtml = await readFile(join(root, "privacy.html"), "utf8");

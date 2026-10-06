@@ -1,0 +1,22 @@
+Parknacross Weather v38.4.140
+Mobile sound level and morning birdsong
+
+Changes to the optional Weather Window soundscape:
+- Increase the wind and rain signal gain and set the initial volume slider to 85% to make playback more audible on phone speakers.
+- Add a compressor to control peaks when wind, rain and chirps overlap.
+- Resume Web Audio directly in the Play tap, before generating the noise/chirp buffers, to better match iOS Safari and mobile Chrome audio policies.
+- Add a short locally synthesized birdlike chirp layer from 05:00 to 12:00 Europe/Dublin time. No real bird recording or external audio is used.
+- Keep tap-to-play, volume control and automatic pause while the page is hidden.
+- Keep the “Illustrated from local readings” caption removed.
+- Cache-bust dashboard assets and update the service-worker cache to v38.4.140.
+
+Existing dashboard readings, calculations, charts, alerts, forecasts and Worker APIs are unchanged. The optional sound component remains isolated from the established rendering.
+
+Verification:
+- JavaScript syntax checks, site smoke tests, weather-window tests, CSV pagination, freshness/resilience, rain-alert, coast-data and custom CSV range tests passed.
+- Tests checked stronger sound gains, resume-before-buffer ordering, morning-only chirps, and no automatic audio start.
+- ZIP integrity checked.
+- Playback could not be tested on a physical mobile device in this workspace.
+
+Deployment:
+- Upload and publish the GitHub Pages website files in the matching ZIP. No Cloudflare Worker update is needed.
