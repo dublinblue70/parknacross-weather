@@ -3,53 +3,33 @@ import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
 
 const source = await readFile(new URL("../weather-window.js", import.meta.url), "utf8");
-const callbacks = new Map();
-const elements = new Map();
+const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const css = await readFile(new URL("../weather-window.css", import.meta.url), "utf8");
+assert.doesNotMatch(source, /AudioContext|createBufferSource|soundscape|birdsong|weatherSound/i, "the Weather Window script contains no weather-audio implementation");
+assert.doesNotMatch(html, /weatherSoundToggle|weatherSoundVolume|weather-sound-controls|Hear the weather/i, "the Dashboard contains no weather-audio controls");
+assert.doesNotMatch(css, /weather-sound|weatherSoundVolume/i, "the Weather Window stylesheet contains no audio-control styling");
 
+const elements = new Map();
+let observationListener = null;
 function element(id) {
   if (!elements.has(id)) elements.set(id, {
-    id,
     textContent: "",
-    value: id === "weatherSoundVolume" ? "85" : "",
-    disabled: false,
     dataset: {},
     style: { setProperty(name, value) { this[name] = value; } },
     attributes: {},
-    addEventListener(name, callback) { callbacks.set(`${id}:${name}`, callback); },
     setAttribute(name, value) { this.attributes[name] = value; },
     querySelector() { return { style: {} }; }
   });
   return elements.get(id);
 }
-
-let contextsCreated = 0;
-class FakeAudioContext {
-  constructor() { contextsCreated++; this.currentTime = 0; this.sampleRate = 8000; this.destination = {}; this.suspended = false; this.state = "suspended"; this.calls = []; this.gains = []; this.sources = []; this.buffers = []; FakeAudioContext.last = this; }
-  createBuffer(_channels, length) { this.calls.push("buffer"); const samples = new Float32Array(length); const buffer = { getChannelData: () => samples }; this.buffers.push(buffer); return buffer; }
-  createGain() { const node = { gain: { value: 0, setTargetAtTime(value) { this.value = value; } }, connect() {} }; this.gains.push(node); return node; }
-  createBiquadFilter() { return { frequency: { value: 0, setTargetAtTime(value) { this.value = value; } }, connect() {} }; }
-  createBufferSource() { const node = { loop: false, buffer: null, starts: 0, connect() {}, start() { this.starts++; } }; this.sources.push(node); return node; }
-  createDynamicsCompressor() { return { threshold: {}, knee: {}, ratio: {}, attack: {}, release: {}, connect() {} }; }
-  async resume() { this.calls.push("resume"); this.suspended = false; this.state = "running"; }
-  async suspend() { this.suspended = true; }
-}
-
-const documentCallbacks = new Map();
-const windowCallbacks = new Map();
-const document = {
-  hidden: false,
-  getElementById: element,
-  addEventListener(name, callback) { documentCallbacks.set(name, callback); }
-};
-const window = {
-  AudioContext: FakeAudioContext,
-  addEventListener(name, callback) { windowCallbacks.set(name, callback); }
-};
+const document = { getElementById: element };
+const window = { addEventListener(name, callback) {
+  if (name === "parknacross:weather-window-observation") observationListener = callback;
+} };
 runInNewContext(source, { document, window, console, Math, Date, Number, String });
+assert.equal(typeof observationListener, "function", "the visual component listens for isolated station updates");
 
-const update = windowCallbacks.get("parknacross:weather-window-observation");
-assert.equal(typeof update, "function", "the component listens for the isolated observation event");
-update({ detail: { current: {
+observationListener({ detail: { current: {
   epoch: new Date("2026-10-06T08:00:00+01:00").getTime() / 1000,
   wind_speed_kmh: 18,
   wind_gust_kmh: 27,
@@ -63,23 +43,10 @@ assert.equal(element("weatherWindowScene").dataset.wind, "breezy");
 assert.equal(element("weatherWindowScene").dataset.rain, "measured");
 assert.match(element("weatherWindowWind").textContent, /from W/);
 assert.equal(element("weatherWindowRain").textContent, "0.4 mm/h");
-assert.equal(element("weatherSoundToggle").disabled, false);
-assert.equal(contextsCreated, 0, "the sound engine is not created until the visitor presses Play");
+assert.equal(element("weatherWindowSolar").textContent, "250 W/m²");
+assert.match(element("weatherWindowObservation").textContent, /Rain is being measured at 0.4 mm\/h/);
 
-await callbacks.get("weatherSoundToggle:click")();
-assert.equal(contextsCreated, 1);
-assert.equal(element("weatherSoundToggle").attributes["aria-pressed"], "true");
-assert.match(element("weatherSoundStatus").textContent, /Playing locally generated wind and rain ambience/);
-assert.match(element("weatherSoundStatus").textContent, /birdlike chirps play during the Irish morning/);
-assert.equal(FakeAudioContext.last.calls[0], "resume", "mobile audio resumes directly inside the user's tap before buffer work");
-assert.ok(FakeAudioContext.last.gains[1].gain.value > 1.5, "the wind signal has stronger mobile-speaker gain");
-assert.ok(FakeAudioContext.last.gains[2].gain.value > 0.6, "measured rain has stronger mobile-speaker gain");
-assert.ok(FakeAudioContext.last.gains[3].gain.value > 0.4, "morning birdlike chirps are mixed into the soundscape");
-assert.equal(FakeAudioContext.last.sources.length, 3, "wind, rain and birds use independent audio layers");
-await callbacks.get("weatherSoundToggle:click")();
-assert.equal(element("weatherSoundToggle").attributes["aria-pressed"], "false");
-
-update({ detail: { current: {
+observationListener({ detail: { current: {
   epoch: new Date("2026-10-06T14:00:00+01:00").getTime() / 1000,
   wind_speed_kmh: 2,
   wind_gust_kmh: 3,
@@ -91,10 +58,10 @@ assert.equal(element("weatherWindowScene").dataset.light, "night");
 assert.equal(element("weatherWindowScene").dataset.wind, "calm");
 assert.equal(element("weatherWindowScene").dataset.rain, "none", "recent rain is not drawn as current rainfall");
 assert.match(element("weatherWindowObservation").textContent, /Recent rain was detected/);
-assert.equal(FakeAudioContext.last.gains[3].gain.value, 0, "synthetic bird chirps stop outside Irish morning hours");
 
-update({ detail: { current: { wind_speed_kmh: null, rain_rate_mm_h: null }, rainDetected: false, isNight: false } });
-assert.equal(element("weatherSoundToggle").disabled, true, "sound is unavailable without usable wind or rain readings");
+observationListener({ detail: { current: { wind_speed_kmh: null, rain_rate_mm_h: null }, rainDetected: false, isNight: false } });
+assert.equal(element("weatherWindowScene").dataset.wind, "unknown");
+assert.equal(element("weatherWindowScene").dataset.rain, "unknown");
 assert.match(element("weatherWindowObservation").textContent, /Time unavailable/);
 
-console.log("Weather Window readings, measured-rain distinction, reduced side effects, and opt-in sound tests passed.");
+console.log("Weather Window visual readings pass; dashboard audio controls and implementation are absent.");

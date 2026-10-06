@@ -1,0 +1,18 @@
+Parknacross Weather v38.4.141
+Weather audio removed
+
+Changes:
+- Removed the weather soundscape controls from the Dashboard.
+- Removed all audio generation, birdlike chirps, Web Audio setup and audio-control styling.
+- Kept the Ardamine Weather Window illustration and live local wind, rain and solar readings.
+- Kept the reading update isolated from the existing Dashboard and its data logic.
+- Updated the service-worker cache to v38.4.141 so installed pages can receive the removal.
+
+Verification:
+- JavaScript syntax checks and site smoke/regression tests passed.
+- Weather Window test confirms the illustration still updates from readings and there are no audio controls or audio implementation in its files.
+- Custom CSV export tests and archive regression tests passed.
+- ZIP integrity checked.
+
+Deployment:
+- Publish the website files from the matching ZIP to GitHub Pages. No Cloudflare Worker update is required.

@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-140-morning-birds-mobile-audio";
+const CACHE_NAME = "parknacross-v38-4-141-weather-audio-removed";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
