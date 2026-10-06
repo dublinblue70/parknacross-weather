@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-143-muted-low-sunlight";
+const CACHE_NAME = "parknacross-v38-4-144-live-install-version";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -92,6 +92,12 @@ self.addEventListener("install", event => {
 self.addEventListener("message", event => {
   if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
+  } else if (event.data?.type === "GET_SITE_VERSION") {
+    const match = CACHE_NAME.match(/parknacross-v(\d+(?:-\d+)+)(?:-|$)/);
+    const version = match ? match[1].replace(/-/g, ".") : "unknown";
+    const reply = { type: "SITE_VERSION", version };
+    if (event.ports?.[0]) event.ports[0].postMessage(reply);
+    else event.source?.postMessage(reply);
   }
 });
 
@@ -149,6 +155,7 @@ self.addEventListener("fetch", event => {
       url.pathname.endsWith("/downloads.js") ||
       url.pathname.endsWith("/alert-settings.js") ||
       url.pathname.endsWith("/pwa-update.js") ||
+      url.pathname.endsWith("/pwa-diagnostics.js") ||
       url.pathname.endsWith("/platform.js"));
 
   const networkRequest = forceFreshLocalAsset

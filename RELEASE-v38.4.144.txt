@@ -1,0 +1,18 @@
+Parknacross Weather v38.4.144
+Automatic installation-check version
+
+Changes:
+- The Quick Installation Check now asks the active service worker for its release instead of displaying a hardcoded number.
+- Station page app-cache diagnostics use the same live release value.
+- The version is derived from the service-worker cache name, the release cache that already changes with each website deployment.
+- Installation version stays accurate without editing another version string in the diagnostics code.
+- The diagnostics script is fetched fresh by the service worker and its page reference is cache-busted.
+
+Verification:
+- Smoke checks confirm Install Help and Station do not hardcode a release number.
+- A focused test verifies the active service worker returns the version encoded in its cache name.
+- Site, weather, CSV export, freshness, rain alert, coastal data and custom-range tests passed.
+- ZIP archive integrity checked.
+
+Deployment:
+- Publish the website files from the matching ZIP to GitHub Pages. No Cloudflare Worker update is required.

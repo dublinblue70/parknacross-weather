@@ -83,7 +83,7 @@ const requiredChecks = [
   ["privacy.html", "Privacy information"],
   ["install.html", "Install Parknacross Weather"],
   ["install.html", "Home Screen or browser mode"],
-  ["install.html", "Version this page expects"],
+  ["install.html", "Active app cache release"],
   ["station.html", "diagInstalled"],
   ["station.html", "<option value=\"40\">Within 40 km</option>"],
   ["lightning-charts.js", "{min:0,max:40}"],
@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-143-muted-low-sunlight"],
+  ["service-worker.js", "parknacross-v38-4-144-live-install-version"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -230,6 +230,13 @@ if (!dashboardHtml.includes('id="seasonNextMarker"') || !dashboardHtml.includes(
 if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
 if (!dashboardHtml.includes('id="weatherWindowScene"') || !dashboardHtml.includes('id="weatherWindowObservation"') || dashboardHtml.includes("weatherSoundToggle") || dashboardHtml.includes("weather-sound-controls") || dashboardHtml.includes("Illustrated from local readings")) failures.push("index.html: Weather Window should remain while all sound controls and the removed caption stay absent");
 if (!dashboardHtml.includes('weather-window.css?v=20261006-v38-4-143') || !dashboardHtml.includes('weather-window.js?v=20261006-v38-4-143')) failures.push("index.html: isolated weather window assets must be versioned and loaded");
+for (const page of ["install.html", "station.html"]) {
+  const html = await readFile(new URL(page, import.meta.url), "utf8");
+  if (/id="diagCache">v\d/i.test(html)) failures.push(`${page}: installation diagnostics must not hardcode a release number`);
+  if (!html.includes('id="diagCache">Checking…')) failures.push(`${page}: installation diagnostics should load the active release dynamically`);
+}
+const diagnosticsSource = await readFile(new URL("pwa-diagnostics.js", import.meta.url), "utf8");
+if (/v\d+\.\d+\.\d+/.test(diagnosticsSource)) failures.push("pwa-diagnostics.js: release number must be read dynamically");
 if (!dashboardHtml.includes('class="ww-coastline"') || !dashboardHtml.includes('class="ww-sea-lines"') || !dashboardHtml.includes('class="ww-garden"')) failures.push("index.html: Ardamine Weather Window should include the added coastal, sea and garden illustration details");
 if (dashboardHtml.indexOf('id="wearForecast"') > dashboardHtml.indexOf('id="todaySkyPanel"')) failures.push("index.html: forecast-only rain context must be near current conditions");
 if (!dashboardApp.includes("This is a forecast, not rain measured at Parknacross")) failures.push("app.js: forecast rain must be distinguished from measured local rain");

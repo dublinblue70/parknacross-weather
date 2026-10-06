@@ -10,8 +10,38 @@
     return "Other platform";
   }
   function updateNetwork() { set("diagNetwork", navigator.onLine ? "Online" : "Offline"); }
+  async function updateSiteVersion() {
+    const output = document.getElementById("diagCache");
+    if (!output) return;
+    if (!("serviceWorker" in navigator)) {
+      set("diagCache", "Unavailable");
+      return;
+    }
+    try {
+      const registration = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) => window.setTimeout(() => reject(new Error("App cache is not ready")), 4000))
+      ]);
+      const worker = navigator.serviceWorker.controller || registration.active;
+      if (!worker) throw new Error("No active app cache");
+      const channel = new MessageChannel();
+      const timeout = window.setTimeout(() => {
+        channel.port1.close();
+        set("diagCache", "Unavailable");
+      }, 4000);
+      channel.port1.onmessage = event => {
+        window.clearTimeout(timeout);
+        channel.port1.close();
+        const version = event.data?.type === "SITE_VERSION" ? event.data.version : null;
+        set("diagCache", version && version !== "unknown" ? `v${version}` : "Unavailable");
+      };
+      worker.postMessage({ type: "GET_SITE_VERSION" }, [channel.port2]);
+    } catch (_) {
+      set("diagCache", "Unavailable");
+    }
+  }
   document.addEventListener("DOMContentLoaded", () => {
-    set("diagCache", "v38.4.130");
+    updateSiteVersion();
     const standalone = window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone === true;
     set("diagInstalled", standalone ? "Yes" : "No · browser mode");
     set("diagPlatform", platformLabel());
