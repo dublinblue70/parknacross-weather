@@ -10,6 +10,7 @@ function element(id) {
   if (!elements.has(id)) elements.set(id, {
     id,
     textContent: "",
+    value: id === "weatherSoundVolume" ? "55" : "",
     disabled: false,
     dataset: {},
     style: { setProperty(name, value) { this[name] = value; } },
@@ -23,12 +24,12 @@ function element(id) {
 
 let contextsCreated = 0;
 class FakeAudioContext {
-  constructor() { contextsCreated++; this.currentTime = 0; this.sampleRate = 8000; this.destination = {}; this.suspended = false; }
-  createBuffer(_channels, length) { const samples = new Float32Array(length); return { getChannelData: () => samples }; }
-  createGain() { return { gain: { value: 0, setTargetAtTime(value) { this.value = value; } }, connect() {} }; }
+  constructor() { contextsCreated++; this.currentTime = 0; this.sampleRate = 8000; this.destination = {}; this.suspended = false; this.state = "suspended"; this.calls = []; this.gains = []; FakeAudioContext.last = this; }
+  createBuffer(_channels, length) { this.calls.push("buffer"); const samples = new Float32Array(length); return { getChannelData: () => samples }; }
+  createGain() { const node = { gain: { value: 0, setTargetAtTime(value) { this.value = value; } }, connect() {} }; this.gains.push(node); return node; }
   createBiquadFilter() { return { frequency: { value: 0, setTargetAtTime(value) { this.value = value; } }, connect() {} }; }
   createBufferSource() { return { loop: false, buffer: null, starts: 0, connect() {}, start() { this.starts++; } }; }
-  async resume() { this.suspended = false; }
+  async resume() { this.calls.push("resume"); this.suspended = false; this.state = "running"; }
   async suspend() { this.suspended = true; }
 }
 
@@ -68,6 +69,9 @@ await callbacks.get("weatherSoundToggle:click")();
 assert.equal(contextsCreated, 1);
 assert.equal(element("weatherSoundToggle").attributes["aria-pressed"], "true");
 assert.match(element("weatherSoundStatus").textContent, /Playing a locally generated sound/);
+assert.equal(FakeAudioContext.last.calls[0], "resume", "mobile audio resumes directly inside the user's tap before buffer work");
+assert.ok(FakeAudioContext.last.gains[1].gain.value > 0.3, "the wind signal has usable speaker-level gain");
+assert.ok(FakeAudioContext.last.gains[2].gain.value > 0.1, "measured rain has usable speaker-level gain");
 await callbacks.get("weatherSoundToggle:click")();
 assert.equal(element("weatherSoundToggle").attributes["aria-pressed"], "false");
 

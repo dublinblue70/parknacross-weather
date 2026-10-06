@@ -38,18 +38,6 @@
 .weather-window-scene .ww-tree-trunk { transform-origin: 174px 269px; transition: transform .8s ease-out; }
 .weather-window-scene .ww-rain { display: none; }
 .weather-window-scene[data-rain="measured"] .ww-rain { display: block; animation: weather-window-rain .85s linear infinite; }
-.weather-window-art-label {
-  position: absolute;
-  right: 12px;
-  bottom: 11px;
-  padding: 5px 9px;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 999px;
-  background: rgba(7,18,27,.62);
-  color: rgba(255,255,255,.9);
-  font-size: .69rem;
-  backdrop-filter: blur(6px);
-}
 .weather-window-details { padding: 22px clamp(18px, 3vw, 30px); align-self: center; }
 .weather-window-observation { margin: 0; color: var(--text, #eef5fa); font-size: 1rem; line-height: 1.55; }
 .weather-window-readings { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 9px; margin: 17px 0 10px; }

@@ -35,12 +35,13 @@
     if (!audio || !latest) return;
     const speed = numberOrNull(latest.current.wind_speed_kmh);
     const rate = numberOrNull(latest.current.rain_rate_mm_h);
-    const wind = speed === null ? 0 : 0.018 + Math.min(80, Math.max(0, speed)) * 0.00045;
-    const rain = rate === null ? 0 : Math.min(0.045, Math.max(0, rate) * 0.009);
+    /* Compensate for filtered noise losing energy through mobile speakers. */
+    const wind = speed === null ? 0 : Math.min(0.9, 0.24 + Math.min(80, Math.max(0, speed)) * 0.008);
+    const rain = rate === null || rate <= 0 ? 0 : Math.min(0.62, 0.08 + Math.sqrt(Math.max(0, rate)) * 0.12);
     const at = audio.context.currentTime;
     audio.wind.gain.setTargetAtTime(wind, at, 0.45);
     audio.rain.gain.setTargetAtTime(rain, at, 0.45);
-    audio.windFilter.frequency.setTargetAtTime(220 + Math.min(80, Math.max(0, speed || 0)) * 19, at, 0.55);
+    audio.windFilter.frequency.setTargetAtTime(600 + Math.min(80, Math.max(0, speed || 0)) * 45, at, 0.55);
   }
 
   function render(detail) {
@@ -88,13 +89,15 @@
 
     soundButton.disabled = speed === null && rate === null;
     updateAudioLevels();
-    if (!audioPlaying && !soundButton.disabled) soundStatus.textContent = "Sound is created in your browser and starts only when you press Play.";
+    if (!audioPlaying && !soundButton.disabled) soundStatus.textContent = "Synthetic sound is created in your browser from local readings. Press Play; check your phone’s media volume if it is quiet.";
   }
 
   function makeAudio() {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) throw new Error("Audio is not supported by this browser.");
     const context = new AudioContext();
+    /* Resume inside the tap before buffer generation, for mobile browser policies. */
+    const resumePromise = context.resume();
     const buffer = context.createBuffer(1, Math.max(1, context.sampleRate * 2), context.sampleRate);
     const samples = buffer.getChannelData(0);
     let previous = 0;
@@ -134,7 +137,7 @@
     rainGain.connect(master);
     rainSource.start();
 
-    audio = { context, master, wind: windGain, rain: rainGain, windFilter };
+    audio = { context, resumePromise, master, wind: windGain, rain: rainGain, windFilter };
     updateAudioLevels();
   }
 
@@ -153,11 +156,12 @@
     }
     try {
       if (!audio) makeAudio();
-      await audio.context.resume();
+      await audio.resumePromise;
+      if (audio.context.state !== "running") await audio.context.resume();
       updateAudioLevels();
       setPlaying(true, "Playing a locally generated sound from the latest measured wind and rain. It stops when you press Stop or hide this page.");
     } catch (error) {
-      setPlaying(false, "Soundscape unavailable in this browser. Your weather readings are unaffected.");
+      setPlaying(false, "Your browser blocked the sound. Tap Play again or check your phone’s media volume. Weather readings are unaffected.");
       console.info("Parknacross soundscape unavailable:", error);
     }
   });

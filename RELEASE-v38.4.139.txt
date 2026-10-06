@@ -1,0 +1,21 @@
+Parknacross Weather v38.4.139
+Weather Window mobile audio fix
+
+Changes:
+- Raise the filtered wind and rain signal levels so the generated sound is audible through typical phone speakers.
+- Resume Web Audio immediately during the Play tap, before creating the two-second noise buffer, to better satisfy mobile browser audio policies.
+- Keep Play/Stop, volume control, hidden-tab pausing and synthetic-audio disclosure.
+- Remove the “Illustrated from local readings” label from the scene.
+- Cache-bust dashboard assets and update the service-worker cache to v38.4.139.
+
+Regression protection:
+- Dashboard readings, charts, alerts, forecasts, data feeds and Worker endpoints are unchanged.
+- The optional component remains failure-isolated and has no external audio/image requests.
+
+Verification:
+- JavaScript syntax checks, site smoke checks, Weather Window behavior tests and git diff whitespace checks passed.
+- The Weather Window test verified audio remains tap-only, resume is called before buffer generation, and both wind/rain gains are set to usable levels.
+- Real-device playback could not be tested in this workspace; the sound still depends on the phone's media volume and browser audio support.
+
+Deployment:
+- Replace the GitHub Pages website files with the files in this package and publish. No Cloudflare Worker update is required for this mobile sound fix.
