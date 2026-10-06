@@ -35,7 +35,7 @@ observationListener({ detail: { current: {
   wind_gust_kmh: 27,
   wind_direction_deg: 270,
   rain_rate_mm_h: 0.4,
-  solar_w_m2: 250
+  solar_w_m2: 450
 }, rainDetected: true, isNight: false } });
 
 assert.equal(element("weatherWindowScene").dataset.light, "day");
@@ -43,7 +43,7 @@ assert.equal(element("weatherWindowScene").dataset.wind, "breezy");
 assert.equal(element("weatherWindowScene").dataset.rain, "measured");
 assert.match(element("weatherWindowWind").textContent, /from W/);
 assert.equal(element("weatherWindowRain").textContent, "0.4 mm/h");
-assert.equal(element("weatherWindowSolar").textContent, "250 W/m²");
+assert.equal(element("weatherWindowSolar").textContent, "450 W/m²");
 assert.match(element("weatherWindowObservation").textContent, /Rain is being measured at 0.4 mm\/h/);
 
 observationListener({ detail: { current: {
@@ -58,6 +58,17 @@ assert.equal(element("weatherWindowScene").dataset.light, "night");
 assert.equal(element("weatherWindowScene").dataset.wind, "calm");
 assert.equal(element("weatherWindowScene").dataset.rain, "none", "recent rain is not drawn as current rainfall");
 assert.match(element("weatherWindowObservation").textContent, /Recent rain was detected/);
+
+observationListener({ detail: { current: {
+  epoch: new Date("2026-10-06T11:00:00+01:00").getTime() / 1000,
+  wind_speed_kmh: 4,
+  wind_gust_kmh: 8,
+  wind_direction_deg: 90,
+  rain_rate_mm_h: 0,
+  solar_w_m2: 250
+}, rainDetected: false, isNight: false } });
+assert.equal(element("weatherWindowScene").dataset.light, "soft", "weak daylight uses the subdued scene instead of suggesting bright sunshine");
+assert.match(css, /\.weather-window-scene\[data-light="soft"\] \.ww-sun,\s*\.weather-window-scene\[data-light="soft"\] \.ww-sun-rays \{ display: none; \}/, "the subdued scene hides the sun and rays");
 
 observationListener({ detail: { current: { wind_speed_kmh: null, rain_rate_mm_h: null }, rainDetected: false, isNight: false } });
 assert.equal(element("weatherWindowScene").dataset.wind, "unknown");

@@ -52,7 +52,7 @@
     parts.push(`Updated ${stamp(current.epoch)} by the Parknacross station.`);
     observation.textContent = parts.join(" ");
 
-    const light = detail.isNight === true ? "night" : solar === null ? "unknown" : solar >= 100 ? "day" : "soft";
+    const light = detail.isNight === true ? "night" : solar === null ? "unknown" : solar >= 300 ? "day" : "soft";
     const windLevel = speed === null ? "unknown" : speed >= 30 || (gust !== null && gust >= 45) ? "strong" : speed >= 8 ? "breezy" : "calm";
     const rainLevel = rate === null ? "unknown" : rate > 0 ? "measured" : "none";
     scene.dataset.light = light;

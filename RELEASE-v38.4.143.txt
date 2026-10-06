@@ -1,0 +1,17 @@
+Parknacross Weather v38.4.143
+Muted Weather Window for weak sunlight
+
+Changes:
+- The sun and sun rays are shown only when measured solar radiation is at least 300 W/m²; lower readings use a muted scene, avoiding a bright-sun impression in cloudy or dim conditions.
+- Low-sunlight colors are now muted and cooler.
+- The page explains that sunlight comes from the solar reading and cloud cover is not measured.
+- Weather behavior, dashboard readings, and the audio removal are unchanged.
+- Updated asset and service-worker versions to v38.4.143.
+
+Verification:
+- Site smoke, Weather Window behavior, CSV export, freshness, rain alert, coastal data and custom-range tests passed.
+- The Weather Window test confirms weak daylight selects the subdued scene and hides the sun and rays.
+- ZIP archive integrity checked.
+
+Deployment:
+- Publish the website files from the matching ZIP to GitHub Pages. No Cloudflare Worker update is required.
