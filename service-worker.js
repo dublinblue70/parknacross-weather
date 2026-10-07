@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-145-weather-request-timeout";
+const CACHE_NAME = "parknacross-v38-4-146-forecast-weather-window";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -30,6 +30,7 @@ const STATIC_ASSETS = [
   "./chart.umd.min.js",
   "./app.js",
   "./weather-window.js",
+  "./weather-window-sky.js",
   "./data-corrections.js",
   "./wind-rose.js",
   "./site-config.js",
@@ -199,3 +200,4 @@ self.addEventListener("notificationclick", event => {
     }
   })());
 });
+

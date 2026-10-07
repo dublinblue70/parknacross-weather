@@ -1266,7 +1266,10 @@ async function refreshSoilFreshness(){
 function publishWeatherWindowObservation(current, rainDetected, isNight) {
   try {
     window.dispatchEvent(new CustomEvent("parknacross:weather-window-observation", {
-      detail: { current, rainDetected, isNight }
+      detail: { current, rainDetected, isNight, isDaylight: (() => {
+        const now = new Date(), stationDate = stationCalendarDate(now), rise = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, true), sunset = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, false);
+        return !!(rise && sunset && now >= rise && now < sunset);
+      })() }
     }));
   } catch (_) {
     /* The optional illustration must never interrupt the established UI. */
@@ -1922,6 +1925,11 @@ async function getJSON(url, cacheMode = "default", timeoutMs = 12000) {
 async function loadForecast() {
   try {
     const forecast = await getJSON(FORECAST_URL);
+    try {
+      window.dispatchEvent(new CustomEvent("parknacross:weather-window-forecast", {
+        detail: { ...forecast, day: new Intl.DateTimeFormat("en-CA", {timeZone: STATION_TIME_ZONE, year:"numeric", month:"2-digit", day:"2-digit"}).format(new Date()), fetchedAt: Date.now() }
+      }));
+    } catch (_) { /* Illustration cannot interrupt the forecast panel. */ }
     latestForecastToday=forecast.today || "";
     set("forecastToday", latestForecastToday || "Forecast unavailable.");
     set("forecastTonight", forecast.tonight || "--");
@@ -2475,9 +2483,13 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(refreshHistory24, 10 * 60 * 1000);
   setInterval(refreshHistory7d, 30 * 60 * 1000);
   setInterval(refreshStats, 15 * 60 * 1000);
-  setInterval(() => updateSunInfo(latestCurrent), 60 * 1000);
+  setInterval(() => {
+    const isNight = updateSunInfo(latestCurrent);
+    if (latestCurrent) publishWeatherWindowObservation(latestCurrent, latestRainDetected, isNight);
+  }, 60 * 1000);
   setInterval(loadWarnings, 5 * 60 * 1000);
   setInterval(loadForecast, 30 * 60 * 1000);
   setInterval(refreshLightning, 60 * 1000);
   setInterval(refreshSoilFreshness, 60 * 1000);
 });
+

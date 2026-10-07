@@ -73,3 +73,43 @@
 @media (prefers-reduced-motion: reduce) {
   .weather-window-scene * { animation: none !important; transition: none !important; }
 }
+
+
+/* Forecast sky is independent of low-angle morning sunlight. */
+.weather-window-scene .ww-cloud { opacity: 0; transition: opacity 1s ease; }
+.weather-window-scene[data-sky="mostly-clear"] .ww-cloud-1 { opacity: .7; }
+.weather-window-scene[data-sky="partly-cloudy"] .ww-cloud-1,
+.weather-window-scene[data-sky="partly-cloudy"] .ww-cloud-2,
+.weather-window-scene[data-sky="partly-cloudy"] .ww-cloud-3 { opacity: .87; }
+.weather-window-scene[data-sky="cloudy"] .ww-cloud { opacity: .9; fill: #c0cbd3; }
+.weather-window-scene[data-sky="overcast"] .ww-cloud { opacity: 1; fill: #a1b0bc; }
+.weather-window-scene[data-light="day"][data-sky="clear"] .ww-sky-top,
+.weather-window-scene[data-light="day"][data-sky="mostly-clear"] .ww-sky-top { stop-color: #2388d0; }
+.weather-window-scene[data-light="day"][data-sky="clear"] .ww-sky-bottom,
+.weather-window-scene[data-light="day"][data-sky="mostly-clear"] .ww-sky-bottom { stop-color: #b1ddf6; }
+.weather-window-scene[data-light="day"][data-sky="cloudy"] .ww-sky-top { stop-color: #71889a; }
+.weather-window-scene[data-light="day"][data-sky="cloudy"] .ww-sky-bottom { stop-color: #b8c8d1; }
+.weather-window-scene[data-light="day"][data-sky="overcast"] .ww-sky-top { stop-color: #697987; }
+.weather-window-scene[data-light="day"][data-sky="overcast"] .ww-sky-bottom { stop-color: #a1afb9; }
+.weather-window-scene .ww-sun { opacity: var(--ww-sun-opacity,.65); }
+.weather-window-scene[data-sky="cloudy"] .ww-sun,
+.weather-window-scene[data-sky="overcast"] .ww-sun,
+.weather-window-scene[data-sky="unknown"] .ww-sun,
+.weather-window-scene[data-sky="cloudy"] .ww-sun-rays,
+.weather-window-scene[data-sky="overcast"] .ww-sun-rays,
+.weather-window-scene[data-sky="unknown"] .ww-sun-rays { display: none; }
+.weather-window-scene[data-light="twilight"] .ww-sky-top { stop-color:#687c9d; }
+.weather-window-scene[data-light="twilight"] .ww-sky-bottom { stop-color:#e7b397; }
+.weather-window-scene[data-light="twilight"] .ww-sun,
+.weather-window-scene[data-light="twilight"] .ww-sun-rays { display:none; }
+.weather-window-scene[data-light="night"] .ww-cloud { fill: #344557; }
+.weather-window-scene[data-light="night"][data-sky="overcast"] .ww-stars,
+.weather-window-scene[data-light="night"][data-sky="overcast"] .ww-night-light,
+.weather-window-scene[data-light="night"][data-sky="cloudy"] .ww-stars { display:none; }
+.weather-window-sky-source { color: var(--text,#eef5fa); font-size:.83rem; margin:12px 0 8px; }
+.weather-window-admin { margin-top:16px; padding:14px; border:1px solid var(--line); border-radius:12px; }
+.weather-window-admin[hidden] { display:none !important; }
+.weather-window-admin label { display:block; margin-bottom:8px; }
+.weather-window-admin select { max-width:100%; padding:8px; background:#122532; color:#eef5fa; border:1px solid #6a8799; border-radius:6px; }
+.weather-window-admin button { margin:8px 0 0; }
+.weather-window-admin p { margin-bottom:0; font-size:.78rem; color:var(--muted); }

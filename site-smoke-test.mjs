@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-145-weather-request-timeout"],
+  ["service-worker.js", "parknacross-v38-4-146-forecast-weather-window"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -335,3 +335,4 @@ if (failures.length) {
 } else {
   console.log(`Smoke test passed: ${htmlFiles.length} HTML pages and cleanup markers verified.`);
 }
+

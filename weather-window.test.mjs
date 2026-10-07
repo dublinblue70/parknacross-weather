@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
 
-const source = await readFile(new URL("../weather-window.js", import.meta.url), "utf8");
-const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
-const css = await readFile(new URL("../weather-window.css", import.meta.url), "utf8");
+const source = await readFile(new URL("./weather-window.js", import.meta.url), "utf8");
+const html = await readFile(new URL("./index.html", import.meta.url), "utf8");
+const css = await readFile(new URL("./weather-window.css", import.meta.url), "utf8");
 assert.doesNotMatch(source, /AudioContext|createBufferSource|soundscape|birdsong|weatherSound/i, "the Weather Window script contains no weather-audio implementation");
 assert.doesNotMatch(html, /weatherSoundToggle|weatherSoundVolume|weather-sound-controls|Hear the weather/i, "the Dashboard contains no weather-audio controls");
 assert.doesNotMatch(css, /weather-sound|weatherSoundVolume/i, "the Weather Window stylesheet contains no audio-control styling");
@@ -18,15 +18,16 @@ function element(id) {
     style: { setProperty(name, value) { this[name] = value; } },
     attributes: {},
     setAttribute(name, value) { this.attributes[name] = value; },
-    querySelector() { return { style: {} }; }
+    querySelector() { return { style: {} }; },
+    addEventListener() {}
   });
   return elements.get(id);
 }
-const document = { getElementById: element };
+const document = { getElementById: element, addEventListener() {} };
 const window = { addEventListener(name, callback) {
   if (name === "parknacross:weather-window-observation") observationListener = callback;
 } };
-runInNewContext(source, { document, window, console, Math, Date, Number, String });
+runInNewContext(source, { document, window, console, Math, Date, Number, String, Intl, URLSearchParams, location:{search:""}, fetch:async()=>({ok:false}), setInterval() {} });
 assert.equal(typeof observationListener, "function", "the visual component listens for isolated station updates");
 
 observationListener({ detail: { current: {
@@ -67,7 +68,8 @@ observationListener({ detail: { current: {
   rain_rate_mm_h: 0,
   solar_w_m2: 250
 }, rainDetected: false, isNight: false } });
-assert.equal(element("weatherWindowScene").dataset.light, "soft", "weak daylight uses the subdued scene instead of suggesting bright sunshine");
+assert.equal(element("weatherWindowScene").dataset.light, "day", "weak daylight does not determine forecast cloud cover");
+assert.equal(element("weatherWindowScene").dataset.sky, "unknown", "missing forecast does not invent cloud cover");
 assert.match(css, /\.weather-window-scene\[data-light="soft"\] \.ww-sun,\s*\.weather-window-scene\[data-light="soft"\] \.ww-sun-rays \{ display: none; \}/, "the subdued scene hides the sun and rays");
 
 observationListener({ detail: { current: { wind_speed_kmh: null, rain_rate_mm_h: null }, rainDetected: false, isNight: false } });
@@ -76,3 +78,4 @@ assert.equal(element("weatherWindowScene").dataset.rain, "unknown");
 assert.match(element("weatherWindowObservation").textContent, /Time unavailable/);
 
 console.log("Weather Window visual readings pass; dashboard audio controls and implementation are absent.");
+

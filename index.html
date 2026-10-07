@@ -32,7 +32,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261005-v38-4-133" />
-    <link rel="stylesheet" href="weather-window.css?v=20261006-v38-4-143" />
+    <link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-146" />
     <!-- Critical astronomy styles stay with the markup so an older PWA cache
          can never render the phase SVGs at their intrinsic page size. -->
     <style id="astronomy-critical-styles">
@@ -912,7 +912,7 @@
             <div>
               <span class="section-eyebrow">A live local portrait</span>
               <h2 id="weatherWindowHeading">The Ardamine Weather Window</h2>
-              <p>A small illustration shaped by what the Parknacross station is measuring now.</p>
+              <p>A changing coastal scene guided by the forecast and local weather readings.</p>
             </div>
           </div>
           <div class="weather-window-card">
@@ -945,13 +945,21 @@
                 </g>
                 <circle class="ww-sun" cx="555" cy="82" r="34" />
                 <path class="ww-night-light" d="M568 57a27 27 0 1 0 0 50 22 22 0 0 1 0-50Z" />
+                <g class="ww-clouds" fill="#eef6fb">
+                  <g class="ww-cloud ww-cloud-1"><ellipse cx="110" cy="52" rx="42" ry="12"/><ellipse cx="98" cy="44" rx="18" ry="13"/><ellipse cx="121" cy="44" rx="23" ry="16"/></g>
+                  <g class="ww-cloud ww-cloud-2"><ellipse cx="333" cy="67" rx="63" ry="17"/><ellipse cx="305" cy="56" rx="27" ry="20"/><ellipse cx="346" cy="50" rx="32" ry="25"/></g>
+                  <g class="ww-cloud ww-cloud-3"><ellipse cx="575" cy="97" rx="74" ry="22"/><ellipse cx="548" cy="80" rx="35" ry="27"/><ellipse cx="592" cy="78" rx="36" ry="30"/></g>
+                  <g class="ww-cloud ww-cloud-4"><ellipse cx="200" cy="107" rx="86" ry="22"/><ellipse cx="174" cy="90" rx="37" ry="28"/><ellipse cx="221" cy="88" rx="41" ry="31"/></g>
+                  <g class="ww-cloud ww-cloud-5"><ellipse cx="415" cy="132" rx="112" ry="29"/><ellipse cx="370" cy="109" rx="52" ry="36"/><ellipse cx="438" cy="106" rx="57" ry="40"/></g>
+                  <g class="ww-cloud ww-cloud-6"><ellipse cx="663" cy="37" rx="110" ry="27"/><ellipse cx="622" cy="19" rx="50" ry="36"/><ellipse cx="683" cy="17" rx="57" ry="39"/></g>
+                </g>
                 <path class="ww-coastline" d="M0 198 Q94 187 174 196t155-1q89-12 165 1t145-2q42-7 81 0v59H0Z" fill="url(#weatherWindowSea)" opacity=".78" />
                 <g class="ww-sea-lines" fill="none" stroke="#c1e0dd" stroke-width="1.5" stroke-linecap="round" opacity=".38">
                   <path d="M24 213q20-4 40 0m38 9q27-5 53 0m60-12q18-4 36 0m44 13q29-5 55 0m39-15q21-4 42 0m42 14q26-5 51 0m55-15q19-4 38 0m32 16q27-5 52 0"/>
                   <path d="M4 232q22-4 44 0m73 5q17-3 34 0m92-5q22-4 44 0m124 5q18-3 36 0m88-5q25-4 49 0m73 5q17-3 34 0"/>
                 </g>
                 <path class="ww-distant-hill" d="M0 214 Q145 176 278 216 T540 206 T720 204 V300 H0Z" />
-                <path class="ww-ground" d="M0 242 Q158 215 300 242 T720 226 V300 H0Z" />
+                <path class="ww-ground" fill="url(#weatherWindowGround)" d="M0 242 Q158 215 300 242 T720 226 V300 H0Z" />
                 <path d="M0 243q127-24 247-4t234 1q100-10 239-10v18q-142 4-248 14t-246-1q-98-5-226 16Z" fill="#6b8061" opacity=".38" />
                 <g class="ww-wind-lines" fill="none" stroke="rgba(235,248,255,.54)" stroke-width="2" stroke-linecap="round">
                   <path d="M46 88h130q16 0 16-10t-16-10h-24" />
@@ -995,7 +1003,20 @@
                 <span>Rain rate <strong id="weatherWindowRain">--</strong></span>
                 <span>Solar <strong id="weatherWindowSolar">--</strong></span>
               </div>
-              <p class="weather-window-note">Wind gives the scene a directional cue; a bright sun appears only with strong measured sunlight. Cloud cover is not measured, so the scene does not claim to show it.</p>
+              <p id="weatherWindowSkySource" class="weather-window-sky-source">Checking the forecast sky…</p>
+              <p class="weather-window-note">Illustration guided by Met Éireann’s forecast and local readings. Forecast cloud cover is approximate; wind and rain animation use station observations.</p>
+              <div id="weatherWindowSkyAdmin" class="weather-window-admin" hidden>
+                <label for="weatherWindowSkySelect">The sky you can see now</label>
+                <select id="weatherWindowSkySelect">
+                  <option value="auto">Automatic forecast sky</option>
+                  <option value="clear">Clear</option>
+                  <option value="mostly-clear">Mostly clear</option>
+                  <option value="partly-cloudy">Partly cloudy</option>
+                  <option value="overcast">Overcast</option>
+                </select>
+                <button id="weatherWindowSkySave" type="button">Save sky setting</button>
+                <p id="weatherWindowSkyStatus" role="status">Applies to all visitors until midnight. Choose Automatic to clear it earlier.</p>
+              </div>
             </div>
           </div>
         </section>
@@ -1654,8 +1675,9 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20261004-v38-4-130-coastal-fallbacks"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="weather-window.js?v=20261006-v38-4-143"></script>
-    <script src="app.js?v=20261006-v38-4-145"></script>
+    <script src="weather-window-sky.js?v=20261007-v38-4-146"></script>
+    <script src="weather-window.js?v=20261007-v38-4-146"></script>
+    <script src="app.js?v=20261007-v38-4-146"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
@@ -2555,3 +2577,4 @@
     <script src="navigation.js?v=20260924-v38-4-97"></script>
   </body>
 </html>
+

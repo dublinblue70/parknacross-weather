@@ -25,9 +25,56 @@
     return date.toLocaleString("en-IE", { timeZone: "Europe/Dublin", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   }
 
+  let latestDetail = null, forecast = null, skyOverride = null;
+  const sourceLabel = document.getElementById("weatherWindowSkySource");
+  const adminControls = document.getElementById("weatherWindowSkyAdmin");
+  const adminSelect = document.getElementById("weatherWindowSkySelect");
+  const adminStatus = document.getElementById("weatherWindowSkyStatus");
+  const apiBase = (window.PARKNACROSS_CONFIG?.apiBase || "https://parknacross-weather.dave-s-carter.workers.dev").replace(/\/$/, "");
+  const skyLabels = {clear:"Clear sky", "mostly-clear":"Mostly clear sky", "partly-cloudy":"Partly cloudy sky", cloudy:"Cloudy sky", overcast:"Overcast sky", unknown:"Cloud cover unavailable"};
+  function clock() {
+    const values = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(p => [p.type,p.value]));
+    return {day:`${values.year}-${values.month}-${values.day}`,hour:Number(values.hour)};
+  }
+  function skyState(detail) {
+    const c = clock();
+    if (skyOverride?.day === c.day && skyLabels[skyOverride.sky] && skyOverride.sky !== "unknown") return {...skyOverride,source:"observer"};
+    return window.ParknacrossWeatherSky?.resolve(forecast,{...c,isNight:detail.isNight}) || {sky:"unknown", source:"unavailable"};
+  }
+  async function refreshOverride() {
+    try {
+      const response = await fetch(`${apiBase}/weather-window/sky?_=${Date.now()}`,{cache:"no-store",signal:AbortSignal.timeout(6000)});
+      if (!response.ok) return;
+      const data = await response.json(); skyOverride = data.override || null;
+      if (adminSelect && document.activeElement !== adminSelect) adminSelect.value = skyOverride?.sky || "auto";
+      if (latestDetail) render(latestDetail);
+    } catch (_) { /* Missing override service does not block the forecast scene. */ }
+  }
+  if (adminControls && new URLSearchParams(location.search).get("admin") === "1") {
+    adminControls.hidden = false;
+    document.getElementById("weatherWindowSkySave")?.addEventListener("click", async () => {
+      try {
+        let key = sessionStorage.getItem("parknacrossAdminKey") || window.prompt("Enter the Parknacross admin key") || "";
+        if (!key) return;
+        adminStatus.textContent = "Saving sky setting…";
+        const response = await fetch(`${apiBase}/weather-window/sky`, {method:"POST",headers:{"Content-Type":"application/json","X-Parknacross-Admin-Key":key},body:JSON.stringify({sky:adminSelect.value}),signal:AbortSignal.timeout(10000)});
+        if (!response.ok) throw new Error(response.status === 401 ? "Admin key was not accepted." : "Could not save. Ensure the updated Worker has been deployed.");
+        const data = await response.json(); skyOverride = data.override || null;
+        sessionStorage.setItem("parknacrossAdminKey",key);
+        adminStatus.textContent = skyOverride ? "Saved for all visitors until midnight today." : "Automatic forecast sky restored.";
+        if (latestDetail) render(latestDetail);
+      } catch (error) { adminStatus.textContent = error.message || "Could not save sky setting."; }
+    });
+  }
   function render(detail) {
     if (!detail || !detail.current || typeof detail.current !== "object") return;
+    latestDetail = detail;
     const current = detail.current;
+    const sky = skyState(detail);
+    const skyName = skyLabels[sky.sky] || skyLabels.unknown;
+    scene.dataset.sky = sky.sky;
+    const provenance = sky.source === "observer" ? "Sky set from a local visual observation · today" : sky.source === "forecast" ? "Sky guided by Met Éireann’s Leinster forecast" : "Forecast sky unavailable · local readings continue";
+    if (sourceLabel) sourceLabel.textContent = `${skyName} · ${provenance}`;
     const speed = numberOrNull(current.wind_speed_kmh);
     const gust = numberOrNull(current.wind_gust_kmh);
     const direction = compass(current.wind_direction_deg);
@@ -52,7 +99,8 @@
     parts.push(`Updated ${stamp(current.epoch)} by the Parknacross station.`);
     observation.textContent = parts.join(" ");
 
-    const light = detail.isNight === true ? "night" : solar === null ? "unknown" : solar >= 300 ? "day" : "soft";
+    const light = detail.isNight === true ? "night" : detail.isDaylight === false ? "twilight" : "day";
+    scene.style.setProperty("--ww-sun-opacity", solar === null ? ".65" : String(Math.max(.45, Math.min(1, solar / 450))));
     const windLevel = speed === null ? "unknown" : speed >= 30 || (gust !== null && gust >= 45) ? "strong" : speed >= 8 ? "breezy" : "calm";
     const rainLevel = rate === null ? "unknown" : rate > 0 ? "measured" : "none";
     scene.dataset.light = light;
@@ -64,11 +112,19 @@
     const tree = scene.querySelector(".ww-tree-trunk");
     if (tree) tree.style.transform = `rotate(${lean.toFixed(1)}deg)`;
     scene.style.setProperty("--ww-wind-duration", `${Math.max(1.6, 5.5 - Math.min(45, gust ?? speed ?? 0) * 0.075).toFixed(2)}s`);
-    scene.setAttribute("aria-label", `Illustrated local conditions: ${windText}. ${rainDescription} ${solarText}.`);
+    scene.setAttribute("aria-label", `${skyName}. ${provenance}. Local readings: ${windText}. ${rainDescription} ${solarText}.`);
   }
 
+  window.addEventListener("parknacross:weather-window-forecast", event => {
+    forecast = event.detail;
+    if (latestDetail) { try { render(latestDetail); } catch (_) {} }
+  });
+  refreshOverride();
+  setInterval(refreshOverride, 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshOverride(); });
   window.addEventListener("parknacross:weather-window-observation", event => {
     try { render(event.detail); }
     catch (error) { console.info("Weather Window is unavailable; dashboard readings continue normally.", error); }
   });
 })();
+
