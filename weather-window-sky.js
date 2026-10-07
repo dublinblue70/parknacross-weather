@@ -39,5 +39,27 @@
     const selected = selectText(text, isNight && hour >= 17 ? 'evening' : p);
     return {sky:classify(selected), text:selected, source:selected ? 'forecast' : 'unavailable'};
   }
-  window.ParknacrossWeatherSky = Object.freeze({period, classify, selectText, resolve});
+  function fromCloudPercent(value) {
+    if (value === null || value === undefined || value === "" || !Number.isFinite(Number(value)) || Number(value) < 0 || Number(value) > 100) return "unknown";
+    const n = Number(value);
+    return n <= 15 ? "clear" : n <= 35 ? "mostly-clear" : n <= 65 ? "partly-cloudy" : n <= 85 ? "cloudy" : "overcast";
+  }
+  function resolvePoint(data, now = Date.now()) {
+    const fetched = Date.parse(data?.fetched_at || "");
+    if (!Number.isFinite(fetched) || now - fetched > 2 * 3600000 || fetched > now + 60000) return null;
+    const rows = (Array.isArray(data?.points) ? data.points : []).filter(p => Number.isFinite(Number(p.epoch)) && fromCloudPercent(p.cloud_percent) !== "unknown").sort((a,b)=>a.epoch-b.epoch);
+    const t = now / 1000;
+    const before = [...rows].reverse().find(p=>Number(p.epoch)<=t), after = rows.find(p=>Number(p.epoch)>=t);
+    let percent;
+    if (before && after && after.epoch !== before.epoch && after.epoch-before.epoch <= 7200) {
+      const f = (t-before.epoch)/(after.epoch-before.epoch);
+      percent = Number(before.cloud_percent)+(Number(after.cloud_percent)-Number(before.cloud_percent))*f;
+    } else {
+      const closest = rows.reduce((best,p)=>!best || Math.abs(p.epoch-t)<Math.abs(best.epoch-t) ? p : best,null);
+      if (!closest || Math.abs(closest.epoch-t)>90*60) return null;
+      percent = Number(closest.cloud_percent);
+    }
+    return {sky:fromCloudPercent(percent),source:"point",cloud_percent:Math.round(percent)};
+  }
+  window.ParknacrossWeatherSky = Object.freeze({period, classify, selectText, resolve, fromCloudPercent, resolvePoint});
 })();

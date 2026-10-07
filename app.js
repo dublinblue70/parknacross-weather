@@ -1266,7 +1266,10 @@ async function refreshSoilFreshness(){
 function publishWeatherWindowObservation(current, rainDetected, isNight) {
   try {
     window.dispatchEvent(new CustomEvent("parknacross:weather-window-observation", {
-      detail: { current, rainDetected, isNight, isDaylight: (() => {
+      detail: { current, rainDetected, isNight, sunProgress: (() => {
+        const now = new Date(), date = stationCalendarDate(now), rise = sunEvent(date,ARDAMINE_LAT,ARDAMINE_LON,true), sunset = sunEvent(date,ARDAMINE_LAT,ARDAMINE_LON,false);
+        return rise && sunset && sunset > rise ? Math.max(0,Math.min(1,(now-rise)/(sunset-rise))) : null;
+      })(), isDaylight: (() => {
         const now = new Date(), stationDate = stationCalendarDate(now), rise = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, true), sunset = sunEvent(stationDate, ARDAMINE_LAT, ARDAMINE_LON, false);
         return !!(rise && sunset && now >= rise && now < sunset);
       })() }
