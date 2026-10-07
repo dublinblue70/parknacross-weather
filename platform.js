@@ -136,7 +136,10 @@
     if (eventR.status === "fulfilled" && eventR.value.events?.length) {
       const e = eventR.value.events[0];
       set("contextMilestone", e.title);
-      set("contextMilestoneDetail", e.detail || "");
+      const rawDate = e.received_at || (usable(e.epoch) ? Number(e.epoch)*1000 : undefined);
+      const day = /^\d{4}-\d{2}-\d{2}$/.test(e.day || "") ? e.day : rawDate === undefined ? null : stationDayKey(rawDate);
+      const when = day ? new Date(day+"T12:00:00Z").toLocaleDateString("en-IE",{timeZone:STATION_TIME_ZONE,day:"numeric",month:"long",year:"numeric"}) : "Date unavailable";
+      set("contextMilestoneDetail", [when,e.detail].filter(Boolean).join(" · "));
     }
 
     if (storageR.status === "fulfilled") {
@@ -272,3 +275,4 @@
        valid card and then show a false failure from the second attempt. */
   });
 })();
+
