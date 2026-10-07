@@ -4,6 +4,7 @@
   if (!panel || new URLSearchParams(location.search).get('admin') !== '1') return;
   panel.hidden = false;
   const $ = id => document.getElementById(id);
+  const previewDetails = $('socialAdminPreview');
   const base = (window.PARKNACROSS_CONFIG?.apiBase || 'https://parknacross-weather.dave-s-carter.workers.dev').replace(/\/$/, '');
   let statusBusy = false, previewBusy = false, lastStatus = null, noticeSent = '';
   const stored = key => { try { return sessionStorage.getItem(key) || ''; } catch (_) { return ''; } };
@@ -59,6 +60,7 @@
     if (previewBusy) return;
     const key = credential(ask); if (!key) return;
     previewBusy = true;
+    $('socialAdminPreviewNote').textContent = 'Loading today’s post preview…';
     try {
       const preview = await request('/social-preview-today',key);
       $('socialAdminFacebookText').textContent = lastStatus?.networks?.facebook?.text || preview.facebookText || '';
@@ -78,7 +80,11 @@
   $('socialAdminRefresh')?.addEventListener('click',async()=>{
     const key = credential(true); if (!key) return;
     try { sessionStorage.setItem('parknacrossAdminKey',key); } catch (_) {}
+    if (previewDetails) previewDetails.open = true;
     await refreshStatus(); await refreshPreview();
+  });
+  previewDetails?.addEventListener('toggle',()=>{
+    if (previewDetails.open) refreshPreview();
   });
   const notifyButton = $('socialAdminNotify');
   if (!('Notification' in window)) notifyButton.hidden = true;
@@ -92,7 +98,11 @@
     } catch (_) { $('socialAdminResult').textContent='Posting notices remain visible in this panel.'; }
   });
   try { if (localStorage.getItem('parknacrossSocialDeviceNotices') === 'enabled') notifyButton.textContent='Disable notices on this device'; } catch (_) {}
-  refreshStatus();
+  async function refreshAll() {
+    await refreshStatus();
+    await refreshPreview();
+  }
+  refreshAll();
   setInterval(()=>refreshStatus(),60000);
-  document.addEventListener('visibilitychange',()=>{if (!document.hidden) refreshStatus();});
+  document.addEventListener('visibilitychange',()=>{if (!document.hidden) refreshAll();});
 })();

@@ -32,7 +32,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261005-v38-4-133" />
-    <link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-147" />
+    <link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-148" />
     <!-- Critical astronomy styles stay with the markup so an older PWA cache
          can never render the phase SVGs at their intrinsic page size. -->
     <style id="astronomy-critical-styles">
@@ -1037,7 +1037,7 @@
           <p id="socialAdminResult" role="status">Use Refresh to load your private posting details.</p>
           <p id="socialAdminNotice" class="social-admin-notice" role="alert" hidden></p>
           <div id="socialAdminNetworks" class="social-admin-networks"></div>
-          <details class="social-admin-preview"><summary>Today’s post preview</summary>
+          <details id="socialAdminPreview" class="social-admin-preview" open><summary>Today’s post preview</summary>
             <p id="socialAdminPreviewNote">Preview text uses the available readings; it refreshes when the scheduled post is built.</p>
             <h3>Facebook</h3><pre id="socialAdminFacebookText"></pre>
             <h3>X</h3><pre id="socialAdminXText"></pre>
@@ -1700,10 +1700,10 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20261004-v38-4-130-coastal-fallbacks"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="weather-window-sky.js?v=20261007-v38-4-147"></script>
-    <script src="weather-window.js?v=20261007-v38-4-147"></script>
-    <script src="social-admin.js?v=20261007-v38-4-147"></script>
-    <script src="app.js?v=20261007-v38-4-147"></script>
+    <script src="weather-window-sky.js?v=20261007-v38-4-148"></script>
+    <script src="weather-window.js?v=20261007-v38-4-148"></script>
+    <script src="social-admin.js?v=20261007-v38-4-148"></script>
+    <script src="app.js?v=20261007-v38-4-148"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
@@ -2603,4 +2603,3 @@
     <script src="navigation.js?v=20260924-v38-4-97"></script>
   </body>
 </html>
-
