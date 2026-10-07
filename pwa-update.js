@@ -103,7 +103,7 @@
       });
 
       checkForUpdate();
-      setInterval(checkForUpdate, 30 * 60 * 1000);
+      ((fn,ms)=>(window.ParknacrossRefresh?.every?window.ParknacrossRefresh.every(fn,ms,{resume:false}):setInterval(fn,ms)))(checkForUpdate, 30 * 60 * 1000);
     })
     .catch(error => console.warn("Service worker registration:", error));
 
@@ -134,3 +134,4 @@
   window.addEventListener("online", checkForUpdate);
   if (isIOS()) window.addEventListener("focus", checkForUpdate);
 })();
+

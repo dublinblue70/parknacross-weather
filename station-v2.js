@@ -47,6 +47,7 @@
     }
 
     loadQuality();
-    setInterval(loadQuality, 5 * 60 * 1000);
+    (window.ParknacrossRefresh?.every || setInterval)(loadQuality, 5 * 60 * 1000);
   });
 })();
+

@@ -1,0 +1,10 @@
+(() => {
+ 'use strict';const allowed=[6,24,48,168,720];
+ function read(){const params=new URLSearchParams(location.search);let remembered=24;try{remembered=Number(localStorage.getItem('parknacross:graph-hours'))||24;}catch(_){}const from=Number(params.get('from')),to=Number(params.get('to'));const range=params.has('from')&&params.has('to')&&Number.isFinite(from)&&Number.isFinite(to)&&from>0&&to>from&&to-from<=31*86400&&to<=Date.now()/1000+120?{from:Math.floor(from),to:Math.floor(to)}:null;const requested=Number(params.get('hours'));return{hours:allowed.includes(requested)?requested:allowed.includes(remembered)?remembered:24,range};}
+ let selection=read();
+ function choose(hours){selection={hours:allowed.includes(hours)?hours:24,range:null};try{localStorage.setItem('parknacross:graph-hours',String(selection.hours));}catch(_){}const url=new URL(location.href);url.searchParams.set('hours',String(selection.hours));url.searchParams.delete('from');url.searchParams.delete('to');history.replaceState(null,'',url);return selection;}
+ function historyPath(){return selection.range?`/history?from_epoch=${selection.range.from}&to_epoch=${selection.range.to}`:`/history?hours=${selection.hours}`;}
+ window.ParknacrossGraphSelection={get:()=>selection,choose,historyPath};
+ window.addEventListener('popstate',()=>{selection=read();window.dispatchEvent(new Event('parknacross:graph-selection'));});
+ document.addEventListener('DOMContentLoaded',()=>{const button=document.getElementById('copyGraphLink'),note=document.getElementById('graphLinkStatus');button?.addEventListener('click',async()=>{const url=new URL(location.href);if(selection.range){url.searchParams.set('from',selection.range.from);url.searchParams.set('to',selection.range.to);url.searchParams.delete('hours');}else url.searchParams.set('hours',selection.hours);try{await navigator.clipboard.writeText(url.href);note.textContent='Link copied with this graph range.';}catch(_){note.replaceChildren();const input=document.createElement('input');input.type='text';input.value=url.href;input.setAttribute('aria-label','Graph link to copy');note.append(input);input.select();}});});
+})();

@@ -115,7 +115,7 @@
     return true;
   }
   async function refresh(requestedHours) {
-    hours = requestedHours;
+    const fixed=window.ParknacrossGraphSelection?.get()?.range;hours = fixed?(fixed.to-fixed.from)/3600:requestedHours;
     const id = ++requestId;
     const countStatus = $('lightningCountStatus'),distanceStatus = $('lightningDistanceStatus');
     if (!activityChart || !distanceChart) return;
@@ -127,11 +127,11 @@
     countStatus.textContent = 'Checking lightning archive…';
     distanceStatus.textContent = 'Checking lightning archive…';
     try {
-      const response = await fetch(`${API}/history?hours=${hours}`, {cache:'default'});
+      const response = await fetch(`${API}${window.ParknacrossGraphSelection?.historyPath()||`/history?hours=${hours}`}`, {cache:'default'});
       if (!response.ok) throw new Error(`History HTTP ${response.status}`);
       const data = await response.json();
       if (id !== requestId) return; // An earlier range response must not overwrite a later selection.
-      const now = Date.now() / 1000;
+      const now = fixed?fixed.to:Date.now() / 1000;
       const series = buildSeries(data.readings, hours, now);
       activityChart.data.labels = series.labels;
       activityChart.data.datasets[0].data = series.count;
@@ -165,7 +165,8 @@
     document.querySelectorAll('[data-hours]').forEach(button => {
       button.addEventListener('click', () => refresh(Number(button.dataset.hours) || 24));
     });
-    refresh(24);
-    setInterval(() => {if(Date.now()-lastRefresh>=4*60*1000)refresh(hours);},5*60*1000);
+    refresh(window.ParknacrossGraphSelection?.get()?.hours||24);window.addEventListener("parknacross:graph-selection",()=>refresh(window.ParknacrossGraphSelection.get().hours));
+    (window.ParknacrossRefresh?.every || setInterval)(() => {if(Date.now()-lastRefresh>=4*60*1000)refresh(hours);},5*60*1000);
   });
 })();
+

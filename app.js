@@ -2483,18 +2483,18 @@ document.addEventListener("DOMContentLoaded", () => {
   $("shareTodayButton")?.addEventListener("click",createWeatherCard);
   setupPWA();
 
-  setInterval(updateRelativeObservation, 15 * 1000);
-  setInterval(refreshCurrent, 60 * 1000);
-  setInterval(refreshHistory24, 10 * 60 * 1000);
-  setInterval(refreshHistory7d, 30 * 60 * 1000);
-  setInterval(refreshStats, 15 * 60 * 1000);
-  setInterval(() => {
+  (window.ParknacrossRefresh?.every || setInterval)(updateRelativeObservation, 15 * 1000);
+  (window.ParknacrossRefresh?.every || setInterval)(refreshCurrent, 60 * 1000);
+  (window.ParknacrossRefresh?.every || setInterval)(refreshHistory24, 10 * 60 * 1000);
+  (window.ParknacrossRefresh?.every || setInterval)(refreshHistory7d, 30 * 60 * 1000);
+  (window.ParknacrossRefresh?.every || setInterval)(refreshStats, 15 * 60 * 1000);
+  (window.ParknacrossRefresh?.every || setInterval)(() => {
     const isNight = updateSunInfo(latestCurrent);
     if (latestCurrent) publishWeatherWindowObservation(latestCurrent, latestRainDetected, isNight);
   }, 60 * 1000);
-  setInterval(loadWarnings, 5 * 60 * 1000);
-  setInterval(loadForecast, 30 * 60 * 1000);
-  setInterval(refreshLightning, 60 * 1000);
-  setInterval(refreshSoilFreshness, 60 * 1000);
+  (window.ParknacrossRefresh?.every || setInterval)(loadWarnings, 5 * 60 * 1000);
+  (window.ParknacrossRefresh?.every || setInterval)(loadForecast, 30 * 60 * 1000);
+  (window.ParknacrossRefresh?.every || setInterval)(refreshLightning, 60 * 1000);
+  (window.ParknacrossRefresh?.every || setInterval)(refreshSoilFreshness, 60 * 1000);
 });
 

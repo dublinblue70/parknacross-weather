@@ -54,7 +54,7 @@
     }
     set("year", new Date().getFullYear());
     loadCurrentComparison();
-    setInterval(loadCurrentComparison, 5 * 60 * 1000);
+    (window.ParknacrossRefresh?.every || setInterval)(loadCurrentComparison, 5 * 60 * 1000);
 
     // /rain-summary includes the latest WS90 daily counter and is the same
     // rainfall source used by the refreshed Dashboard figures.
@@ -121,3 +121,4 @@
     
   });
 })();
+

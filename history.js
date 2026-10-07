@@ -133,9 +133,13 @@ function renderDayChart(rows){
   requestAnimationFrame(()=>{chart.resize();chart.update("none");});
   return measured.length;
 }
+let photoRequest=0;
+async function loadHistoricalSky(day){const ticket=++photoRequest,node=$("historicalSkyImage");if(!node)return;node.hidden=true;node.removeAttribute("src");set("historicalSkyCaption","");set("historicalSkyStatus","Checking this date’s sky photograph…");try{const data=await getJSON(`${API_BASE}/sky-photo/history?day=${encodeURIComponent(day)}`);if(ticket!==photoRequest||day!==selectedArchiveDay)return;if(data.day!==day)throw Error("Photo date mismatch");if(!data.photo){set("historicalSkyStatus","No sky photograph saved for this date.");return;}node.onload=()=>{if(ticket===photoRequest){node.hidden=false;set("historicalSkyStatus","Archived visual observation · latest saved photo on this date.");}};node.onerror=()=>{if(ticket===photoRequest){node.hidden=true;set("historicalSkyStatus","This archived photograph could not be loaded.");}};node.src=`${API_BASE}/sky-photo/history/image?day=${encodeURIComponent(day)}&photo_id=${encodeURIComponent(data.photo.photo_id)}`;set("historicalSkyCaption",data.photo.caption||"");}catch(_){if(ticket===photoRequest)set("historicalSkyStatus","Historical photo service unavailable. Worker v38.4.90 enables this feature.");}}
 async function loadDay(day){
   const loadId=++dayLoadSequence;
   selectedArchiveDay=day;
+  loadHistoricalSky(day);
+  window.ParknacrossMaintenance?.renderDay(day);
   renderCalendar();
   renderHeatmap();
   set("dayDetailTitle",longDay(day));

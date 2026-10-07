@@ -20,7 +20,7 @@
   layer=L.tileLayer(`${f.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`,{opacity:.72,maxNativeZoom:7,maxZoom:12}).addTo(map);
   $("radarSlider").value=i;set("radarTime",frameTime(f.time));updateRadarStatus();
  }
- function startAnimation(){clearInterval(timer);if(frames.length>1)timer=setInterval(()=>show((i+1)%frames.length),1500);}
+ function startAnimation(){clearInterval(timer);if(document.hidden)return;if(frames.length>1)timer=setInterval(()=>show((i+1)%frames.length),1500);}
  function stopAnimation(){clearInterval(timer);timer=null;}
  async function loadRadar(){
   try{
@@ -43,6 +43,7 @@
   const start=()=>{if(started)return;started=true;stream.addEventListener("load",()=>{if(status)status.textContent="Player loaded. Press play to view the stream; if playback is unavailable, use the direct link below.";},{once:true});stream.addEventListener("error",()=>{if(status)status.textContent="The embedded player could not load. Open the EUMETSAT stream directly using the link below.";},{once:true});stream.src=stream.dataset.streamSrc;};
   if("IntersectionObserver" in window){const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){start();observer.disconnect();}},{rootMargin:"280px 0px",threshold:0});observer.observe(stream);}else start();
  }
+ document.addEventListener("visibilitychange",()=>{if(document.hidden)stopAnimation();else if(playing)startAnimation();});
  document.addEventListener("DOMContentLoaded",()=>{
   set("year",new Date().getFullYear());map=L.map("radarMap").setView(coords,7);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);
@@ -50,6 +51,7 @@
   $("radarCenter").addEventListener("click",()=>map.setView(coords,Math.max(7,map.getZoom())));
   $("radarSlider").addEventListener("input",event=>{playing=false;stopAnimation();set("radarPlay","Play");show(Number(event.target.value))});
   $("radarPlay").addEventListener("click",()=>{playing=!playing;set("radarPlay",playing?"Pause":"Play");if(playing)startAnimation();else stopAnimation()});
-  startSatelliteStream();loadRadar();loadRain();setInterval(loadRain,60*1000);setInterval(loadRadar,5*60*1000);setInterval(updateRadarStatus,60*1000);
+  startSatelliteStream();loadRadar();loadRain();(window.ParknacrossRefresh?.every || setInterval)(loadRain,60*1000);(window.ParknacrossRefresh?.every || setInterval)(loadRadar,5*60*1000);(window.ParknacrossRefresh?.every || setInterval)(updateRadarStatus,60*1000);
  });
 })();
+

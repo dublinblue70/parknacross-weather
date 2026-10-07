@@ -154,8 +154,8 @@
   });
   refreshOverride();
   refreshPointSky();
-  setInterval(refreshOverride, 60000);
-  setInterval(refreshPointSky,20*60000);
+  ((fn,ms)=>(window.ParknacrossRefresh?.every?window.ParknacrossRefresh.every(fn,ms,{resume:false}):setInterval(fn,ms)))(refreshOverride, 60000);
+  ((fn,ms)=>(window.ParknacrossRefresh?.every?window.ParknacrossRefresh.every(fn,ms,{resume:false}):setInterval(fn,ms)))(refreshPointSky,20*60000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { refreshOverride(); refreshPointSky(); } });
   window.addEventListener("parknacross:weather-window-observation", event => {
     try { render(event.detail); }

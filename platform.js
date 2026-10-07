@@ -273,7 +273,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     loadContext();
-    setInterval(loadContext, 5 * 60 * 1000);
+    (window.ParknacrossRefresh?.every || setInterval)(loadContext, 5 * 60 * 1000);
     /* app.js exclusively owns the weather-card button. Do not attach the
        retired platform card generator here: two click handlers can create a
        valid card and then show a false failure from the second attempt. */

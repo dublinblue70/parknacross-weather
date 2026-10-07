@@ -115,6 +115,6 @@
     $('socialAdminNotice').hidden=true;
   });
   refreshAll();
-  setInterval(()=>refreshStatus(),60000);
+  ((fn,ms)=>(window.ParknacrossRefresh?.every?window.ParknacrossRefresh.every(fn,ms,{resume:false}):setInterval(fn,ms)))(()=>refreshStatus(),60000);
   document.addEventListener('visibilitychange',()=>{if (!document.hidden) refreshAll();});
 })();

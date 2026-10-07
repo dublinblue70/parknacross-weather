@@ -163,25 +163,28 @@ function renderIssues(issues) {
   return worst;
 }
 
-async function runChecks() {
+let checkResults={},checksRunning=false;
+async function runChecks(only=null) {
+  if(checksRunning)return;checksRunning=true;
+  const read=async(key,fn)=>{if(only&&only!==key&&checkResults[key])return checkResults[key];const data=await fn();checkResults[key]=data;return data;};
   const button=$("refreshButton"); if(button) button.disabled=true;
   setText("overallTitle","Checking systems…"); setText("overallText","Checking the website, weather station and saved data.");
   $("overall").className="overall";
 
-  const sitePromise=checkSite();
+  const sitePromise=read("site",checkSite);
   const apiStarted=performance.now();
   const [health,current,quality,history,reliability,backup,social,tides,m2,site] = await Promise.all([
-    fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e})),
-    fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e})),
-    fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e})),
-    fetchJSON(`${API_BASE}/history?hours=24`).catch(e=>({__error:e})),
-    fetchJSON(`${API_BASE}/reliability`).catch(e=>({__error:e})),
-    fetchJSON(`${API_BASE}/backup-status`).catch(e=>({__error:e})),
-    fetchJSON(`${API_BASE}/social-status`).catch(e=>({__error:e})),
+    read("health",()=>fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e}))),
+    read("current",()=>fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e}))),
+    read("quality",()=>fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e}))),
+    read("history",()=>fetchJSON(`${API_BASE}/history?hours=24`).catch(e=>({__error:e}))),
+    read("reliability",()=>fetchJSON(`${API_BASE}/reliability`).catch(e=>({__error:e}))),
+    read("backup",()=>fetchJSON(`${API_BASE}/backup-status`).catch(e=>({__error:e}))),
+    read("social",()=>fetchJSON(`${API_BASE}/social-status`).catch(e=>({__error:e}))),
     // Unique query values bypass the Worker's long marine cache TTLs so this
     // health check can detect an upstream outage instead of only checking cache.
-    fetchJSON(`${API_BASE}/marine/tides?station=Arklow&healthcheck=${Date.now()}`,10000).catch(e=>({__error:e})),
-    fetchJSON(`${API_BASE}/marine/sea-temperature?healthcheck=${Date.now()}`,10000).catch(e=>({__error:e})),
+    read("tides",()=>fetchJSON(`${API_BASE}/marine/tides?station=Arklow&healthcheck=${Date.now()}`,10000).catch(e=>({__error:e}))),
+    read("m2",()=>fetchJSON(`${API_BASE}/marine/sea-temperature?healthcheck=${Date.now()}`,10000).catch(e=>({__error:e}))),
     sitePromise
   ]);
 
@@ -382,12 +385,18 @@ async function runChecks() {
   $("overall").className=`overall ${overall}`;
   setText("overallTitle",overall==="good"?"All monitored systems look healthy":overall==="warn"?"Site is running, but something is worth checking":coreFailure?"A monitored service needs attention":"Historical archive is incomplete");
   setText("overallText",overall==="good"?"Website, weather data service, live readings and recent data checks passed.":overall==="warn"?"One or more checks produced a warning. Review the cards below.":coreFailure?"At least one core service failed or the latest weather reading is stale.":"The website, weather data service and latest observation are operating normally. Some earlier five-minute archive intervals are missing; this does not indicate a current station outage.");
-  setText("lastRun",`Last checked ${new Date().toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})}`);
+  setText("lastRun",`${only?"Selected source rechecked; other cards retain their previous results · ":"Last checked "}${new Date().toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})}`);
   if(button) button.disabled=false;
+  checksRunning=false;
+  for(const retry of document.querySelectorAll('[data-retry-feed]')){const key=retry.dataset.retryFeed;retry.hidden=false;retry.textContent='Retry this check';const hint=retry.nextElementSibling;if(hint)hint.textContent=checkResults[key]?.__error?'This check could not reach its data source. Retry affects this source only; other readings keep their last result.':'';}
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
-  $("refreshButton")?.addEventListener("click",runChecks);
+  $("refreshButton")?.addEventListener("click",()=>runChecks());
+  const feeds={siteBadge:'site',apiBadge:'health',feedBadge:'current',ingestBadge:'health',samplesBadge:'quality',gapBadge:'quality',batteryBadge:'quality',reliabilityBadge:'reliability',gustQualityBadge:'quality',soilBadge:'current',tideBadge:'tides',m2Badge:'m2',backupBadge:'backup',facebookBadge:'social',xBadge:'social',qualityBadge:'history'};
+  for(const [id,key] of Object.entries(feeds)){const card=$(id)?.closest('article');if(!card)continue;const retry=document.createElement('button');retry.type='button';retry.className='feed-retry';retry.dataset.retryFeed=key;retry.textContent='Retry this check';const hint=document.createElement('p');hint.className='sub';hint.setAttribute('role','status');retry.addEventListener('click',async()=>{retry.disabled=true;hint.textContent='Retrying this source only…';try{await runChecks(key);}finally{retry.disabled=false;}});card.append(retry,hint);}
+
   runChecks();
-  setInterval(runChecks,REFRESH_MS);
+  (window.ParknacrossRefresh?.every || setInterval)(runChecks,REFRESH_MS);
 });
+

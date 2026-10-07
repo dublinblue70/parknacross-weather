@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-155-sky-social-admin"],
+  ["service-worker.js", "parknacross-v38-4-156-sky-social-admin"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
