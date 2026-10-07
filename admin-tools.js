@@ -31,8 +31,25 @@
    try{await signIn();}catch(error){note(error.message);}
  });
  $('adminSignOut').addEventListener('click',signOut);
- let supported=null;
- async function checkCompatibility(){const ticket=generation;try{const data=await (await request('/admin/capabilities')).json();if(!active||ticket!==generation)return;if(!data.features||typeof data.features!=='object')throw Error('Feature list missing from the deployed Worker response.');supported=data.features;$('adminCompatibility').textContent=`Deployed Worker ${data.worker_version||'version unknown'} · `+[['rain_override','rain / storm settings'],['photo_calendar','photo calendar'],['social_history','social history']].map(([key,label])=>`${label}: ${supported[key]?'supported':'unavailable'}`).join(' · ');}catch(error){if(!active||ticket!==generation)return;supported={};$('adminCompatibility').textContent='Compatibility could not be confirmed. Deploy Worker v38.4.89, then check again. '+error.message;}finally{if(active&&ticket===generation){$('adminSkySave').disabled=!supported?.rain_override;window.dispatchEvent(new CustomEvent('parknacross:capabilities',{detail:supported||{}}));}}}
+ let supported=null,compatibilitySequence=0;
+ async function checkCompatibility(){
+   if(!active)return;
+   const ticket=generation,sequence=++compatibilitySequence,button=$('adminCompatibilityRefresh'),status=$('adminCompatibility');
+   button.disabled=true;button.textContent='Checking…';status.textContent='Checking the deployed Worker’s features…';status.setAttribute('aria-busy','true');
+   try{
+     const data=await (await request('/admin/capabilities')).json();if(!active||ticket!==generation||sequence!==compatibilitySequence)return;
+     if(!data.features||typeof data.features!=='object')throw Error('Feature list missing from the deployed Worker response.');
+     supported=data.features;
+     const checked=new Date().toLocaleTimeString('en-IE',{timeZone:'Europe/Dublin',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+     status.textContent=`Checked at ${checked} · Deployed Worker ${data.worker_version||'version unknown'} · `+[['rain_override','rain / storm settings'],['photo_calendar','photo calendar'],['social_history','social history'],['history_photos','historical sky photos'],['export_preview','download previews'],['history_range','event graph windows']].map(([key,label])=>`${label}: ${supported[key]?'supported':'unavailable'}`).join(' · ');
+   }catch(error){
+     if(!active||ticket!==generation||sequence!==compatibilitySequence)return;
+     supported={};status.textContent='Compatibility check failed. '+error.message+' Try Check compatibility again.';
+   }finally{
+     if(sequence===compatibilitySequence){button.disabled=false;button.textContent='Check compatibility';status.setAttribute('aria-busy','false');}
+     if(active&&ticket===generation&&sequence===compatibilitySequence){$('adminSkySave').disabled=!supported?.rain_override;window.dispatchEvent(new CustomEvent('parknacross:capabilities',{detail:supported||{}}));}
+   }
+ }
  $('adminCompatibilityRefresh')?.addEventListener('click',checkCompatibility);
  async function loadSky(){try{const payload=await (await request('/weather-window/sky')).json(),d=payload.override||{};if(!active)return;$('adminSky').value=d.sky||'auto';$('adminRain').value=d.rain||'auto';window.dispatchEvent(new Event('parknacross:window-preview-update'));$('adminSkyStatus').textContent=(d.sky&&d.sky!=='auto')||(d.rain&&d.rain!=='auto')?`Visual settings: sky ${d.sky||'auto'} · rain / storm ${d.rain||'auto'}${d.expires_at?' · expires '+new Date(d.expires_at).toLocaleString('en-IE',{timeZone:'Europe/Dublin'}):''}`:'Automatic forecast sky and station rain are active.';}catch(error){$('adminSkyStatus').textContent=error.message;}}
  $('adminSkyForm').addEventListener('submit',async event=>{

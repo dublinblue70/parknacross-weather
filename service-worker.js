@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-156-sky-social-admin";
+const CACHE_NAME = "parknacross-v38-4-157-sky-social-admin";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
