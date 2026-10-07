@@ -23,16 +23,18 @@
  });
  const solarLine=()=>({label:"Solar radiation",data:[],borderColor:"#ffd56a",backgroundColor:"rgba(255,213,106,.18)",borderWidth:2.4,pointRadius:0,pointHoverRadius:4,pointHitRadius:10,tension:.22,fill:"origin",spanGaps:false,yAxisID:"y",order:2});
  const uvLine=()=>({label:"UV index",data:[],borderColor:"#bd91ff",backgroundColor:"#bd91ff",borderWidth:2.8,borderCapStyle:"round",pointRadius:0,pointHoverRadius:4,pointHitRadius:10,tension:.22,fill:false,spanGaps:false,yAxisID:"y",order:1});
- const tickTime=value=>{const d=new Date(Number(value)),time=d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"});if(hours<24)return time;if(hours<=48)return[d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"}),time];return d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})};
+ const tickTime=function(value){const d=new Date(Number(value)),time=d.toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"});const span=this.max-this.min;if(span<24*3600000)return time;if(span<=48*3600000)return[d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"}),time];return d.toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})};
  const tooltipTime=items=>{const value=items?.[0]?.parsed?.x;return Number.isFinite(value)?new Date(value).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""};
- const timeAxis=()=>({type:"linear",grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:9,callback:tickTime}});
- // Keep stacked solar/UV charts aligned, including labels and plotting width.
- const solarTimeAxis=()=>({...timeAxis(),ticks:{...timeAxis().ticks,autoSkip:false,maxRotation:0,minRotation:0},afterBuildTicks:axis=>{
+ const timeAxis=()=>({type:"linear",grid:{color:"transparent"},ticks:{color:"#9fb3c1",autoSkip:false,maxRotation:0,minRotation:0,callback:tickTime},afterBuildTicks:axis=>{
    if(!Number.isFinite(axis.min)||!Number.isFinite(axis.max)||axis.max<=axis.min)return;
-   axis.ticks=Array.from({length:4},(_,i)=>({value:axis.min+(axis.max-axis.min)*i/3}));
+   // Epoch numbers produce uneven automatic ticks. Space readable labels across the actual plot.
+   const count=Math.max(2,Math.min(4,Math.floor((axis.chart.width-80)/130)+1));
+   axis.ticks=Array.from({length:count},(_,i)=>({value:axis.min+(axis.max-axis.min)*i/(count-1)}));
  }});
+ // Keep stacked solar/UV charts aligned, including labels and plotting width.
+ const solarTimeAxis=timeAxis;
  const alignSolarYAxis=axis=>{axis.width=64;};
- const scales=(unit,zero=false)=>({x:timeAxis(),y:{beginAtZero:zero,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:unit,color:"#9fb3c1"}}});
+ const scales=(unit,zero=false)=>({x:timeAxis(),y:{beginAtZero:zero,...(unit==="hPa"?{afterDataLimits:axis=>{if(axis.max-axis.min<2){const middle=(axis.min+axis.max)/2;axis.min=middle-1;axis.max=middle+1;}}}:{}),grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",...(unit==="hPa"?{precision:1,maxTicksLimit:6}: {})},title:{display:true,text:unit,color:"#9fb3c1"}}});
  const windLine=(label,colour,axis="y")=>({
    label,
    data:[],
