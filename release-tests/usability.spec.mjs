@@ -27,3 +27,17 @@ test('short pressure graph has spaced mobile labels and a readable pressure rang
  expect(axes.span).toBeGreaterThanOrEqual(2);expect(axes.labels.length).toBeLessThanOrEqual(3);expect(axes.labels.every(x=>typeof x==='string'&&/^\d{2}:\d{2}$/.test(x))).toBe(true);
  expect(axes.positions.slice(1).every((x,i)=>x-axes.positions[i]>100)).toBe(true);
 });
+
+test('zoom keeps gust segments at the edges inside the vertical scale without bridging missing readings',async({page})=>{
+ await page.goto('/graphs.html');await expect(page.locator('#highlightTemp')).not.toHaveText('Loading…');
+ const result=await page.evaluate(()=>{
+  const c=Chart.getChart(document.getElementById('gWind')),start=c.data.datasets[0].data[0].x,step=300000;
+  const gusts=[{x:start,y:18},{x:start+step,y:4},{x:start+2*step,y:8},{x:start+3*step,y:5},{x:start+4*step,y:20}];
+  c.data.datasets[0].data=gusts.map(p=>({...p,y:2}));c.data.datasets[1].data=gusts;
+  ParknacrossChartExplorer.zoom(start+step*.5,start+step*3.5);
+  const maximum=c.scales.y.max;c.data.datasets[1].data[2].y=null;c.update('none');
+  return{maximum,min:c.scales.y.min,gap:c.data.datasets[1].data[2].y,spanGaps:c.data.datasets[1].spanGaps,count:c.data.datasets[1].data.length};
+ });
+ expect(result.maximum).toBeGreaterThan(20);expect(result.min).toBe(0);expect(result.gap).toBeNull();expect(result.spanGaps).toBe(false);expect(result.count).toBe(5);
+ await page.getByRole('button',{name:'Reset graph zoom'}).click();await expect(page.locator('#resetChartZoom')).toBeDisabled();
+});

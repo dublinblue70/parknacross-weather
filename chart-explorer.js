@@ -6,10 +6,30 @@
  const stamp=x=>new Date(x).toLocaleString('en-IE',{timeZone:'Europe/Dublin',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
  function drawAll(){for(const c of charts)c.draw();}
  function reset(){zoomRange=null;for(const c of charts){const saved=original.get(c);if(saved){if(saved.min===undefined)delete c.options.scales.x.min;else c.options.scales.x.min=saved.min;if(saved.max===undefined)delete c.options.scales.x.max;else c.options.scales.x.max=saved.max;original.delete(c);c.update('none');}}zoomed=false;zoomRange=null;const button=document.getElementById('resetChartZoom');if(button)button.disabled=true;const note=document.getElementById('chartExplorerStatus');if(note)note.textContent='Full graph view restored.';}
- function zoom(from,to){if(!Number.isFinite(from)||!Number.isFinite(to)||to-from<60000)return false;for(const c of charts){if(!original.has(c))original.set(c,{min:c.options.scales.x.min,max:c.options.scales.x.max});c.options.scales.x.min=from;c.options.scales.x.max=to;c.update('none');}zoomed=true;zoomRange={from,to};const button=document.getElementById('resetChartZoom');if(button)button.disabled=false;const note=document.getElementById('chartExplorerStatus');if(note)note.textContent='Zoomed to '+stamp(from)+' – '+stamp(to)+'. Reset returns to the complete period.';return true;}
+ function zoom(from,to){if(!Number.isFinite(from)||!Number.isFinite(to)||to-from<60000)return false;zoomRange={from,to};for(const c of charts){if(!original.has(c))original.set(c,{min:c.options.scales.x.min,max:c.options.scales.x.max});c.options.scales.x.min=from;c.options.scales.x.max=to;c.update('none');}zoomed=true;zoomRange={from,to};const button=document.getElementById('resetChartZoom');if(button)button.disabled=false;const note=document.getElementById('chartExplorerStatus');if(note)note.textContent='Zoomed to '+stamp(from)+' – '+stamp(to)+'. Reset returns to the complete period.';return true;}
  function summary(x){const node=document.getElementById('chartCursorValues');if(!node)return;const values=[];for(const c of charts){if(c.canvas.closest('[data-user-hidden]'))continue;for(let i=0;i<c.data.datasets.length;i++){const d=c.data.datasets[i];if(!c.isDatasetVisible(i)||/suspect|excluded/i.test(d.label||''))continue;let best=null,diff=Infinity;for(const p of d.data||[]){if(p?.y===null||p?.y===undefined||!Number.isFinite(Number(p.y)))continue;const distance=Math.abs(Number(p.x)-x);if(distance<diff){diff=distance;best=p;}}if(best&&diff<=10*60000)values.push((d.label||'Reading')+': '+Number(best.y).toFixed(1));}}
  node.textContent=stamp(x)+' · Nearby saved readings (within ten minutes): '+(values.length?values.join(' · '):'No observations within ten minutes of this time.');}
- const plugin={id:'parknacrossChartExplorer',afterInit(c){if(eligible(c))charts.add(c);},afterDestroy(c){charts.delete(c);},beforeUpdate(c){if(zoomRange&&charts.has(c)){c.options.scales.x.min=zoomRange.from;c.options.scales.x.max=zoomRange.to;}},afterEvent(c,args){if(!charts.has(c))return;const e=args.event;if(e.type==='mouseout'){cursor=null;drawAll();return;}if(!['mousemove','touchstart','touchmove','click'].includes(e.type)||!args.inChartArea)return;cursor=c.scales.x.getValueForPixel(e.x);summary(cursor);drawAll();},afterDraw(c){if(!charts.has(c))return;const {ctx,chartArea:a}=c;if(!a)return;ctx.save();ctx.beginPath();ctx.rect(a.left,a.top,a.right-a.left,a.bottom-a.top);ctx.clip();if(cursor!==null){const x=c.scales.x.getPixelForValue(cursor);ctx.strokeStyle='#c9efff';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,a.top);ctx.lineTo(x,a.bottom);ctx.stroke();}if(drag?.chart===c){ctx.fillStyle='rgba(116,221,255,.2)';ctx.fillRect(Math.min(drag.start,drag.end),a.top,Math.abs(drag.end-drag.start),a.bottom-a.top);}ctx.restore();}};
+ function fitZoomedValues(c,axis){
+  if(!zoomRange||!charts.has(c)||axis.axis!=='y')return;
+  let lo=Infinity,hi=-Infinity;
+  c.data.datasets.forEach((dataset,index)=>{
+   if(!c.isDatasetVisible(index)||(dataset.yAxisID||'y')!==axis.id)return;
+   const points=dataset.data||[];
+   // Include the adjoining observations: their connecting segments still enter the zoomed plot.
+   const first=points.findIndex(p=>Number(p?.x)>=zoomRange.from);
+   let last=-1;for(let i=points.length-1;i>=0;i--)if(Number(points[i]?.x)<=zoomRange.to){last=i;break;}
+   if(first<0||last<0)return;
+   for(let i=Math.max(0,first-1);i<=Math.min(points.length-1,last+1);i++){
+    const y=points[i]?.y;if(y===null||y===undefined||!Number.isFinite(Number(y)))continue;
+    lo=Math.min(lo,Number(y));hi=Math.max(hi,Number(y));
+   }
+  });
+  if(!Number.isFinite(lo)||!Number.isFinite(hi))return;
+  const padding=Math.max((hi-lo)*.1,Math.max(Math.abs(lo),Math.abs(hi))*0.001,.1);
+  if(axis.options.min===undefined)axis.min=axis.options.beginAtZero&&lo>=0?0:Math.min(axis.min,lo-padding);
+  if(axis.options.max===undefined)axis.max=Math.max(axis.max,hi+padding);
+ }
+ const plugin={id:'parknacrossChartExplorer',afterDataLimits(c,{scale}){fitZoomedValues(c,scale);},afterInit(c){if(eligible(c))charts.add(c);},afterDestroy(c){charts.delete(c);},beforeUpdate(c){if(zoomRange&&charts.has(c)){c.options.scales.x.min=zoomRange.from;c.options.scales.x.max=zoomRange.to;}},afterEvent(c,args){if(!charts.has(c))return;const e=args.event;if(e.type==='mouseout'){cursor=null;drawAll();return;}if(!['mousemove','touchstart','touchmove','click'].includes(e.type)||!args.inChartArea)return;cursor=c.scales.x.getValueForPixel(e.x);summary(cursor);drawAll();},afterDraw(c){if(!charts.has(c))return;const {ctx,chartArea:a}=c;if(!a)return;ctx.save();ctx.beginPath();ctx.rect(a.left,a.top,a.right-a.left,a.bottom-a.top);ctx.clip();if(cursor!==null){const x=c.scales.x.getPixelForValue(cursor);ctx.strokeStyle='#c9efff';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,a.top);ctx.lineTo(x,a.bottom);ctx.stroke();}if(drag?.chart===c){ctx.fillStyle='rgba(116,221,255,.2)';ctx.fillRect(Math.min(drag.start,drag.end),a.top,Math.abs(drag.end-drag.start),a.bottom-a.top);}ctx.restore();}};
  Chart.register(plugin);
  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{
  const host=document.querySelector('.v2-chart-grid')||document.querySelector('#graphs .chart-grid');if(!host)return;
