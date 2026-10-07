@@ -7,7 +7,7 @@
  async function request(path,options={}){
    const response=await fetch(base+path,{...options,headers:{...options.headers,'X-Parknacross-Admin-Key':key()},cache:'no-store',signal:AbortSignal.timeout(15000)});
    if(response.status===401){signOut();throw Error('Admin key was not accepted. Please sign in again.');}
-   if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.error||(response.status===404?'This feature needs Worker v38.4.86.':`Request failed (${response.status}).`));}
+   if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.error==='Invalid sky setting'?'The Worker does not support this sky choice yet. Deploy Worker v38.4.87, or choose Overcast for now.':data.error||(response.status===404?'This feature needs Worker v38.4.86.':`Request failed (${response.status}).`));}
    return response;
  }
  function signOut(){
