@@ -32,8 +32,8 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261005-v38-4-133" />
-    <link rel="stylesheet" href="site-enhancements.css?v=20261007-v38-4-152">
-    <link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-152" />
+    <link rel="stylesheet" href="site-enhancements.css?v=20261007-v38-4-153">
+    <link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-153" />
     <!-- Critical astronomy styles stay with the markup so an older PWA cache
          can never render the phase SVGs at their intrinsic page size. -->
     <style id="astronomy-critical-styles">
@@ -993,6 +993,7 @@
                   <g fill="#e6b5a5"><circle cx="56" cy="245" r="3"/><circle cx="81" cy="255" r="3"/><circle cx="108" cy="251" r="3"/><circle cx="60" cy="263" r="2.5"/></g>
                   <g fill="#f0d884"><circle cx="56" cy="245" r="1"/><circle cx="81" cy="255" r="1"/><circle cx="108" cy="251" r="1"/><circle cx="60" cy="263" r="1"/></g>
                 </g>
+                <path class="ww-lightning" d="M415 116h-23l-14 34h20l-10 34 39-48h-22z" fill="#ffe78a" stroke="#a77f2e" stroke-width="2" />
                 <g class="ww-rain" fill="none" stroke="#d8f2ff" stroke-width="3" stroke-linecap="round">
                   <path d="m287 165-8 17m37-28-8 17m40 3-8 17m39-36-8 17m38 12-8 17m36-36-8 17m42 3-8 17m-197-12-8 17" />
                 </g>
@@ -1007,8 +1008,8 @@
                 <span>Solar <strong id="weatherWindowSolar">--</strong></span>
               </div>
               <p id="weatherWindowSkySource" class="weather-window-sky-source">Checking the forecast sky…</p>
-              <p class="weather-window-note">Illustration guided by Met Éireann’s forecast and local readings. Hourly forecast cloud cover is preferred, with the regional forecast as a fallback; wind and rain animation use station observations.</p>
-              <details id="weatherWindowInfo" class="weather-window-info"><summary>How this scene works</summary><p id="weatherWindowExplanation"></p><p>Cloud cover comes from the hourly Ardamine forecast, with the Leinster description as a fallback. A local visual override takes priority until it expires. Sun position follows daylight; wind and rain use measured station readings.</p><p id="weatherWindowMeasured"></p><p>This illustration describes its sources; forecast clouds may differ from the sky overhead.</p></details>
+              <p class="weather-window-note">Illustration guided by Met Éireann’s forecast and local readings. Hourly forecast cloud cover is preferred, with the regional forecast as a fallback; wind uses station observations, and rain uses station observations unless a labelled visual override is active.</p>
+              <details id="weatherWindowInfo" class="weather-window-info"><summary>How this scene works</summary><p id="weatherWindowExplanation"></p><p>Cloud cover comes from the hourly Ardamine forecast, with the Leinster description as a fallback. A local visual override takes priority until it expires. Sun position follows daylight; wind uses measured readings. Rain uses measured readings by default; manual rain or storm settings are labelled and expire automatically.</p><p id="weatherWindowMeasured"></p><p>This illustration describes its sources; forecast clouds may differ from the sky overhead.</p></details>
               <div id="weatherWindowSkyAdmin" class="weather-window-admin" hidden>
                 <label for="weatherWindowSkySelect">The sky you can see now</label>
                 <select id="weatherWindowSkySelect">
@@ -1019,13 +1020,13 @@
                   <option value="cloudy">Cloudy</option>
                   <option value="overcast">Overcast</option>
                 </select>
-                <label for="weatherWindowSkyDuration">Keep this setting for</label>
+                <label for="weatherWindowRainSelect">Rain / storm in illustration</label><select id="weatherWindowRainSelect"><option value="auto">Automatic station reading</option><option value="none">No rain</option><option value="light">Light rain / drizzle</option><option value="rain">Rain</option><option value="heavy">Heavy rain</option><option value="thunderstorm">Thunder / lightning with rain</option></select><p class="weather-window-note">Manual rain and storm settings affect the illustration only; readings and alerts use station data. Lightning is a static symbol, not a detected-storm report.</p><label for="weatherWindowSkyDuration">Keep this setting for</label>
                 <select id="weatherWindowSkyDuration">
                   <option value="1h">One hour</option>
                   <option value="3h">Three hours</option>
                   <option value="today" selected>Until midnight</option>
                 </select>
-                <button id="weatherWindowSkySave" type="button">Save sky setting</button>
+                <button id="weatherWindowSkySave" type="button">Save illustration settings</button>
                 <p id="weatherWindowSkyStatus" role="status">Applies to all visitors for the selected time. Choose Automatic to clear it earlier.</p>
               </div>
             </div>
@@ -1704,12 +1705,12 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20261004-v38-4-130-coastal-fallbacks"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="weather-window-sky.js?v=20261007-v38-4-152"></script>
-    <script src="weather-window.js?v=20261007-v38-4-152"></script>
-    <script src="social-admin.js?v=20261007-v38-4-152"></script>
-    <script src="source-freshness.js?v=20261007-v38-4-152"></script>
-    <script src="dashboard-enhancements.js?v=20261007-v38-4-152"></script>
-    <script src="app.js?v=20261007-v38-4-152"></script>
+    <script src="weather-window-sky.js?v=20261007-v38-4-153"></script>
+    <script src="weather-window.js?v=20261007-v38-4-153"></script>
+    <script src="social-admin.js?v=20261007-v38-4-153"></script>
+    <script src="source-freshness.js?v=20261007-v38-4-153"></script>
+    <script src="dashboard-enhancements.js?v=20261007-v38-4-153"></script>
+    <script src="app.js?v=20261007-v38-4-153"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
@@ -1726,7 +1727,7 @@
     </script>
 
     <script src="site-config.js?v=20260912-mobile2"></script>
-    <script src="platform.js?v=20261007-v38-4-152"></script>
+    <script src="platform.js?v=20261007-v38-4-153"></script>
     <script>
       /* Lightning detector acquisition status; existing app.js displays detections and alerts. */
       (() => {

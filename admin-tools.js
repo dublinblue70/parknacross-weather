@@ -31,10 +31,10 @@
    try{await signIn();}catch(error){note(error.message);}
  });
  $('adminSignOut').addEventListener('click',signOut);
- async function loadSky(){try{const payload=await (await request('/weather-window/sky')).json(),d=payload.override||{};if(!active)return;$('adminSky').value=d.sky||'auto';$('adminSkyStatus').textContent=d.sky&&d.sky!=='auto'?`Current override: ${d.sky}${d.expires_at?' · expires '+new Date(d.expires_at).toLocaleString('en-IE',{timeZone:'Europe/Dublin'}):''}`:'Automatic forecast sky is active.';}catch(error){$('adminSkyStatus').textContent=error.message;}}
+ async function loadSky(){try{const payload=await (await request('/weather-window/sky')).json(),d=payload.override||{};if(!active)return;$('adminSky').value=d.sky||'auto';$('adminRain').value=d.rain||'auto';$('adminSkyStatus').textContent=(d.sky&&d.sky!=='auto')||(d.rain&&d.rain!=='auto')?`Visual settings: sky ${d.sky||'auto'} · rain / storm ${d.rain||'auto'}${d.expires_at?' · expires '+new Date(d.expires_at).toLocaleString('en-IE',{timeZone:'Europe/Dublin'}):''}`:'Automatic forecast sky and station rain are active.';}catch(error){$('adminSkyStatus').textContent=error.message;}}
  $('adminSkyForm').addEventListener('submit',async event=>{
    event.preventDefault();$('adminSkySave').disabled=true;
-   try{await request('/weather-window/sky',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sky:$('adminSky').value,duration:$('adminSkyDuration').value})});await loadSky();}catch(error){$('adminSkyStatus').textContent=error.message;}finally{$('adminSkySave').disabled=false;}
+   try{const response=await request('/weather-window/sky',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sky:$('adminSky').value,rain:$('adminRain').value||'auto',duration:$('adminSkyDuration').value})});const saved=await response.json();if($('adminRain').value&&$('adminRain').value!=='auto'&&saved.override?.rain!==$('adminRain').value)throw Error('Deploy Worker v38.4.88 to save rain and storm settings.');await loadSky();}catch(error){$('adminSkyStatus').textContent=error.message;}finally{$('adminSkySave').disabled=false;}
  });
  async function preparePhoto(file){
    if(!/^image\/(jpeg|png|webp)$/.test(file.type))throw Error('Choose a JPEG, PNG or WebP photo.');

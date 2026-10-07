@@ -29,6 +29,9 @@
   const sourceLabel = document.getElementById("weatherWindowSkySource");
   const adminControls = document.getElementById("weatherWindowSkyAdmin");
   const adminSelect = document.getElementById("weatherWindowSkySelect");
+  const adminRain = document.getElementById("weatherWindowRainSelect");
+  const rainLabels = {none:"No rain",light:"Light rain / drizzle",rain:"Rain",heavy:"Heavy rain",thunderstorm:"Thunder / lightning with rain"};
+  function activeOverride() { return (skyOverride?.expires_at ? Date.parse(skyOverride.expires_at) > Date.now() : skyOverride?.day === clock().day) ? skyOverride : null; }
   const adminStatus = document.getElementById("weatherWindowSkyStatus");
   const apiBase = (window.PARKNACROSS_CONFIG?.apiBase || "https://parknacross-weather.dave-s-carter.workers.dev").replace(/\/$/, "");
   const skyLabels = {clear:"Clear sky", "mostly-clear":"Mostly clear sky", "partly-cloudy":"Partly cloudy sky", cloudy:"Cloudy sky", overcast:"Overcast sky", unknown:"Cloud cover unavailable"};
@@ -38,7 +41,7 @@
   }
   function skyState(detail) {
     const c = clock();
-    const overrideActive = skyOverride?.expires_at ? Date.parse(skyOverride.expires_at) > Date.now() : skyOverride?.day === c.day;
+    const overrideActive = activeOverride();
     if (overrideActive && skyLabels[skyOverride.sky] && skyOverride.sky !== "unknown") return {...skyOverride,source:"observer"};
     const hourly = window.ParknacrossWeatherSky?.resolvePoint(pointForecast);
     if (hourly) return hourly;
@@ -58,6 +61,7 @@
       if (!response.ok) return;
       const data = await response.json(); skyOverride = data.override || null;
       if (adminSelect && document.activeElement !== adminSelect) adminSelect.value = skyOverride?.sky || "auto";
+      if (adminRain && document.activeElement !== adminRain) adminRain.value = skyOverride?.rain || "auto";
       if (latestDetail) render(latestDetail);
     } catch (_) { /* Missing override service does not block the forecast scene. */ }
   }
@@ -68,11 +72,13 @@
         let key = sessionStorage.getItem("parknacrossAdminKey") || window.prompt("Enter the Parknacross admin key") || "";
         if (!key) return;
         adminStatus.textContent = "Saving sky setting…";
-        const response = await fetch(`${apiBase}/weather-window/sky`, {method:"POST",headers:{"Content-Type":"application/json","X-Parknacross-Admin-Key":key},body:JSON.stringify({sky:adminSelect.value,duration:document.getElementById("weatherWindowSkyDuration")?.value || "today"}),signal:AbortSignal.timeout(10000)});
+        const response = await fetch(`${apiBase}/weather-window/sky`, {method:"POST",headers:{"Content-Type":"application/json","X-Parknacross-Admin-Key":key},body:JSON.stringify({sky:adminSelect.value,rain:adminRain?.value || "auto",duration:document.getElementById("weatherWindowSkyDuration")?.value || "today"}),signal:AbortSignal.timeout(10000)});
         if (!response.ok) throw new Error(response.status === 401 ? "Admin key was not accepted." : "Could not save. Ensure the updated Worker has been deployed.");
-        const data = await response.json(); skyOverride = data.override || null;
+        const data = await response.json();
+        if (adminRain?.value && adminRain.value !== "auto" && data.override?.rain !== adminRain.value) throw new Error("Deploy Worker v38.4.88 to save rain and storm settings.");
+        skyOverride = data.override || null;
         sessionStorage.setItem("parknacrossAdminKey",key);
-        adminStatus.textContent = skyOverride ? `Saved for all visitors until ${(skyOverride.expires_at ? new Date(skyOverride.expires_at).toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}) : "midnight")}.` : "Automatic forecast sky restored.";
+        adminStatus.textContent = skyOverride ? `Saved for all visitors until ${(skyOverride.expires_at ? new Date(skyOverride.expires_at).toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}) : "midnight")}.` : "Automatic forecast sky and station rain restored.";
         if (latestDetail) render(latestDetail);
       } catch (error) { adminStatus.textContent = error.message || "Could not save sky setting."; }
     });
@@ -113,7 +119,12 @@
     const light = detail.isNight === true ? "night" : detail.isDaylight === false ? "twilight" : "day";
     scene.style.setProperty("--ww-sun-opacity", solar === null ? ".65" : String(Math.max(.45, Math.min(1, solar / 450))));
     const windLevel = speed === null ? "unknown" : speed >= 30 || (gust !== null && gust >= 45) ? "strong" : speed >= 8 ? "breezy" : "calm";
-    const rainLevel = rate === null ? "unknown" : rate > 0 ? "measured" : "none";
+    const rainOverride = activeOverride()?.rain;
+    const manualRain = Boolean(rainLabels[rainOverride]);
+    const rainLevel = manualRain ? rainOverride : rate === null ? "unknown" : rate > 0 ? "measured" : "none";
+    const rainNote = manualRain ? `${rainLabels[rainOverride]} · manual visual override${skyOverride.expires_at ? " until " + new Date(skyOverride.expires_at).toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}) : " until midnight"}${rainOverride === "thunderstorm" ? " · storm symbol set manually; no lightning detection implied" : ""}` : "Rain illustration follows the station reading";
+    if (sourceLabel) sourceLabel.textContent += ` · ${rainNote}`;
+    scene.dataset.rainSource = manualRain ? "observer" : "station";
     scene.dataset.light = light;
     const progress = numberOrNull(detail.sunProgress);
     scene.dataset.edge = light === "day" && progress !== null ? progress < .08 ? "dawn" : progress > .92 ? "dusk" : "midday" : "none";
@@ -131,7 +142,7 @@
     const tree = scene.querySelector(".ww-tree-trunk");
     if (tree) tree.style.transform = `rotate(${lean.toFixed(1)}deg)`;
     scene.style.setProperty("--ww-wind-duration", `${Math.max(1.6, 5.5 - Math.min(45, gust ?? speed ?? 0) * 0.075).toFixed(2)}s`);
-    scene.setAttribute("aria-label", `${skyName}. ${provenance}. Local readings: ${windText}. ${rainDescription} ${solarText}.`);
+    scene.setAttribute("aria-label", `${skyName}. ${provenance}. ${rainNote}. Local readings: ${windText}. ${rainDescription} ${solarText}.`);
   }
 
   window.addEventListener("parknacross:weather-window-forecast", event => {
