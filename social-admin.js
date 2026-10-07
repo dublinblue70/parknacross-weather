@@ -1,8 +1,10 @@
 (() => {
   'use strict';
   const panel = document.getElementById('socialAdminPanel');
-  if (!panel || new URLSearchParams(location.search).get('admin') !== '1') return;
+  if (!panel || !window.PARKNACROSS_ADMIN_PAGE && new URLSearchParams(location.search).get('admin') !== '1') return;
   panel.hidden = false;
+  if(document.getElementById('adminPageShortcut')) document.getElementById('adminPageShortcut').hidden=false;
+  let authEpoch=0;
   const $ = id => document.getElementById(id);
   const previewDetails = $('socialAdminPreview');
   const base = (window.PARKNACROSS_CONFIG?.apiBase || 'https://parknacross-weather.dave-s-carter.workers.dev').replace(/\/$/, '');
@@ -14,9 +16,11 @@
     return key;
   }
   async function request(path, key) {
+    const ticket=authEpoch;
     const response = await fetch(`${base}${path}`, {headers:{'X-Parknacross-Admin-Key':key},cache:'no-store',signal:AbortSignal.timeout(12000)});
     if (!response.ok) throw new Error(response.status === 401 ? 'Admin key was not accepted.' : 'Posting details are unavailable. Check that the updated Worker has been deployed.');
     const data = await response.json();
+    if(ticket!==authEpoch)throw new Error('Signed out.');
     try { sessionStorage.setItem('parknacrossAdminKey',key); } catch (_) {}
     return data;
   }
@@ -102,6 +106,14 @@
     await refreshStatus();
     await refreshPreview();
   }
+  window.addEventListener('parknacross:admin-signin',()=>refreshAll());
+  window.addEventListener('parknacross:admin-signout',()=>{
+    authEpoch++;lastStatus=null;
+    $('socialAdminNetworks').replaceChildren();
+    $('socialAdminFacebookText').textContent='';$('socialAdminXText').textContent='';
+    $('socialAdminPhoto').hidden=true;$('socialAdminPhoto').removeAttribute('src');
+    $('socialAdminNotice').hidden=true;
+  });
   refreshAll();
   setInterval(()=>refreshStatus(),60000);
   document.addEventListener('visibilitychange',()=>{if (!document.hidden) refreshAll();});

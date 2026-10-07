@@ -32,7 +32,8 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261005-v38-4-133" />
-    <link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-148" />
+    <link rel="stylesheet" href="site-enhancements.css?v=20261007-v38-4-149">
+    <link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-149" />
     <!-- Critical astronomy styles stay with the markup so an older PWA cache
          can never render the phase SVGs at their intrinsic page size. -->
     <style id="astronomy-critical-styles">
@@ -1007,6 +1008,7 @@
               </div>
               <p id="weatherWindowSkySource" class="weather-window-sky-source">Checking the forecast sky…</p>
               <p class="weather-window-note">Illustration guided by Met Éireann’s forecast and local readings. Hourly forecast cloud cover is preferred, with the regional forecast as a fallback; wind and rain animation use station observations.</p>
+              <details id="weatherWindowInfo" class="weather-window-info"><summary>How this scene works</summary><p id="weatherWindowExplanation"></p><p>Cloud cover comes from the hourly Ardamine forecast, with the Leinster description as a fallback. A local visual override takes priority until it expires. Sun position follows daylight; wind and rain use measured station readings.</p><p id="weatherWindowMeasured"></p><p>This illustration describes its sources; forecast clouds may differ from the sky overhead.</p></details>
               <div id="weatherWindowSkyAdmin" class="weather-window-admin" hidden>
                 <label for="weatherWindowSkySelect">The sky you can see now</label>
                 <select id="weatherWindowSkySelect">
@@ -1029,6 +1031,7 @@
           </div>
         </section>
 
+        <p id="adminPageShortcut" hidden><a href="admin.html">Open the administration page →</a></p>
         <section id="socialAdminPanel" class="social-admin-panel" aria-labelledby="socialAdminHeading" hidden>
           <div class="section-heading compact-heading"><div><span class="section-eyebrow">Private admin view</span><h2 id="socialAdminHeading">Daily social posts</h2><p>Facebook and X · scheduled for 07:30 Irish time.</p></div></div>
           <button id="socialAdminRefresh" type="button">Refresh preview and status</button>
@@ -1351,7 +1354,7 @@
             <div>
               <span class="section-eyebrow">Official outlook</span>
               <span class="source-badge source-official">Official</span>
-              <h2>Met Éireann forecast</h2>
+              <h2>Met Éireann forecast</h2><p id="forecastFreshness" class="source-freshness">Checking forecast update time…</p>
               <p>
                 Leinster forecast · separate from local Parknacross observations
               </p>
@@ -1691,7 +1694,7 @@
           >Hyperlocal weather observations · Ardamine, Co. Wexford,
           Ireland</span
         >
-        <nav class="footer-links" aria-label="Parknacross Weather links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a><span aria-hidden="true">·</span><a href="install.html">Install help</a><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></nav>
+        <nav class="footer-links" aria-label="Parknacross Weather links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a><span aria-hidden="true">·</span><a href="install.html">Install help</a><span aria-hidden="true">·</span><a href="admin.html">Admin</a><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></nav>
       </footer>
     </div>
 
@@ -1700,10 +1703,12 @@
     <script src="offline.js?v=20260915-v36"></script>
     <script src="alert-settings.js?v=20261004-v38-4-130-coastal-fallbacks"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="weather-window-sky.js?v=20261007-v38-4-148"></script>
-    <script src="weather-window.js?v=20261007-v38-4-148"></script>
-    <script src="social-admin.js?v=20261007-v38-4-148"></script>
-    <script src="app.js?v=20261007-v38-4-148"></script>
+    <script src="weather-window-sky.js?v=20261007-v38-4-149"></script>
+    <script src="weather-window.js?v=20261007-v38-4-149"></script>
+    <script src="social-admin.js?v=20261007-v38-4-149"></script>
+    <script src="source-freshness.js?v=20261007-v38-4-149"></script>
+    <script src="dashboard-enhancements.js?v=20261007-v38-4-149"></script>
+    <script src="app.js?v=20261007-v38-4-149"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */

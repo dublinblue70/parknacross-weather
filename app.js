@@ -1933,6 +1933,7 @@ async function loadForecast() {
         detail: { ...forecast, day: new Intl.DateTimeFormat("en-CA", {timeZone: STATION_TIME_ZONE, year:"numeric", month:"2-digit", day:"2-digit"}).format(new Date()), fetchedAt: Date.now() }
       }));
     } catch (_) { /* Illustration cannot interrupt the forecast panel. */ }
+    window.ParknacrossFreshness?.render("forecastFreshness",forecast,forecast.issued_at||forecast.issued||forecast.updated_at,24,"Forecast issued");
     latestForecastToday=forecast.today || "";
     set("forecastToday", latestForecastToday || "Forecast unavailable.");
     set("forecastTonight", forecast.tonight || "--");
@@ -1940,6 +1941,7 @@ async function loadForecast() {
     if(latestCurrent)updateWhatToWear(latestCurrent,latestRainDetected);
   } catch (error) {
     console.warn("Met Éireann forecast:", error);
+    set("forecastFreshness","Official forecast feed is unavailable.");
     latestForecastToday="";
     set("forecastToday", "Official forecast temporarily unavailable.");
     if(latestCurrent)updateWhatToWear(latestCurrent,latestRainDetected);

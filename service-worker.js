@@ -1,7 +1,12 @@
-const CACHE_NAME = "parknacross-v38-4-148-sky-social-admin";
+const CACHE_NAME = "parknacross-v38-4-149-sky-social-admin";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
+  "./admin.html",
+  "./admin-tools.js",
+  "./site-enhancements.css",
+  "./source-freshness.js",
+  "./dashboard-enhancements.js",
   "./summary.html",
   "./radar.html",
   "./graphs.html",

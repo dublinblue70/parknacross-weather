@@ -114,7 +114,9 @@
  charts.s=new Chart($("gSolar"),{type:"line",data:{datasets:[solarLine()]},options:{...common,scales:{x:solarTimeAxis(),y:{afterFit:alignSolarYAxis,position:"left",beginAtZero:true,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",maxTicksLimit:5},title:{display:true,text:"W/m²",color:"#ffd56a"}}},plugins:{legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`Solar radiation: ${Math.round(Number(ctx.parsed.y))} W/m²`}}}}});
  charts.uv=new Chart($("gUv"),{type:"line",data:{datasets:[uvLine()]},options:{...common,scales:{x:solarTimeAxis(),y:{afterFit:alignSolarYAxis,position:"left",beginAtZero:true,suggestedMax:3,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",precision:0,stepSize:1,maxTicksLimit:5},title:{display:true,text:"UV index",color:"#bd91ff"}}},plugins:{legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`UV index: ${Number(ctx.parsed.y).toFixed(1)}`}}}}});
  charts.sm=new Chart($("gSoilMoisture"),{type:"line",data:{datasets:[soilLine("Soil moisture","#65d19a")]},options:{...common,scales:{x:timeAxis(),y:{min:0,max:100,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",callback:v=>`${v}%`},title:{display:true,text:"Moisture %",color:"#9fb3c1"}}},plugins:{...common.plugins,legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>usable(ctx.parsed.y)?`Soil moisture: ${Number(ctx.parsed.y).toFixed(0)}%`:"Soil moisture unavailable"}}}}});
- charts.sd=new Chart($("gSoilDetail"),{type:"line",data:{datasets:[soilLine("Soil temperature","#ffad66","y"),soilLine("Conductivity","#b594ff","y1")]},options:{...common,scales:{x:timeAxis(),y:{position:"left",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:"°C",color:"#9fb3c1"}},y1:{position:"right",beginAtZero:true,grid:{drawOnChartArea:false},ticks:{color:"#9fb3c1"},title:{display:true,text:"µS/cm",color:"#9fb3c1"}}},plugins:{...common.plugins,legend:{position:"bottom"},tooltip:{callbacks:{title:tooltipTime,label:ctx=>ctx.dataset.yAxisID==="y1"?`Conductivity: ${Math.round(Number(ctx.parsed.y)).toLocaleString("en-IE")} µS/cm`:`Soil temperature: ${Number(ctx.parsed.y).toFixed(1)}°C`}}}}});
+ const soilAxis=unit=>({x:solarTimeAxis(),y:{afterFit:alignSolarYAxis,position:"left",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:unit,color:"#9fb3c1"}}});
+ charts.sd=new Chart($("gSoilDetail"),{type:"line",data:{datasets:[soilLine("Soil temperature","#ffad66")]},options:{...common,scales:soilAxis("°C"),plugins:{...common.plugins,legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`Soil temperature: ${Number(ctx.parsed.y).toFixed(1)}°C`}}}}});
+ charts.ec=new Chart($("gSoilEc"),{type:"line",data:{datasets:[soilLine("Conductivity","#b594ff")]},options:{...common,scales:soilAxis("µS/cm"),plugins:{...common.plugins,legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`Conductivity: ${Math.round(Number(ctx.parsed.y))} µS/cm`}}}}});
  }
  const GAP_SECONDS=20*60;
  function rowEpoch(x){
@@ -208,7 +210,7 @@
  const point=(x,key,excluded=null)=>({x:Number(rowEpoch(x))*1000,y:x?._gap||excluded?.has(x)?null:value(x,key)});
  function coverageDetails(rows,requestedHours){const epochs=rows.map(rowEpoch).filter(Number.isFinite).sort((a,b)=>a-b);if(!epochs.length)return{text:"No usable timestamps",pct:0,latestAge:null,observedSlots:0,expectedSlots:Math.round(requestedHours*12)};const slots=new Set(epochs.map(epoch=>Math.floor(epoch/300))),expectedSlots=Math.max(1,Math.round(requestedHours*12)),observedSlots=Math.min(expectedSlots,slots.size),pct=Math.min(100,observedSlots/expectedSlots*100),latestAge=Math.max(0,Math.floor(Date.now()/1000)-epochs.at(-1));const date=e=>new Date(e*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}),freshness=latestAge>600?` · latest saved point is ${Math.floor(latestAge/60)} min old`:"";return{text:`${date(epochs[0])}–${date(epochs.at(-1))} · ${observedSlots} of ${expectedSlots} expected five-minute slots (${pct.toFixed(1)}%)${freshness}`,pct,latestAge,observedSlots,expectedSlots};}
  function updateChartAccessibility(periodLabel,rowCount,coverage){
-   const labels={gTemp:"Temperature and dew point",gWind:"Wind speed and gusts",gPressure:"Sea-level pressure",gRain:"Rain rate",gSolar:"Solar radiation",gUv:"UV index",gWindRose:"Wind direction frequency",gSoilMoisture:"Soil moisture",gSoilDetail:"Soil temperature and conductivity"};
+   const labels={gTemp:"Temperature and dew point",gWind:"Wind speed and gusts",gPressure:"Sea-level pressure",gRain:"Rain rate",gSolar:"Solar radiation",gUv:"UV index",gWindRose:"Wind direction frequency",gSoilMoisture:"Soil moisture",gSoilDetail:"Soil temperature",gSoilEc:"Soil conductivity"};
    Object.entries(labels).forEach(([id,label])=>$(id)?.setAttribute("aria-label",`${label} for ${periodLabel.toLowerCase()}, based on ${rowCount.toLocaleString("en-IE")} saved observations. ${coverage.text}.`));
  }
  function rangeText(rows,key,unit,excluded=null,digits=1){
@@ -227,7 +229,7 @@
    return{first:epochs[0],last:epochs.at(-1),text:`${text(epochs[0])}–${text(epochs.at(-1))}`};
  }
  function applyExactTimeBounds(rows){
-   const period=exactPeriod(rows),bounded=[charts.t,charts.w,charts.p,charts.r,charts.s,charts.uv,charts.sm,charts.sd];
+   const period=exactPeriod(rows),bounded=[charts.t,charts.w,charts.p,charts.r,charts.s,charts.uv,charts.sm,charts.sd,charts.ec];
    for(const chart of bounded){
      if(!chart?.options?.scales?.x)continue;
      if(period){chart.options.scales.x.min=period.first*1000;chart.options.scales.x.max=period.last*1000;}
@@ -267,20 +269,29 @@
  }
  const hasSoil=rows.some(x=>usable(x?.soil_moisture_pct)||usable(x?.soil_temperature_c)||usable(x?.soil_ec_us_cm));
  $("soilMoistureCard").hidden=!hasSoil;$("soilDetailCard").hidden=!hasSoil;
- charts.sm.data.datasets[0].data=r.map(x=>point(x,"soil_moisture_pct"));charts.sd.data.datasets[0].data=r.map(x=>point(x,"soil_temperature_c"));charts.sd.data.datasets[1].data=r.map(x=>point(x,"soil_ec_us_cm"));
+ charts.sm.data.datasets[0].data=r.map(x=>point(x,"soil_moisture_pct"));charts.sd.data.datasets[0].data=r.map(x=>point(x,"soil_temperature_c"));charts.ec.data.datasets[0].data=r.map(x=>point(x,"soil_ec_us_cm"));
+ const soilSummary=(field,unit,digits=1)=>{
+   const values=rows.filter(x=>usable(x?.[field])).sort((a,b)=>rowEpoch(a)-rowEpoch(b));
+   if(!values.length)return "No saved readings for this period.";
+   const nums=values.map(x=>Number(x[field])),fmt=x=>`${x.toFixed(digits)} ${unit}`;
+   return `Latest saved: ${fmt(nums.at(-1))} · period low: ${fmt(Math.min(...nums))} · high: ${fmt(Math.max(...nums))}`;
+ };
+ set("soilTempStats",soilSummary("soil_temperature_c","°C"));
+ set("soilEcStats",soilSummary("soil_ec_us_cm","µS/cm",0));
  const soilRows=rows.filter(x=>usable(x?.soil_moisture_pct)||usable(x?.soil_temperature_c)||usable(x?.soil_ec_us_cm));
  if(hasSoil){
    const firstSoil=new Date(Number(rowEpoch(soilRows[0]))*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
    set("soilMoistureStatus",`${soilRows.length.toLocaleString("en-IE")} saved soil-sensor reading${soilRows.length===1?"":"s"} since ${firstSoil}. Points remain visible while the new archive builds.`);
-   set("soilDetailStatus",`Soil temperature and conductivity from the same ${soilRows.length.toLocaleString("en-IE")} soil-sensor observation${soilRows.length===1?"":"s"}. Conductivity is best compared with this sensor’s own baseline.`);
+   set("soilDetailStatus",`Separate temperature and conductivity charts share the same time axis, using ${soilRows.length.toLocaleString("en-IE")} soil-sensor observation${soilRows.length===1?"":"s"}. Conductivity is best compared with this sensor’s own baseline.`);
    $("gSoilMoisture")?.setAttribute("aria-label",`Soil moisture for ${periodLabel.toLowerCase()}, based on ${soilRows.length.toLocaleString("en-IE")} saved soil-sensor observations.`);
-   $("gSoilDetail")?.setAttribute("aria-label",`Soil temperature and conductivity for ${periodLabel.toLowerCase()}, based on ${soilRows.length.toLocaleString("en-IE")} saved soil-sensor observations.`);
-   requestAnimationFrame(()=>{charts.sm.resize();charts.sd.resize();charts.sm.update("none");charts.sd.update("none");});
+   $("gSoilDetail")?.setAttribute("aria-label",`Soil temperature for ${periodLabel.toLowerCase()}, based on ${soilRows.length.toLocaleString("en-IE")} saved soil-sensor observations.`);
+   requestAnimationFrame(()=>{charts.sm.resize();charts.sd.resize();charts.ec.resize();charts.sm.update("none");charts.sd.update("none");charts.ec.update("none");});
  }
  updateWindRose(rows,h,Math.floor(Date.now()/300000)*300);
- [charts.t,charts.w,charts.p,charts.r,charts.s,charts.uv,charts.sm,charts.sd].forEach(c=>c.update());
+ [charts.t,charts.w,charts.p,charts.r,charts.s,charts.uv,charts.sm,charts.sd,charts.ec].forEach(c=>c.update());
  updateHighlights(rows,temperatureOutliers,windGustOutliers);
  const gapText=gapData.gaps?` · ${gapData.gaps} archive gap${gapData.gaps===1?"":"s"} shown as breaks`:"",qualityText=temperatureOutliers.size?` · ${temperatureOutliers.size} isolated temperature spike${temperatureOutliers.size===1?"":"s"} excluded`:"",gustQualityText=windGustOutliers.size?` · ${windGustOutliers.size} suspect gust spike${windGustOutliers.size===1?"":"s"} excluded`:"";
  const coverage=coverageDetails(rows,h),partial=coverage.pct<98||coverage.latestAge>600;set("graphCoverage",coverage.text);const badge=$("partialCoverageBadge");if(badge){badge.hidden=!partial;badge.textContent=!partial?"":coverage.latestAge>600?`Archive delayed · latest point ${Math.floor(coverage.latestAge/60)} min old`:`Partial archive · ${coverage.pct.toFixed(1)}%`;}set("graphCount",`${rows.length.toLocaleString("en-IE")} saved observations · ${r.filter(x=>!x?._gap).length.toLocaleString("en-IE")} extrema-preserving points plotted${gapText}${qualityText}${gustQualityText}`);set("graphUpdated",`Updated ${new Date().toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"})} Irish time`);updateChartAccessibility(periodLabel,rows.length,coverage);set("chartTextSummary",`${({6:"Six-hour",24:"Twenty-four-hour",48:"Forty-eight-hour",168:"Seven-day",720:"Thirty-day"})[h]} charts. Available observations cover ${coverage.text}. ${partial?"This is a partial archive and should not be read as a complete selected period. ":""}${gapData.gaps?`${gapData.gaps} archive gap${gapData.gaps===1?" is":"s are"} shown as breaks.`:"No archive gaps longer than twenty minutes."}`);}catch(e){["highlightTemp","highlightGust","highlightPressure","highlightRain","highlightSolar"].forEach(id=>set(id,"Unavailable"));set("graphCount","Archive temporarily unavailable.");set("graphCoverage","Coverage unavailable.");set("graphUpdated","Charts could not be refreshed. Try again.");$("partialCoverageBadge")?.setAttribute("hidden","");}}
  document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());make();document.querySelectorAll("[data-hours]").forEach(b=>{b.setAttribute("aria-pressed",b.classList.contains("active")?"true":"false");b.addEventListener("click",()=>{document.querySelectorAll("[data-hours]").forEach(x=>{const selected=x===b;x.classList.toggle("active",selected);x.setAttribute("aria-pressed",selected?"true":"false")});load(Number(b.dataset.hours))})});$("graphRetry")?.addEventListener("click",()=>document.querySelector("[data-hours].active")?.click());load(24);setInterval(()=>load(hours),5*60*1000);});
 })();
+

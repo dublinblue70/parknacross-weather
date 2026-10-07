@@ -1,0 +1,35 @@
+.admin-page { max-width:1000px; margin:auto; padding:24px; }
+.admin-card { padding:22px; margin:20px 0; border:1px solid var(--line,#263e4d); border-radius:18px; background:var(--panel,#0c1b25); }
+.admin-card form,.admin-fields { display:grid; gap:12px; }
+.admin-card label { display:grid; gap:6px; }
+.admin-card input,.admin-card select,.admin-card button,.social-admin-panel button { font:inherit; padding:10px 14px; border-radius:9px; border:1px solid #507184; background:#122936; color:#eef8ff; }
+.admin-card button,.social-admin-panel button { cursor:pointer; }
+.admin-card button:disabled { opacity:.5; cursor:default; }
+.admin-card [hidden],.admin-page [hidden] { display:none!important; }
+.admin-card img { max-width:100%; height:auto; border-radius:12px; }
+.admin-card pre { font:inherit; white-space:pre-wrap; overflow-wrap:anywhere; }
+.admin-card details { padding:12px 0; border-bottom:1px solid #263e4d; }
+.admin-card summary { cursor:pointer; }
+.admin-card a { display:inline-block; margin:8px 18px 8px 0; }
+.admin-actions { display:flex; flex-wrap:wrap; gap:10px; margin:16px 0; }
+.source-freshness { font-size:.85rem; color:#a8c3d3; line-height:1.6; }
+.source-freshness[data-state="old"] { color:#ffc386; }
+.weather-window-info summary { cursor:pointer; padding:12px 0; }
+.weather-window-info p { color:#b7ccd9; }
+.mobile-detail-toggle { display:none; }
+.mobile-detail-body { display:contents; }
+@media(max-width:640px){
+ .mobile-detail-toggle { display:block; width:100%; text-align:left; padding:14px; font:inherit; color:#eff8ff; border:1px solid #375265; border-radius:12px; background:#11232f; margin:16px 0 0; }
+ .mobile-detail-body { display:block; grid-column:1/-1; width:100%; }
+ .astronomy-strip .mobile-detail-body { display:grid; gap:16px; }
+ .mobile-detail-body[data-collapsed="true"] { display:none!important; }
+ .compact-dashboard main { display:flex; flex-direction:column; }
+ .compact-dashboard main > * { order:10; }
+ .compact-dashboard main > .hero-main-card { order:0; }
+ .compact-dashboard main > .station-bar { order:1; }
+ .compact-dashboard main > .today-section { order:2; }
+ .compact-dashboard main > .today-sky-panel { order:3; }
+ .compact-dashboard main > .local-search-intro { order:4; }
+ .admin-page { padding:14px; }
+ .admin-card { padding:16px; }
+}
