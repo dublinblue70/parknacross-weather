@@ -32,8 +32,8 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261005-v38-4-133" />
-    <link rel="stylesheet" href="site-enhancements.css?v=20261007-v38-4-157">
-    <link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-157" />
+    <link rel="stylesheet" href="site-enhancements.css?v=20261007-v38-4-158">
+    <link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-158" />
     <!-- Critical astronomy styles stay with the markup so an older PWA cache
          can never render the phase SVGs at their intrinsic page size. -->
     <style id="astronomy-critical-styles">
@@ -577,7 +577,7 @@
         }
       }
     </style>
-  <link rel="stylesheet" href="site-help.css?v=20261007-v38-4-157"><link rel="stylesheet" href="explore-weather.css?v=20261007-v38-4-157"><script src="visibility-refresh.js?v=20261007-v38-4-157"></script></head>
+  <link rel="stylesheet" href="site-help.css?v=20261007-v38-4-158"><link rel="stylesheet" href="explore-weather.css?v=20261007-v38-4-158"><script src="visibility-refresh.js?v=20261007-v38-4-158"></script><link rel="stylesheet" href="website-usability.css?v=20261007-v38-4-158"></head>
 
   <body class="weather-neutral">
     <div
@@ -1503,7 +1503,7 @@
             <div>
               <span class="section-eyebrow">Past 24 hours</span>
               <h2 id="trendsHeading">Weather trends</h2>
-              <p>Hover or tap a chart for exact observation values.</p>
+              <p>Hover or tap a chart to inspect the same time across weather graphs.</p>
             </div>
             <a class="text-link" href="graphs.html"
               >All detailed graphs →</a
@@ -1702,16 +1702,16 @@
 
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="wind-rose.js?v=20260923-radial-restore"></script>
-    <script src="offline.js?v=20260915-v36"></script>
+    <script src="offline.js?v=20261007-v38-4-158"></script>
     <script src="alert-settings.js?v=20261004-v38-4-130-coastal-fallbacks"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="weather-window-sky.js?v=20261007-v38-4-157"></script>
-    <script src="weather-window.js?v=20261007-v38-4-157"></script>
-    <script src="social-admin.js?v=20261007-v38-4-157"></script>
-    <script src="source-freshness.js?v=20261007-v38-4-157"></script>
-    <script src="dashboard-enhancements.js?v=20261007-v38-4-157"></script>
-    <script src="archive-quality.js?v=20261007-v38-4-157"></script>
-<script src="app.js?v=20261007-v38-4-157"></script>
+    <script src="weather-window-sky.js?v=20261007-v38-4-158"></script>
+    <script src="action-feedback.js?v=20261007-v38-4-158"></script><script src="weather-window.js?v=20261007-v38-4-158"></script>
+    <script src="social-admin.js?v=20261007-v38-4-158"></script>
+    <script src="source-freshness.js?v=20261007-v38-4-158"></script>
+    <script src="dashboard-enhancements.js?v=20261007-v38-4-158"></script>
+    <script src="archive-quality.js?v=20261007-v38-4-158"></script>
+<script src="chart-explorer.js?v=20261007-v38-4-158"></script><script src="dashboard-preferences.js?v=20261007-v38-4-158"></script><script src="app.js?v=20261007-v38-4-158"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
@@ -1728,9 +1728,9 @@
     </script>
 
     <script src="site-config.js?v=20260912-mobile2"></script>
-    <script src="platform.js?v=20261007-v38-4-157"></script>
+    <script src="platform.js?v=20261007-v38-4-158"></script>
     <script>
-      /* Lightning detector acquisition status; existing app.js?v=20261007-v38-4-157 displays detections and alerts. */
+      /* Lightning detector acquisition status; existing app.js?v=20261007-v38-4-158 displays detections and alerts. */
       (() => {
         const notice = document.getElementById("lightningSetupNotice");
         const status = document.getElementById("lightningSetupStatus");
@@ -2088,6 +2088,7 @@
             nameStatus.textContent = "Enter a display name of 2–50 characters.";
             return;
           }
+          const saveNameButtonDone = window.ParknacrossAction?.begin(saveNameButton,"Saving\u2026");
           saveNameButton.disabled = true;
           try {
             const response = await fetch(`${base}/sky-photo/likes/name`, {
@@ -2109,7 +2110,8 @@
             if (photoId === currentPhotoId)
               nameStatus.textContent = error.message || "Could not save name.";
           } finally {
-            saveNameButton.disabled = false;
+            saveNameButtonDone?.();
+          saveNameButton.disabled = false;
           }
         });
 
@@ -2125,7 +2127,8 @@
             if (!adminKey)
               adminKey = window.prompt("Enter the Parknacross admin key") || "";
             if (!adminKey) return;
-            viewLikesButton.disabled = true;
+            const viewLikesButtonDone = window.ParknacrossAction?.begin(viewLikesButton,"Loading\u2026");
+          viewLikesButton.disabled = true;
             adminLikesResult.textContent = "Loading names…";
             try {
               const response = await fetch(
@@ -2167,7 +2170,8 @@
               adminLikesResult.textContent =
                 error.message || "Could not load likes.";
             } finally {
-              viewLikesButton.disabled = false;
+              viewLikesButtonDone?.();
+          viewLikesButton.disabled = false;
             }
           });
 
@@ -2274,7 +2278,8 @@
           download.type = "button";
           download.textContent = "Download";
           download.addEventListener("click", async () => {
-            download.disabled = true;
+            const downloadDone = window.ParknacrossAction?.begin(download,"Preparing download\u2026");
+          download.disabled = true;
             try {
               const blob = await fetchArchivedPhotoBlob(
                 item.photo_id,
@@ -2304,7 +2309,8 @@
               message.textContent = error.message || "Download failed.";
               adminArchiveResult.prepend(message);
             } finally {
-              download.disabled = false;
+              downloadDone?.();
+          download.disabled = false;
             }
           });
           copy.append(when, details, download);
@@ -2323,6 +2329,7 @@
             archiveTotal = 0;
             adminArchiveResult.textContent = "Loading archive…";
           }
+          const viewArchiveButtonDone = window.ParknacrossAction?.begin(viewArchiveButton,"Loading\u2026");
           viewArchiveButton.disabled = true;
           try {
             const response = await fetch(
@@ -2381,7 +2388,8 @@
             adminArchiveResult.textContent =
               error.message || "Could not load photo archive.";
           } finally {
-            viewArchiveButton.disabled = false;
+            viewArchiveButtonDone?.();
+          viewArchiveButton.disabled = false;
           }
         }
 
@@ -2476,7 +2484,8 @@
 
         if (isAdminMode && historicalImportButton) {
           historicalImportButton.addEventListener("click", async () => {
-            historicalImportButton.disabled = true;
+            const historicalImportButtonDone = window.ParknacrossAction?.begin(historicalImportButton,"Importing\u2026");
+          historicalImportButton.disabled = true;
             if (historicalImportStatus)
               historicalImportStatus.textContent = "Preparing photo…";
             try {
@@ -2531,7 +2540,8 @@
                 historicalImportStatus.textContent =
                   error.message || "Historical photo import failed.";
             } finally {
-              historicalImportButton.disabled = false;
+              historicalImportButtonDone?.();
+          historicalImportButton.disabled = false;
             }
           });
         }
@@ -2547,7 +2557,8 @@
 
         if (isAdminMode && uploadButton) {
           uploadButton.addEventListener("click", async () => {
-            uploadButton.disabled = true;
+            const uploadButtonDone = window.ParknacrossAction?.begin(uploadButton,"Uploading\u2026");
+          uploadButton.disabled = true;
             adminStatus.textContent = "Preparing photo…";
             try {
               const prepared = await preparePhoto(fileInput.files?.[0]);
@@ -2590,7 +2601,8 @@
             } catch (error) {
               adminStatus.textContent = error?.message || "Upload failed.";
             } finally {
-              uploadButton.disabled = false;
+              uploadButtonDone?.();
+          uploadButton.disabled = false;
             }
           });
         }
@@ -2606,8 +2618,8 @@
       data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'
     ></script>
     <!-- End Cloudflare Web Analytics -->
-    <script src="pwa-update.js?v=20261007-v38-4-157"></script>
+    <script src="pwa-update.js?v=20261007-v38-4-158"></script>
     <script src="accessibility.js?v=20260924-v38-4-97"></script>
     <script src="navigation.js?v=20260924-v38-4-97"></script>
-  <script src="site-help.js?v=20261007-v38-4-157"></script></body>
+  <script src="site-help.js?v=20261007-v38-4-158"></script></body>
 </html>

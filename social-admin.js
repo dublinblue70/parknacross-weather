@@ -84,8 +84,7 @@
   $('socialAdminRefresh')?.addEventListener('click',async()=>{
     const key = credential(true); if (!key) return;
     try { sessionStorage.setItem('parknacrossAdminKey',key); } catch (_) {}
-    if (previewDetails) previewDetails.open = true;
-    await refreshStatus(); await refreshPreview();
+    const done=window.ParknacrossAction?.begin($('socialAdminRefresh'),'Refreshing…');if(done===null)return;if (previewDetails) previewDetails.open = true;try{await refreshStatus(); await refreshPreview();}finally{done?.();}
   });
   previewDetails?.addEventListener('toggle',()=>{
     if (previewDetails.open) refreshPreview();

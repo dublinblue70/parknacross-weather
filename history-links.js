@@ -1,0 +1,7 @@
+(() => {
+ 'use strict';const valid=value=>/^\d{4}-\d{2}-\d{2}$/.test(value||'')&&!Number.isNaN(new Date(value+'T12:00:00Z').getTime())&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;
+ function requested(){const value=new URLSearchParams(location.search).get('day');return valid(value)?value:null;}
+ function select(day){if(!valid(day))return;const url=new URL(location.href);url.searchParams.set('day',day);history.replaceState(null,'',url);const button=document.getElementById('shareArchiveDay');if(button)button.disabled=false;}
+ window.ParknacrossHistoryLink={requested,select};
+ document.addEventListener('DOMContentLoaded',()=>{const button=document.getElementById('shareArchiveDay'),note=document.getElementById('archiveShareStatus');button?.addEventListener('click',async()=>{const day=requested();if(!day)return;const url=new URL('history.html',location.href);url.searchParams.set('day',day);url.hash='dayDetailTitle';try{await navigator.clipboard.writeText(url.href);note.textContent='Link copied for '+day+'.';}catch(_){const input=document.createElement('input');input.value=url.href;input.setAttribute('aria-label','Historical day link to copy');note.replaceChildren(input);input.select();}});window.addEventListener('popstate',()=>{const day=requested(),input=document.getElementById('archiveDateSearch');if(day&&input){input.value=day;input.dispatchEvent(new Event('change',{bubbles:true}));}});});
+})();

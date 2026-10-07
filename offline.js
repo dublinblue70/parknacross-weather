@@ -1,90 +1,10 @@
 (() => {
-  "use strict";
-
-  const ID = "parknacrossOfflineBanner";
-
-  function ensureBanner() {
-    let banner = document.getElementById(ID);
-    if (banner) return banner;
-
-    banner = document.createElement("div");
-    banner.id = ID;
-    banner.className = "offline-banner";
-    banner.hidden = true;
-    banner.setAttribute("role", "status");
-    banner.setAttribute("aria-live", "polite");
-    document.body.prepend(banner);
-    return banner;
-  }
-
-  function fmtTime(value) {
-    if (!value) return "";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleTimeString("en-IE", {
-      timeZone: "Europe/Dublin",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  }
-
-  function setState(mode, lastObservation) {
-    const banner = ensureBanner();
-    if (lastObservation) banner.dataset.lastObservation = lastObservation;
-    document.documentElement.classList.toggle("is-offline", mode === "offline");
-
-    if (mode === "live") {
-      banner.hidden = true;
-      banner.textContent = "";
-      return;
-    }
-
-    const time = fmtTime(lastObservation);
-    if (mode === "offline") {
-      banner.textContent = time
-        ? `Offline · showing the last saved observation from ${time}`
-        : "Offline · showing the most recently saved information";
-    } else {
-      banner.textContent = time
-        ? `Live feed unavailable · showing the last observation from ${time}`
-        : "Live feed temporarily unavailable";
-    }
-    banner.hidden = false;
-  }
-
-  function updateNetworkState() {
-    if (!navigator.onLine) setState("offline", null);
-    else {
-      const banner = document.getElementById(ID);
-      if (banner?.dataset?.feedError !== "true") setState("live", null);
-    }
-  }
-
-  window.PWOffline = {
-    setLive() {
-      const banner = ensureBanner();
-      banner.dataset.feedError = "false";
-      setState("live", null);
-    },
-    setOffline(lastObservation) {
-      const banner = ensureBanner();
-      banner.dataset.feedError = "true";
-      setState(navigator.onLine ? "feed-error" : "offline", lastObservation);
-    },
-    refreshNetworkState: updateNetworkState
-  };
-
-  window.addEventListener("offline", () => {
-    const banner = ensureBanner();
-    setState("offline", banner.dataset.lastObservation || null);
-  });
-
-  window.addEventListener("online", () => {
-    updateNetworkState();
-  });
-
-  document.addEventListener("DOMContentLoaded", () => {
-    ensureBanner();
-    updateNetworkState();
-  });
+ 'use strict';const ID='parknacrossOfflineBanner';let last=null;
+ try{last=JSON.parse(localStorage.getItem('parknacross.dashboard.current.v1')||'null')?.value||null;}catch(_){}
+ function ensure(){let node=document.getElementById(ID);if(node)return node;node=document.createElement('div');node.id=ID;node.className='offline-banner';node.hidden=true;node.setAttribute('role','status');node.setAttribute('aria-live','polite');document.body.prepend(node);return node;}
+ const time=value=>{const date=new Date(value);return value&&!Number.isNaN(date.getTime())?date.toLocaleString('en-IE',{timeZone:'Europe/Dublin',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';};
+ const usable=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
+ function render(mode,timestamp){const node=ensure();if(timestamp)node.dataset.lastObservation=timestamp;document.documentElement.classList.toggle('is-offline',mode==='offline');if(mode==='live'){node.hidden=true;node.textContent='';return;}const when=time(timestamp||node.dataset.lastObservation||last?.received_at||(last?.epoch?new Date(last.epoch*1000).toISOString():null));const fields=[['temperature_c','°C','Temperature'],['wind_speed_kmh',' km/h','Wind'],['daily_rain_mm',' mm','Rain today']].filter(([key])=>usable(last?.[key])).map(([key,unit,label])=>label+' '+Number(last[key]).toFixed(1)+unit);node.textContent=(mode==='offline'?'Offline':mode==='reconnecting'?'Connection restored · checking the live feed':'Live feed unavailable')+' · '+(when?'Saved readings from '+when:'No saved observation available on this device')+(fields.length?' · '+fields.join(' · '):'')+'. Saved readings describe their observation time.';node.hidden=false;}
+ window.PWOffline={setLive(observation){if(observation&&typeof observation==='object')last=observation;const node=ensure();node.dataset.feedError='false';render(navigator.onLine?'live':'offline',last?.received_at||(last?.epoch?new Date(last.epoch*1000).toISOString():null));},setOffline(timestamp){ensure().dataset.feedError='true';render(navigator.onLine?'feed-error':'offline',timestamp);},refreshNetworkState(){if(!navigator.onLine)render('offline');else if(!ensure().hidden)render('reconnecting');}};
+ window.addEventListener('offline',()=>render('offline'));window.addEventListener('online',()=>{render('reconnecting');window.dispatchEvent(new Event('parknacross:network-restored'));});document.addEventListener('DOMContentLoaded',()=>{ensure();if(!navigator.onLine)render('offline');});
 })();

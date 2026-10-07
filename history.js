@@ -84,6 +84,7 @@ function openArchiveDay(day){
     return;
   }
   selectedArchiveDay=day;
+  window.ParknacrossHistoryLink?.select(day);
   updateArchiveDayNavigation();
   calendarCursor=cursorFromDay(day);
   renderCalendar();
@@ -138,6 +139,7 @@ async function loadHistoricalSky(day){const ticket=++photoRequest,node=$("histor
 async function loadDay(day){
   const loadId=++dayLoadSequence;
   selectedArchiveDay=day;
+  window.ParknacrossHistoryLink?.select(day);
   loadHistoricalSky(day);
   window.ParknacrossMaintenance?.renderDay(day);
   renderCalendar();
@@ -179,7 +181,7 @@ async function loadDay(day){
     clearDayChart("The observation graph could not be loaded for this date.");
   }
 }
-async function loadHistory(){try{const[daily,stats,coverage]=await Promise.all([getJSON(`${API_BASE}/daily?days=3660`),getJSON(`${API_BASE}/stats`),getJSON(`${API_BASE}/coverage?days=371`).catch(()=>({days:[],summary:null}))]);dailyRows=Array.isArray(daily.days)?daily.days:[];dailyMap=new Map(dailyRows.map(row=>[row.day,row]));coverageRows=new Map((Array.isArray(coverage.days)?coverage.days:[]).map(row=>[row.day,row]));coverageSummary=coverage.summary||null;renderCharts();renderStats(stats);renderHeatmap();const latest=dailyRows.length?dailyRows[dailyRows.length-1].day:null;if(latest){const input=$("archiveDateSearch");if(input){input.min=dailyRows[0].day;input.max=todayKey();input.value=latest;}calendarCursor=cursorFromDay(latest);selectedArchiveDay=latest;updateArchiveDayNavigation();renderCalendar();loadDay(latest);}}catch(error){console.error("History:",error);set("archiveSearchStatus","Archive temporarily unavailable.");}}
+async function loadHistory(){try{const[daily,stats,coverage]=await Promise.all([getJSON(`${API_BASE}/daily?days=3660`),getJSON(`${API_BASE}/stats`),getJSON(`${API_BASE}/coverage?days=371`).catch(()=>({days:[],summary:null}))]);dailyRows=Array.isArray(daily.days)?daily.days:[];dailyMap=new Map(dailyRows.map(row=>[row.day,row]));coverageRows=new Map((Array.isArray(coverage.days)?coverage.days:[]).map(row=>[row.day,row]));coverageSummary=coverage.summary||null;renderCharts();renderStats(stats);renderHeatmap();const latest=window.ParknacrossHistoryLink?.requested()|| (dailyRows.length?dailyRows[dailyRows.length-1].day:null);if(latest){const input=$("archiveDateSearch");if(input){input.min=dailyRows[0].day;input.max=todayKey();input.value=latest;}calendarCursor=cursorFromDay(latest);selectedArchiveDay=latest;updateArchiveDayNavigation();renderCalendar();loadDay(latest);}}catch(error){console.error("History:",error);set("archiveSearchStatus","Archive temporarily unavailable.");}}
 
 document.addEventListener("DOMContentLoaded",()=>{createCharts();set("year",new Date().getFullYear());document.querySelectorAll("[data-days]").forEach(button=>button.addEventListener("click",()=>{selectedDays=Number(button.dataset.days);document.querySelectorAll("[data-days]").forEach(b=>b.classList.toggle("active",b===button));renderCharts();}));$("calendarPrev")?.addEventListener("click",()=>{calendarCursor=shiftMonth(calendarCursor,-1);renderCalendar();});$("calendarNext")?.addEventListener("click",()=>{calendarCursor=shiftMonth(calendarCursor,1);renderCalendar();});$("previousArchiveDay")?.addEventListener("click",event=>{const day=event.currentTarget.dataset.day;if(day)openArchiveDay(day);});$("nextArchiveDay")?.addEventListener("click",event=>{const day=event.currentTarget.dataset.day;if(day)openArchiveDay(day);});$("archiveDateButton")?.addEventListener("click",()=>{const day=$("archiveDateSearch")?.value;if(day)openArchiveDay(day);});$("archiveDateSearch")?.addEventListener("change",event=>{const day=event.currentTarget.value;if(day)openArchiveDay(day);});$("archiveDateSearch")?.addEventListener("keydown",event=>{if(event.key==='Enter'){event.preventDefault();const day=event.currentTarget.value;if(day)openArchiveDay(day);}});loadHistory();});
 

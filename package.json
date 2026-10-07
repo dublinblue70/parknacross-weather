@@ -1,7 +1,7 @@
 {
   "name": "parknacross-weather-site",
   "private": true,
-  "version": "38.4.157",
+  "version": "38.4.158",
   "scripts": {
     "test": "node site-smoke-test.mjs && node csv-export-test.mjs && node freshness-resilience-test.mjs && node rain-alert-test.mjs && node coast-data-test.mjs && playwright test",
     "test:smoke": "node site-smoke-test.mjs && node tests/weather-window.test.mjs && node tests/install-version.test.mjs && node tests/weather-request-timeout.test.mjs && node csv-export-test.mjs && node freshness-resilience-test.mjs && node rain-alert-test.mjs && node coast-data-test.mjs",
@@ -13,7 +13,9 @@
     "test:weather-window-sky": "node tests/weather-window-sky.test.mjs && node tests/weather-window-rain.test.mjs",
     "test:install-browsers": "playwright install chromium webkit",
     "test:usability": "node tests/usability.test.mjs && node tests/mobile-dashboard.test.mjs && node tests/social-admin.test.mjs && node tests/archive-quality.test.mjs && node tests/admin-enhancements.test.mjs",
-    "test:explore": "node tests/explore-weather.test.mjs"
+    "test:explore": "node tests/explore-weather.test.mjs",
+    "test:release": "node release-check.mjs && npm run test:usability && npm run test:explore && npm run test:weather-window-sky && node tests/website-usability.test.mjs",
+    "test:release-browser": "playwright test --config release-playwright.config.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0"

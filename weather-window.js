@@ -68,6 +68,7 @@
   if (adminControls && new URLSearchParams(location.search).get("admin") === "1") {
     adminControls.hidden = false;
     document.getElementById("weatherWindowSkySave")?.addEventListener("click", async () => {
+      const done=window.ParknacrossAction?.begin(document.getElementById("weatherWindowSkySave"),"Saving…");if(done===null)return;
       try {
         let key = sessionStorage.getItem("parknacrossAdminKey") || window.prompt("Enter the Parknacross admin key") || "";
         if (!key) return;
@@ -83,7 +84,7 @@
         sessionStorage.setItem("parknacrossAdminKey",key);
         adminStatus.textContent = skyOverride ? `Saved for all visitors until ${(skyOverride.expires_at ? new Date(skyOverride.expires_at).toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}) : "midnight")}.` : "Automatic forecast sky and station rain restored.";
         if (latestDetail) render(latestDetail);
-      } catch (error) { adminStatus.textContent = error.message || "Could not save sky setting."; }
+      } catch (error) { adminStatus.textContent = error.message || "Could not save sky setting."; } finally { done?.(); }
     });
   }
   function render(detail) {

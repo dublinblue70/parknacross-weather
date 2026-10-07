@@ -1,0 +1,21 @@
+(() => {
+ 'use strict';
+ const main=document.getElementById('dashboard');if(!main)return;
+ const lightning=document.createElement('section');lightning.className='lightning-group';const firstLightning=document.getElementById('lightningSetupNotice');if(firstLightning){firstLightning.before(lightning);lightning.append(firstLightning);const liveLightning=document.getElementById('lightningPanel');if(liveLightning)lightning.append(liveLightning);}
+ const definitions=[['sinceVisitPanel','Since your last visit'],['todaySkyPanel','Today’s sky'],['weather-window-section','Weather Window'],['lightning-group','Lightning'],['today-section','At a glance'],['wear-today-section','Clothing guide'],['astronomy-strip','Sun and moon'],['metrics-section','Detailed readings'],['soilPanel','Garden soil'],['forecast','Official forecast'],['climate-section','Station climate'],['signature-section','Local context'],['graphs','Weather graphs'],['records-section','Station records']];
+ const sections=definitions.map(([key,label])=>({key,label,node:document.getElementById(key)||main.querySelector('.'+key)})).filter(item=>item.node);
+ const key='parknacross:dashboard-layout:v1';let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{};}catch(_){}
+ const known=new Set(sections.map(s=>s.key));let order=Array.isArray(saved.order)?[...new Set(saved.order.filter(id=>known.has(id)))]:[];order.push(...sections.map(s=>s.key).filter(id=>!order.includes(id)));const hidden=new Set(Array.isArray(saved.hidden)?saved.hidden.filter(id=>known.has(id)):[]);
+ const controls=document.createElement('details');controls.className='dashboard-customise';const title=document.createElement('summary');title.textContent='Customise your dashboard';controls.append(title);
+ const copy=document.createElement('p');copy.textContent='Choose which sections to show and move them up or down. Preferences stay on this device. Current conditions and official warning banners remain visible.';controls.append(copy);
+ const list=document.createElement('ul'),note=document.createElement('p'),reset=document.createElement('button');list.className='dashboard-preference-list';note.setAttribute('role','status');reset.type='button';reset.textContent='Reset dashboard layout';controls.append(list,reset,note);
+ const host=document.createElement('div');host.id='dashboardOptionalSections';main.insertBefore(controls,sections[0]?.node||null);controls.after(host);
+ const rows=new Map();
+ function persist(){try{localStorage.setItem(key,JSON.stringify({order,hidden:[...hidden]}));return true;}catch(_){note.textContent='Layout changed for this visit; this browser could not save it.';return false;}}
+ function apply(){for(const id of order){const item=sections.find(s=>s.key===id);host.append(item.node);item.node.toggleAttribute('data-user-hidden',hidden.has(id));const row=rows.get(id);if(row){list.append(row.node);row.check.checked=!hidden.has(id);row.up.disabled=order.indexOf(id)===0;row.down.disabled=order.indexOf(id)===order.length-1;}}window.dispatchEvent(new Event('resize'));}
+ for(const item of sections){const li=document.createElement('li'),label=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.checked=!hidden.has(item.key);label.append(check,document.createTextNode(item.label));li.append(label);
+ const up=document.createElement('button'),down=document.createElement('button');up.type=down.type='button';up.textContent='↑';down.textContent='↓';up.setAttribute('aria-label','Move '+item.label+' up');down.setAttribute('aria-label','Move '+item.label+' down');li.append(up,down);rows.set(item.key,{node:li,check,up,down});
+ check.addEventListener('change',()=>{if(check.checked)hidden.delete(item.key);else hidden.add(item.key);apply();if(persist())note.textContent=item.label+(check.checked?' shown.':' hidden.');});
+ for(const [button,delta] of [[up,-1],[down,1]])button.addEventListener('click',()=>{const index=order.indexOf(item.key),next=index+delta;if(next<0||next>=order.length)return;[order[index],order[next]]=[order[next],order[index]];apply();button.focus();if(persist())note.textContent=item.label+' moved '+(delta<0?'up.':'down.');});}
+ reset.addEventListener('click',()=>{order=sections.map(s=>s.key);hidden.clear();apply();if(persist())note.textContent='Default dashboard layout restored.';});apply();
+})();

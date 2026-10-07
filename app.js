@@ -82,7 +82,7 @@ function readLocalCache(name) {
 }
 
 function markLiveMode() {
-  window.PWOffline?.setLive?.();
+  window.PWOffline?.setLive?.(latestCurrent);
 }
 
 function markOfflineMode(current) {
@@ -2474,6 +2474,7 @@ function setupPWA() {
 
 document.addEventListener("DOMContentLoaded", () => {
   createCharts();
+  if(!navigator.onLine){const saved=readLocalCache("current")?.value;if(saved){latestCurrent=saved;history24=readLocalCache("history24")?.value||[];updateDashboard(saved);updateCharts();markOfflineMode(saved);}}
   updateSunInfo();
   loadEverything();
   loadForecast();
@@ -2498,3 +2499,5 @@ document.addEventListener("DOMContentLoaded", () => {
   (window.ParknacrossRefresh?.every || setInterval)(refreshSoilFreshness, 60 * 1000);
 });
 
+
+window.addEventListener('parknacross:network-restored',()=>refreshCurrent());

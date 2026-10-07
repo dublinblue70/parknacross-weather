@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-157-sky-social-admin";
+const CACHE_NAME = "parknacross-v38-4-158-sky-social-admin";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -42,6 +42,13 @@ const STATIC_ASSETS = [
   "./download-preview.js",
   "./maintenance-markers.js",
   "./explore-weather.css",
+  "./dashboard-preferences.js",
+  "./chart-explorer.js",
+  "./history-links.js",
+  "./public-photo-calendar.js",
+  "./action-feedback.js",
+  "./website-usability.css",
+
   "./site-help.css",
   "./weather-window-preview.js",
   "./photo-calendar.js",
