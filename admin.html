@@ -1,6 +1,86 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin · Parknacross Weather</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-149"><link rel="stylesheet" href="site-enhancements.css?v=20261007-v38-4-149"></head><body><main class="admin-page"><a href="index.html">← Weather dashboard</a><h1>Parknacross administration</h1><p>Photo uploads, sky settings and daily social posts.</p><p id="adminMessage" role="status" aria-live="polite">Sign in with your admin key.</p><form id="adminLogin" class="admin-card"><label>Admin key<input id="adminKey" type="password" autocomplete="off" required></label><button type="submit">Sign in</button></form><div id="adminWorkspace" hidden><button id="adminSignOut" type="button">Sign out</button>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin · Parknacross Weather</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-154"><link rel="stylesheet" href="site-enhancements.css?v=20261007-v38-4-149"><link rel="stylesheet" href="site-help.css?v=20261007-v38-4-154"></head><body><main class="admin-page"><a href="index.html">← Weather dashboard</a><h1>Parknacross administration</h1><p>Photo uploads, sky settings and daily social posts.</p><p id="adminMessage" role="status" aria-live="polite">Sign in with your admin key.</p><form id="adminLogin" class="admin-card"><label>Admin key<input id="adminKey" type="password" autocomplete="off" required></label><button type="submit">Sign in</button></form><div id="adminWorkspace" hidden><button id="adminSignOut" type="button">Sign out</button><section class="admin-card"><h2>Feature compatibility</h2><button id="adminCompatibilityRefresh" type="button">Check compatibility</button><p id="adminCompatibility" role="status">Checking deployed features…</p></section>
 <section class="admin-card"><h2>Today’s sky photo</h2><form id="adminPhotoForm"><label>Photograph<input id="adminPhotoFile" type="file" accept="image/jpeg,image/png,image/webp" required></label><label>Caption<input id="adminPhotoCaption" maxlength="140"></label><button id="adminPhotoSave" type="submit">Upload today’s photo</button></form><p id="adminPhotoStatus" role="status"></p><p>Photos are resized before upload. <a href="index.html?admin=1#todaySkyPanel">Photo likes and historical imports →</a></p></section>
-<section class="admin-card"><h2>Weather Window</h2><form id="adminSkyForm"><label>Sky now<select id="adminSky"><option value="auto">Automatic forecast</option><option value="clear">Clear</option><option value="mostly-clear">Mostly clear</option><option value="partly-cloudy">Partly cloudy</option><option value="cloudy">Cloudy</option><option value="overcast">Overcast</option></select></label><label>Rain / storm in illustration<select id="adminRain"><option value="auto">Automatic station reading</option><option value="none">No rain</option><option value="light">Light rain / drizzle</option><option value="rain">Rain</option><option value="heavy">Heavy rain</option><option value="thunderstorm">Thunder / lightning with rain</option></select></label><label>Duration<select id="adminSkyDuration"><option value="1h">One hour</option><option value="3h">Three hours</option><option value="today" selected>Until midnight</option></select></label><button id="adminSkySave" type="submit">Save illustration settings</button></form><p id="adminSkyStatus" role="status"></p><p>Manual rain and storm choices affect the illustration only. Rain readings, alerts and social posts still use station data. Lightning is shown as a static symbol; this setting does not confirm a detected storm.</p></section>
+<section class="admin-card"><h2>Weather Window</h2><form id="adminSkyForm"><label>Sky now<select id="adminSky"><option value="auto">Automatic forecast</option><option value="clear">Clear</option><option value="mostly-clear">Mostly clear</option><option value="partly-cloudy">Partly cloudy</option><option value="cloudy">Cloudy</option><option value="overcast">Overcast</option></select></label><label>Rain / storm in illustration<select id="adminRain"><option value="auto">Automatic station reading</option><option value="none">No rain</option><option value="light">Light rain / drizzle</option><option value="rain">Rain</option><option value="heavy">Heavy rain</option><option value="thunderstorm">Thunder / lightning with rain</option></select></label><label>Duration<select id="adminSkyDuration"><option value="1h">One hour</option><option value="3h">Three hours</option><option value="today" selected>Until midnight</option></select></label><button id="adminSkySave" type="submit">Save illustration settings</button></form><p id="adminSkyStatus" role="status"></p><h3>Preview before saving</h3><div id="adminWindowPreview" class="weather-window-scene" data-sky="unknown" data-rain="none" data-light="day"><svg viewBox="0 0 720 300" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                  <linearGradient id="weatherWindowSky" x1="0" y1="0" x2="0" y2="1">
+                    <stop class="ww-sky-top" offset="0" />
+                    <stop class="ww-sky-bottom" offset="1" />
+                  </linearGradient>
+                  <linearGradient id="weatherWindowGround" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#305a50" />
+                    <stop offset="1" stop-color="#142f31" />
+                  </linearGradient>
+                  <linearGradient id="weatherWindowSea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#719aa0" />
+                    <stop offset="1" stop-color="#355f6b" />
+                  </linearGradient>
+                  <linearGradient id="weatherWindowRoof" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#46565a" />
+                    <stop offset="1" stop-color="#26363b" />
+                  </linearGradient>
+                </defs>
+                <rect width="720" height="300" fill="url(#weatherWindowSky)" />
+                <g class="ww-stars" fill="#f5eecb" opacity=".8">
+                  <circle cx="91" cy="45" r="1.5"/><circle cx="238" cy="73" r="1.2"/><circle cx="357" cy="35" r="1.7"/><circle cx="450" cy="63" r="1.1"/><circle cx="654" cy="42" r="1.4"/>
+                </g>
+                <g class="ww-sun-track">
+                <g class="ww-sun-rays" stroke="#fff0bd" stroke-width="2" stroke-linecap="round" opacity=".48">
+                  <path d="M555 31v-9m0 120v-9m51-51h10m-132 0h10m97-36 7-7m-90 90 7-7m76 0 7 7m-90-90 7 7"/>
+                </g>
+                <circle class="ww-sun" cx="555" cy="82" r="34" />
+                </g>
+                <path class="ww-night-light" d="M568 57a27 27 0 1 0 0 50 22 22 0 0 1 0-50Z" />
+                <g class="ww-clouds" fill="#eef6fb">
+                  <g class="ww-cloud ww-cloud-1"><ellipse cx="110" cy="52" rx="42" ry="12"/><ellipse cx="98" cy="44" rx="18" ry="13"/><ellipse cx="121" cy="44" rx="23" ry="16"/></g>
+                  <g class="ww-cloud ww-cloud-2"><ellipse cx="333" cy="67" rx="63" ry="17"/><ellipse cx="305" cy="56" rx="27" ry="20"/><ellipse cx="346" cy="50" rx="32" ry="25"/></g>
+                  <g class="ww-cloud ww-cloud-3"><ellipse cx="575" cy="97" rx="74" ry="22"/><ellipse cx="548" cy="80" rx="35" ry="27"/><ellipse cx="592" cy="78" rx="36" ry="30"/></g>
+                  <g class="ww-cloud ww-cloud-4"><ellipse cx="200" cy="107" rx="86" ry="22"/><ellipse cx="174" cy="90" rx="37" ry="28"/><ellipse cx="221" cy="88" rx="41" ry="31"/></g>
+                  <g class="ww-cloud ww-cloud-5"><ellipse cx="415" cy="132" rx="112" ry="29"/><ellipse cx="370" cy="109" rx="52" ry="36"/><ellipse cx="438" cy="106" rx="57" ry="40"/></g>
+                  <g class="ww-cloud ww-cloud-6"><ellipse cx="663" cy="37" rx="110" ry="27"/><ellipse cx="622" cy="19" rx="50" ry="36"/><ellipse cx="683" cy="17" rx="57" ry="39"/></g>
+                </g>
+                <path class="ww-coastline" d="M0 198 Q94 187 174 196t155-1q89-12 165 1t145-2q42-7 81 0v59H0Z" fill="url(#weatherWindowSea)" opacity=".78" />
+                <g class="ww-sea-lines" fill="none" stroke="#c1e0dd" stroke-width="1.5" stroke-linecap="round" opacity=".38">
+                  <path d="M24 213q20-4 40 0m38 9q27-5 53 0m60-12q18-4 36 0m44 13q29-5 55 0m39-15q21-4 42 0m42 14q26-5 51 0m55-15q19-4 38 0m32 16q27-5 52 0"/>
+                  <path d="M4 232q22-4 44 0m73 5q17-3 34 0m92-5q22-4 44 0m124 5q18-3 36 0m88-5q25-4 49 0m73 5q17-3 34 0"/>
+                </g>
+                <path class="ww-distant-hill" d="M0 214 Q145 176 278 216 T540 206 T720 204 V300 H0Z" />
+                <path class="ww-ground" fill="url(#weatherWindowGround)" d="M0 242 Q158 215 300 242 T720 226 V300 H0Z" />
+                <path d="M0 243q127-24 247-4t234 1q100-10 239-10v18q-142 4-248 14t-246-1q-98-5-226 16Z" fill="#6b8061" opacity=".38" />
+                <g class="ww-wind-lines" fill="none" stroke="rgba(235,248,255,.54)" stroke-width="2" stroke-linecap="round">
+                  <path d="M46 88h130q16 0 16-10t-16-10h-24" />
+                  <path d="M86 120h82q13 0 13-8t-13-8h-14" />
+                  <path d="M427 147h122q12 0 12-8t-12-8h-20" />
+                </g>
+                <g class="ww-house">
+                  <path d="M470 204 561 147l91 57v72H470Z" fill="#34464a" />
+                  <path d="m454 207 107-72 107 72-8 10-99-65-99 65Z" fill="url(#weatherWindowRoof)" />
+                  <path d="m480 193 81-54 81 54m-150 8 69-46 69 46" fill="none" stroke="#78868a" stroke-width="1.4" opacity=".43" />
+                  <path d="M491 204v-16l17-11 17 11v16" fill="#34464a" stroke="#26363b" stroke-width="3" />
+                  <rect x="494" y="216" width="31" height="34" rx="2" fill="#f0c77c" />
+                  <rect x="582" y="216" width="44" height="60" fill="#202f34" />
+                  <path d="M502 216v34m-8-17h31" stroke="#9b8055" stroke-width="2" />
+                  <rect class="ww-house-window" x="538" y="216" width="27" height="24" rx="2" fill="#a8c8ca" />
+                  <path d="M551.5 216v24m-13.5-12h27" stroke="#41565b" stroke-width="2" />
+                  <path d="M479 257h175" stroke="#1e3033" stroke-width="3" opacity=".7" />
+                </g>
+                <g class="ww-tree-trunk">
+                  <path d="M167 269 Q177 222 174 182 Q169 147 141 127 M174 185 Q202 155 211 126 M170 209 Q143 185 119 181" fill="none" stroke="#513e31" stroke-width="12" stroke-linecap="round" />
+                  <g fill="#395b49">
+                    <circle cx="139" cy="123" r="35"/><circle cx="179" cy="108" r="43"/><circle cx="215" cy="131" r="31"/><circle cx="123" cy="160" r="27"/><circle cx="190" cy="151" r="35"/>
+                  </g>
+                  <g fill="#54745a" opacity=".72"><circle cx="158" cy="96" r="21"/><circle cx="210" cy="113" r="19"/><circle cx="133" cy="145" r="17"/></g>
+                </g>
+                <g class="ww-garden" stroke-linecap="round">
+                  <path d="M50 281q-2-21 6-34m9 34q5-18 16-26m20 25q-1-17 7-28m-32 29q-2-11-9-17" fill="none" stroke="#8ca66a" stroke-width="2" />
+                  <g fill="#e6b5a5"><circle cx="56" cy="245" r="3"/><circle cx="81" cy="255" r="3"/><circle cx="108" cy="251" r="3"/><circle cx="60" cy="263" r="2.5"/></g>
+                  <g fill="#f0d884"><circle cx="56" cy="245" r="1"/><circle cx="81" cy="255" r="1"/><circle cx="108" cy="251" r="1"/><circle cx="60" cy="263" r="1"/></g>
+                </g>
+                <path class="ww-lightning" d="M415 116h-23l-14 34h20l-10 34 39-48h-22z" fill="#ffe78a" stroke="#a77f2e" stroke-width="2" />
+                <g class="ww-rain" fill="none" stroke="#d8f2ff" stroke-width="3" stroke-linecap="round">
+                  <path d="m287 165-8 17m37-28-8 17m40 3-8 17m39-36-8 17m38 12-8 17m36-36-8 17m42 3-8 17m-197-12-8 17" />
+                </g>
+                <path d="M0 276 Q99 262 198 276 T396 276 T594 276 T792 276" fill="none" stroke="#73926b" stroke-width="3" opacity=".7" />
+              </svg></div><p id="windowPreviewStatus" role="status">Preview only · visible to you until saved.</p><p>Manual rain and storm choices affect the illustration only. Rain readings, alerts and social posts still use station data. Lightning is shown as a static symbol; this setting does not confirm a detected storm.</p></section>
         <section id="socialAdminPanel" class="social-admin-panel" aria-labelledby="socialAdminHeading" hidden>
           <div class="section-heading compact-heading"><div><span class="section-eyebrow">Private admin view</span><h2 id="socialAdminHeading">Daily social posts</h2><p>Facebook and X · scheduled for 07:30 Irish time.</p></div></div>
           <button id="socialAdminRefresh" type="button">Refresh preview and status</button>
@@ -18,5 +98,5 @@
           </details>
         </section>
 <section class="admin-card"><h2>Social-post history</h2><button id="postHistoryRefresh" type="button">Refresh history</button><p id="postHistoryNote" role="status"></p><div id="postHistory"></div></section>
-<section class="admin-card"><h2>Sky photo archive</h2><label>Choose a date<input id="archiveDay" type="date"></label><div class="admin-actions"><button id="archiveAll" type="button">All dates</button><button id="archivePrevious" type="button" disabled>Previous photo</button><button id="archiveNext" type="button" disabled>Next photo</button><button id="archiveDownload" type="button" disabled>Download photo</button></div><p id="archiveCaption" role="status"></p><img id="archiveImage" alt="Selected archived sky photograph"></section>
-</div></main><script src="site-config.js"></script><script>window.PARKNACROSS_ADMIN_PAGE=true;</script><script src="social-admin.js?v=20261007-v38-4-149"></script><script src="admin-tools.js?v=20261007-v38-4-153"></script></body></html>
+<section class="admin-card"><h2>Sky photo archive</h2><label>Choose a date<input id="archiveDay" type="date"></label><div class="admin-actions"><button id="photoMonthPrev" type="button">Previous month</button><h3 id="photoMonthTitle"></h3><button id="photoMonthNext" type="button">Next month</button></div><div id="photoCalendar" class="photo-calendar" aria-label="Sky photograph calendar"></div><p id="photoCalendarNote" role="status">Highlighted dates have saved photographs.</p><div class="admin-actions"><button id="archiveAll" type="button">All dates</button><button id="archivePrevious" type="button" disabled>Previous photo</button><button id="archiveNext" type="button" disabled>Next photo</button><button id="archiveDownload" type="button" disabled>Download photo</button></div><p id="archiveCaption" role="status"></p><img id="archiveImage" alt="Selected archived sky photograph"></section>
+</div></main><script src="site-config.js"></script><script>window.PARKNACROSS_ADMIN_PAGE=true;</script><script src="social-admin.js?v=20261007-v38-4-149"></script><script src="admin-tools.js?v=20261007-v38-4-154"></script><script src="weather-window-sky.js?v=20261007-v38-4-154"></script><script src="weather-window-preview.js?v=20261007-v38-4-154"></script><script src="photo-calendar.js?v=20261007-v38-4-154"></script><script src="site-help.js?v=20261007-v38-4-154"></script></body></html>

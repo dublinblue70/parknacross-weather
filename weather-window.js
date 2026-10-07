@@ -71,7 +71,10 @@
       try {
         let key = sessionStorage.getItem("parknacrossAdminKey") || window.prompt("Enter the Parknacross admin key") || "";
         if (!key) return;
-        adminStatus.textContent = "Saving sky setting…";
+        adminStatus.textContent = "Checking illustration compatibility…";
+        const compatible = await fetch(`${apiBase}/admin/capabilities`,{headers:{"X-Parknacross-Admin-Key":key},cache:"no-store",signal:AbortSignal.timeout(10000)});
+        if (!compatible.ok || !(await compatible.json()).features?.rain_override) throw new Error("Deploy Worker v38.4.89 before saving illustration settings. Preview and compatibility details are on the administration page.");
+        adminStatus.textContent = "Saving illustration settings…";
         const response = await fetch(`${apiBase}/weather-window/sky`, {method:"POST",headers:{"Content-Type":"application/json","X-Parknacross-Admin-Key":key},body:JSON.stringify({sky:adminSelect.value,rain:adminRain?.value || "auto",duration:document.getElementById("weatherWindowSkyDuration")?.value || "today"}),signal:AbortSignal.timeout(10000)});
         if (!response.ok) throw new Error(response.status === 401 ? "Admin key was not accepted." : "Could not save. Ensure the updated Worker has been deployed.");
         const data = await response.json();

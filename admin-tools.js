@@ -11,7 +11,7 @@
    return response;
  }
  function signOut(){
-   active=false;generation++;sessionStorage.removeItem('parknacrossAdminKey');
+   active=false;generation++;$('adminSkySave').disabled=true;sessionStorage.removeItem('parknacrossAdminKey');
    $('adminWorkspace').hidden=true;$('adminLogin').hidden=false;$('adminKey').value='';
    window.dispatchEvent(new Event('parknacross:admin-signout'));
    $('postHistory').replaceChildren();$('archiveCaption').textContent='';$('archiveImage').removeAttribute('src');
@@ -24,17 +24,20 @@
    if(ticket!==generation)return;
    active=true;$('adminLogin').hidden=true;$('adminWorkspace').hidden=false;note('Signed in. Your key stays in this tab’s session.');
    window.dispatchEvent(new Event('parknacross:admin-signin'));
-   await Promise.allSettled([loadArchive(),loadHistory(),loadSky()]);
+   await Promise.allSettled([loadArchive(),loadHistory(),loadSky(),checkCompatibility()]);
  }
  $('adminLogin').addEventListener('submit',async event=>{
    event.preventDefault();sessionStorage.setItem('parknacrossAdminKey',$('adminKey').value.trim());$('adminKey').value='';
    try{await signIn();}catch(error){note(error.message);}
  });
  $('adminSignOut').addEventListener('click',signOut);
- async function loadSky(){try{const payload=await (await request('/weather-window/sky')).json(),d=payload.override||{};if(!active)return;$('adminSky').value=d.sky||'auto';$('adminRain').value=d.rain||'auto';$('adminSkyStatus').textContent=(d.sky&&d.sky!=='auto')||(d.rain&&d.rain!=='auto')?`Visual settings: sky ${d.sky||'auto'} · rain / storm ${d.rain||'auto'}${d.expires_at?' · expires '+new Date(d.expires_at).toLocaleString('en-IE',{timeZone:'Europe/Dublin'}):''}`:'Automatic forecast sky and station rain are active.';}catch(error){$('adminSkyStatus').textContent=error.message;}}
+ let supported=null;
+ async function checkCompatibility(){const ticket=generation;try{const data=await (await request('/admin/capabilities')).json();if(!active||ticket!==generation)return;if(!data.features||typeof data.features!=='object')throw Error('Feature list missing from the deployed Worker response.');supported=data.features;$('adminCompatibility').textContent=`Deployed Worker ${data.worker_version||'version unknown'} · `+[['rain_override','rain / storm settings'],['photo_calendar','photo calendar'],['social_history','social history']].map(([key,label])=>`${label}: ${supported[key]?'supported':'unavailable'}`).join(' · ');}catch(error){if(!active||ticket!==generation)return;supported={};$('adminCompatibility').textContent='Compatibility could not be confirmed. Deploy Worker v38.4.89, then check again. '+error.message;}finally{if(active&&ticket===generation){$('adminSkySave').disabled=!supported?.rain_override;window.dispatchEvent(new CustomEvent('parknacross:capabilities',{detail:supported||{}}));}}}
+ $('adminCompatibilityRefresh')?.addEventListener('click',checkCompatibility);
+ async function loadSky(){try{const payload=await (await request('/weather-window/sky')).json(),d=payload.override||{};if(!active)return;$('adminSky').value=d.sky||'auto';$('adminRain').value=d.rain||'auto';window.dispatchEvent(new Event('parknacross:window-preview-update'));$('adminSkyStatus').textContent=(d.sky&&d.sky!=='auto')||(d.rain&&d.rain!=='auto')?`Visual settings: sky ${d.sky||'auto'} · rain / storm ${d.rain||'auto'}${d.expires_at?' · expires '+new Date(d.expires_at).toLocaleString('en-IE',{timeZone:'Europe/Dublin'}):''}`:'Automatic forecast sky and station rain are active.';}catch(error){$('adminSkyStatus').textContent=error.message;}}
  $('adminSkyForm').addEventListener('submit',async event=>{
-   event.preventDefault();$('adminSkySave').disabled=true;
-   try{const response=await request('/weather-window/sky',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sky:$('adminSky').value,rain:$('adminRain').value||'auto',duration:$('adminSkyDuration').value})});const saved=await response.json();if($('adminRain').value&&$('adminRain').value!=='auto'&&saved.override?.rain!==$('adminRain').value)throw Error('Deploy Worker v38.4.88 to save rain and storm settings.');await loadSky();}catch(error){$('adminSkyStatus').textContent=error.message;}finally{$('adminSkySave').disabled=false;}
+   event.preventDefault();if(!supported?.rain_override){$('adminSkyStatus').textContent='Check compatibility and deploy Worker v38.4.89 before saving illustration settings.';return;}$('adminSkySave').disabled=true;
+   try{const response=await request('/weather-window/sky',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sky:$('adminSky').value,rain:$('adminRain').value||'auto',duration:$('adminSkyDuration').value})});const saved=await response.json();if($('adminRain').value&&$('adminRain').value!=='auto'&&saved.override?.rain!==$('adminRain').value)throw Error('Deploy Worker v38.4.88 to save rain and storm settings.');await loadSky();}catch(error){$('adminSkyStatus').textContent=error.message;}finally{$('adminSkySave').disabled=!supported?.rain_override;}
  });
  async function preparePhoto(file){
    if(!/^image\/(jpeg|png|webp)$/.test(file.type))throw Error('Choose a JPEG, PNG or WebP photo.');
@@ -44,7 +47,7 @@
  }
  $('adminPhotoForm').addEventListener('submit',async event=>{
    event.preventDefault();$('adminPhotoSave').disabled=true;$('adminPhotoStatus').textContent='Preparing and uploading…';
-   try{const file=$('adminPhotoFile').files[0];if(!file)throw Error('Choose a photo first.');const photo=await preparePhoto(file),body=new FormData();body.append('photo',photo,'parknacross-sky.jpg');body.append('caption',$('adminPhotoCaption').value.trim());await request('/sky-photo',{method:'POST',body});$('adminPhotoStatus').textContent='Today’s photo uploaded.';$('adminPhotoFile').value='';await loadArchive();window.dispatchEvent(new Event('parknacross:admin-signin'));}catch(error){$('adminPhotoStatus').textContent=error.message;}finally{$('adminPhotoSave').disabled=false;}
+   try{const file=$('adminPhotoFile').files[0];if(!file)throw Error('Choose a photo first.');const photo=await preparePhoto(file),body=new FormData();body.append('photo',photo,'parknacross-sky.jpg');body.append('caption',$('adminPhotoCaption').value.trim());await request('/sky-photo',{method:'POST',body});$('adminPhotoStatus').textContent='Today’s photo uploaded.';$('adminPhotoFile').value='';await loadArchive();window.dispatchEvent(new Event('parknacross:photo-archive-update'));window.dispatchEvent(new Event('parknacross:admin-signin'));}catch(error){$('adminPhotoStatus').textContent=error.message;}finally{$('adminPhotoSave').disabled=false;}
  });
  function archiveControls(){ $('archivePrevious').disabled=position===0&&offset===0;$('archiveNext').disabled=offset+position+1>=total;$('archiveDownload').disabled=!imageUrl; }
  async function showPhoto(){

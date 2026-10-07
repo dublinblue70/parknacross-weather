@@ -1802,7 +1802,7 @@ function createCharts() {
   });
 }
 
-function chartRowsWithGaps(rows, gapMinutes = 20) {
+function chartRowsWithGaps(rows, gapMinutes = 10) {
   const clean = rows.filter(reading => readingTime(reading));
   if (clean.length < 2) return clean;
 
@@ -1843,7 +1843,7 @@ function updateCharts() {
 
   // Never draw a continuous weather line across a substantial D1 archive gap.
   // A null data point makes Chart.js visibly break the line instead.
-  const rows = chartRowsWithGaps(source, 20);
+  const rows = chartRowsWithGaps(source, 10);
   const timeForChartRow = row => row?._archiveGap ? row._gapTime : readingTime(row);
   const valueForChartRow = (row, field) => row?._archiveGap ? null : row?.[field];
 
@@ -1899,7 +1899,7 @@ function updateCharts() {
   const period = firstTime && lastTime
     ? `${new Date(firstTime).toLocaleString("en-IE", { timeZone: STATION_TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} to ${new Date(lastTime).toLocaleString("en-IE", { timeZone: STATION_TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
     : "the latest available period";
-  set("dashboardChartSummary", `Dashboard weather charts cover ${period} using ${usableRows.length.toLocaleString("en-IE")} observations. Large archive gaps are shown as breaks; isolated suspect readings are not joined into the valid trend lines.`);
+  set("dashboardChartSummary", `Dashboard weather charts cover ${period} using ${usableRows.length.toLocaleString("en-IE")} observations. Archive gaps longer than ten minutes are shown as breaks; isolated suspect readings are not joined into the valid trend lines.`);
 }
 
 async function getJSON(url, cacheMode = "default", timeoutMs = 12000) {
