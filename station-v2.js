@@ -16,26 +16,26 @@
 
     async function loadQuality() {
       try {
-        const [qualityResponse,reliabilityResponse,lightningResponse] = await Promise.all([
-          fetch(`${c.apiBase}/quality`, { cache: "no-store" }),
-          fetch(`${c.apiBase}/reliability`, { cache: "no-store" }),
-          fetch(`${c.apiBase}/lightning`, { cache: "no-store" })
-        ]);
-        if (!qualityResponse.ok) throw new Error(`HTTP ${qualityResponse.status}`);
-        const q = await qualityResponse.json();
-        const reliability = reliabilityResponse.ok ? await reliabilityResponse.json() : null;
-        const lightning = lightningResponse.ok ? await lightningResponse.json() : null;
-        set("qualityFeed", q.feed_status || "--");
+        const sources = await Promise.allSettled(["/quality", "/reliability", "/lightning"].map(async path => {
+          const response = await fetch(`${c.apiBase}${path}`, {cache:"no-store"});
+          if(!response.ok)throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          if(!data || data.error)throw new Error(data?.error || "Invalid response");
+          return data;
+        }));
+        const [quality, reliability, lightning] = sources.map(result => result.status === "fulfilled" ? result.value : null);
+        const q = quality || {};
+        set("qualityFeed", q.feed_status || "Unavailable");
         set("qualityAge", usable(q.latest_age_seconds) ? `${Math.round(Number(q.latest_age_seconds) / 60)} min since latest reading` : "Latest observation");
         set("quality24", usable(q.samples_last_24h) ? Number(q.samples_last_24h).toLocaleString("en-IE") : "--");
         set("qualityInterval", usable(q.median_interval_minutes) ? Number(q.median_interval_minutes).toFixed(1) + " min" : "--");
         set("qualityGap", formatGap(q.largest_recent_gap_minutes));
         set("qualityTotal", usable(q.total_samples) ? Number(q.total_samples).toLocaleString("en-IE") : "--");
-        set("qualityBattery", q.battery_status || "--");
+        set("qualityBattery", q.battery_status || "Unavailable");
         set("qualityReliability", usable(reliability?.archive_reliability_percent) ? `${Number(reliability.archive_reliability_percent).toFixed(1)}%` : "--");
         const reliabilityDetail = usable(reliability?.actual_samples) && usable(reliability?.expected_samples)
           ? `${Number(reliability.actual_samples).toLocaleString("en-IE")} of ${Number(reliability.expected_samples).toLocaleString("en-IE")} expected 5-minute readings saved this month`
-          : "Percentage of expected 5-minute readings successfully saved this month";
+          : reliability ? "Percentage of expected 5-minute readings successfully saved this month" : "Archive coverage could not be refreshed. Other station readings are shown independently.";
         set("qualityReliabilityNote", reliability?.label ? `${reliability.label} · ${reliabilityDetail}` : reliabilityDetail);
         set("stationLightning", "Ecowitt WH57 lightning detector · approximate range up to 40 km");
         if (lightning?.available) {

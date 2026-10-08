@@ -133,6 +133,11 @@ function render(year) {
   const annualCanvas=$("annualRainChart");
   annualCanvas?.setAttribute("role","img");
   annualCanvas?.setAttribute("aria-label",`Monthly rainfall totals for ${year}. This is a ${periodType} report based on ${rows.length} archived day${rows.length===1?"":"s"}. Months without rainfall data are unavailable, not zero.${missingRainDays?` ${missingRainDays} archived day${missingRainDays===1?" has":"s have"} no rainfall value.`:""}`);
+  if (!window.Chart) {
+    set("annualChartStatus", "The chart library could not load. Annual figures remain available; reload to restore the rainfall chart.");
+    const status = $("annualChartStatus"); if(status)status.hidden=false;
+    return;
+  }
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
     Chart.defaults.animation = false;
   if (chart) chart.destroy();
@@ -171,7 +176,7 @@ async function load() {
       .sort()
       .reverse();
     let selected = new URL(location.href).searchParams.get("year");
-    if (!years.includes(selected)) selected = years[0];
+    if (!years.includes(selected)) selected = years[0] || dublinYear();
     const picker = $("yearPicker");
     picker.innerHTML = "";
     years.forEach((y) => {
@@ -218,7 +223,7 @@ async function loadVerified() {
       .sort()
       .reverse();
     let selected = new URL(location.href).searchParams.get("year");
-    if (!years.includes(selected)) selected = years[0];
+    if (!years.includes(selected)) selected = years[0] || dublinYear();
     const picker = $("yearPicker");
     picker.innerHTML = "";
     years.forEach((y) => {

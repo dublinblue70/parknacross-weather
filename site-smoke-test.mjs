@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const files = await readdir(root);
+const releaseVersion = JSON.parse(await readFile(join(root, "package.json"), "utf8")).version;
 const htmlFiles = files.filter(name => name.endsWith(".html"));
 const failures = [];
 const offlineReferences = new Set();
@@ -96,7 +97,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-170-comprehensive-audit"],
+  ["service-worker.js", `parknacross-v${releaseVersion.replaceAll(".", "-")}-`],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],

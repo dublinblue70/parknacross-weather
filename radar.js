@@ -28,11 +28,11 @@
    if(!response.ok)throw new Error(`RainViewer returned ${response.status}`);
    const data=await response.json(),next=(data.radar?.past||[]).filter(frame=>frame.path&&Number.isFinite(Number(frame.time))).map(frame=>({...frame,host:data.host}));
    if(!data.host||!next.length)throw new Error("No radar frames returned");
-   frames=next;feedWarning="";$("radarSlider").max=Math.max(0,frames.length-1);show(frames.length-1);
+   frames=next;feedWarning="";$("radarPlay").disabled=frames.length<2;$("radarSlider").disabled=frames.length<2;$("radarSlider").max=Math.max(0,frames.length-1);show(frames.length-1);
    if(playing)startAnimation();else stopAnimation();
   }catch(error){
    feedWarning=frames.length?"Radar refresh failed; showing the last loaded frames":"Radar feed temporarily unavailable";
-   if(frames.length)updateRadarStatus();else set("radarTime","Radar temporarily unavailable");
+   if(frames.length)updateRadarStatus();else {set("radarTime","Radar temporarily unavailable");set("radarStatus",feedWarning+". Rain readings and satellite imagery remain available; refresh this page to retry.");playing=false;stopAnimation();set("radarPlay","Play");$("radarPlay").disabled=true;$("radarSlider").disabled=true;}
   }
  }
  async function loadRain(){try{const c=await fetch(`${API}/current`,{cache:"no-store"}).then(r=>r.json());set("radarRainRate",usable(c.rain_rate_mm_h)?`${Number(c.rain_rate_mm_h).toFixed(1)} mm/h`:"--");set("radarRainToday",usable(c.rain_daily_mm)?`${Number(c.rain_daily_mm).toFixed(1)} mm`:"--");}catch{set("radarRainRate","--");set("radarRainToday","--");}}
