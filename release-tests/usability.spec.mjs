@@ -72,7 +72,7 @@ test('radar library failure preserves rain readings and satellite section',async
 test('every website page renders at mobile and desktop widths without script errors',async({page})=>{
  test.setTimeout(120000);const {readdirSync}=await import('node:fs');const pages=readdirSync('.').filter(name=>name.endsWith('.html'));
  await page.route('**/unpkg.com/**',r=>r.fulfill({status:503,body:''}));
- for(const width of [390,1280]){await page.setViewportSize({width,height:900});for(const file of pages){await page.goto('/'+file,{waitUntil:'domcontentloaded'});await page.waitForTimeout(100);await expect(page.locator('h1').first()).toBeVisible();}}
+ for(const width of [390,1280]){await page.setViewportSize({width,height:900});for(const file of pages){await page.goto('/'+file,{waitUntil:'domcontentloaded'});await page.waitForTimeout(100);await expect(page.locator('h1').first()).toBeVisible();const layout=await page.evaluate(()=>({width:window.innerWidth,content:document.documentElement.scrollWidth}));expect(layout.content,`${file} overflows at ${width}px`).toBeLessThanOrEqual(layout.width+2);}}
 });
 
 test('Summary keeps observations when rain history fails',async({page})=>{
@@ -93,4 +93,20 @@ test('Reports explain sparse days and heatmap targets support touch',async({page
  await page.goto('/monthly.html');await expect(page.locator('#reportCoverageNote')).toContainText('36.1%');await expect(page.locator('#reportCoverageNote')).toContainText('incomplete coverage');
  await page.goto('/annual.html');await expect(page.locator('#reportCoverageNote')).toContainText('36.1%');
  await page.goto('/history.html');const cell=page.locator('.heatmap-day.has-data').first();await expect(cell).toBeVisible();const box=await cell.boundingBox();expect(box.width).toBeGreaterThanOrEqual(28);expect(box.height).toBeGreaterThanOrEqual(28);
+});
+
+
+test('missing chart library preserves archive and annual figures with clear recovery messages',async({page})=>{
+ await page.route('**/chart.umd.min.js*',r=>r.fulfill({status:503,body:''}));
+ await page.goto('/history.html?day='+day);await expect(page.locator('#dayHigh')).toHaveText('12.0 °C');await expect(page.locator('#historicalSkyImage')).toBeVisible();await expect(page.locator('#historyChartStatus')).toContainText('chart library could not load');
+ await page.goto('/annual.html');await expect(page.locator('#annualHigh')).toHaveText('12.0 °C');await expect(page.locator('#annualChartStatus')).toBeVisible();await expect(page.locator('#annualSubtitle')).not.toContainText('unavailable');
+ await page.goto('/graphs.html');await expect(page.locator('#graphUpdated')).toContainText('Graphs could not load');await expect(page.locator('#chartTextSummary')).not.toContainText('are loading');
+});
+test('empty monthly archive shows an empty report without an invalid date',async({page})=>{
+ await page.route('**/daily?**',r=>r.fulfill({contentType:'application/json',body:'{"days":[]}'}));
+ await page.goto('/monthly.html');await expect(page.locator('#monthStory')).toHaveText('No archive data is available for this month.');await expect(page.locator('#shareMonthCard')).toBeDisabled();await expect(page.locator('#monthTitle')).not.toContainText('undefined');
+});
+test('station quality remains available when optional coverage fails',async({page})=>{
+ await page.route('**/quality',r=>r.fulfill({contentType:'application/json',body:'{"feed_status":"Live","samples_last_24h":288}'}));
+ await page.route('**/reliability',r=>r.abort());await page.goto('/station.html');await expect(page.locator('#qualityFeed')).toHaveText('Live');await expect(page.locator('#quality24')).toHaveText('288');await expect(page.locator('#qualityReliabilityNote')).toContainText('could not be refreshed');
 });
