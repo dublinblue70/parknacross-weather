@@ -1,11 +1,24 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 import re
+import socket
 from urllib.parse import urlparse, parse_qs
 
 class Handler(SimpleHTTPRequestHandler):
+    disconnected = False
     def do_GET(self):
         parsed = urlparse(self.path)
+        if parsed.path == '/__origin-connectivity':
+            Handler.disconnected = parse_qs(parsed.query).get('mode', ['on'])[0] == 'off'
+            self.send_response(200)
+            self.send_header('Content-Length', '2')
+            self.end_headers()
+            self.wfile.write(b'OK')
+            return
+        if Handler.disconnected:
+            self.connection.shutdown(socket.SHUT_RDWR)
+            self.connection.close()
+            return
         candidate = parse_qs(parsed.query).get('candidate', [''])[0]
         if parsed.path == '/service-worker.js' and candidate in ('failed', 'next'):
             source = Path('service-worker.js').read_text()
