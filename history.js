@@ -51,6 +51,7 @@ function lastSunday(year,month){const d=new Date(Date.UTC(year,month+1,0,12));d.
 function todayKey(){const parts=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()),m=Object.fromEntries(parts.map(p=>[p.type,p.value]));return `${m.year}-${m.month}-${m.day}`;}
 function expectedSamples(day){if(day===todayKey()){const parts=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date()),m=Object.fromEntries(parts.map(p=>[p.type,p.value])),minutes=Number(m.hour||0)*60+Number(m.minute||0);return Math.max(1,Math.floor(minutes/5)+1);}const y=Number(day.slice(0,4));if(day===lastSunday(y,2))return276;if(day===lastSunday(y,9))return300;return288;}
 
+let heatmapPositioned=false;
 function renderHeatmap(){
   const host=$("archiveHeatmap");if(!host)return;host.innerHTML="";
   const end=new Date(`${todayKey()}T12:00:00Z`),start=new Date(end);start.setUTCDate(start.getUTCDate()-364);
@@ -70,6 +71,7 @@ function renderHeatmap(){
     else {cell.title=`${longDay(day)} · no archived data`;cell.setAttribute("aria-hidden","true");}
     if(day===todayKey())cell.classList.add("current");if(day===selectedArchiveDay)cell.classList.add("selected");host.appendChild(cell);
   }
+  if(!heatmapPositioned&&host.parentElement){host.parentElement.scrollLeft=Math.max(0,host.scrollWidth-host.parentElement.clientWidth);heatmapPositioned=true;}
   const pct=usable(coverageSummary?.coverage_percent)?Number(coverageSummary.coverage_percent):(totalExpected?Math.min(100,totalActual/totalExpected*100):null);
   set("heatmapSummary",populated?`${populated} archived day${populated===1?"":"s"} in view · ${complete} at ≥98% coverage${pct!==null?` · ${pct.toFixed(1)}% of unique five-minute slots captured since archiving began`:""}.` : (dailyRows.length?"Archive coverage is unavailable. Saved weather observations remain available below.":"The completeness map will fill as the archive grows."));
 }
