@@ -2549,3 +2549,6 @@ footer > .footer-links a:focus-visible {
   footer > .footer-links { order: 1 !important; }
   footer > span:nth-child(2) { order: 2 !important; flex-basis: 100% !important; }
 }
+
+/* An unavailable official feed is a neutral status, never a yellow warning. */
+.warning-banner.level-unavailable{--warning-bg:#e4e9ed;--warning-fg:#18232d;--warning-soft:rgba(24,35,45,.08);--warning-line:rgba(24,35,45,.25)}

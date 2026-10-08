@@ -263,20 +263,7 @@ function renderOfficialWarningStatus(payload){
   const warnings=Array.isArray(payload?.warnings)?payload.warnings:null;
   if(!warnings){badge.classList.add("warning-white");badge.textContent="Status unavailable";detail.textContent="The Met Éireann warning feed could not be checked. Open the official warnings page for the current status.";return;}
   const now=Date.now();
-  const valid=warnings.filter(warning=>{
-    const expiry=warning?.expires||warning?.expiry;
-    const expiryTime=expiry?new Date(expiry).getTime():NaN;
-    if(Number.isFinite(expiryTime)&&expiryTime<now)return false;
-    const words=[warning?.type,warning?.event,warning?.status,warning?.headline,warning?.description].filter(Boolean).join(" ").toLowerCase();
-    return !/potato|blight|farming|agricultur|environmental advisory/.test(words);
-  }).map(warning=>{
-    const text=String(warning?.level||warning?.severity||warning?.status||"").toLowerCase();
-    const level=text.includes("red")?"red":text.includes("orange")?"orange":text.includes("yellow")?"yellow":"unknown";
-    const onset=warning?.onset?new Date(warning.onset):null;
-    return {...warning,level,onset:Number.isFinite(onset?.getTime())?onset:null};
-  });
-  const severity={red:3,orange:2,yellow:1,unknown:0};
-  valid.sort((a,b)=>severity[b.level]-severity[a.level]||(a.onset?.getTime()||0)-(b.onset?.getTime()||0));
+  const valid=window.ParknacrossWarnings.select(warnings).map(w=>({...w,onset:w.onset?new Date(w.onset):null}));
   if(!valid.length){badge.classList.add("warning-green");badge.textContent="Green · no warning in force";detail.textContent="No current Wexford land warning is listed in the latest official feed.";return;}
   const warning=valid[0];
   if(warning.level==="unknown"){

@@ -45,13 +45,15 @@
  }
  document.addEventListener("visibilitychange",()=>{if(document.hidden)stopAnimation();else if(playing)startAnimation();});
  document.addEventListener("DOMContentLoaded",()=>{
-  set("year",new Date().getFullYear());map=L.map("radarMap").setView(coords,7);
+  set("year",new Date().getFullYear());startSatelliteStream();loadRain();(window.ParknacrossRefresh?.every || setInterval)(loadRain,60*1000);
+  if(!window.L){set("radarStatus","The map library could not load. Retry this page to restore radar.");set("radarTime","Radar map unavailable");["radarCenter","radarSlider","radarPlay"].forEach(id=>{if($(id))$(id).disabled=true;});return;}
+  map=L.map("radarMap").setView(coords,7);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);
   L.circleMarker(coords,{radius:7,color:"#fff",weight:2,fillColor:"#7bd7ef",fillOpacity:1}).addTo(map).bindTooltip("Approximate station area · North Wexford (not an exact location)");
   $("radarCenter").addEventListener("click",()=>map.setView(coords,Math.max(7,map.getZoom())));
   $("radarSlider").addEventListener("input",event=>{playing=false;stopAnimation();set("radarPlay","Play");show(Number(event.target.value))});
   $("radarPlay").addEventListener("click",()=>{playing=!playing;set("radarPlay",playing?"Pause":"Play");if(playing)startAnimation();else stopAnimation()});
-  startSatelliteStream();loadRadar();loadRain();(window.ParknacrossRefresh?.every || setInterval)(loadRain,60*1000);(window.ParknacrossRefresh?.every || setInterval)(loadRadar,5*60*1000);(window.ParknacrossRefresh?.every || setInterval)(updateRadarStatus,60*1000);
+  loadRadar();(window.ParknacrossRefresh?.every || setInterval)(loadRadar,5*60*1000);(window.ParknacrossRefresh?.every || setInterval)(updateRadarStatus,60*1000);
  });
 })();
 

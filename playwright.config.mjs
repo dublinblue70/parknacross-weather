@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests",
+  testDir: ".",
+  testMatch: ["mobile-menu.spec.mjs", "intelligent-features.spec.mjs"],
   timeout: 30_000,
   use: { baseURL: "http://127.0.0.1:4173" },
   webServer: {

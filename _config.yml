@@ -1,0 +1,5 @@
+exclude:
+  - _worker
+  - tests
+  - release-tests
+  - node_modules

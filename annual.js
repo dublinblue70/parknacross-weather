@@ -61,7 +61,7 @@ function render(year) {
     ? rainRows.reduce((s, r) => s + Number(r.rain_mm), 0)
     : null;
   const wetDays = rows.filter(
-    (r) => usable(r.rain_mm) && Number(r.rain_mm) > 0,
+    (r) => usable(r.rain_mm) && Number(r.rain_mm) >= 0.2,
   ).length;
   const avgHigh = avg(rows.map((r) => r.high_c)),
     avgLow = avg(rows.map((r) => r.low_c));
@@ -74,7 +74,7 @@ function render(year) {
   );
   set("annualRain", usable(rain) ? `${n(rain)} mm` : "Unavailable");
   set("annualWetDays", rainRows.length
-    ? `${wetDays} wet day${wetDays === 1 ? "" : "s"} · ${rainRows.length}/${rows.length} archived days with rainfall data`
+    ? `${wetDays} day${wetDays === 1 ? "" : "s"} with at least 0.2 mm of rain · ${rainRows.length}/${rows.length} archived days with rainfall data`
     : "No archived rainfall values");
   set("annualHigh", usable(high?.high_c) ? `${n(high.high_c)} °C` : "--");
   set("annualHighDate", high ? dateLabel(high.day) : "--");
@@ -105,7 +105,7 @@ function render(year) {
       `Temperatures ranged from ${n(low.low_c)}°C to ${n(high.high_c)}°C`,
     );
   if (usable(rain)) story.push(
-    `${n(rain)} mm of rain was recorded across ${wetDays} wet day${wetDays === 1 ? "" : "s"}${missingRainDays ? `, based on ${rainRows.length} of ${rows.length} archived days with rainfall values` : ""}`,
+    `${n(rain)} mm of rain was recorded across ${wetDays} day${wetDays === 1 ? "" : "s"} with at least 0.2 mm of rain${missingRainDays ? `, based on ${rainRows.length} of ${rows.length} archived days with rainfall values` : ""}`,
   );
   if (usable(gust?.peak_gust_kmh))
     story.push(`the strongest gust reached ${n(gust.peak_gust_kmh)} km/h`);
@@ -193,7 +193,8 @@ async function load() {
 }
 async function loadVerified() {
   try {
-    const [d, stats] = await Promise.all([get(), getStats().catch(() => null)]);
+    const statsPromise=getStats().catch(()=>null);const d=await get(), stats=null;
+
     allRows = Array.isArray(d.days) ? d.days : [];
     const record = stats?.records?.peak_gust;
     if (usable(record?.epoch) && usable(record?.value)) {
@@ -231,6 +232,7 @@ async function loadVerified() {
       render(picker.value);
     });
     render(selected);
+    statsPromise.then(value=>{const rec=value?.records?.peak_gust;if(usable(rec?.epoch)&&usable(rec?.value)){const day=new Date(Number(rec.epoch)*1000).toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});const row=allRows.find(item=>item.day===day);if(row){row.peak_gust_kmh=Number(rec.value)+0.0001;render(picker.value);}}});
   } catch (e) {
     console.error(e);
     set("annualSubtitle", "Annual archive temporarily unavailable.");

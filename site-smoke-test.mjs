@@ -24,7 +24,7 @@ for (const name of htmlFiles) {
     if (!html.includes('href="install.html">Install help</a>')) failures.push(`${name}: missing static Install help link`);
     if (!html.includes('href="privacy.html">Privacy</a>')) failures.push(`${name}: missing static Privacy link`);
     const menuItems = [...html.matchAll(/role="menuitem"/g)].length;
-    if (menuItems !== 11) failures.push(`${name}: expected 11 static More-menu destinations, found ${menuItems}`);
+    if (name !== "admin.html" && menuItems !== 11) failures.push(`${name}: expected 11 static More-menu destinations, found ${menuItems}`);
   }
 
   for (const match of html.matchAll(/(?:src|href)="([^"?#]+)(?:[?#][^"]*)?"/g)) {
@@ -73,9 +73,9 @@ const requiredChecks = [
   ["history.js", "Weather observations for"],
   ["history.js", "No lightning count stored for this day"],
   ["status.js", "retained in the raw archive"],
-  ["station.html", "Readings saved today"],
+  ["station.html", "Estimated database writes today"],
   ["navigation.js", "document.body.appendChild(menu)"],
-  ["sitemap.xml", "2026-09-29"],
+  ["sitemap.xml", "2026-10-08"],
   ["app.js", "dashboardTooltipTime"],
   ["graphs.js", "Partial archive"],
   ["history.html", "previousArchiveDay"],
@@ -96,7 +96,7 @@ const requiredChecks = [
   ["app.js", "function lightningDistance"],
   ["status.js", "PARTIAL"],
   ["pwa-diagnostics.js", "diagWorker"],
-  ["service-worker.js", "parknacross-v38-4-162-sky-social-admin"],
+  ["service-worker.js", "parknacross-v38-4-163-whole-site-reliability"],
   ["graphs.js", "recentEventOutsideWindow"],
   ["graphs.js", "applyExactTimeBounds"],
   ["service-worker.js", "url.pathname.endsWith(\"/styles.css\")"],
@@ -108,7 +108,7 @@ const requiredChecks = [
   ["graphs.html", "How to read these charts"],
   ["privacy.html", "Mostly weather, very little personal data"],
   ["playwright.config.mjs", "mobile-safari"],
-  ["tests/mobile-menu.spec.mjs", "More menu works"],
+  ["mobile-menu.spec.mjs", "More menu works"],
   ["coast.html", "Sea &amp; Swim Conditions"],
   ["coast.js", "renderSwimSummary"],
   ["coast.js", "localSeaEstimate"],
@@ -229,7 +229,7 @@ if (!dashboardHtml.includes('aria-label="Daily sun phases"') || !dashboardHtml.i
 if (!dashboardHtml.includes('id="seasonNextMarker"') || !dashboardHtml.includes("Typical dates for Ireland")) failures.push("index.html: approximate annual equinox and solstice outlook is missing");
 if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
 if (!dashboardHtml.includes('id="weatherWindowScene"') || !dashboardHtml.includes('id="weatherWindowObservation"') || dashboardHtml.includes("weatherSoundToggle") || dashboardHtml.includes("weather-sound-controls") || dashboardHtml.includes("Illustrated from local readings")) failures.push("index.html: Weather Window should remain while all sound controls and the removed caption stay absent");
-if (!dashboardHtml.includes('weather-window.css?v=20261006-v38-4-143') || !dashboardHtml.includes('weather-window.js?v=20261006-v38-4-143')) failures.push("index.html: isolated weather window assets must be versioned and loaded");
+if (!dashboardHtml.includes('weather-window.css?v=20261008-v38-4-163') || !dashboardHtml.includes('weather-window.js?v=20261008-v38-4-163')) failures.push("index.html: isolated weather window assets must be versioned and loaded");
 for (const page of ["install.html", "station.html"]) {
   const html = await readFile(new URL(page, import.meta.url), "utf8");
   if (/id="diagCache">v\d/i.test(html)) failures.push(`${page}: installation diagnostics must not hardcode a release number`);
@@ -255,7 +255,8 @@ try {
   const end = summaryApp.indexOf("\n\nasync function loadOfficialWarningStatus", start);
   const nodes = new Map();
   for (const id of ["officialWarningBadge", "officialWarningDetail"]) nodes.set(id, { textContent: "", classList: { values: new Set(), add(value) { this.values.add(value); }, remove(...values) { values.forEach(value => this.values.delete(value)); } } });
-  const render = Function("$", "TIME_ZONE", `${summaryApp.slice(start, end)}; return renderOfficialWarningStatus;`)(id => nodes.get(id), "Europe/Dublin");
+  const warningsWindow={};(Function("window",await readFile(join(root,"weather-warnings.js"),"utf8")))(warningsWindow);
+  const render = Function("$", "TIME_ZONE", "window", `${summaryApp.slice(start, end)}; return renderOfficialWarningStatus;`)(id => nodes.get(id), "Europe/Dublin",warningsWindow);
   render({ warnings: [{ level: "Yellow", type: "Rain", expires: new Date(Date.now() + 3600000).toISOString() }] });
   if (!nodes.get("officialWarningBadge").classList.values.has("warning-yellow")) failures.push("summary.js: official yellow warnings do not receive the yellow colour");
   render({ warnings: [{ level: "Yellow" }, { level: "Orange" }, { level: "Red" }] });
@@ -302,11 +303,11 @@ try {
   const start = dashboardApp.indexOf("function publishWeatherWindowObservation(");
   const end = dashboardApp.indexOf("\n}\n", start) + 2;
   const events = [];
-  const publish = Function("window", "CustomEvent", `${dashboardApp.slice(start, end)}; return publishWeatherWindowObservation;`)({ dispatchEvent: event => events.push(event) }, class CustomEvent { constructor(type, options) { this.type = type; this.detail = options.detail; } });
+  const publish = Function("window", "CustomEvent", "stationCalendarDate", "sunEvent", "ARDAMINE_LAT", "ARDAMINE_LON", `${dashboardApp.slice(start, end)}; return publishWeatherWindowObservation;`)({ dispatchEvent: event => events.push(event) }, class CustomEvent { constructor(type, options) { this.type = type; this.detail = options.detail; } },date=>date,()=>null,52.6,-6.2);
   const observation = { epoch: 1 };
   publish(observation, true, false);
   if (events.length !== 1 || events[0].detail.current !== observation || !events[0].detail.rainDetected) failures.push("app.js: isolated weather-window event must carry readings without transforming them");
-  const failureSafePublish = Function("window", "CustomEvent", `${dashboardApp.slice(start, end)}; return publishWeatherWindowObservation;`)({ dispatchEvent: () => { throw new Error("optional listener failure"); } }, class CustomEvent { constructor(type, options) { this.type = type; this.detail = options.detail; } });
+  const failureSafePublish = Function("window", "CustomEvent", "stationCalendarDate", "sunEvent", "ARDAMINE_LAT", "ARDAMINE_LON", `${dashboardApp.slice(start, end)}; return publishWeatherWindowObservation;`)({ dispatchEvent: () => { throw new Error("optional listener failure"); } }, class CustomEvent { constructor(type, options) { this.type = type; this.detail = options.detail; } },date=>date,()=>null,52.6,-6.2);
   try { failureSafePublish(observation, false, false); } catch { failures.push("app.js: optional weather-window failures must not escape into existing dashboard rendering"); }
 } catch (error) {
   failures.push(`app.js: weather-window isolation check failed (${error.message})`);

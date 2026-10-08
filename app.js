@@ -1991,7 +1991,7 @@ function isDashboardWeatherWarning(warning) {
 function renderWeatherWarning(list) {
   const banner = $("warningBanner");
   const relevant = Array.isArray(list)
-    ? list.filter(isDashboardWeatherWarning)
+    ? window.ParknacrossWarnings.select(list)
     : [];
 
   if (!banner || !relevant.length) {
@@ -2012,17 +2012,19 @@ function renderWeatherWarning(list) {
   banner.classList.remove(
     "level-yellow",
     "level-orange",
-    "level-red"
+    "level-red",
+    "level-unavailable"
   );
 
   if (level.includes("red")) {
     banner.classList.add("level-red");
   } else if (level.includes("orange")) {
     banner.classList.add("level-orange");
-  } else {
+  } else if(level.includes("yellow")) {
     banner.classList.add("level-yellow");
   }
 
+  if(level.includes("unknown"))banner.classList.add("level-unavailable");
   const displayLevel =
     level.includes("red")
       ? "Red"
@@ -2030,7 +2032,7 @@ function renderWeatherWarning(list) {
         ? "Orange"
         : "Yellow";
 
-  set("warningLevel", `${displayLevel} warning`);
+  set("warningLevel", level.includes("unknown") ? "Warning details unavailable" : `${displayLevel} · ${warning.upcoming ? "upcoming warning" : "warning in force"}`);
 
   const warningType =
     String(
@@ -2085,10 +2087,10 @@ function renderMarineWarning(marine, weatherWarningVisible) {
 
   banner.hidden = false;
   banner.classList.toggle("stacked-warning", weatherWarningVisible);
-  banner.classList.remove("level-orange", "level-red");
+  banner.classList.remove("level-orange", "level-red", "level-unavailable");
   banner.classList.add("level-yellow");
 
-  set("marineWarningLevel", "North Wexford marine warning");
+  set("marineWarningLevel", Date.parse(marine?.local_warning_onset)>Date.now()?"North Wexford marine warning · upcoming":"North Wexford marine warning");
 
   let title = "Marine warning — North Wexford coast";
   if (gale && smallCraft) {
@@ -2152,7 +2154,7 @@ async function loadWarnings() {
   } else {
     console.warn("Met Éireann weather warnings:", weatherResult.reason);
     const banner = $("warningBanner");
-    if (banner) banner.hidden = true;
+    if (banner) { weatherWarningVisible=true;banner.hidden = false; banner.classList.remove("level-yellow","level-orange","level-red");banner.classList.add("level-unavailable"); set("warningLevel","Status unavailable"); set("warningTitle","Official weather warnings unavailable"); set("warningTiming",""); set("warningText","The official feed could not be checked. Open Met Éireann for the latest warnings."); }
   }
 
   if (marineResult.status === "fulfilled") {
@@ -2160,7 +2162,7 @@ async function loadWarnings() {
   } else {
     console.warn("Met Éireann marine warnings:", marineResult.reason);
     const banner = $("marineWarningBanner");
-    if (banner) banner.hidden = true;
+    if(banner){banner.hidden=false;banner.classList.remove("level-yellow","level-orange","level-red");banner.classList.add("level-unavailable");banner.classList.toggle("stacked-warning",weatherWarningVisible);set("marineWarningLevel","Status unavailable");set("marineWarningTitle","Official marine warnings unavailable");set("marineWarningTiming","");set("marineWarningText","The marine warning feed could not be checked. Open Met Éireann for the latest bulletin.");}
   }
 }
 

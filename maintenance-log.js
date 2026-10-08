@@ -1,4 +1,6 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
+  {date:"2026-10-08",type:"Website",title:"Whole-site reliability and clarity update",detail:"Improved warning handling, archive photo loading, request deadlines, status monitoring, offline updates and report labels."},
+  {date:"2026-10-07",type:"Website",title:"Sky calendar, graph and admin improvements",detail:"Added visitor sky-photo browsing, improved graph inspection and zoom, and updated private admin tools."},
   {
     date: "2026-09-26",
     type: "Sensor expansion",

@@ -28,6 +28,8 @@
     const local = currentR.status === "fulfilled" && usable(currentR.value?.temperature_c)
       ? Number(currentR.value.temperature_c) : null;
 
+    const stamp=(data,officialFeed)=>{const raw=officialFeed?data?.report_time:(data?.received_at||(usable(data?.epoch)?Number(data.epoch)*1000:null));const date=new Date(raw||NaN);if(!Number.isFinite(date.getTime()))return "reading time unavailable";const age=(Date.now()-date.getTime())/60000;return `${date.toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}${age>(officialFeed?120:15)?" · stale reading":""}`;};
+    set("climateComparisonTime",`Johnstown Castle: ${officialR.status==="fulfilled"?stamp(officialR.value,true):"unavailable"} · Parknacross: ${currentR.status==="fulfilled"?stamp(currentR.value,false):"unavailable"}. Readings may be from different times.`);
     set("climateOfficialTemp", official === null ? "--" : `${official.toFixed(1)}°C`);
     if (official !== null && local !== null) {
       const d = local - official;
@@ -44,7 +46,7 @@
       return;
     }
     e.innerHTML = items.map(x =>
-      `<article class="event-item"><time>${new Date(x.received_at).toLocaleDateString("en-IE", {timeZone:"Europe/Dublin",day:"numeric",month:"short",year:"numeric"})}</time><div><strong>${esc(x.title)}</strong><p>${esc(x.detail || "")}</p></div></article>`
+      `<article class="event-item"><time>${new Date(x.received_at).toLocaleDateString("en-IE", {timeZone:"Europe/Dublin",day:"numeric",month:"short",year:"numeric"})}</time><div><strong>${esc(x.title==="Wet day"?"Day with at least 10 mm of rain":x.title)}</strong><p>${esc(x.detail || "")}</p></div></article>`
     ).join("");
   }
 
@@ -58,13 +60,15 @@
 
     // /rain-summary includes the latest WS90 daily counter and is the same
     // rainfall source used by the refreshed Dashboard figures.
-    const [cR, sR, eR, dR, stR] = await Promise.allSettled([
+    const promises=[
       get("/climate-summary"),
       get("/rain-summary"),
       get("/events"),
       get("/daily?days=3660"),
       get("/stats")
-    ]);
+    ];
+    const settled=Array(5).fill({status:"pending"});
+    async function renderAvailable(){const [cR,sR,eR,dR,stR]=settled;
 
     if (cR.status === "fulfilled") {
       const c = cR.value;
@@ -83,7 +87,7 @@
         ? new Date(Number(stR.value.first_epoch)*1000).toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"long",year:"numeric"})
         : null;
       set("climateRainText", ltaMonthRain !== null
-        ? `${n(stationMonthRain)} mm at Parknacross${archiveSince?` since records began on ${archiveSince}`:" so far"}; Johnstown Castle's 1991–2020 ${monthName} average is ${n(ltaMonthRain)} mm. This is a partial-period comparison until the local archive covers the full month.`
+        ? `${n(stationMonthRain)} mm at Parknacross so far this ${monthName}; Johnstown Castle's 1991–2020 ${monthName} average is ${n(ltaMonthRain)} mm. This is a partial-period comparison until the local archive covers the full month.`
         : `${n(stationMonthRain)} mm at Parknacross so far. A Johnstown Castle long-term rainfall comparison is not configured for ${monthName} yet.`);
       set("climateLocalMean", `${n(c.station_month_mean_temperature_c)}°C`);
       if (c.on_this_day?.available) {
@@ -93,15 +97,17 @@
     }
 
     if (eR.status === "fulfilled") events(eR.value.events || []);
+    else if(eR.status === "rejected")$("eventTimeline").textContent="Station milestones are temporarily unavailable.";
 
-    if (dR.status === "fulfilled") {
+    if (dR.status === "fulfilled"&&!renderAvailable.chartRendered) {
+      renderAvailable.chartRendered=true;
       const m = new Map();
       (dR.value.days || []).forEach(x => {
         const k = x.day.slice(0, 7);
         if (usable(x.rain_mm)) m.set(k, (m.get(k) || 0) + Number(x.rain_mm));
       });
       const rows = [...m].sort();
-      new Chart($("climateMonthlyChart"), {
+      window.Chart&&new Chart($("climateMonthlyChart"), {
         type: "bar",
         data: {
           labels: rows.map(([k]) => new Date(k + "-15T12:00:00").toLocaleDateString("en-IE", {timeZone:"Europe/Dublin",month:"short",year:"2-digit"})),
@@ -118,7 +124,8 @@
       });
     }
 
-    
+    }
+    promises.forEach((promise,index)=>promise.then(value=>{settled[index]={status:"fulfilled",value};renderAvailable();},reason=>{settled[index]={status:"rejected",reason};renderAvailable();}));
   });
 })();
 

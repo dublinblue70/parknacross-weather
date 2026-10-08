@@ -1,6 +1,8 @@
-const CACHE_NAME = "parknacross-v38-4-162-sky-social-admin";
+const CACHE_NAME = "parknacross-v38-4-163-whole-site-reliability";
 const STATIC_ASSETS = [
   "./",
+  "./site-request.js",
+  "./weather-warnings.js",
   "./index.html",
   "./admin.html",
   "./admin-tools.js",
@@ -31,6 +33,7 @@ const STATIC_ASSETS = [
   "./north-wexford-weather.html",
   "./north-wexford-coastal-weather.html",
   "./styles.css",
+  "./style.css",
   "./weather-window.css",
   "./chart.umd.min.js",
   "./app.js",
@@ -95,6 +98,8 @@ const STATIC_ASSETS = [
   "./pwa-dashboard-narrow.jpg"
 ];
 
+const ESSENTIAL_ASSETS=["./index.html","./styles.css","./app.js","./site-request.js","./weather-warnings.js","./navigation.js","./offline.html","./admin.html"];
+async function verifyEssentialCache(){const cache=await caches.open(CACHE_NAME);for(const asset of ESSENTIAL_ASSETS){const response=await cache.match(new URL(asset,self.registration.scope).toString());if(!response?.ok)throw new Error(`Incomplete offline update: ${asset}`);}}
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
@@ -102,13 +107,14 @@ self.addEventListener("install", event => {
       try {
         const absolute = new URL(asset, self.registration.scope).toString();
         const request = new Request(absolute, { cache: "reload" });
-        const response = await fetch(request);
+        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);let response;try{response=await fetch(request,{signal:controller.signal});}finally{clearTimeout(timer);}
         if (response.ok) await cache.put(request, response);
       } catch (_) {}
     }));
     /* Activate a fully cached release immediately. This prevents installed
        PWAs—especially iOS installations reopened after several days—from
        remaining indefinitely on an older application shell. */
+    await verifyEssentialCache();
     await self.skipWaiting();
   })());
 });
@@ -127,8 +133,9 @@ self.addEventListener("message", event => {
 
 self.addEventListener("activate", event => {
   event.waitUntil((async () => {
+    await verifyEssentialCache();
     const keys = await caches.keys();
-    await Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
+    await Promise.all(keys.filter(key => key.startsWith("parknacross-") && key !== CACHE_NAME).map(key => caches.delete(key)));
     await self.clients.claim();
   })());
 });

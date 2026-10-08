@@ -17,6 +17,10 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: npm run test:smoke
+      - run: npm run test:worker-export-range
       - run: npm run test:release
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:smoke
+      - run: npm run test:worker-export-range
       - run: npm run test:release-browser

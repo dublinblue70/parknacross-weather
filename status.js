@@ -173,7 +173,7 @@ async function runChecks(only=null) {
 
   const sitePromise=read("site",checkSite);
   const apiStarted=performance.now();
-  const [health,current,quality,history,reliability,backup,social,tides,m2,site] = await Promise.all([
+  const [health,current,quality,history,reliability,backup,social,tides,m2,landWarnings,marineWarnings,site] = await Promise.all([
     read("health",()=>fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e}))),
     read("current",()=>fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e}))),
     read("quality",()=>fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e}))),
@@ -185,11 +185,18 @@ async function runChecks(only=null) {
     // health check can detect an upstream outage instead of only checking cache.
     read("tides",()=>fetchJSON(`${API_BASE}/marine/tides?station=Arklow&healthcheck=${Date.now()}`,10000).catch(e=>({__error:e}))),
     read("m2",()=>fetchJSON(`${API_BASE}/marine/sea-temperature?healthcheck=${Date.now()}`,10000).catch(e=>({__error:e}))),
+    read("landWarnings",()=>fetchJSON(`${API_BASE}/met/warnings?healthcheck=${Date.now()}`,12000).catch(e=>({__error:e}))),
+    read("marineWarnings",()=>fetchJSON(`${API_BASE}/met/marine?healthcheck=${Date.now()}`,15000).catch(e=>({__error:e}))),
     sitePromise
   ]);
 
   const apiElapsed=Math.round(performance.now()-apiStarted);
   let states=[site.state];
+  for(const [prefix,data,valid] of [["landWarning",landWarnings,Array.isArray(landWarnings?.warnings)],["marineWarning",marineWarnings,typeof marineWarnings?.local_warning_relevant==="boolean"]]){
+    const ok=!data.__error&&valid;setBadge(prefix+"Badge",ok?"good":"warn",ok?"CHECKED":"UNAVAILABLE");
+    setText(prefix+"Value",ok?(prefix==="landWarning"?`${window.ParknacrossWarnings.select(data.warnings).length} relevant warnings`:data.local_warning_relevant?"Relevant marine warning":"No relevant marine warning"):"Feed unavailable");
+    setText(prefix+"Detail",ok?`Official feed checked ${fmtIrishDateTime(new Date().toISOString())}`:"The official warning feed could not be verified. Check Met Éireann directly.");if(!ok)states.push("warn");
+  }
 
   const tideEvents=Array.isArray(tides?.events)?tides.events:[];
   const validTideEvents=tideEvents.filter(event=>event&&Number.isFinite(Date.parse(event.time))&&
@@ -393,7 +400,7 @@ async function runChecks(only=null) {
 
 document.addEventListener("DOMContentLoaded",()=>{
   $("refreshButton")?.addEventListener("click",()=>runChecks());
-  const feeds={siteBadge:'site',apiBadge:'health',feedBadge:'current',ingestBadge:'health',samplesBadge:'quality',gapBadge:'quality',batteryBadge:'quality',reliabilityBadge:'reliability',gustQualityBadge:'quality',soilBadge:'current',tideBadge:'tides',m2Badge:'m2',backupBadge:'backup',facebookBadge:'social',xBadge:'social',qualityBadge:'history'};
+  const feeds={landWarningBadge:'landWarnings',marineWarningBadge:'marineWarnings',siteBadge:'site',apiBadge:'health',feedBadge:'current',ingestBadge:'health',samplesBadge:'quality',gapBadge:'quality',batteryBadge:'quality',reliabilityBadge:'reliability',gustQualityBadge:'quality',soilBadge:'current',tideBadge:'tides',m2Badge:'m2',backupBadge:'backup',facebookBadge:'social',xBadge:'social',qualityBadge:'history'};
   for(const [id,key] of Object.entries(feeds)){const card=$(id)?.closest('article');if(!card)continue;const retry=document.createElement('button');retry.type='button';retry.className='feed-retry';retry.dataset.retryFeed=key;retry.textContent='Retry this check';const hint=document.createElement('p');hint.className='sub';hint.setAttribute('role','status');retry.addEventListener('click',async()=>{retry.disabled=true;hint.textContent='Retrying this source only…';try{await runChecks(key);}finally{retry.disabled=false;}});card.append(retry,hint);}
 
   runChecks();

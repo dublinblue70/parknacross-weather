@@ -87,7 +87,7 @@
       .storage-meter-copy { flex-direction: column; gap: 3px; }
     }
   </style>
-<link rel="stylesheet" href="site-help.css?v=20261007-v38-4-162"><link rel="stylesheet" href="explore-weather.css?v=20261007-v38-4-162"><script src="visibility-refresh.js?v=20261007-v38-4-162"></script><link rel="stylesheet" href="website-usability.css?v=20261007-v38-4-162"></head>
+<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-163"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-163"><script src="visibility-refresh.js?v=20261008-v38-4-163"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-163"><script src="site-request.js?v=20261008-v38-4-163"></script><script src="weather-warnings.js?v=20261008-v38-4-163"></script></head>
 <body>
 <div class="shell">
   <header class="topbar">
@@ -218,7 +218,7 @@
             <small id="d1StorageProjection">A forecast appears after 7 days of archive history</small>
           </div>
           <div class="storage-stat">
-            <span>Readings saved today</span>
+            <span>Estimated database writes today</span>
             <strong id="d1WritesToday">--</strong>
             <small id="d1WritesTodayNote">Estimated archive activity</small>
           </div>
@@ -423,14 +423,14 @@ function renderStorage(storage) {
       "d1WritesTodayNote",
       pct === null
         ? "Estimated archive activity"
-        : `About ${pct.toFixed(2)}% of today’s free save allowance`
+        : `About ${pct.toFixed(2)}% of today’s estimated free database-write allowance`
     );
   }
 
   const writeLimit = storage?.daily_row_limits?.rows_written;
   const readLimit = storage?.daily_row_limits?.rows_read;
   if (usable(writeLimit) && usable(readLimit)) {
-    set("d1DailyLimits", `${Number(writeLimit).toLocaleString("en-IE")} saves per day`);
+    set("d1DailyLimits", `${Number(writeLimit).toLocaleString("en-IE")} database row writes per day`);
     set("d1DailyLimitsNote", `${Number(readLimit).toLocaleString("en-IE")} reads available · official usage is shown by the hosting service`);
   }
 
@@ -538,11 +538,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<script src="offline.js?v=20261007-v38-4-162"></script><script src="alert-settings.js?v=20261004-v38-4-130-fresh-alert-gate"></script><script src="site-config.js?v=20260912-batteryrestore1"></script><script src="station-v2.js?v=20261007-v38-4-162"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
-<script src="pwa-update.js?v=20261007-v38-4-162"></script>
+<script src="offline.js?v=20261008-v38-4-163"></script><script src="alert-settings.js?v=20261004-v38-4-130-fresh-alert-gate"></script><script src="site-config.js?v=20260912-batteryrestore1"></script><script src="station-v2.js?v=20261008-v38-4-163"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="pwa-update.js?v=20261008-v38-4-163"></script>
 <script src="pwa-diagnostics.js?v=20261006-v38-4-144"></script>
 <script src="accessibility.js?v=20260924-v38-4-97"></script>
 <script src="navigation.js?v=20260924-v38-4-97"></script>
-<script src="site-help.js?v=20261007-v38-4-162"></script><script src="maintenance-log.js?v=20261007-v38-4-162"></script><script src="maintenance-markers.js?v=20261007-v38-4-162"></script></body>
+<script src="site-help.js?v=20261008-v38-4-163"></script><script src="maintenance-log.js?v=20261008-v38-4-163"></script><script src="maintenance-markers.js?v=20261008-v38-4-163"></script></body>
 </html>
 

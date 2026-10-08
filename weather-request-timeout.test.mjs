@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
 
-const source = await readFile(new URL("../app.js", import.meta.url), "utf8");
+const source = await readFile(new URL("./app.js", import.meta.url), "utf8");
 const declaration = source.match(/async function getJSON\(url, cacheMode = "default", timeoutMs = 12000\) \{[\s\S]*?\n\}/)?.[0];
 assert.ok(declaration, "the shared JSON request helper includes an explicit timeout");
 
