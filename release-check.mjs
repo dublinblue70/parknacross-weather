@@ -10,3 +10,6 @@ const sw=fs.readFileSync(path.join(root,'service-worker.js'),'utf8');for(const m
 for(const file of ['dashboard-preferences.js','chart-explorer.js','history-links.js','public-photo-calendar.js','action-feedback.js','website-usability.css'])assert.ok(sw.includes('./'+file),'Offline cache must include '+file);
 const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;assert.ok(sw.includes('v'+version.replaceAll('.','-')),'Release version differs from offline cache');
 console.log('PASS: '+html.length+' pages, local links/assets, unique IDs, JavaScript syntax, offline assets and release version.');
+
+const adminInline=fs.readFileSync(new URL('./admin.html',import.meta.url),'utf8').match(/<script id="adminAppScript">([\s\S]*?)<\/script>/)?.[1];
+if(!adminInline||adminInline.trim()!== (fs.readFileSync(new URL('./admin-tools.js',import.meta.url),'utf8')+'\nwindow.ParknacrossAdminStarted=true;').trim())throw Error('Admin inline controller must match admin-tools.js');

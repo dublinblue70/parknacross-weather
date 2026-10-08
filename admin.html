@@ -1,4 +1,11 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin · Parknacross Weather</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-161"><link rel="stylesheet" href="site-enhancements.css?v=20261007-v38-4-149"><link rel="stylesheet" href="site-help.css?v=20261007-v38-4-161"><link rel="stylesheet" href="explore-weather.css?v=20261007-v38-4-161"><script src="visibility-refresh.js?v=20261007-v38-4-161"></script><link rel="stylesheet" href="website-usability.css?v=20261007-v38-4-161"></head><body><main class="admin-page"><a href="index.html">← Weather dashboard</a><h1>Parknacross administration</h1><p>Photo uploads, sky settings and daily social posts.</p><p id="adminMessage" role="status" aria-live="polite">Sign in with your admin key.</p><form id="adminLogin" class="admin-card"><label>Admin key<input id="adminKey" type="password" autocomplete="off" required></label><button id="adminSignIn" type="submit">Sign in</button></form><div id="adminWorkspace" hidden><button id="adminSignOut" type="button">Sign out</button><section class="admin-card"><h2>Feature compatibility</h2><button id="adminCompatibilityRefresh" type="button">Check compatibility</button><p id="adminCompatibility" role="status">Checking deployed features…</p></section>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin · Parknacross Weather</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="weather-window.css?v=20261007-v38-4-162"><link rel="stylesheet" href="site-enhancements.css?v=20261007-v38-4-149"><link rel="stylesheet" href="site-help.css?v=20261007-v38-4-162"><link rel="stylesheet" href="explore-weather.css?v=20261007-v38-4-162"><script src="visibility-refresh.js?v=20261007-v38-4-162"></script><link rel="stylesheet" href="website-usability.css?v=20261007-v38-4-162"></head><body><main class="admin-page"><a href="index.html">← Weather dashboard</a><h1>Parknacross administration</h1><p>Photo uploads, sky settings and daily social posts.</p><p id="adminMessage" role="status" aria-live="polite">Sign in with your admin key.</p><form id="adminLogin" class="admin-card" novalidate><label>Admin key<input id="adminKey" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" required></label><button id="adminSignIn" type="submit">Sign in</button></form><script>
+(function(){
+ var status=document.getElementById('adminMessage'),form=document.getElementById('adminLogin');
+ window.ParknacrossAdminStarted=false;
+ form.addEventListener('submit',function(event){if(!window.ParknacrossAdminStarted){event.preventDefault();status.textContent='The admin login could not start on this browser. Use Reload admin page below, then try again.';}});
+ window.setTimeout(function(){if(!window.ParknacrossAdminStarted){status.textContent='The admin login code did not start. Use Reload admin page below to get a fresh copy.';}},5000);
+})();
+</script><p><a id="adminReload" href="admin.html?refresh=38.4.162">Reload admin page</a> · <span id="adminRelease">Admin version 38.4.162</span></p><div id="adminWorkspace" hidden><button id="adminSignOut" type="button">Sign out</button><section class="admin-card"><h2>Feature compatibility</h2><button id="adminCompatibilityRefresh" type="button">Check compatibility</button><p id="adminCompatibility" role="status">Checking deployed features…</p></section>
 <section class="admin-card"><h2>Today’s sky photo</h2><form id="adminPhotoForm"><label>Photograph<input id="adminPhotoFile" type="file" accept="image/jpeg,image/png,image/webp" required></label><label>Caption<input id="adminPhotoCaption" maxlength="140"></label><button id="adminPhotoSave" type="submit">Upload today’s photo</button></form><p id="adminPhotoStatus" role="status"></p><p>Photos are resized before upload. <a href="index.html?admin=1#todaySkyPanel">Photo likes and historical imports →</a></p></section>
 <section class="admin-card"><h2>Weather Window</h2><form id="adminSkyForm"><label>Sky now<select id="adminSky"><option value="auto">Automatic forecast</option><option value="clear">Clear</option><option value="mostly-clear">Mostly clear</option><option value="partly-cloudy">Partly cloudy</option><option value="cloudy">Cloudy</option><option value="overcast">Overcast</option></select></label><label>Rain / storm in illustration<select id="adminRain"><option value="auto">Automatic station reading</option><option value="none">No rain</option><option value="light">Light rain / drizzle</option><option value="rain">Rain</option><option value="heavy">Heavy rain</option><option value="thunderstorm">Thunder / lightning with rain</option></select></label><label>Duration<select id="adminSkyDuration"><option value="1h">One hour</option><option value="3h">Three hours</option><option value="today" selected>Until midnight</option></select></label><button id="adminSkySave" type="submit">Save illustration settings</button></form><p id="adminSkyStatus" role="status"></p><h3>Preview before saving</h3><div id="adminWindowPreview" class="weather-window-scene" data-sky="unknown" data-rain="none" data-light="day"><svg viewBox="0 0 720 300" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid slice">
                 <defs>
@@ -99,4 +106,122 @@
         </section>
 <section class="admin-card"><h2>Social-post history</h2><button id="postHistoryRefresh" type="button">Refresh history</button><p id="postHistoryNote" role="status"></p><div id="postHistory"></div></section>
 <section class="admin-card"><h2>Sky photo archive</h2><label>Choose a date<input id="archiveDay" type="date"></label><div class="admin-actions"><button id="photoMonthPrev" type="button">Previous month</button><h3 id="photoMonthTitle"></h3><button id="photoMonthNext" type="button">Next month</button></div><div id="photoCalendar" class="photo-calendar" aria-label="Sky photograph calendar"></div><p id="photoCalendarNote" role="status">Highlighted dates have saved photographs.</p><div class="admin-actions"><button id="archiveAll" type="button">All dates</button><button id="archivePrevious" type="button" disabled>Previous photo</button><button id="archiveNext" type="button" disabled>Next photo</button><button id="archiveDownload" type="button" disabled>Download photo</button></div><p id="archiveCaption" role="status"></p><img id="archiveImage" alt="Selected archived sky photograph"></section>
-</div></main><script src="site-config.js"></script><script>window.PARKNACROSS_ADMIN_PAGE=true;</script><script src="social-admin.js?v=20261007-v38-4-161"></script><script src="action-feedback.js?v=20261007-v38-4-161"></script><script src="admin-tools.js?v=20261007-v38-4-161"></script><script src="weather-window-sky.js?v=20261007-v38-4-161"></script><script src="weather-window-preview.js?v=20261007-v38-4-161"></script><script src="photo-calendar.js?v=20261007-v38-4-161"></script><script src="site-help.js?v=20261007-v38-4-161"></script></body></html>
+</div></main><script src="site-config.js"></script><script>window.PARKNACROSS_ADMIN_PAGE=true;</script><script src="social-admin.js?v=20261007-v38-4-162"></script><script src="action-feedback.js?v=20261007-v38-4-162"></script><script id="adminAppScript">(() => {
+ 'use strict';
+ const $=id=>document.getElementById(id),base=(window.PARKNACROSS_CONFIG?.apiBase||'https://parknacross-weather.dave-s-carter.workers.dev').replace(/\/$/,'');
+ let archiveSequence=0,historySequence=0;
+ let active=false,generation=0,items=[],position=0,total=0,offset=0,imageUrl=null,imageExtension="jpg";
+ let memoryKey='';
+ const key=()=>{try{return sessionStorage.getItem('parknacrossAdminKey')||memoryKey;}catch(_){return memoryKey;}};
+ const saveKey=value=>{memoryKey=value;try{if(value)sessionStorage.setItem('parknacrossAdminKey',value);else sessionStorage.removeItem('parknacrossAdminKey');}catch(_){}};
+ window.ParknacrossAdminSession={get:key,set:saveKey};
+ const note=text=>{$('adminMessage').textContent=text;};
+ async function request(path,options={}){
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);let response;
+   try{response=await fetch(base+path,{...options,headers:{...options.headers,'X-Parknacross-Admin-Key':key()},cache:'no-store',signal:controller.signal});}
+   catch(error){throw Error(controller.signal.aborted?'The admin service took too long to respond. Please try signing in again.':'Could not connect to the admin service. Check your connection and try again.');}
+   finally{clearTimeout(timer);}
+   if(response.status===401){signOut();throw Error('Admin key was not accepted. Please sign in again.');}
+   if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.error==='Invalid sky setting'?'The Worker does not support this sky choice yet. Deploy Worker v38.4.87, or choose Overcast for now.':data.error||(response.status===404?'This feature needs Worker v38.4.86.':`Request failed (${response.status}).`));}
+   return response;
+ }
+ function signOut(){
+   active=false;generation++;$('adminSkySave').disabled=true;saveKey('');
+   $('adminWorkspace').hidden=true;$('adminLogin').hidden=false;$('adminKey').value='';
+   window.dispatchEvent(new Event('parknacross:admin-signout'));
+   $('postHistory').replaceChildren();$('archiveCaption').textContent='';$('archiveImage').removeAttribute('src');
+   if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=null;note('Signed out on this tab.');
+ }
+ async function signIn(){
+   const ticket=++generation;
+   note('Checking admin access…');
+   await request('/admin/capabilities');
+   if(ticket!==generation)return;
+   active=true;$('adminLogin').hidden=true;$('adminWorkspace').hidden=false;note('Signed in. Your key stays in this tab’s session.');
+   window.dispatchEvent(new Event('parknacross:admin-signin'));
+   void Promise.allSettled([loadArchive(),loadHistory(),loadSky(),checkCompatibility()]);
+ }
+ $('adminLogin').addEventListener('submit',async event=>{
+   event.preventDefault();
+   const done=window.ParknacrossAction?.begin($('adminSignIn'),'Signing in…');if(done===null)return;
+   try{const entered=$('adminKey').value.trim();if(!entered)throw Error('Enter your admin key.');saveKey(entered);await signIn();$('adminKey').value='';}
+   catch(error){note(error.message);}finally{done?.();}
+
+ });
+ $('adminSignOut').addEventListener('click',signOut);
+ let supported=null,compatibilitySequence=0;
+ const action=(id,label)=>window.ParknacrossAction?.begin($(id),label);
+ async function checkCompatibility(){
+   if(!active)return;
+   const ticket=generation,sequence=++compatibilitySequence,button=$('adminCompatibilityRefresh'),status=$('adminCompatibility');
+   button.disabled=true;button.textContent='Checking…';status.textContent='Checking the deployed Worker’s features…';status.setAttribute('aria-busy','true');
+   try{
+     const data=await (await request('/admin/capabilities')).json();if(!active||ticket!==generation||sequence!==compatibilitySequence)return;
+     if(!data.features||typeof data.features!=='object')throw Error('Feature list missing from the deployed Worker response.');
+     supported=data.features;
+     const checked=new Date().toLocaleTimeString('en-IE',{timeZone:'Europe/Dublin',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+     status.textContent=`Checked at ${checked} · Deployed Worker ${data.worker_version||'version unknown'} · `+[['rain_override','rain / storm settings'],['photo_calendar','photo calendar'],['social_history','social history'],['history_photos','historical sky photos'],['export_preview','download previews'],['history_range','event graph windows'],['public_photo_calendar','visitor photo calendar']].map(([key,label])=>`${label}: ${supported[key]?'supported':'unavailable'}`).join(' · ');
+   }catch(error){
+     if(!active||ticket!==generation||sequence!==compatibilitySequence)return;
+     supported={};status.textContent='Compatibility check failed. '+error.message+' Try Check compatibility again.';
+   }finally{
+     if(sequence===compatibilitySequence){button.disabled=false;button.textContent='Check compatibility';status.setAttribute('aria-busy','false');}
+     if(active&&ticket===generation&&sequence===compatibilitySequence){$('adminSkySave').disabled=!supported?.rain_override;window.dispatchEvent(new CustomEvent('parknacross:capabilities',{detail:supported||{}}));}
+   }
+ }
+ $('adminCompatibilityRefresh')?.addEventListener('click',checkCompatibility);
+ async function loadSky(){try{const payload=await (await request('/weather-window/sky')).json(),d=payload.override||{};if(!active)return;$('adminSky').value=d.sky||'auto';$('adminRain').value=d.rain||'auto';window.dispatchEvent(new Event('parknacross:window-preview-update'));$('adminSkyStatus').textContent=(d.sky&&d.sky!=='auto')||(d.rain&&d.rain!=='auto')?`Visual settings: sky ${d.sky||'auto'} · rain / storm ${d.rain||'auto'}${d.expires_at?' · expires '+new Date(d.expires_at).toLocaleString('en-IE',{timeZone:'Europe/Dublin'}):''}`:'Automatic forecast sky and station rain are active.';}catch(error){$('adminSkyStatus').textContent=error.message;}}
+ $('adminSkyForm').addEventListener('submit',async event=>{
+   event.preventDefault();if(!supported?.rain_override){$('adminSkyStatus').textContent='Check compatibility and deploy Worker v38.4.89 before saving illustration settings.';return;}const done=action('adminSkySave','Saving…');if(done===null)return;$('adminSkySave').disabled=true;
+   try{const response=await request('/weather-window/sky',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sky:$('adminSky').value,rain:$('adminRain').value||'auto',duration:$('adminSkyDuration').value})});const saved=await response.json();if($('adminRain').value&&$('adminRain').value!=='auto'&&saved.override?.rain!==$('adminRain').value)throw Error('Deploy Worker v38.4.88 to save rain and storm settings.');await loadSky();}catch(error){$('adminSkyStatus').textContent=error.message;}finally{done?.();$('adminSkySave').disabled=!supported?.rain_override;}
+ });
+ async function preparePhoto(file){
+   if(!/^image\/(jpeg|png|webp)$/.test(file.type))throw Error('Choose a JPEG, PNG or WebP photo.');
+   if(file.size>30*1024*1024)throw Error('Choose a photo smaller than 30 MB.');
+   const bitmap=await createImageBitmap(file);
+   try{const scale=Math.min(1,1800/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);const blob=await new Promise(r=>canvas.toBlob(r,'image/jpeg',.88));if(!blob)throw Error('Could not prepare this photo.');return blob;}finally{bitmap.close();}
+ }
+ $('adminPhotoForm').addEventListener('submit',async event=>{
+   event.preventDefault();const done=action('adminPhotoSave','Uploading…');if(done===null)return;$('adminPhotoSave').disabled=true;$('adminPhotoStatus').textContent='Preparing and uploading…';
+   try{const file=$('adminPhotoFile').files[0];if(!file)throw Error('Choose a photo first.');const photo=await preparePhoto(file),body=new FormData();body.append('photo',photo,'parknacross-sky.jpg');body.append('caption',$('adminPhotoCaption').value.trim());await request('/sky-photo',{method:'POST',body});$('adminPhotoStatus').textContent='Today’s photo uploaded.';$('adminPhotoFile').value='';await loadArchive();window.dispatchEvent(new Event('parknacross:photo-archive-update'));window.dispatchEvent(new Event('parknacross:admin-signin'));}catch(error){$('adminPhotoStatus').textContent=error.message;}finally{done?.();$('adminPhotoSave').disabled=false;}
+ });
+ function archiveControls(){ $('archivePrevious').disabled=position===0&&offset===0;$('archiveNext').disabled=offset+position+1>=total;$('archiveDownload').disabled=!imageUrl; }
+ async function showPhoto(){
+   const item=items[position],ticket=generation;if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=null;$('archiveImage').removeAttribute('src');archiveControls();
+   if(!item){$('archiveCaption').textContent='No photographs for this selection.';return;}
+   $('archiveCaption').textContent=`${item.day} · ${item.caption||'No caption'} · photo ${offset+position+1} of ${total}`;
+   try{const response=await request('/sky-photo/archive/image?photo_id='+encodeURIComponent(item.photo_id)),blob=await response.blob();if(!active||ticket!==generation||items[position]?.photo_id!==item.photo_id)return;imageExtension=blob.type==='image/png'?'png':blob.type==='image/webp'?'webp':'jpg';imageUrl=URL.createObjectURL(blob);$('archiveImage').src=imageUrl;archiveControls();}catch(error){$('archiveCaption').textContent=error.message;}
+ }
+ async function loadArchive(nextOffset=0,nextPosition=0){
+   const ticket=generation,sequence=++archiveSequence;const restore=['archiveAll','archivePrevious','archiveNext'].map(id=>action(id,'Loading…'));$('archiveCaption').textContent='Loading photo archive…';
+   try{const day=$('archiveDay').value,d=await (await request(`/sky-photo/archive/admin?limit=50&offset=${nextOffset}${day?'&day='+encodeURIComponent(day):''}`)).json();if(!active||ticket!==generation||sequence!==archiveSequence)return;if(day&&d.day!==day)throw Error('Calendar filtering needs Worker v38.4.86. Choose All dates until it is deployed.');items=d.items||[];total=d.total||0;offset=nextOffset;position=nextPosition<0?Math.max(0,items.length-1):nextPosition;await showPhoto();}catch(error){if(sequence===archiveSequence)$('archiveCaption').textContent=error.message;}finally{restore.forEach(done=>done?.());archiveControls();}
+ }
+ $('archiveDay').addEventListener('change',()=>loadArchive());
+ $('archiveAll').addEventListener('click',()=>{$('archiveDay').value='';loadArchive();});
+ $('archivePrevious').addEventListener('click',()=>{if(position>0){position--;showPhoto();}else if(offset>0)loadArchive(Math.max(0,offset-50),-1);});
+ $('archiveNext').addEventListener('click',()=>{if(position+1<items.length){position++;showPhoto();}else if(offset+items.length<total)loadArchive(offset+items.length);});
+ $('archiveDownload').addEventListener('click',()=>{if(!imageUrl)return;const a=document.createElement('a');a.href=imageUrl;a.download=`parknacross-sky-${items[position].day}.${imageExtension}`;a.click();});
+ async function loadHistory(){
+   const done=action('postHistoryRefresh','Refreshing…');if(done===null)return;const ticket=generation,sequence=++historySequence;$('postHistoryNote').textContent='Loading saved social posts…';
+   try{const data=await (await request('/social-history')).json();if(!active||ticket!==generation||sequence!==historySequence)return;const container=$('postHistory');container.replaceChildren();
+     for(const item of data.items||[]){
+       const card=document.createElement('details'),title=document.createElement('summary');title.textContent=`${item.day} · ${item.network==='x'?'X':'Facebook'} · ${item.status||'Submitted'}`;card.append(title);
+       const text=document.createElement('pre');text.textContent=item.text||'Original wording was not recorded.';card.append(text);
+       const photo=document.createElement('p');photo.textContent=item.photo_url?(item.status==='failed'?'Photo was intended for this failed attempt.':'Photo attachment recorded.'):'No photo attachment recorded.';card.append(photo);
+       if(item.photo_id){const image=document.createElement('img');image.alt='Archived sky photograph for this post';image.hidden=true;card.append(image);let loaded=false;
+         card.addEventListener('toggle',async()=>{if(!card.open||loaded)return;try{const response=await request('/sky-photo/archive/image?photo_id='+encodeURIComponent(item.photo_id)),blob=await response.blob();if(!active||ticket!==generation)return;const url=URL.createObjectURL(blob);image.src=url;image.hidden=false;loaded=true;window.addEventListener('parknacross:admin-signout',()=>{URL.revokeObjectURL(url);image.removeAttribute('src');},{once:true});}catch(error){photo.textContent='Recorded photo is unavailable: '+error.message;}});
+       }
+       for(const [url,label,hosts] of [[item.public_url,'View published post',/^(.*\.)?(facebook\.com|x\.com|twitter\.com|t\.co)$/]]){
+         try{const u=new URL(url);if(u.protocol==='https:'&&hosts.test(u.hostname)){const a=document.createElement('a');a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';a.textContent=label;card.append(a);}}catch(_){}
+       }
+       if(item.error){const error=document.createElement('p');error.textContent=item.error;card.append(error);}container.append(card);
+     }
+     $('postHistoryNote').textContent=(data.items?.length?data.note:'No saved posts yet. '+data.note)||'Saved social-post history.';
+   }catch(error){if(sequence===historySequence)$('postHistoryNote').textContent=error.message;}finally{done?.();}
+ }
+ $('postHistoryRefresh').addEventListener('click',()=>loadHistory());
+ if(key())signIn().catch(error=>note(error.message));
+})();
+
+window.ParknacrossAdminStarted=true;
+</script><script src="weather-window-sky.js?v=20261007-v38-4-162"></script><script src="weather-window-preview.js?v=20261007-v38-4-162"></script><script src="photo-calendar.js?v=20261007-v38-4-162"></script><script src="site-help.js?v=20261007-v38-4-162"></script></body></html>

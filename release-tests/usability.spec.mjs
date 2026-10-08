@@ -53,3 +53,9 @@ test('mobile live readings load even if the graph library cannot be downloaded',
  await page.setViewportSize({width:390,height:844});await page.route('**/chart.umd.min.js*',r=>r.fulfill({status:503,body:''}));
  await page.goto('/index.html');await expect(page.locator('#heroTemp')).toHaveText(/12/);await expect(page.locator('#conditionsTag')).not.toHaveText('Loading…');
 });
+
+test('mobile admin login starts even when external admin-controller downloads are blocked',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.route('**/admin-tools.js*',r=>r.abort());
+ await page.goto('/admin.html');await expect(page.locator('#adminRelease')).toHaveText('Admin version 38.4.162');
+ await page.getByLabel('Admin key',{exact:true}).fill('test-only');await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.locator('#adminWorkspace')).toBeVisible();await expect(page.locator('#adminMessage')).toContainText('Signed in.');
+});
