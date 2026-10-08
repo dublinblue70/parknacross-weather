@@ -395,13 +395,10 @@ async function runChecks(only=null) {
   setText("lastRun",`${only?"Selected source rechecked; other cards retain their previous results · ":"Last checked "}${new Date().toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})}`);
   if(button) button.disabled=false;
   checksRunning=false;
-  for(const retry of document.querySelectorAll('[data-retry-feed]')){const key=retry.dataset.retryFeed;retry.hidden=false;retry.textContent='Retry this check';const hint=retry.nextElementSibling;if(hint)hint.textContent=checkResults[key]?.__error?'This check could not reach its data source. Retry affects this source only; other readings keep their last result.':'';}
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
   $("refreshButton")?.addEventListener("click",()=>runChecks());
-  const feeds={landWarningBadge:'landWarnings',marineWarningBadge:'marineWarnings',siteBadge:'site',apiBadge:'health',feedBadge:'current',ingestBadge:'health',samplesBadge:'quality',gapBadge:'quality',batteryBadge:'quality',reliabilityBadge:'reliability',gustQualityBadge:'quality',soilBadge:'current',tideBadge:'tides',m2Badge:'m2',backupBadge:'backup',facebookBadge:'social',xBadge:'social',qualityBadge:'history'};
-  for(const [id,key] of Object.entries(feeds)){const card=$(id)?.closest('article');if(!card)continue;const retry=document.createElement('button');retry.type='button';retry.className='feed-retry';retry.dataset.retryFeed=key;retry.textContent='Retry this check';const hint=document.createElement('p');hint.className='sub';hint.setAttribute('role','status');retry.addEventListener('click',async()=>{retry.disabled=true;hint.textContent='Retrying this source only…';try{await runChecks(key);}finally{retry.disabled=false;}});card.append(retry,hint);}
 
   runChecks();
   (window.ParknacrossRefresh?.every || setInterval)(runChecks,REFRESH_MS);
