@@ -1,4 +1,6 @@
 import {test,expect} from '@playwright/test';
+import {readFileSync} from 'node:fs';
+const releaseVersion=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8')).version;
 const now=Math.floor(Date.now()/1000),day=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()),month=day.slice(0,7);
 const current={epoch:now,received_at:new Date(now*1000).toISOString(),temperature_c:12,humidity_pct:70,dew_point_c:7,wind_speed_kmh:8,wind_gust_kmh:13,wind_direction_deg:90,pressure_hpa:1017,daily_rain_mm:0,rain_rate_mm_h:0,solar_w_m2:100,uv_index:1,soil_moisture_pct:36,soil_temperature_c:10.4,soil_ec_us_cm:150};
 const readings=Array.from({length:13},(_,i)=>({...current,epoch:now-(12-i)*300,received_at:new Date((now-(12-i)*300)*1000).toISOString(),temperature_c:10+i/6}));const summary={day,high_c:12,low_c:10,rain_mm:0,peak_gust_kmh:13,sample_count:13};
@@ -56,7 +58,7 @@ test('mobile live readings load even if the graph library cannot be downloaded',
 
 test('mobile admin login starts even when external admin-controller downloads are blocked',async({page})=>{
  await page.setViewportSize({width:390,height:844});await page.route('**/admin-tools.js*',r=>r.abort());
- await page.goto('/admin.html');await expect(page.locator('#adminRelease')).toHaveText('Admin version 38.4.163');
+ await page.goto('/admin.html');await expect(page.locator('#adminRelease')).toHaveText('Admin version '+releaseVersion);
  await page.getByLabel('Admin key',{exact:true}).fill('test-only');await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.locator('#adminWorkspace')).toBeVisible();await expect(page.locator('#adminMessage')).toContainText('Signed in.');
 });
 
