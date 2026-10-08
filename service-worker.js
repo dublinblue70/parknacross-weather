@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-163-whole-site-reliability";
+const CACHE_NAME = "parknacross-v38-4-164-follow-up-fixes";
 const STATIC_ASSETS = [
   "./",
   "./site-request.js",
@@ -98,7 +98,8 @@ const STATIC_ASSETS = [
   "./pwa-dashboard-narrow.jpg"
 ];
 
-const ESSENTIAL_ASSETS=["./index.html","./styles.css","./app.js","./site-request.js","./weather-warnings.js","./navigation.js","./offline.html","./admin.html"];
+// Every advertised offline page must retain its local dependencies before activation.
+const ESSENTIAL_ASSETS=STATIC_ASSETS;
 async function verifyEssentialCache(){const cache=await caches.open(CACHE_NAME);for(const asset of ESSENTIAL_ASSETS){const response=await cache.match(new URL(asset,self.registration.scope).toString());if(!response?.ok)throw new Error(`Incomplete offline update: ${asset}`);}}
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
@@ -121,7 +122,7 @@ self.addEventListener("install", event => {
 
 self.addEventListener("message", event => {
   if (event.data?.type === "SKIP_WAITING") {
-    self.skipWaiting();
+    event.waitUntil(verifyEssentialCache().then(()=>self.skipWaiting()));
   } else if (event.data?.type === "GET_SITE_VERSION") {
     const match = CACHE_NAME.match(/parknacross-v(\d+(?:-\d+)+)(?:-|$)/);
     const version = match ? match[1].replace(/-/g, ".") : "unknown";
@@ -195,9 +196,13 @@ self.addEventListener("fetch", event => {
 
   event.respondWith(
     fetch(networkRequest).then(response => {
-      const copy = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-      return response;
+      if(response.ok){
+        const copy=response.clone();
+        event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.put(request,copy)).catch(()=>{}));
+        return response;
+      }
+      // Keep the last working asset when the server temporarily returns an error.
+      return caches.match(request,{ignoreSearch:url.origin===self.location.origin}).then(cached=>cached?.ok?cached:response);
     }).catch(() => caches.match(request, {
       // HTML references local assets with release query strings while the
       // install cache stores their canonical paths. Ignore only that query

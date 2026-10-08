@@ -237,6 +237,11 @@
      if(period){chart.options.scales.x.min=period.first*1000;chart.options.scales.x.max=period.last*1000;}
      else{delete chart.options.scales.x.min;delete chart.options.scales.x.max;}
    }
+   if(period){
+     const bounds={key:window.ParknacrossGraphSelection?.historyPath()||`/history?hours=${hours}`,from:period.first*1000,to:period.last*1000};
+     window.ParknacrossGraphTimeBounds=bounds;
+     if(typeof CustomEvent!=="undefined")window.dispatchEvent?.(new CustomEvent("parknacross:chart-bounds",{detail:bounds}));
+   }
    return period;
  }
  function recentEventOutsideWindow(events,period){
@@ -255,6 +260,7 @@
  }
  function updateWindRose(rows, hours, endEpoch){
    window.ParknacrossWindRose?.update(charts.rose,rows,$("windRoseMeta"),{hours,endEpoch});
+   const meta=$("windRoseMeta");if(meta)meta.textContent="Full selected period · "+meta.textContent;
  }
  async function load(h){const loadId=++graphRequest;const selected=window.ParknacrossGraphSelection?.get(),fixed=selected?.range;hours=h;if(fixed)h=hours=(fixed.to-fixed.from)/3600;const periodLabel=fixed?"Selected event window":({6:"Last 6 hours",24:"Last 24 hours",48:"Last 48 hours",168:"Last 7 days",720:"Last 30 days"})[h];document.querySelectorAll("[data-hours]").forEach(b=>{const on=!fixed&&Number(b.dataset.hours)===h;b.classList.toggle("active",on);b.setAttribute("aria-pressed",String(on));});set("graphRangeTitle",periodLabel);set("graphCoverage","Checking available coverage…");set("graphCount","Loading…");$("partialCoverageBadge")?.setAttribute("hidden","");
  try{const [d,c,recentRain]=await Promise.all([get(window.ParknacrossGraphSelection?.historyPath()||`/history?hours=${h}`),fixed?Promise.resolve(null):get("/current",true),!fixed&&h<=24?get("/rain-events?days=3",true):Promise.resolve(null)]);if(loadId!==graphRequest)return;let rows=Array.isArray(d.readings)?d.readings:[];if(c&&rowEpoch(c)!==null){const ce=rowEpoch(c),last=rows.length?rowEpoch(rows.at(-1)):null;if(last===null||ce>last)rows=[...rows,c];else if(ce===last)rows=[...rows.slice(0,-1),c];}const temperatureOutliers=temperatureOutlierRows(rows),windGustOutliers=gustOutlierRows(rows),gapData=withGapMarkers(rows),r=h<=24?gapData.rows:thinPreservingExtrema(gapData.rows,["temperature_c","dew_point_c","wind_speed_kmh","wind_gust_kmh","pressure_hpa","solar_w_m2","uv_index","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"]),rainRows=thinRain(gapData.rows),period=applyExactTimeBounds(rows);
@@ -264,7 +270,7 @@
  const timedRainRows=rows.filter(x=>rowEpoch(x)!==null&&usable(x?.rain_rate_mm_h));
  const missingRainRows=rows.filter(x=>rowEpoch(x)!==null&&!usable(x?.rain_rate_mm_h)).length;
  if(timedRainRows.length){
-   const firstRainReading=new Date(Number(rowEpoch(timedRainRows[0]))*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}),outside=recentEventOutsideWindow(recentRain?.events,period),base=`Showing ${period?.text||`from ${firstRainReading}`}. ${timedRainRows.length.toLocaleString("en-IE")} saved rain-rate reading${timedRainRows.length===1?"":"s"}${missingRainRows?"; blank sections are missing readings, not zero rainfall":"; no missing rain-rate values in this period"}.`;
+   const firstRainReading=new Date(Number(rowEpoch(timedRainRows[0]))*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}),outside=recentEventOutsideWindow(recentRain?.events,period),base=`Full selected period: ${period?.text||`from ${firstRainReading}`}. ${timedRainRows.length.toLocaleString("en-IE")} saved rain-rate reading${timedRainRows.length===1?"":"s"}${missingRainRows?"; blank sections are missing readings, not zero rainfall":"; no missing rain-rate values in this period"}.`;
    if(outside){const ended=new Date(Number(outside.end_epoch)*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}),minutes=Math.max(1,Math.round((period.first-Number(outside.end_epoch))/60)),amount=Number(outside.total_mm||0).toFixed(1),peak=Number(outside.peak_rate_mm_h||0).toFixed(1),range=hours<=6?"24h":"48h";set("rainChartStatus",`${base} A ${amount} mm rain event (peak ${peak} mm/h) ended ${minutes} min before this view starts, at ${ended}; select ${range} to see it.`);}else set("rainChartStatus",base);
  }else{
    set("rainChartStatus","No saved rain-rate readings are available for this period. The blank chart does not mean there was no rain.");
@@ -276,15 +282,15 @@
    const values=rows.filter(x=>usable(x?.[field])).sort((a,b)=>rowEpoch(a)-rowEpoch(b));
    if(!values.length)return "No saved readings for this period.";
    const nums=values.map(x=>Number(x[field])),fmt=x=>`${x.toFixed(digits)} ${unit}`;
-   return `Latest saved: ${fmt(nums.at(-1))} · period low: ${fmt(Math.min(...nums))} · high: ${fmt(Math.max(...nums))}`;
+   return `Full selected period · latest saved: ${fmt(nums.at(-1))} · low: ${fmt(Math.min(...nums))} · high: ${fmt(Math.max(...nums))}`;
  };
  set("soilTempStats",soilSummary("soil_temperature_c","°C"));
  set("soilEcStats",soilSummary("soil_ec_us_cm","µS/cm",0));
  const soilRows=rows.filter(x=>usable(x?.soil_moisture_pct)||usable(x?.soil_temperature_c)||usable(x?.soil_ec_us_cm));
  if(hasSoil){
    const firstSoil=new Date(Number(rowEpoch(soilRows[0]))*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
-   set("soilMoistureStatus",`${soilRows.length.toLocaleString("en-IE")} saved soil-sensor reading${soilRows.length===1?"":"s"} since ${firstSoil}. Points remain visible while the new archive builds.`);
-   set("soilDetailStatus",`Separate temperature and conductivity charts share the same time axis, using ${soilRows.length.toLocaleString("en-IE")} soil-sensor observation${soilRows.length===1?"":"s"}. Conductivity is best compared with this sensor’s own baseline.`);
+   set("soilMoistureStatus",`Full selected period: ${soilRows.length.toLocaleString("en-IE")} saved soil-sensor reading${soilRows.length===1?"":"s"} since ${firstSoil}. Points remain visible while the new archive builds.`);
+   set("soilDetailStatus",`Full selected period: separate temperature and conductivity charts share the same time axis, using ${soilRows.length.toLocaleString("en-IE")} soil-sensor observation${soilRows.length===1?"":"s"}. Conductivity is best compared with this sensor’s own baseline.`);
    $("gSoilMoisture")?.setAttribute("aria-label",`Soil moisture for ${periodLabel.toLowerCase()}, based on ${soilRows.length.toLocaleString("en-IE")} saved soil-sensor observations.`);
    $("gSoilDetail")?.setAttribute("aria-label",`Soil temperature for ${periodLabel.toLowerCase()}, based on ${soilRows.length.toLocaleString("en-IE")} saved soil-sensor observations.`);
    requestAnimationFrame(()=>{charts.sm.resize();charts.sd.resize();charts.ec.resize();charts.sm.update("none");charts.sd.update("none");charts.ec.update("none");});

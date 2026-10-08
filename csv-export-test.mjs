@@ -1,12 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const workerPath = process.env.PARKNACROSS_WORKER_SOURCE || resolve("../../worker-source/Parknacross-worker-v38.4.75-LIVE-FRESHNESS-RESILIENCE-NOTEPAD.txt");
+const workerPath = process.env.PARKNACROSS_WORKER_SOURCE || new URL("./_worker/worker.mjs",import.meta.url);
 let worker;
 try { worker = await readFile(workerPath, "utf8"); }
-catch {
-  console.log("CSV Worker regression checks skipped: set PARKNACROSS_WORKER_SOURCE to the current Cloudflare Worker source.");
-  process.exit(0);
+catch(error) {
+  throw new Error("CSV checks require the current Cloudflare Worker source", {cause:error});
 }
 const start = worker.indexOf("async function exportRows(env, days, range = null)");
 const end = worker.indexOf("\nfunction exportCsv(", start);

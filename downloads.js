@@ -45,10 +45,11 @@ function downloadCustom(button){
   if(archiveStart&&from<archiveStart){status("Choose dates within the available archive coverage.","bad");return;}
   return downloadUrl(`${API}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&fresh=1`,`${from}-to-${to}`,button,`${from} to ${to}`);
 }
+let rangeEdited=false;
 function setRangeDefaults(firstKey){
   const from=$("exportFrom"),to=$("exportTo");if(!from||!to)return;
   const today=safeDate();from.min=firstKey||"";from.max=today;to.min=firstKey||"";to.max=today;
-  to.value=today;const proposed=shiftDay(today,-6);from.value=firstKey&&proposed<firstKey?firstKey:proposed;
+  if(!rangeEdited){to.value=today;const proposed=shiftDay(today,-6);from.value=firstKey&&proposed<firstKey?firstKey:proposed;}
 }
 async function loadArchiveCoverage(){
   const el=$("archiveCoverage");if(!el)return;
@@ -67,6 +68,7 @@ async function loadBackupStatus(){
   catch{el.textContent="Backup status is temporarily unavailable.";}
 }
 document.addEventListener("DOMContentLoaded",()=>{
+  for(const id of ["exportFrom","exportTo"]){for(const event of ["input","change"])$(id)?.addEventListener(event,()=>{rangeEdited=true;});}
   document.querySelectorAll(".export").forEach(button=>button.addEventListener("click",()=>download(button.dataset.days,button.dataset.name,button)));
   $("customExportButton")?.addEventListener("click",event=>downloadCustom(event.currentTarget));
   setRangeDefaults(null);loadArchiveCoverage();loadBackupStatus();
