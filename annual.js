@@ -68,6 +68,7 @@ function render(year) {
   const avgHigh = avg(rows.map((r) => r.high_c)),
     avgLow = avg(rows.map((r) => r.low_c));
   set("annualTitle", `${year} · Parknacross Weather`);
+  set("annualRainHeading", /^\d{4}$/.test(String(year)) ? `Rainfall by month · ${year}` : "Rainfall by month");
   set(
     "annualSubtitle",
     rows.length
@@ -144,14 +145,14 @@ function render(year) {
           timeZone: "UTC",
         }),
       ),
-      datasets: [{ label: "Rainfall mm", data: totals }],
+      datasets: [{ label: `Rainfall ${year} (mm)`, data: totals }],
     },
     options: {
       maintainAspectRatio: false,
       scales: { y: { beginAtZero: true } },
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: (context) => context.raw === null ? "No archived data" : `${Number(context.raw).toFixed(1)} mm` } },
+          tooltip: { callbacks: { title: (items) => items.length ? `${items[0].label} ${year}` : "", label: (context) => context.raw === null ? "No archived data" : `${Number(context.raw).toFixed(1)} mm` } },
         },
     },
   });
