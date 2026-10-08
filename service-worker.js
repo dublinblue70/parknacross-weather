@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-167-comprehensive-audit";
+const CACHE_NAME = "parknacross-v38-4-168-comprehensive-audit";
 const STATIC_ASSETS = [
   "./",
   "./site-request.js",

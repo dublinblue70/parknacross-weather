@@ -1,7 +1,7 @@
 {
   "name": "parknacross-weather-site",
   "private": true,
-  "version": "38.4.167",
+  "version": "38.4.168",
   "scripts": {
     "test": "node site-smoke-test.mjs && node csv-export-test.mjs && node freshness-resilience-test.mjs && node rain-alert-test.mjs && node coast-data-test.mjs && playwright test",
     "test:smoke": "node site-smoke-test.mjs && node weather-window.test.mjs && node install-version.test.mjs && node weather-request-timeout.test.mjs && PARKNACROSS_WORKER_SOURCE=_worker/worker.mjs node csv-export-test.mjs && PARKNACROSS_WORKER_SOURCE=_worker/worker.mjs node freshness-resilience-test.mjs && node rain-alert-test.mjs && node coast-data-test.mjs && node tests/audit-reliability.test.mjs && node tests/worker-current-fast.test.mjs && node tests/follow-up-audit.test.mjs && node tests/comprehensive-audit.test.mjs",
