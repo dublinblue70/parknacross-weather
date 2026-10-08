@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-165-status-cleanup";
+const CACHE_NAME = "parknacross-v38-4-166-comprehensive-audit";
 const STATIC_ASSETS = [
   "./",
   "./site-request.js",
@@ -39,6 +39,7 @@ const STATIC_ASSETS = [
   "./app.js",
   "./weather-window.js",
   "./archive-quality.js",
+  "./report-quality.js",
   "./site-help.js",
   "./visibility-refresh.js",
   "./graph-selection.js",

@@ -1,0 +1,26 @@
+name: Public website monitoring
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows: [pages build and deployment]
+    types: [completed]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: public-website-monitor
+  cancel-in-progress: false
+jobs:
+  monitor:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node public-monitor.mjs

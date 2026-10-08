@@ -50,7 +50,7 @@ async function fetchJSON(url, timeout=20000) {
   try {
     const r = await fetch(url, {cache:"no-store", signal:controller.signal});
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return await r.json();
+    const data=await r.json();if(!data||typeof data!=="object"||data.error)throw new Error(data?.error||"Invalid data response");return data;
   } finally { clearTimeout(timer); }
 }
 async function checkSite() {
@@ -173,7 +173,7 @@ async function runChecks(only=null) {
 
   const sitePromise=read("site",checkSite);
   const apiStarted=performance.now();
-  const [health,current,quality,history,reliability,backup,social,tides,m2,landWarnings,marineWarnings,site] = await Promise.all([
+  const [health,current,quality,history,reliability,backup,social,tides,m2,landWarnings,marineWarnings,site,daily,stats,summaryHistory,exportPreview] = await Promise.all([
     read("health",()=>fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e}))),
     read("current",()=>fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e}))),
     read("quality",()=>fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e}))),
@@ -187,11 +187,31 @@ async function runChecks(only=null) {
     read("m2",()=>fetchJSON(`${API_BASE}/marine/sea-temperature?healthcheck=${Date.now()}`,10000).catch(e=>({__error:e}))),
     read("landWarnings",()=>fetchJSON(`${API_BASE}/met/warnings?healthcheck=${Date.now()}`,12000).catch(e=>({__error:e}))),
     read("marineWarnings",()=>fetchJSON(`${API_BASE}/met/marine?healthcheck=${Date.now()}`,15000).catch(e=>({__error:e}))),
-    sitePromise
+    sitePromise,
+    read("daily",()=>fetchJSON(`${API_BASE}/daily?days=8`).catch(e=>({__error:e}))),
+    read("stats",()=>fetchJSON(`${API_BASE}/stats`).catch(e=>({__error:e}))),
+    read("summaryHistory",()=>fetchJSON(`${API_BASE}/history?hours=48`).catch(e=>({__error:e}))),
+    read("exportPreview",()=>fetchJSON(`${API_BASE}/export-preview?days=1`).catch(e=>({__error:e})))
   ]);
 
   const apiElapsed=Math.round(performance.now()-apiStarted);
   let states=[site.state];
+  const latestEpoch=rows=>Math.max(0,...(Array.isArray(rows)?rows:[]).map(row=>usableNumber(row.epoch)?Number(row.epoch):Date.parse(row.received_at||"")/1000).filter(Number.isFinite));
+  const fresh=epoch=>usableNumber(epoch)&&Number(epoch)>0&&Math.abs(Date.now()/1000-Number(epoch))<=900;
+  const dayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+  const recentDay=day=>/^\d{4}-\d{2}-\d{2}$/.test(day||"")&&Math.abs(Date.parse(dayKey+"T12:00:00Z")-Date.parse(day+"T12:00:00Z"))<=86400000;
+  for(const [prefix,data,valid,detail] of [
+    ["dailyFeed",daily,Array.isArray(daily.days)&&daily.days.some(row=>recentDay(row.day)),"Recent daily summaries available"],
+    ["recordsFeed",stats,usableNumber(stats.total_samples)&&Number(stats.total_samples)>0&&typeof stats.records==="object"&&stats.records!==null,"Archive statistics and records available"],
+    ["summaryFeed",summaryHistory,Array.isArray(summaryHistory.readings)&&fresh(latestEpoch(summaryHistory.readings)),"Daily Summary observation feed is fresh"],
+    ["exportFeed",exportPreview,Number(exportPreview.count)>0&&Array.isArray(exportPreview.columns)&&exportPreview.columns.includes("epoch")&&fresh(exportPreview.last_epoch),"Recent export preview and field list available"]
+  ]){
+    const ok=!data.__error&&valid;
+    setBadge(prefix+"Badge",ok?"good":"warn",ok?"CHECKED":"UNAVAILABLE");
+    setText(prefix+"Value",ok?"Available":"Could not verify");
+    setText(prefix+"Detail",ok?detail:data.__error?"This data source could not be reached. Other sources may still work.":"The source is missing expected data or its observations are delayed.");
+    if(!ok)states.push("warn");
+  }
   for(const [prefix,data,valid] of [["landWarning",landWarnings,Array.isArray(landWarnings?.warnings)],["marineWarning",marineWarnings,typeof marineWarnings?.local_warning_relevant==="boolean"]]){
     const ok=!data.__error&&valid;setBadge(prefix+"Badge",ok?"good":"warn",ok?"CHECKED":"UNAVAILABLE");
     setText(prefix+"Value",ok?(prefix==="landWarning"?`${window.ParknacrossWarnings.select(data.warnings).length} relevant warnings`:data.local_warning_relevant?"Relevant marine warning":"No relevant marine warning"):"Feed unavailable");

@@ -74,3 +74,23 @@ test('every website page renders at mobile and desktop widths without script err
  await page.route('**/unpkg.com/**',r=>r.fulfill({status:503,body:''}));
  for(const width of [390,1280]){await page.setViewportSize({width,height:900});for(const file of pages){await page.goto('/'+file,{waitUntil:'domcontentloaded'});await page.waitForTimeout(100);await expect(page.locator('h1').first()).toBeVisible();}}
 });
+
+test('Summary keeps observations when rain history fails',async({page})=>{
+ await page.route('**/rain-summary',r=>r.fulfill({status:503,contentType:'application/json',body:'{"error":"Unavailable"}'}));
+ await page.goto('/summary.html');await expect(page.locator('#todayHigh')).toHaveText('12.0 °C');await expect(page.locator('#summarySubtitle')).toContainText('rain history');await expect(page.locator('#downloadCsvButton')).toBeEnabled();await expect(page.locator('#lastRainWhen')).toHaveText('Unavailable');
+});
+test('History finishes loading and retains metadata when daily summaries fail',async({page})=>{
+ await page.route('**/daily?**',r=>r.fulfill({status:503,contentType:'application/json',body:'{"error":"Unavailable"}'}));
+ await page.route('**/stats',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({total_samples:100,month_rain_mm:2,year_rain_mm:3,first_epoch:now,records:{}})}));
+ await page.goto('/history.html');await expect(page.locator('#histSamples')).toHaveText('100');await expect(page.locator('#archiveSearchStatus')).toContainText('Daily archive temporarily unavailable');await expect(page.locator('#heatmapSummary')).not.toContainText('Calculating');await expect(page.locator('#historyChartStatus')).toContainText('could not load');
+});
+test('Invalid download range clears the preceding preview',async({page})=>{
+ await page.route('**/export-preview?**',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({count:13,first_epoch:now-3600,last_epoch:now,coverage_percent:100,columns:['epoch'],sample:[current]})}));
+ await page.goto('/downloads.html');await page.getByRole('button',{name:'Preview this download',exact:true}).first().click();await expect(page.locator('#downloadPreview table')).toBeVisible();await page.getByLabel('From',{exact:true}).fill(day);await page.getByLabel('To',{exact:true}).fill('2020-01-01');await page.getByRole('button',{name:'Preview date range',exact:true}).click();await expect(page.locator('#downloadPreviewStatus')).toContainText('valid start and end');await expect(page.locator('#downloadPreview table')).toHaveCount(0);
+});
+test('Reports explain sparse days and heatmap targets support touch',async({page})=>{
+ await page.route('**/coverage?**',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({days:[{day,actual_slots:104,expected_slots:288,coverage_percent:36.1}],summary:{coverage_percent:36.1}})}));
+ await page.goto('/monthly.html');await expect(page.locator('#reportCoverageNote')).toContainText('36.1%');await expect(page.locator('#reportCoverageNote')).toContainText('incomplete coverage');
+ await page.goto('/annual.html');await expect(page.locator('#reportCoverageNote')).toContainText('36.1%');
+ await page.goto('/history.html');const cell=page.locator('.heatmap-day.has-data').first();await expect(cell).toBeVisible();const box=await cell.boundingBox();expect(box.width).toBeGreaterThanOrEqual(28);expect(box.height).toBeGreaterThanOrEqual(28);
+});

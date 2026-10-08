@@ -207,7 +207,29 @@ async function loadDay(day){
     clearDayChart("The observation graph could not be loaded for this date.");
   }
 }
-async function loadHistory(){try{const statsPromise=getJSON(`${API_BASE}/stats`).catch(()=>({})),coveragePromise=getJSON(`${API_BASE}/coverage?days=371`).catch(()=>({days:[],summary:null}));const daily=await getJSON(`${API_BASE}/daily?days=3660`),stats={},coverage={days:[],summary:null};Promise.all([statsPromise,coveragePromise]).then(([s,c])=>{coverageRows=new Map((c.days||[]).map(row=>[row.day,row]));coverageSummary=c.summary||null;renderStats(s);renderCalendar();renderHeatmap();if(selectedArchiveDay)set("dayCoverage",window.ParknacrossArchiveQuality?.coverageText(coverageRows.get(selectedArchiveDay),selectedArchiveDay)||"Coverage unavailable.");});dailyRows=Array.isArray(daily.days)?daily.days:[];dailyMap=new Map(dailyRows.map(row=>[row.day,row]));coverageRows=new Map((Array.isArray(coverage.days)?coverage.days:[]).map(row=>[row.day,row]));coverageSummary=coverage.summary||null;renderCharts();renderStats(stats);renderHeatmap();const latest=window.ParknacrossHistoryLink?.requested()|| (dailyRows.length?dailyRows[dailyRows.length-1].day:null);if(latest){const input=$("archiveDateSearch");if(input){input.min=dailyRows[0]?.day||todayKey();input.max=todayKey();input.value=latest;}calendarCursor=cursorFromDay(latest);selectedArchiveDay=latest;updateArchiveDayNavigation();renderCalendar();loadDay(latest);}}catch(error){console.error("History:",error);set("archiveSearchStatus","Archive temporarily unavailable.");}}
+async function loadHistory(){
+  const [dailyResult,statsResult,coverageResult]=await Promise.allSettled([
+    getJSON(`${API_BASE}/daily?days=3660`),getJSON(`${API_BASE}/stats`),getJSON(`${API_BASE}/coverage?days=371`)
+  ]);
+  const daily=dailyResult.status==="fulfilled"?dailyResult.value:null;
+  const stats=statsResult.status==="fulfilled"?statsResult.value:null;
+  const coverage=coverageResult.status==="fulfilled"?coverageResult.value:null;
+  coverageRows=new Map((coverage?.days||[]).map(row=>[row.day,row]));coverageSummary=coverage?.summary||null;
+  if(daily){dailyRows=Array.isArray(daily.days)?daily.days:[];dailyMap=new Map(dailyRows.map(row=>[row.day,row]));renderCharts();}
+  if(stats)renderStats(stats);
+  else{for(const id of ["historyMonthRain","historyYearRain","historyWettest","historySince","histSamples","histAllHigh","histAllLow","histAllGust","histAllPressureHigh","histAllPressureLow"])set(id,"Unavailable");for(const id of ["historyMonthRainDays","historyWettestDate","histAllHighDate","histAllLowDate","histAllGustDate","histAllPressureHighDate","histAllPressureLowDate"])set(id,"Record source could not be checked.");}
+  renderHeatmap();
+  const latest=window.ParknacrossHistoryLink?.requested()||(dailyRows.length?dailyRows[dailyRows.length-1].day:null);
+  calendarCursor=cursorFromDay(latest||todayKey());selectedArchiveDay=latest;updateArchiveDayNavigation();renderCalendar();
+  if(daily){if(latest){const input=$("archiveDateSearch");if(input){input.min=dailyRows[0]?.day||todayKey();input.max=todayKey();input.value=latest;}loadDay(latest);}else{set("archiveSearchStatus","No archived days are available yet.");clearDayValues("Unavailable");set("dayDetailStory","No archived daily observations.");set("dayCoverage","Coverage unavailable.");}}
+  else{
+    set("archiveSearchStatus","Daily archive temporarily unavailable. Available records and coverage are shown independently.");
+    set("heatmapSummary",coverageSummary?`Archive coverage: ${Number(coverageSummary.coverage_percent||0).toFixed(1)}%. Daily summaries could not load; the calendar is temporarily unavailable.`:"Archive completeness could not be checked just now.");
+    set("historyChartStatus","Daily charts could not load. Available records and coverage are shown independently.");
+    clearDayValues("Unavailable");set("dayDetailStory","Daily archive unavailable. Choose a date to try its detailed observations.");set("dayCoverage","Coverage unavailable until a date is selected.");set("historicalSkyStatus","Choose a date to view its photograph.");
+  }
+}
+
 
 document.addEventListener("DOMContentLoaded",()=>{$("archiveDayRetry")?.addEventListener("click",()=>{if(selectedArchiveDay)loadDay(selectedArchiveDay);});$("historicalSkyRetry")?.addEventListener("click",()=>{if(selectedArchiveDay)loadHistoricalSky(selectedArchiveDay);});createCharts();set("year",new Date().getFullYear());document.querySelectorAll("[data-days]").forEach(button=>button.addEventListener("click",()=>{selectedDays=Number(button.dataset.days);document.querySelectorAll("[data-days]").forEach(b=>b.classList.toggle("active",b===button));renderCharts();}));$("calendarPrev")?.addEventListener("click",()=>{calendarCursor=shiftMonth(calendarCursor,-1);renderCalendar();});$("calendarNext")?.addEventListener("click",()=>{calendarCursor=shiftMonth(calendarCursor,1);renderCalendar();});$("previousArchiveDay")?.addEventListener("click",event=>{const day=event.currentTarget.dataset.day;if(day)openArchiveDay(day);});$("nextArchiveDay")?.addEventListener("click",event=>{const day=event.currentTarget.dataset.day;if(day)openArchiveDay(day);});$("archiveDateButton")?.addEventListener("click",()=>{const day=$("archiveDateSearch")?.value;if(day)openArchiveDay(day);});$("archiveDateSearch")?.addEventListener("change",event=>{const day=event.currentTarget.value;if(day)openArchiveDay(day);});$("archiveDateSearch")?.addEventListener("keydown",event=>{if(event.key==='Enter'){event.preventDefault();const day=event.currentTarget.value;if(day)openArchiveDay(day);}});loadHistory();});
 

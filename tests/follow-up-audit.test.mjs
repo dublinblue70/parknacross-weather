@@ -13,7 +13,7 @@ assert.equal(averages.result,1020);assert.equal(averages.empty,null);
 const history=source('history.js'),heatmap={window:{},document:{getElementById:()=>null,addEventListener(){}},console,Date,Intl,Map,Set,Number,Math,Promise};
 vm.createContext(heatmap);vm.runInContext(history,heatmap);
 vm.runInContext('renders=0;renderCharts=()=>{};renderStats=()=>{};renderCalendar=()=>{};renderHeatmap=()=>renders++;getJSON=async url=>url.includes("/daily")?{days:[]}:url.includes("/coverage")?{days:[],summary:{coverage_percent:100}}:{};',heatmap);
-await vm.runInContext('loadHistory()',heatmap);await new Promise(resolve=>setImmediate(resolve));assert.equal(heatmap.renders,2);
+await vm.runInContext('loadHistory()',heatmap);await new Promise(resolve=>setImmediate(resolve));assert.equal(heatmap.renders,1);
 
 // New date loading and failure cannot retain the previous date's figures.
 const nodes=new Map(),el=id=>{if(!nodes.has(id))nodes.set(id,{textContent:'previous day',hidden:true,setAttribute(){}});return nodes.get(id)};

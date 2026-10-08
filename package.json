@@ -1,10 +1,10 @@
 {
   "name": "parknacross-weather-site",
   "private": true,
-  "version": "38.4.165",
+  "version": "38.4.166",
   "scripts": {
     "test": "node site-smoke-test.mjs && node csv-export-test.mjs && node freshness-resilience-test.mjs && node rain-alert-test.mjs && node coast-data-test.mjs && playwright test",
-    "test:smoke": "node site-smoke-test.mjs && node weather-window.test.mjs && node install-version.test.mjs && node weather-request-timeout.test.mjs && PARKNACROSS_WORKER_SOURCE=_worker/worker.mjs node csv-export-test.mjs && PARKNACROSS_WORKER_SOURCE=_worker/worker.mjs node freshness-resilience-test.mjs && node rain-alert-test.mjs && node coast-data-test.mjs && node tests/audit-reliability.test.mjs && node tests/worker-current-fast.test.mjs && node tests/follow-up-audit.test.mjs",
+    "test:smoke": "node site-smoke-test.mjs && node weather-window.test.mjs && node install-version.test.mjs && node weather-request-timeout.test.mjs && PARKNACROSS_WORKER_SOURCE=_worker/worker.mjs node csv-export-test.mjs && PARKNACROSS_WORKER_SOURCE=_worker/worker.mjs node freshness-resilience-test.mjs && node rain-alert-test.mjs && node coast-data-test.mjs && node tests/audit-reliability.test.mjs && node tests/worker-current-fast.test.mjs && node tests/follow-up-audit.test.mjs && node tests/comprehensive-audit.test.mjs",
     "test:csv": "node csv-export-test.mjs",
     "test:browser": "playwright test",
     "test:coast": "node coast-data-test.mjs",
@@ -15,7 +15,8 @@
     "test:usability": "node tests/usability.test.mjs && node tests/mobile-dashboard.test.mjs && node tests/social-admin.test.mjs && node tests/archive-quality.test.mjs && node tests/admin-enhancements.test.mjs",
     "test:explore": "node tests/explore-weather.test.mjs",
     "test:release": "node release-check.mjs && npm run test:usability && npm run test:explore && npm run test:weather-window-sky && node tests/website-usability.test.mjs",
-    "test:release-browser": "playwright test --config release-playwright.config.mjs"
+    "test:release-browser": "playwright test --config release-playwright.config.mjs",
+    "test:pwa-browser": "playwright test --config pwa-playwright.config.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0"

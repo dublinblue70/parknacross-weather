@@ -2229,10 +2229,10 @@ html.is-offline .live-pill{opacity:.78}
 .archive-search-status { margin-top:8px; color:var(--muted); font-size:.76rem; }
 .archive-heatmap-wrap { overflow-x:auto; padding-bottom:6px; }
 .archive-heatmap {
-  display:grid; grid-auto-flow:column; grid-template-rows:repeat(7,12px);
-  grid-auto-columns:12px; gap:3px; width:max-content; min-width:100%; align-content:start;
+  display:grid; grid-auto-flow:column; grid-template-rows:repeat(7,28px);
+  grid-auto-columns:28px; gap:3px; width:max-content; min-width:100%; align-content:start;
 }
-.heatmap-day { width:12px; height:12px; border:0; border-radius:3px; background:rgba(255,255,255,.025); padding:0; cursor:default; }
+.heatmap-day { width:28px; height:28px; border:0; border-radius:3px; background:rgba(255,255,255,.025); padding:0; cursor:default; }
 .heatmap-day.has-data { cursor:pointer; outline:1px solid rgba(255,255,255,.035); }
 .heatmap-day.level-1 { background:rgba(116,221,255,.18); }
 .heatmap-day.level-2 { background:rgba(116,221,255,.34); }
@@ -2552,3 +2552,6 @@ footer > .footer-links a:focus-visible {
 
 /* An unavailable official feed is a neutral status, never a yellow warning. */
 .warning-banner.level-unavailable{--warning-bg:#e4e9ed;--warning-fg:#18232d;--warning-soft:rgba(24,35,45,.08);--warning-line:rgba(24,35,45,.25)}
+
+.heatmap-day:focus-visible { outline:3px solid #fff; outline-offset:1px; }
+@media (pointer:coarse) { .archive-heatmap { grid-template-rows:repeat(7,44px);grid-auto-columns:44px;gap:4px; }.heatmap-day { width:44px;height:44px; } }

@@ -3,3 +3,7 @@ exclude:
   - tests
   - release-tests
   - node_modules
+  - pwa-tests
+  - pwa-test-server.py
+  - pwa-playwright.config.mjs
+  - public-monitor.mjs

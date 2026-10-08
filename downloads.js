@@ -56,7 +56,7 @@ async function loadArchiveCoverage(){
   try{
     const [statsResponse,currentResponse]=await Promise.all([fetch("https://parknacross-weather.dave-s-carter.workers.dev/stats",{cache:"no-store"}),fetch("https://parknacross-weather.dave-s-carter.workers.dev/current",{cache:"no-store"})]);
     if(!statsResponse.ok||!currentResponse.ok)throw new Error("Coverage unavailable");
-    const stats=await statsResponse.json(),current=await currentResponse.json(),first=Number(stats.first_epoch),last=Number(current.epoch),fromKey=Number.isFinite(first)?dateKey(first*1000):null,toKey=Number.isFinite(last)?dateKey(last*1000):safeDate();
+    const stats=await statsResponse.json(),current=await currentResponse.json(),first=stats.first_epoch!==null&&stats.first_epoch!==undefined&&stats.first_epoch!==""?Number(stats.first_epoch):NaN,last=current.epoch!==null&&current.epoch!==undefined&&current.epoch!==""?Number(current.epoch):NaN,fromKey=Number.isFinite(first)?dateKey(first*1000):null,toKey=Number.isFinite(last)?dateKey(last*1000):safeDate();
     const from=fromKey?archiveDate(first*1000):null,to=Number.isFinite(last)?archiveDate(last*1000):archiveDate(current.received_at);
     el.textContent=from&&to?`Archive coverage: ${from} to ${to}. Longer download options return only the observations actually available in that period.`:"Archive dates are still being established. Downloads contain only observations currently available.";
     setRangeDefaults(fromKey);

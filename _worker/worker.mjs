@@ -1,4 +1,4 @@
-// Parknacross v38.4.93 — fast admin authentication and live readings before schema work; background cloud recovery.
+// Parknacross v38.4.94 — fast admin authentication and live readings before schema work; background cloud recovery.
 // Visitor photo calendar exposes dates and counts only; admin archives stay private.
 // Parknacross v38.4.91 — bounded event history, public date-matched sky photos and export previews; retains earlier sky, social and archive features.
 // Parknacross v38.4.84 — shared daily Weather Window sky override; social enhancements retained.
@@ -2129,6 +2129,20 @@ async function archiveCurrentSkyPhotoIfNeeded(env) {
 }
 
 
+// Conservative per-instance throttles complement account-level edge controls.
+// Successful admin authentication is never counted or locked out.
+const SECURITY_WINDOWS = new Map();
+function requestRateLimited(request, bucket, limit, now=Date.now()) {
+  const ip=request.headers.get("CF-Connecting-IP");
+  if(!ip)return false; // Local fixtures and non-Cloudflare transports have no trusted client address.
+  if(SECURITY_WINDOWS.size>=2048){for(const [key,value] of SECURITY_WINDOWS){if(value.until<=now)SECURITY_WINDOWS.delete(key);}if(SECURITY_WINDOWS.size>=2048)SECURITY_WINDOWS.delete(SECURITY_WINDOWS.keys().next().value);}
+  const key=bucket+":"+ip;let window=SECURITY_WINDOWS.get(key);
+  if(!window||window.until<=now){window={count:0,until:now+60000};SECURITY_WINDOWS.set(key,window);}
+  return ++window.count>limit;
+}
+function rateLimitedResponse(){return json({error:"Too many requests. Please wait a minute and try again."},429,{"Cache-Control":"no-store","Retry-After":"60"});}
+function unauthorizedResponse(request){return requestRateLimited(request,"failed-admin",30)?rateLimitedResponse():json({error:"Unauthorized"},401,{"Cache-Control":"no-store"});}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
@@ -2136,14 +2150,15 @@ export default {
     }
 
     const url = new URL(request.url);
+    if(request.method==="POST"&&["/sky-photo/likes","/sky-photo/likes/name"].includes(url.pathname)&&requestRateLimited(request,"photo-writes",30))return rateLimitedResponse();
 
     // Admin sign-in is a secret check, not an archive query. Never wait for
     // D1 migrations before accepting or rejecting the key.
     if (url.pathname === "/admin/capabilities") {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
-        if (!(await adminDiagnosticAuthorized(request, env))) return json({error:"Unauthorized"},401,{"Cache-Control":"no-store"});
-        return json({worker_version:"38.4.93",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true}},200,{"Cache-Control":"no-store"});
+        if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
+        return json({worker_version:"38.4.94",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2237,7 +2252,7 @@ export default {
           status: connected ? (healthyArchive ? "ok" : "warning") : "error",
           database: connected ? "connected" : "error",
           service: "Parknacross Weather",
-          release: "v38.4.93-WHOLE-SITE-RELIABILITY",
+          release: "v38.4.94-WHOLE-SITE-RELIABILITY",
           station_time_zone: STATION_TIME_ZONE,
           station_local_day: stationDayKey(new Date()),
           archive_ingest: ingest
@@ -2249,7 +2264,7 @@ export default {
           status: "error",
           database: "error",
           service: "Parknacross Weather",
-          release: "v38.4.93-WHOLE-SITE-RELIABILITY",
+          release: "v38.4.94-WHOLE-SITE-RELIABILITY",
           error: error?.message || "D1 health check failed"
         }, 503, {
           "Cache-Control": "no-store"
@@ -2318,7 +2333,7 @@ export default {
 
     if (url.pathname === "/sky-photo" && request.method === "POST") {
       if (!(await adminDiagnosticAuthorized(request, env))) {
-        return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+        return unauthorizedResponse(request);
       }
       if (!env.SKY_PHOTOS || typeof env.SKY_PHOTOS.put !== "function") {
         return json({
@@ -2439,7 +2454,7 @@ export default {
         return new Response(object.body,{headers:{"Content-Type":object.httpMetadata?.contentType||row.content_type||"image/jpeg","Access-Control-Allow-Origin":"*","Cache-Control":"public, max-age=3600"}});
       }
       if (url.pathname === "/sky-photo/archive/dates") {
-        if (!(await adminDiagnosticAuthorized(request, env))) return json({error:"Unauthorized"},401,{"Cache-Control":"no-store"});
+        if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
         if (request.method !== "GET") return json({error:"Method not allowed"},405);
         const month = String(url.searchParams.get("month") || stationDayKey(new Date()).slice(0,7));
         if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return json({error:"Valid calendar month required"},400);
@@ -2453,7 +2468,7 @@ export default {
         const rainChoices = ["auto","none","light","rain","heavy","thunderstorm"];
         const day = stationDayKey(new Date());
         if (request.method === "POST") {
-          if (!(await adminDiagnosticAuthorized(request, env))) return json({error:"Unauthorized"},401,{"Cache-Control":"no-store"});
+          if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
           let body;
           try { body = await request.json(); } catch (_) { return json({error:"Invalid JSON"},400); }
           if (!choices.includes(body?.sky)) return json({error:"Invalid sky setting"},400);
@@ -2642,7 +2657,7 @@ export default {
       if (url.pathname === "/sky-photo/archive/admin" && request.method === "GET") {
         const expected = await readSecret(env.ADMIN_KEY);
         const supplied = String(request.headers.get("X-Parknacross-Admin-Key") || "");
-        if (!expected || supplied !== expected) return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+        if (!expected || supplied !== expected) return unauthorizedResponse(request);
 
         // Capture the currently displayed pre-archive photo on first use.
         await archiveCurrentSkyPhotoIfNeeded(env);
@@ -2680,7 +2695,7 @@ export default {
       // supplied capture time so the archive is ordered by the real photo date.
       if (url.pathname === "/sky-photo/archive/import" && request.method === "POST") {
         if (!(await adminDiagnosticAuthorized(request, env))) {
-          return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+          return unauthorizedResponse(request);
         }
         if (!env.SKY_PHOTOS || typeof env.SKY_PHOTOS.put !== "function") {
           return json({ error: "Sky photo storage is not configured" }, 503, { "Cache-Control": "no-store" });
@@ -2761,7 +2776,7 @@ export default {
       if (url.pathname === "/sky-photo/archive/image" && request.method === "GET") {
         const expected = await readSecret(env.ADMIN_KEY);
         const supplied = String(request.headers.get("X-Parknacross-Admin-Key") || "");
-        if (!expected || supplied !== expected) return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+        if (!expected || supplied !== expected) return unauthorizedResponse(request);
         if (!env.SKY_PHOTOS || typeof env.SKY_PHOTOS.get !== "function") {
           return json({ error: "Sky photo storage is not configured" }, 503, { "Cache-Control": "no-store" });
         }
@@ -2791,7 +2806,7 @@ export default {
       if (url.pathname === "/sky-photo/likes/admin" && request.method === "GET") {
         const expected = await readSecret(env.ADMIN_KEY);
         const supplied = String(request.headers.get("X-Parknacross-Admin-Key") || "");
-        if (!expected || supplied !== expected) return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+        if (!expected || supplied !== expected) return unauthorizedResponse(request);
         const photoId = String(url.searchParams.get("photo_id") || "").trim();
         if (!photoId || photoId.length > 80) return json({ error: "Valid photo_id is required" }, 400, { "Cache-Control": "no-store" });
         const [totalRow, namedRow, entries] = await Promise.all([
@@ -2870,17 +2885,17 @@ export default {
       }
 
       if (url.pathname === "/social-history" && request.method === "GET") {
-        if (!(await adminDiagnosticAuthorized(request, env))) return json({error:"Unauthorized"},401,{"Cache-Control":"no-store"});
+        if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
         return json(await getSocialHistory(env),200,{"Cache-Control":"no-store"});
       }
 
       if (url.pathname === "/social-dashboard" && request.method === "GET") {
-        if (!(await adminDiagnosticAuthorized(request, env))) return json({error:"Unauthorized"},401,{"Cache-Control":"no-store"});
+        if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
         return json(await getSocialDashboardStatus(env),200,{"Cache-Control":"no-store"});
       }
 
       if (url.pathname === "/social-preview-today" && request.method === "GET") {
-        if (!(await adminDiagnosticAuthorized(request, env))) return json({error:"Unauthorized"},401,{"Cache-Control":"no-store"});
+        if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
         return json(await buildDailySocialPost(env,stationDayKey(new Date()),{preview:true}),200,{"Cache-Control":"no-store"});
       }
 
@@ -2890,7 +2905,7 @@ export default {
 
       if (url.pathname === "/social-status-admin" && request.method === "GET") {
         if (!(await adminDiagnosticAuthorized(request, env))) {
-          return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+          return unauthorizedResponse(request);
         }
         return json(await getSocialStatus(env), 200, { "Cache-Control": "no-store" });
       }
@@ -2903,7 +2918,7 @@ export default {
           });
         }
         if (!(await adminDiagnosticAuthorized(request, env))) {
-          return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+          return unauthorizedResponse(request);
         }
         try {
           const result = await recoverTodaySocialPost(env);
@@ -2925,7 +2940,7 @@ export default {
 
       if (url.pathname === "/social-preview" && request.method === "GET") {
         if (!(await adminDiagnosticAuthorized(request, env))) {
-          return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+          return unauthorizedResponse(request);
         }
         const date = String(url.searchParams.get("date") || shiftDayKey(stationDayKey(new Date()), -1));
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ error: "date must be YYYY-MM-DD" }, 400);
@@ -2933,7 +2948,7 @@ export default {
       }
 
       if (url.pathname === "/social-publish" && request.method === "POST") {
-        if (!(await manualSocialPublishAuthorized(request, env))) return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+        if (!(await manualSocialPublishAuthorized(request, env))) return unauthorizedResponse(request);
         let payload = {}; try { payload = await request.json(); } catch (_) {}
         const date = String(payload?.date || stationDayKey(new Date()));
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ error: "date must be YYYY-MM-DD" }, 400);
@@ -2942,7 +2957,7 @@ export default {
 
       if (url.pathname === "/sync") {
         if (!(await adminDiagnosticAuthorized(request, env))) {
-          return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+          return unauthorizedResponse(request);
         }
         return json(await syncEcowitt(env), 200, { "Cache-Control": "no-store" });
       }
@@ -3105,7 +3120,7 @@ export default {
 
       if (url.pathname === "/battery-debug") {
         if (!(await adminDiagnosticAuthorized(request, env))) {
-          return json({ error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+          return unauthorizedResponse(request);
         }
         return json(await buildBatteryDebug(env), 200, {
           "Cache-Control": "no-store"

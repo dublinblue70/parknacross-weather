@@ -38,6 +38,7 @@ async function getStats() {
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
+let reportCoverage = null;
 let chart = null,
   allRows = [];
 function dublinYear() {
@@ -51,6 +52,7 @@ function render(year) {
   const rows = allRows.filter((r) =>
     String(r.day || "").startsWith(`${year}-`),
   );
+  set("reportCoverageNote",window.ParknacrossReportQuality?.describe(rows,String(year),reportCoverage)||"Coverage unavailable; figures use available observations.");
   const high = maxRow(rows, "high_c"),
     low = minRow(rows, "low_c"),
     gust = maxRow(rows, "peak_gust_kmh"),
@@ -193,7 +195,7 @@ async function load() {
 }
 async function loadVerified() {
   try {
-    const statsPromise=getStats().catch(()=>null);const d=await get(), stats=null;
+    const statsPromise=getStats().catch(()=>null),coveragePromise=window.ParknacrossReportQuality?.load()||Promise.resolve(null);const d=await get(), stats=null;
 
     allRows = Array.isArray(d.days) ? d.days : [];
     const record = stats?.records?.peak_gust;
@@ -232,6 +234,7 @@ async function loadVerified() {
       render(picker.value);
     });
     render(selected);
+    coveragePromise.then(value=>{reportCoverage=value;render(picker.value);});
     statsPromise.then(value=>{const rec=value?.records?.peak_gust;if(usable(rec?.epoch)&&usable(rec?.value)){const day=new Date(Number(rec.epoch)*1000).toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});const row=allRows.find(item=>item.day===day);if(row){row.peak_gust_kmh=Number(rec.value)+0.0001;render(picker.value);}}});
   } catch (e) {
     console.error(e);
