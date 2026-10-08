@@ -85,22 +85,22 @@
       }
       eventCount++;
     }
-    return {labels, count, distances, eventLabels, observed, counted, eventCount,
+    return {labels, times:Array.from({length},(_,index)=>(first+index*interval)*1000), count, distances, eventLabels, observed, counted, eventCount,
       skippedIntervals, interval: intervalLabel(interval)};
   }
   // Expose a pure data transformation for non-network regression tests.
   window.ParknacrossLightningSeries = {buildSeries};
   let activityChart, distanceChart, hours = 24, requestId = 0, lastRefresh = 0;
   const plainAxis = unit => ({
-    x: {grid:{color:'transparent'},ticks:{color:'#9fb3c1',maxTicksLimit:8}},
+    x: {type:'linear',grid:{color:'transparent'},ticks:{color:'#9fb3c1',maxTicksLimit:8,callback:value=>localTime(Number(value)/1000)}},
     y: {beginAtZero:true,...(unit === 'km' ? {min:0,max:40} : {}),grid:{color:'rgba(174,210,232,.09)'},
       ticks:{color:'#9fb3c1',precision:unit === 'Detected events' ? 0 : undefined,...(unit === 'km' ? {stepSize:5} : {})},
       title:{display:true,text:unit,color:'#9fb3c1'}}
   });
   function makeCharts() {
     if (!window.Chart || !$('gLightningCount') || !$('gLightningDistance')) return false;
-    const common = {maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false}}};
+    const common = {parsing:false,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:items=>items.length?localTime(Number(items[0].parsed.x)/1000)+' (Irish time)':''}}}};
     activityChart = new Chart($('gLightningCount'), {type:'bar',data:{labels:[],datasets:[{
       label:'New detections',data:[],backgroundColor:'#f2bb68',borderRadius:2,barPercentage:1,
       categoryPercentage:1
@@ -109,11 +109,17 @@
       label:'Lightning distance',data:[],borderColor:'#74ddff',backgroundColor:'#74ddff',
       showLine:false,pointRadius:4,pointHoverRadius:7,spanGaps:false
     }]},options:{...common,scales:plainAxis('km'),plugins:{legend:{display:false},tooltip:{
-      callbacks:{afterLabel:context => distanceChart._eventLabels?.[context.dataIndex]
+      callbacks:{title:items=>items.length?localTime(Number(items[0].parsed.x)/1000)+' (Irish time)':'',afterLabel:context => distanceChart._eventLabels?.[context.dataIndex]
         ? `Detected: ${distanceChart._eventLabels[context.dataIndex]} (Irish time)` : ''}
     }}}});
     return true;
   }
+  function alignBounds(bounds){
+    const key=window.ParknacrossGraphSelection?.historyPath()||`/history?hours=${hours}`;
+    if(!bounds||bounds.key!==key)return;
+    for(const chart of [activityChart,distanceChart]){if(!chart)continue;chart.options.scales.x.min=bounds.from;chart.options.scales.x.max=bounds.to;chart.update('none');}
+  }
+  window.addEventListener('parknacross:chart-bounds',event=>alignBounds(event.detail));
   async function refresh(requestedHours) {
     const fixed=window.ParknacrossGraphSelection?.get()?.range;hours = fixed?(fixed.to-fixed.from)/3600:requestedHours;
     const id = ++requestId;
@@ -131,14 +137,18 @@
       if (!response.ok) throw new Error(`History HTTP ${response.status}`);
       const data = await response.json();
       if (id !== requestId) return; // An earlier range response must not overwrite a later selection.
-      const now = fixed?fixed.to:Date.now() / 1000;
+      const epochs=(data.readings||[]).map(epochOf).filter(Number.isFinite);
+      const now = fixed?fixed.to:(epochs.length?Math.max(...epochs):Date.now()/1000);
       const series = buildSeries(data.readings, hours, now);
-      activityChart.data.labels = series.labels;
-      activityChart.data.datasets[0].data = series.count;
-      distanceChart.data.labels = series.labels;
-      distanceChart.data.datasets[0].data = series.distances;
+      activityChart.data.labels = [];
+      activityChart.data.datasets[0].data = series.count.map((y,i)=>({x:series.times[i],y}));
+      distanceChart.data.labels = [];
+      distanceChart.data.datasets[0].data = series.distances.map((y,i)=>({x:series.times[i],y}));
       distanceChart._eventLabels = series.eventLabels;
+      const start=fixed?fixed.from:(epochs.length?Math.min(...epochs):now-hours*3600);
+      for(const chart of [activityChart,distanceChart]){chart.options.scales.x.min=start*1000;chart.options.scales.x.max=now*1000;}
       activityChart.update(); distanceChart.update();
+      alignBounds(window.ParknacrossGraphTimeBounds);
       const periodLabel=({6:'6-hour',24:'24-hour',48:'48-hour',168:'7-day',720:'30-day'})[hours]||`${hours}-hour`;
       if (!series.observed) {
         countStatus.textContent = 'No lightning strike-counter readings are available for this period. Missing data does not mean zero lightning.';
