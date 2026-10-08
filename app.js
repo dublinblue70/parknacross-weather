@@ -1827,6 +1827,7 @@ function chartRowsWithGaps(rows, gapMinutes = 10) {
 }
 
 function updateCharts() {
+  if(!charts.temperature||!charts.wind||!charts.pressure||!charts.solar||!charts.uv||!charts.rain)return;
   // Merge the latest live observation into cached history so chart endpoints
   // cannot visibly lag behind the live cards while the history cache catches up.
   const source = [...history24];
@@ -2473,7 +2474,7 @@ function setupPWA() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  createCharts();
+  try{createCharts();}catch(error){console.warn('Charts could not start:',error);set('dashboardChartSummary','Charts could not load. Live weather readings remain available; refresh to retry the charts.');}
   if(!navigator.onLine){const saved=readLocalCache("current")?.value;if(saved){latestCurrent=saved;history24=readLocalCache("history24")?.value||[];updateDashboard(saved);updateCharts();markOfflineMode(saved);}}
   updateSunInfo();
   loadEverything();

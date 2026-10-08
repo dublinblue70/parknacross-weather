@@ -11,7 +11,7 @@
   let statusBusy = false, previewBusy = false, lastStatus = null, noticeSent = '';
   const stored = key => { try { return sessionStorage.getItem(key) || ''; } catch (_) { return ''; } };
   function credential(ask = false) {
-    let key = stored('parknacrossAdminKey');
+    let key = window.ParknacrossAdminSession?.get() || stored('parknacrossAdminKey');
     if (!key && ask) key = window.prompt('Enter the Parknacross admin key') || '';
     return key;
   }

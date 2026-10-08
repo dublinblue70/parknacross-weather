@@ -41,3 +41,15 @@ test('zoom keeps gust segments at the edges inside the vertical scale without br
  expect(result.maximum).toBeGreaterThan(20);expect(result.min).toBe(0);expect(result.gap).toBeNull();expect(result.spanGaps).toBe(false);expect(result.count).toBe(5);
  await page.getByRole('button',{name:'Reset graph zoom'}).click();await expect(page.locator('#resetChartZoom')).toBeDisabled();
 });
+
+test('mobile admin accepts a valid key when browser session storage is blocked',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.addInitScript(()=>Object.defineProperty(window,'sessionStorage',{get(){throw new DOMException('Storage blocked','SecurityError');}}));
+ let authenticated=false;await page.route('**/admin/capabilities',async r=>{authenticated=r.request().headers()['x-parknacross-admin-key']==='test-only';return r.fulfill({status:authenticated?200:401,contentType:'application/json',body:JSON.stringify({worker_version:'38.4.91',features:{rain_override:true,photo_calendar:true}})});});
+ await page.goto('/admin.html');await page.getByLabel('Admin key',{exact:true}).fill('test-only');await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await expect(page.locator('#adminWorkspace')).toBeVisible();expect(authenticated).toBe(true);await expect(page.locator('#adminMessage')).toContainText('Signed in.');
+ await page.getByRole('button',{name:'Sign out',exact:true}).click();await expect(page.locator('#adminLogin')).toBeVisible();
+});
+test('mobile live readings load even if the graph library cannot be downloaded',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.route('**/chart.umd.min.js*',r=>r.fulfill({status:503,body:''}));
+ await page.goto('/index.html');await expect(page.locator('#heroTemp')).toHaveText(/12/);await expect(page.locator('#conditionsTag')).not.toHaveText('Loading…');
+});

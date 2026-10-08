@@ -3,16 +3,22 @@
  const $=id=>document.getElementById(id),base=(window.PARKNACROSS_CONFIG?.apiBase||'https://parknacross-weather.dave-s-carter.workers.dev').replace(/\/$/,'');
  let archiveSequence=0,historySequence=0;
  let active=false,generation=0,items=[],position=0,total=0,offset=0,imageUrl=null,imageExtension="jpg";
- const key=()=>{try{return sessionStorage.getItem('parknacrossAdminKey')||'';}catch(_){return '';}};
+ let memoryKey='';
+ const key=()=>{try{return sessionStorage.getItem('parknacrossAdminKey')||memoryKey;}catch(_){return memoryKey;}};
+ const saveKey=value=>{memoryKey=value;try{if(value)sessionStorage.setItem('parknacrossAdminKey',value);else sessionStorage.removeItem('parknacrossAdminKey');}catch(_){}};
+ window.ParknacrossAdminSession={get:key,set:saveKey};
  const note=text=>{$('adminMessage').textContent=text;};
  async function request(path,options={}){
-   const response=await fetch(base+path,{...options,headers:{...options.headers,'X-Parknacross-Admin-Key':key()},cache:'no-store',signal:AbortSignal.timeout(15000)});
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);let response;
+   try{response=await fetch(base+path,{...options,headers:{...options.headers,'X-Parknacross-Admin-Key':key()},cache:'no-store',signal:controller.signal});}
+   catch(error){throw Error(controller.signal.aborted?'The admin service took too long to respond. Please try signing in again.':'Could not connect to the admin service. Check your connection and try again.');}
+   finally{clearTimeout(timer);}
    if(response.status===401){signOut();throw Error('Admin key was not accepted. Please sign in again.');}
    if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.error==='Invalid sky setting'?'The Worker does not support this sky choice yet. Deploy Worker v38.4.87, or choose Overcast for now.':data.error||(response.status===404?'This feature needs Worker v38.4.86.':`Request failed (${response.status}).`));}
    return response;
  }
  function signOut(){
-   active=false;generation++;$('adminSkySave').disabled=true;sessionStorage.removeItem('parknacrossAdminKey');
+   active=false;generation++;$('adminSkySave').disabled=true;saveKey('');
    $('adminWorkspace').hidden=true;$('adminLogin').hidden=false;$('adminKey').value='';
    window.dispatchEvent(new Event('parknacross:admin-signout'));
    $('postHistory').replaceChildren();$('archiveCaption').textContent='';$('archiveImage').removeAttribute('src');
@@ -21,15 +27,18 @@
  async function signIn(){
    const ticket=++generation;
    note('Checking admin access…');
-   await request('/social-dashboard');
+   await request('/admin/capabilities');
    if(ticket!==generation)return;
    active=true;$('adminLogin').hidden=true;$('adminWorkspace').hidden=false;note('Signed in. Your key stays in this tab’s session.');
    window.dispatchEvent(new Event('parknacross:admin-signin'));
-   await Promise.allSettled([loadArchive(),loadHistory(),loadSky(),checkCompatibility()]);
+   void Promise.allSettled([loadArchive(),loadHistory(),loadSky(),checkCompatibility()]);
  }
  $('adminLogin').addEventListener('submit',async event=>{
-   event.preventDefault();sessionStorage.setItem('parknacrossAdminKey',$('adminKey').value.trim());$('adminKey').value='';
-   const done=window.ParknacrossAction?.begin($('adminSignIn'),'Signing in…');if(done===null)return;try{await signIn();}catch(error){note(error.message);}finally{done?.();}
+   event.preventDefault();
+   const done=window.ParknacrossAction?.begin($('adminSignIn'),'Signing in…');if(done===null)return;
+   try{const entered=$('adminKey').value.trim();if(!entered)throw Error('Enter your admin key.');saveKey(entered);await signIn();$('adminKey').value='';}
+   catch(error){note(error.message);}finally{done?.();}
+
  });
  $('adminSignOut').addEventListener('click',signOut);
  let supported=null,compatibilitySequence=0;
