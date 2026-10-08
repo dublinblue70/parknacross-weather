@@ -9,3 +9,20 @@
 .chart-explorer-controls button:focus-visible { outline:3px solid #76c9ee;outline-offset:3px; }
 .footer-links a { display:inline-flex;align-items:center;min-height:44px;padding:5px 8px; }
 .maintenance-chart-notes details summary { cursor:pointer; }
+
+/* Keep cursor inspection from moving the charts as readings wrap or disappear. */
+.chart-explorer-controls .chart-cursor-values {
+  box-sizing: border-box;
+  flex: 0 0 100%;
+  min-width: 0;
+  height: 5.1em;
+  min-height: 5.1em;
+  max-height: 5.1em;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  scrollbar-gutter: stable;
+}
+.chart-cursor-values:focus-visible { outline: 2px solid #76c9ee; outline-offset: 3px; }
+@media (max-width: 600px) {
+  .chart-explorer-controls .chart-cursor-values { height: 8.5em; min-height: 8.5em; max-height: 8.5em; }
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-170-comprehensive-audit";
+const CACHE_NAME = "parknacross-v38-4-171-stable-chart-hover";
 const STATIC_ASSETS = [
   "./",
   "./site-request.js",
