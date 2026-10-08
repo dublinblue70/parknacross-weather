@@ -58,8 +58,9 @@
 .weather-window-details { padding: 22px clamp(18px, 3vw, 30px); align-self: center; }
 .weather-window-observation { margin: 0; color: var(--text, #eef5fa); font-size: 1rem; line-height: 1.55; }
 .weather-window-readings { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 9px; margin: 17px 0 10px; }
-.weather-window-readings span { display: grid; gap: 5px; padding: 10px; border: 1px solid rgba(163,209,255,.13); border-radius: 12px; color: var(--muted, #a8bfd4); font-size: .72rem; }
-.weather-window-readings strong { color: var(--text, #eef5fa); font-size: .87rem; font-weight: 700; }
+.weather-window-readings span { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; align-content: start; align-items: start; gap: 5px; padding: 10px; border: 1px solid rgba(163,209,255,.13); border-radius: 12px; color: var(--muted, #a8bfd4); font-size: .72rem; }
+.weather-window-readings strong { grid-column: 1; grid-row: 2; color: var(--text, #eef5fa); font-size: .87rem; font-weight: 700; }
+.weather-window-readings .weather-term-help { grid-column: 2; grid-row: 2; margin-left: 0; }
 .weather-window-note { margin: 0; color: var(--muted, #a8bfd4); font-size: .76rem; line-height: 1.5; }
 @keyframes weather-window-flow { to { stroke-dashoffset: -58; } }
 @keyframes weather-window-rain { to { transform: translateY(13px); opacity: .45; } }

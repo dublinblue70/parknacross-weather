@@ -173,6 +173,7 @@ async function runChecks(only=null) {
 
   const sitePromise=read("site",checkSite);
   const apiStarted=performance.now();
+  const exportDay=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
   const [health,current,quality,history,reliability,backup,social,tides,m2,landWarnings,marineWarnings,site,daily,stats,summaryHistory,exportPreview] = await Promise.all([
     read("health",()=>fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e}))),
     read("current",()=>fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e}))),
@@ -191,7 +192,7 @@ async function runChecks(only=null) {
     read("daily",()=>fetchJSON(`${API_BASE}/daily?days=8`).catch(e=>({__error:e}))),
     read("stats",()=>fetchJSON(`${API_BASE}/stats`).catch(e=>({__error:e}))),
     read("summaryHistory",()=>fetchJSON(`${API_BASE}/history?hours=48`).catch(e=>({__error:e}))),
-    read("exportPreview",()=>fetchJSON(`${API_BASE}/export-preview?days=1`).catch(e=>({__error:e})))
+    read("exportPreview",()=>fetchJSON(`${API_BASE}/export-preview?from=${exportDay}&to=${exportDay}`).catch(e=>({__error:e})))
   ]);
 
   const apiElapsed=Math.round(performance.now()-apiStarted);
