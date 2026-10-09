@@ -230,7 +230,7 @@ if (!dashboardHtml.includes('aria-label="Daily sun phases"') || !dashboardHtml.i
 if (!dashboardHtml.includes('id="seasonNextMarker"') || !dashboardHtml.includes("Typical dates for Ireland")) failures.push("index.html: approximate annual equinox and solstice outlook is missing");
 if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
 if (!dashboardHtml.includes('id="weatherWindowScene"') || !dashboardHtml.includes('id="weatherWindowObservation"') || dashboardHtml.includes("weatherSoundToggle") || dashboardHtml.includes("weather-sound-controls") || dashboardHtml.includes("Illustrated from local readings")) failures.push("index.html: Weather Window should remain while all sound controls and the removed caption stay absent");
-if (!dashboardHtml.includes('weather-window.css?v=20261008-v38-4-170') || !dashboardHtml.includes('weather-window.js?v=20261008-v38-4-170')) failures.push("index.html: isolated weather window assets must be versioned and loaded");
+if (!/weather-window\.css\?v=\d{8}-v\d+(?:-\d+)+/.test(dashboardHtml) || !/weather-window\.js\?v=\d{8}-v\d+(?:-\d+)+/.test(dashboardHtml)) failures.push("index.html: isolated weather window assets must be versioned and loaded");
 for (const page of ["install.html", "station.html"]) {
   const html = await readFile(new URL(page, import.meta.url), "utf8");
   if (/id="diagCache">v\d/i.test(html)) failures.push(`${page}: installation diagnostics must not hardcode a release number`);
