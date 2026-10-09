@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-175-uv-axis-headroom";
+const CACHE_NAME = "parknacross-v38-4-176-chart-axis-margins";
 const STATIC_ASSETS = [
   "./",
   "./site-request.js",

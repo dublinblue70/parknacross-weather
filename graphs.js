@@ -34,7 +34,7 @@
  // Keep stacked solar/UV charts aligned, including labels and plotting width.
  const solarTimeAxis=timeAxis;
  const alignSolarYAxis=axis=>{axis.width=64;};
- const scales=(unit,zero=false)=>({x:timeAxis(),y:{beginAtZero:zero,...(unit==="hPa"?{afterDataLimits:axis=>{if(axis.max-axis.min<2){const middle=(axis.min+axis.max)/2;axis.min=middle-1;axis.max=middle+1;}}}:{}),grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",...(unit==="hPa"?{precision:1,maxTicksLimit:6}: {})},title:{display:true,text:unit,color:"#9fb3c1"}}});
+ const scales=(unit,zero=false)=>({x:timeAxis(),y:{beginAtZero:zero,...(unit==="°C"?{grace:"10%"}:{}),...(unit==="hPa"?{afterDataLimits:axis=>{if(axis.max-axis.min<2){const middle=(axis.min+axis.max)/2;axis.min=middle-1;axis.max=middle+1;}}}:{}),grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",...(unit==="hPa"?{precision:1,maxTicksLimit:6}: {})},title:{display:true,text:unit,color:"#9fb3c1"}}});
  const windLine=(label,colour,axis="y")=>({
    label,
    data:[],
@@ -52,6 +52,7 @@
    x:timeAxis(),
    y:{
      beginAtZero:true,
+     grace:"10%",
      grid:{color:"rgba(163,209,255,.10)"},
      ticks:{color:"#a8bfd4"},
      title:{display:true,text:title,color:"#a8bfd4"}
@@ -113,7 +114,7 @@
      }
    }
  });
- charts.s=new Chart($("gSolar"),{type:"line",data:{datasets:[solarLine()]},options:{...common,scales:{x:solarTimeAxis(),y:{afterFit:alignSolarYAxis,position:"left",beginAtZero:true,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",maxTicksLimit:5},title:{display:true,text:"W/m²",color:"#ffd56a"}}},plugins:{legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`Solar radiation: ${Math.round(Number(ctx.parsed.y))} W/m²`}}}}});
+ charts.s=new Chart($("gSolar"),{type:"line",data:{datasets:[solarLine()]},options:{...common,scales:{x:solarTimeAxis(),y:{afterFit:alignSolarYAxis,position:"left",beginAtZero:true,grace:"10%",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",maxTicksLimit:5},title:{display:true,text:"W/m²",color:"#ffd56a"}}},plugins:{legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`Solar radiation: ${Math.round(Number(ctx.parsed.y))} W/m²`}}}}});
  charts.uv=new Chart($("gUv"),{type:"line",data:{datasets:[uvLine()]},options:{...common,scales:{x:solarTimeAxis(),y:{afterFit:alignSolarYAxis,position:"left",beginAtZero:true,suggestedMax:3,afterDataLimits:axis=>{axis.max=Math.max(4,Math.floor(axis.max)+1);},grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",precision:0,stepSize:1,maxTicksLimit:5},title:{display:true,text:"UV index",color:"#bd91ff"}}},plugins:{legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>`UV index: ${Number(ctx.parsed.y).toFixed(1)}`}}}}});
  charts.sm=new Chart($("gSoilMoisture"),{type:"line",data:{datasets:[soilLine("Soil moisture","#65d19a")]},options:{...common,scales:{x:timeAxis(),y:{min:0,max:100,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",callback:v=>`${v}%`},title:{display:true,text:"Moisture %",color:"#9fb3c1"}}},plugins:{...common.plugins,legend:{display:false},tooltip:{callbacks:{title:tooltipTime,label:ctx=>usable(ctx.parsed.y)?`Soil moisture: ${Number(ctx.parsed.y).toFixed(0)}%`:"Soil moisture unavailable"}}}}});
  const soilAxis=unit=>({x:solarTimeAxis(),y:{afterFit:alignSolarYAxis,position:"left",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:unit,color:"#9fb3c1"}}});

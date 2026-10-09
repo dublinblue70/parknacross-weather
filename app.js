@@ -1588,8 +1588,18 @@ function scales(title, beginAtZero = false, timeBased = false) {
     },
     y: {
       beginAtZero,
+      ...(["°C", "km/h"].includes(title) ? { grace: "10%" } : {}),
+      ...(title === "hPa" ? {
+        afterDataLimits: axis => {
+          if (axis.max - axis.min < 2) {
+            const middle = (axis.min + axis.max) / 2;
+            axis.min = middle - 1;
+            axis.max = middle + 1;
+          }
+        }
+      } : {}),
       grid: { color: "rgba(163,209,255,.10)" },
-      ticks: { color: "#a8bfd4" },
+      ticks: { color: "#a8bfd4", ...(title === "hPa" ? { precision: 1, maxTicksLimit: 6 } : {}) },
       title: { display: true, text: title, color: "#a8bfd4" }
     }
   };
@@ -1756,6 +1766,7 @@ function createCharts() {
         y: {
           position: "left",
           beginAtZero: true,
+          grace: "10%",
           grid: { color: "rgba(163,209,255,.10)" },
           ticks: { color: "#a8bfd4", maxTicksLimit: 5 },
           title: { display: true, text: "W/m²", color: "#ffd56a" }
