@@ -91,8 +91,15 @@
   // Expose a pure data transformation for non-network regression tests.
   window.ParknacrossLightningSeries = {buildSeries};
   let activityChart, distanceChart, hours = 24, requestId = 0, lastRefresh = 0;
+  const lightningTick = function(value) {
+    const date = new Date(Number(value));
+    const span = this.max - this.min;
+    const day = date.toLocaleDateString('en-IE', {timeZone:'Europe/Dublin', day:'2-digit', month:'short'});
+    const time = date.toLocaleTimeString('en-IE', {timeZone:'Europe/Dublin', hour:'2-digit', minute:'2-digit'});
+    return span <= 48 * 60 * 60 * 1000 ? [day, time] : day;
+  };
   const plainAxis = unit => ({
-    x: {type:'linear',grid:{color:'transparent'},ticks:{color:'#9fb3c1',maxTicksLimit:8,callback:value=>localTime(Number(value)/1000)}},
+    x: {type:'linear',grid:{color:'transparent'},ticks:{color:'#9fb3c1',autoSkip:true,maxRotation:0,minRotation:0,maxTicksLimit:Math.max(2,Math.min(6,Math.floor(((window.innerWidth||390)-80)/180)+1)),callback:lightningTick}},
     y: {beginAtZero:true,...(unit === 'km' ? {min:0,max:40} : {}),grid:{color:'rgba(174,210,232,.09)'},
       ticks:{color:'#9fb3c1',precision:unit === 'Detected events' ? 0 : undefined,...(unit === 'km' ? {stepSize:5} : {})},
       title:{display:true,text:unit,color:'#9fb3c1'}}
