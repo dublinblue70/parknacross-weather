@@ -146,6 +146,8 @@
     scene.style.setProperty("--ww-tree-lean", `${lean.toFixed(1)}deg`);
     scene.style.setProperty("--ww-tree-sway", `${windLevel === "strong" ? 4 : windLevel === "breezy" ? 1.8 : 0}deg`);
     scene.style.setProperty("--ww-wind-travel", `${Number(current.wind_direction_deg) >= 180 ? 28 : -28}px`);
+    scene.style.setProperty("--ww-flower-lean", `${(lean * 1.5).toFixed(1)}deg`);
+    scene.style.setProperty("--ww-flower-sway", `${windLevel === "strong" ? 8 : windLevel === "breezy" ? 4 : 0}deg`);
     const tree = scene.querySelector(".ww-tree-trunk");
     if (tree) tree.style.transform = `rotate(${lean.toFixed(1)}deg)`;
     scene.style.setProperty("--ww-wind-duration", `${Math.max(1.6, 5.5 - Math.min(45, gust ?? speed ?? 0) * 0.075).toFixed(2)}s`);

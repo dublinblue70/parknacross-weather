@@ -6,7 +6,7 @@ export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https:
   const tasks=[
     ['Website',site+'/',async r=>{assert.match(await r.text(),/PARKNACROSS WEATHER/);} ],
     ['Current readings',api+'/current',async r=>{const d=await r.json();assert.ok(!d.error&&fresh(d.epoch),'Latest observation is missing or delayed');}],
-    ['Summary observations',api+'/history?hours=48',async r=>{const d=await r.json();assert.ok(Array.isArray(d.readings)&&d.readings.some(row=>fresh(row.epoch)),'Summary archive has no fresh observations');}],
+    ['Summary observations',api+`/history?hours=48&_window=${Math.floor(now/300000)}`,async r=>{const d=await r.json();assert.ok(Array.isArray(d.readings)&&d.readings.some(row=>fresh(row.epoch)),'Summary archive has no fresh observations');}],
     ['Daily summaries',api+'/daily?days=8',async r=>{const d=await r.json();assert.ok(Array.isArray(d.days)&&d.days.some(row=>/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(row.day)&&Math.abs(now-Date.parse(row.day+'T12:00:00Z'))<2*86400000),'Recent daily archive is missing');}],
     ['Statistics',api+'/stats',async r=>{const d=await r.json();assert.ok(Number(d.total_samples)>0&&d.records&&typeof d.records==='object'&&!d.error,'Archive statistics are missing');}],
     ['Export preview',api+`/export-preview?from=${exportDay}&to=${exportDay}`,async r=>{const d=await r.json();assert.ok(Number(d.count)>0&&fresh(d.last_epoch)&&d.columns?.includes('soil_moisture_pct')&&d.columns?.includes('lightning_strikes'),'Export preview is incomplete or delayed');}],

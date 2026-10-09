@@ -122,3 +122,12 @@ test('weather chart peaks have headroom and dashboard pressure keeps a meaningfu
   for(const s of scales){if(/Pressure|pressure/.test(s.id))expect(s.max-s.min).toBeGreaterThanOrEqual(2);else expect(s.max,`${s.id} peak needs headroom`).toBeGreaterThan(s.peak);if(/Wind|wind|Solar|solar|Uv|uv|Rain/.test(s.id))expect(s.min).toBe(0);}
  }
 });
+
+test('all four flowers stay inside the weather scene and respect reduced motion',async({page})=>{
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:900});await page.goto('/index.html');await expect(page.locator('#weatherWindowScene')).toHaveAttribute('data-wind','breezy');await expect(page.locator('.ww-flowers .ww-flower')).toHaveCount(4);
+  const bounds=await page.evaluate(()=>{const s=document.getElementById('weatherWindowScene').getBoundingClientRect();return [...document.querySelectorAll('.ww-flowers .ww-flower')].map(f=>{const b=f.getBoundingClientRect();return {inside:b.left>=s.left&&b.right<=s.right&&b.top>=s.top&&b.bottom<=s.bottom,animation:getComputedStyle(f).animationName};});});
+  expect(bounds.every(f=>f.inside)).toBe(true);expect(bounds.every(f=>f.animation==='weather-window-flower-sway')).toBe(true);
+ }
+ await page.emulateMedia({reducedMotion:'reduce'});expect(await page.locator('.ww-flower').first().evaluate(f=>getComputedStyle(f).animationName)).toBe('none');
+});

@@ -161,3 +161,15 @@
 .social-admin-preview img { width:100%; max-width:560px; height:auto; border-radius:12px; }
 @media(max-width:600px) { .social-admin-networks { grid-template-columns:1fr; } }
 @media(prefers-reduced-motion:reduce) { .weather-window-scene * { transition:none !important; animation:none !important; } }
+
+/* Anchor the flowers to the visible scene instead of the cropped landscape. */
+.weather-window-scene svg.ww-flowers { position:absolute; left:12px; bottom:10px; width:clamp(88px, 20%, 124px); height:auto; min-height:0; overflow:visible; pointer-events:none; }
+.weather-window-scene .ww-flower { transform:rotate(var(--ww-flower-lean, 0deg)); }
+.weather-window-scene:is([data-wind="breezy"],[data-wind="strong"]) .ww-flower { animation:weather-window-flower-sway var(--ww-wind-duration, 4s) ease-in-out infinite; }
+.weather-window-scene .ww-flower:nth-child(2) { animation-delay:-.6s; }
+.weather-window-scene .ww-flower:nth-child(3) { animation-delay:-1.3s; }
+.weather-window-scene .ww-flower:nth-child(4) { animation-delay:-.9s; }
+@keyframes weather-window-flower-sway {
+  0%, 100% { transform:rotate(calc(var(--ww-flower-lean, 0deg) - var(--ww-flower-sway, 4deg))); }
+  50% { transform:rotate(calc(var(--ww-flower-lean, 0deg) + var(--ww-flower-sway, 4deg))); }
+}

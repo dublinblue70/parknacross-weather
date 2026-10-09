@@ -14,3 +14,12 @@ try{
  globalThis.fetch=async()=>new Response('<html>Unavailable</html>',{status:503});response=await worker.fetch(request(),{},ctx);assert.equal(response.status,503);assert.match((await response.json()).error,/unavailable/);
 }finally{globalThis.fetch=originalFetch;}
 console.log('PASS: warning expiry/severity, body deadlines, offline cache preservation, schema-independent official warning fallback and honest failure.');
+// Share five-minute history cache keys; preserve explicitly fixed historical intervals.
+const historyRequests=[];const historyWindow={fetch:async input=>{historyRequests.push(new URL(typeof input==='string'?input:input.url));return new Response('{}',{headers:{'Content-Type':'application/json'}});}};
+vm.runInNewContext(source('site-request.js'),{window:historyWindow,location:{href:'https://parknacrossweather.ie/'},URL,Request,Response,AbortController,setTimeout,clearTimeout});
+await historyWindow.fetch('https://parknacross-weather.dave-s-carter.workers.dev/history?hours=48');
+await historyWindow.fetch('https://parknacross-weather.dave-s-carter.workers.dev/history?hours=168');
+await historyWindow.fetch(new Request('https://parknacross-weather.dave-s-carter.workers.dev/history?hours=24'));
+await historyWindow.fetch('https://parknacross-weather.dave-s-carter.workers.dev/history?from_epoch=100&to_epoch=200');
+assert.match(historyRequests[0].searchParams.get('_window'),/^\d+$/);assert.equal(historyRequests[0].searchParams.get('_window'),historyRequests[1].searchParams.get('_window'));assert.equal(historyRequests[2].searchParams.get('hours'),'24');assert.equal(historyRequests[3].searchParams.has('_window'),false);
+console.log('PASS: rolling archive cache windows and fixed historical intervals.');

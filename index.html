@@ -33,7 +33,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261008-v38-4-170" />
     <link rel="stylesheet" href="site-enhancements.css?v=20261008-v38-4-170">
-    <link rel="stylesheet" href="weather-window.css?v=20261009-v38-4-174" />
+    <link rel="stylesheet" href="weather-window.css?v=20261009-v38-4-179" />
     <!-- Critical astronomy styles stay with the markup so an older PWA cache
          can never render the phase SVGs at their intrinsic page size. -->
     <style id="astronomy-critical-styles">
@@ -577,7 +577,7 @@
         }
       }
     </style>
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-171"><script src="site-request.js?v=20261008-v38-4-170"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script></head>
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-171"><script src="site-request.js?v=20261009-v38-4-179"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script></head>
 
   <body class="weather-neutral">
     <div
@@ -990,17 +990,13 @@
                   </g>
                   <g fill="#54745a" opacity=".72"><circle cx="158" cy="96" r="21"/><circle cx="210" cy="113" r="19"/><circle cx="133" cy="145" r="17"/></g>
                 </g>
-                <g class="ww-garden" stroke-linecap="round">
-                  <path d="M50 281q-2-21 6-34m9 34q5-18 16-26m20 25q-1-17 7-28m-32 29q-2-11-9-17" fill="none" stroke="#8ca66a" stroke-width="2" />
-                  <g fill="#e6b5a5"><circle cx="56" cy="245" r="3"/><circle cx="81" cy="255" r="3"/><circle cx="108" cy="251" r="3"/><circle cx="60" cy="263" r="2.5"/></g>
-                  <g fill="#f0d884"><circle cx="56" cy="245" r="1"/><circle cx="81" cy="255" r="1"/><circle cx="108" cy="251" r="1"/><circle cx="60" cy="263" r="1"/></g>
-                </g>
                 <path class="ww-lightning" d="M415 116h-23l-14 34h20l-10 34 39-48h-22z" fill="#ffe78a" stroke="#a77f2e" stroke-width="2" />
                 <g class="ww-rain" fill="none" stroke="#d8f2ff" stroke-width="3" stroke-linecap="round">
                   <path d="m287 165-8 17m37-28-8 17m40 3-8 17m39-36-8 17m38 12-8 17m36-36-8 17m42 3-8 17m-197-12-8 17" />
                 </g>
                 <path d="M0 276 Q99 262 198 276 T396 276 T594 276 T792 276" fill="none" stroke="#73926b" stroke-width="3" opacity=".7" />
               </svg>
+              <svg class="ww-flowers" viewBox="0 0 120 90" aria-hidden="true" focusable="false"><g class="ww-garden"><g class="ww-flower" style="transform-origin:20px 80px"><path d="M20 80Q14 54 20 28" fill="none" stroke="#8ca66a" stroke-width="2.5" stroke-linecap="round"/><path d="M19 64q-10-11-12-4q4 7 12 4M18 54q10-12 13-6q-2 7-13 6" fill="#7c9a63"/><circle cx="20" cy="28" r="5" fill="#e6b5a5"/><circle cx="20" cy="28" r="2" fill="#f4db86"/></g><g class="ww-flower" style="transform-origin:46px 80px"><path d="M46 80Q40 54 46 37" fill="none" stroke="#8ca66a" stroke-width="2.5" stroke-linecap="round"/><path d="M45 64q-10-11-12-4q4 7 12 4M44 54q10-12 13-6q-2 7-13 6" fill="#7c9a63"/><circle cx="46" cy="37" r="5" fill="#f0d884"/><circle cx="46" cy="37" r="2" fill="#f4db86"/></g><g class="ww-flower" style="transform-origin:72px 80px"><path d="M72 80Q66 54 72 25" fill="none" stroke="#8ca66a" stroke-width="2.5" stroke-linecap="round"/><path d="M71 64q-10-11-12-4q4 7 12 4M70 54q10-12 13-6q-2 7-13 6" fill="#7c9a63"/><circle cx="72" cy="25" r="5" fill="#e6b5a5"/><circle cx="72" cy="25" r="2" fill="#f4db86"/></g><g class="ww-flower" style="transform-origin:98px 80px"><path d="M98 80Q92 54 98 40" fill="none" stroke="#8ca66a" stroke-width="2.5" stroke-linecap="round"/><path d="M97 64q-10-11-12-4q4 7 12 4M96 54q10-12 13-6q-2 7-13 6" fill="#7c9a63"/><circle cx="98" cy="40" r="5" fill="#f0d884"/><circle cx="98" cy="40" r="2" fill="#f4db86"/></g></g></svg>
             </div>
             <div class="weather-window-details">
               <p id="weatherWindowObservation" class="weather-window-observation" role="status" aria-live="polite">Waiting for the latest Parknacross observation…</p>
@@ -1011,7 +1007,7 @@
               </div>
               <p id="weatherWindowSkySource" class="weather-window-sky-source">Checking the forecast sky…</p>
               <p class="weather-window-note">Wind and rain reflect the Parknacross station readings. Clouds come from the forecast and may differ from the sky overhead.</p>
-              <details id="weatherWindowInfo" class="weather-window-info"><summary>How this scene works</summary><p id="weatherWindowExplanation"></p><ul><li><strong>Wind:</strong> moving streaks and a swaying tree show wind or gusts measured at Parknacross. Stronger winds create more movement.</li><li><strong>Rain:</strong> raindrops appear when the station measures rainfall.</li><li><strong>Sky:</strong> clouds follow Met Éireann’s hourly forecast for Ardamine, or its Leinster forecast if hourly data is unavailable. This is a forecast, not a live camera view.</li><li><strong>Sun and night:</strong> the scene follows local daylight times, and the sun moves across the scene during the day.</li></ul><p>Any manual sky or rain adjustment is clearly labelled and expires automatically.</p><p id="weatherWindowMeasured"></p><p>If your device uses reduced motion, the wind streaks and tree lean remain visible without animation.</p></details>
+              <details id="weatherWindowInfo" class="weather-window-info"><summary>How this scene works</summary><p id="weatherWindowExplanation"></p><ul><li><strong>Wind:</strong> moving streaks, a swaying tree and swaying flowers show wind or gusts measured at Parknacross. Stronger winds create more movement.</li><li><strong>Rain:</strong> raindrops appear when the station measures rainfall.</li><li><strong>Sky:</strong> clouds follow Met Éireann’s hourly forecast for Ardamine, or its Leinster forecast if hourly data is unavailable. This is a forecast, not a live camera view.</li><li><strong>Sun and night:</strong> the scene follows local daylight times, and the sun moves across the scene during the day.</li></ul><p>Any manual sky or rain adjustment is clearly labelled and expires automatically.</p><p id="weatherWindowMeasured"></p><p>If your device uses reduced motion, the wind streaks and tree lean remain visible without animation.</p></details>
               <div id="weatherWindowSkyAdmin" class="weather-window-admin" hidden><p><a href="admin.html">Preview settings and check feature compatibility in administration →</a></p>
                 <label for="weatherWindowSkySelect">The sky you can see now</label>
                 <select id="weatherWindowSkySelect">
@@ -1708,7 +1704,7 @@
     <script src="alert-settings.js?v=20261004-v38-4-130-coastal-fallbacks"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
     <script src="weather-window-sky.js?v=20261008-v38-4-170"></script>
-    <script src="action-feedback.js?v=20261008-v38-4-170"></script><script src="weather-window.js?v=20261009-v38-4-174"></script>
+    <script src="action-feedback.js?v=20261008-v38-4-170"></script><script src="weather-window.js?v=20261009-v38-4-179"></script>
     <script src="social-admin.js?v=20261008-v38-4-170"></script>
     <script src="source-freshness.js?v=20261008-v38-4-170"></script>
     <script src="dashboard-enhancements.js?v=20261008-v38-4-170"></script>
