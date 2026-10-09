@@ -1789,6 +1789,7 @@ function createCharts() {
           position: "left",
           beginAtZero: true,
           suggestedMax: 3,
+          afterDataLimits: axis => { axis.max = Math.max(4, Math.floor(axis.max) + 1); },
           grid: { color: "rgba(163,209,255,.10)" },
           ticks: { color: "#a8bfd4", precision: 0, stepSize: 1, maxTicksLimit: 5 },
           title: { display: true, text: "UV index", color: "#bd91ff" }
