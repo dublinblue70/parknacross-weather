@@ -106,7 +106,7 @@
      ...common,
      scales:{
        x:timeAxis(),
-       y:{beginAtZero:true,suggestedMax:1,grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",precision:1},title:{display:true,text:"mm/h",color:"#9fb3c1"}}
+       y:{beginAtZero:true,suggestedMax:1,grace:"10%",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1",precision:1},title:{display:true,text:"mm/h",color:"#9fb3c1"}}
      },
      plugins:{
        legend:{display:false},

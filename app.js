@@ -1588,7 +1588,7 @@ function scales(title, beginAtZero = false, timeBased = false) {
     },
     y: {
       beginAtZero,
-      ...(["°C", "km/h"].includes(title) ? { grace: "10%" } : {}),
+      ...(["°C", "km/h", "mm"].includes(title) ? { grace: "10%" } : {}),
       ...(title === "hPa" ? {
         afterDataLimits: axis => {
           if (axis.max - axis.min < 2) {

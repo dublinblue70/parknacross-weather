@@ -117,7 +117,7 @@
           maintainAspectRatio: false,
           scales: {
             x: {grid:{color:"transparent"}, ticks:{color:"#9fb3c1"}},
-            y: {beginAtZero:true, grid:{color:"rgba(174,210,232,.09)"}, ticks:{color:"#9fb3c1"}, title:{display:true,text:"mm",color:"#9fb3c1"}}
+            y: {beginAtZero:true,grace:"10%", grid:{color:"rgba(174,210,232,.09)"}, ticks:{color:"#9fb3c1"}, title:{display:true,text:"mm",color:"#9fb3c1"}}
           },
           plugins: {legend:{display:false}}
         }

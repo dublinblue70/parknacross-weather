@@ -154,7 +154,7 @@ function render(year) {
     },
     options: {
       maintainAspectRatio: false,
-      scales: { y: { beginAtZero: true } },
+      scales: { y: { beginAtZero: true, grace: "10%" } },
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { title: (items) => items.length ? `${items[0].label} ${year}` : "", label: (context) => context.raw === null ? "No archived data" : `${Number(context.raw).toFixed(1)} mm` } },
