@@ -95,7 +95,7 @@
     const skyName = skyLabels[sky.sky] || skyLabels.unknown;
     scene.dataset.sky = sky.sky;
     const provenance = sky.source === "observer" ? "Sky set from a local visual observation" : sky.source === "point" ? `Met Éireann hourly forecast for Ardamine · ${sky.cloud_percent}% cloud cover` : sky.source === "forecast" ? "Sky guided by Met Éireann’s Leinster forecast" : "Forecast sky unavailable · local readings continue";
-    if (sourceLabel) sourceLabel.textContent = `${skyName} · ${provenance}`;
+    if (sourceLabel) sourceLabel.textContent = `${skyName}. ${provenance}.`;
     const speed = numberOrNull(current.wind_speed_kmh);
     const gust = numberOrNull(current.wind_gust_kmh);
     const direction = compass(current.wind_direction_deg);
@@ -122,12 +122,12 @@
 
     const light = detail.isNight === true ? "night" : detail.isDaylight === false ? "twilight" : "day";
     scene.style.setProperty("--ww-sun-opacity", solar === null ? ".65" : String(Math.max(.45, Math.min(1, solar / 450))));
-    const windLevel = speed === null ? "unknown" : speed >= 30 || (gust !== null && gust >= 45) ? "strong" : speed >= 8 ? "breezy" : "calm";
+    const windLevel = speed === null ? "unknown" : speed >= 30 || (gust !== null && gust >= 45) ? "strong" : speed >= 8 || (gust !== null && gust >= 15) ? "breezy" : "calm";
     const rainOverride = activeOverride()?.rain;
     const manualRain = Boolean(rainLabels[rainOverride]);
     const rainLevel = manualRain ? rainOverride : rate === null ? "unknown" : rate > 0 ? "measured" : "none";
-    const rainNote = manualRain ? `${rainLabels[rainOverride]} · manual visual override${skyOverride.expires_at ? " until " + new Date(skyOverride.expires_at).toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}) : " until midnight"}${rainOverride === "thunderstorm" ? " · storm symbol set manually; no lightning detection implied" : ""}` : "Rain illustration follows the station reading";
-    if (sourceLabel) sourceLabel.textContent += ` · ${rainNote}`;
+    const rainNote = manualRain ? `${rainLabels[rainOverride]} · manual visual override${skyOverride.expires_at ? " until " + new Date(skyOverride.expires_at).toLocaleTimeString("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"}) : " until midnight"}${rainOverride === "thunderstorm" ? " · storm symbol set manually; no lightning detection implied" : ""}` : "Rain is shown only when the station measures rainfall";
+    if (sourceLabel) sourceLabel.textContent += ` ${rainNote}.`;
     scene.dataset.rainSource = manualRain ? "observer" : "station";
     scene.dataset.light = light;
     const progress = numberOrNull(detail.sunProgress);
@@ -140,9 +140,12 @@
     }
     scene.dataset.wind = windLevel;
     scene.dataset.rain = rainLevel;
-    const lean = speed !== null && direction && speed >= 3
-      ? -Math.sin(Number(current.wind_direction_deg) * Math.PI / 180) * Math.min(8, speed * 0.12)
+    const lean = speed !== null && direction && (speed >= 3 || (gust ?? 0) >= 15)
+      ? -Math.sin(Number(current.wind_direction_deg) * Math.PI / 180) * Math.min(10, Math.max(speed, (gust ?? 0) * .65) * .3)
       : 0;
+    scene.style.setProperty("--ww-tree-lean", `${lean.toFixed(1)}deg`);
+    scene.style.setProperty("--ww-tree-sway", `${windLevel === "strong" ? 4 : windLevel === "breezy" ? 1.8 : 0}deg`);
+    scene.style.setProperty("--ww-wind-travel", `${Number(current.wind_direction_deg) >= 180 ? 28 : -28}px`);
     const tree = scene.querySelector(".ww-tree-trunk");
     if (tree) tree.style.transform = `rotate(${lean.toFixed(1)}deg)`;
     scene.style.setProperty("--ww-wind-duration", `${Math.max(1.6, 5.5 - Math.min(45, gust ?? speed ?? 0) * 0.075).toFixed(2)}s`);

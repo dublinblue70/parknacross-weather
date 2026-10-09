@@ -72,6 +72,16 @@ assert.equal(element("weatherWindowScene").dataset.light, "day", "weak daylight 
 assert.equal(element("weatherWindowScene").dataset.sky, "unknown", "missing forecast does not invent cloud cover");
 assert.match(css, /\.weather-window-scene\[data-light="soft"\] \.ww-sun,\s*\.weather-window-scene\[data-light="soft"\] \.ww-sun-rays \{ display: none; \}/, "the subdued scene hides the sun and rays");
 
+// Gusts still illustrate a breeze when the latest average wind drops.
+observationListener({ detail: { current: { wind_speed_kmh: 4, wind_gust_kmh: 15.5, wind_direction_deg: 67, rain_rate_mm_h: 0, solar_w_m2: 40 } } });
+assert.equal(element("weatherWindowScene").dataset.wind, "breezy");
+assert.equal(element("weatherWindowScene").style["--ww-tree-sway"], "1.8deg");
+assert.equal(element("weatherWindowScene").style["--ww-wind-travel"], "-28px");
+observationListener({ detail: { current: { wind_speed_kmh: 32, wind_gust_kmh: 48, wind_direction_deg: 270 } } });
+assert.equal(element("weatherWindowScene").dataset.wind, "strong");
+assert.equal(element("weatherWindowScene").style["--ww-tree-sway"], "4deg");
+assert.equal(element("weatherWindowScene").style["--ww-wind-travel"], "28px");
+
 observationListener({ detail: { current: { wind_speed_kmh: null, rain_rate_mm_h: null }, rainDetected: false, isNight: false } });
 assert.equal(element("weatherWindowScene").dataset.wind, "unknown");
 assert.equal(element("weatherWindowScene").dataset.rain, "unknown");

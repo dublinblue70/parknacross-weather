@@ -33,7 +33,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261008-v38-4-170" />
     <link rel="stylesheet" href="site-enhancements.css?v=20261008-v38-4-170">
-    <link rel="stylesheet" href="weather-window.css?v=20261008-v38-4-170" />
+    <link rel="stylesheet" href="weather-window.css?v=20261009-v38-4-174" />
     <!-- Critical astronomy styles stay with the markup so an older PWA cache
          can never render the phase SVGs at their intrinsic page size. -->
     <style id="astronomy-critical-styles">
@@ -968,6 +968,8 @@
                   <path d="M46 88h130q16 0 16-10t-16-10h-24" />
                   <path d="M86 120h82q13 0 13-8t-13-8h-14" />
                   <path d="M427 147h122q12 0 12-8t-12-8h-20" />
+                  <path d="M270 170h110q12 0 12-8t-12-8h-18" />
+                  <path d="M336 102h80q10 0 10-7t-10-7h-14" />
                 </g>
                 <g class="ww-house">
                   <path d="M470 204 561 147l91 57v72H470Z" fill="#34464a" />
@@ -1008,8 +1010,8 @@
                 <span>Solar <strong id="weatherWindowSolar">--</strong></span>
               </div>
               <p id="weatherWindowSkySource" class="weather-window-sky-source">Checking the forecast sky…</p>
-              <p class="weather-window-note">Illustration guided by Met Éireann’s forecast and local readings. Hourly forecast cloud cover is preferred, with the regional forecast as a fallback; wind uses station observations, and rain uses station observations unless a labelled visual override is active.</p>
-              <details id="weatherWindowInfo" class="weather-window-info"><summary>How this scene works</summary><p id="weatherWindowExplanation"></p><p>Cloud cover comes from the hourly Ardamine forecast, with the Leinster description as a fallback. A local visual override takes priority until it expires. Sun position follows daylight; wind uses measured readings. Rain uses measured readings by default; manual rain or storm settings are labelled and expire automatically.</p><p id="weatherWindowMeasured"></p><p>This illustration describes its sources; forecast clouds may differ from the sky overhead.</p></details>
+              <p class="weather-window-note">Wind and rain reflect the Parknacross station readings. Clouds come from the forecast and may differ from the sky overhead.</p>
+              <details id="weatherWindowInfo" class="weather-window-info"><summary>How this scene works</summary><p id="weatherWindowExplanation"></p><ul><li><strong>Wind:</strong> moving streaks and a swaying tree show wind or gusts measured at Parknacross. Stronger winds create more movement.</li><li><strong>Rain:</strong> raindrops appear when the station measures rainfall.</li><li><strong>Sky:</strong> clouds follow Met Éireann’s hourly forecast for Ardamine, or its Leinster forecast if hourly data is unavailable. This is a forecast, not a live camera view.</li><li><strong>Sun and night:</strong> the scene follows local daylight times, and the sun moves across the scene during the day.</li></ul><p>Any manual sky or rain adjustment is clearly labelled and expires automatically.</p><p id="weatherWindowMeasured"></p><p>If your device uses reduced motion, the wind streaks and tree lean remain visible without animation.</p></details>
               <div id="weatherWindowSkyAdmin" class="weather-window-admin" hidden><p><a href="admin.html">Preview settings and check feature compatibility in administration →</a></p>
                 <label for="weatherWindowSkySelect">The sky you can see now</label>
                 <select id="weatherWindowSkySelect">
@@ -1706,7 +1708,7 @@
     <script src="alert-settings.js?v=20261004-v38-4-130-coastal-fallbacks"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
     <script src="weather-window-sky.js?v=20261008-v38-4-170"></script>
-    <script src="action-feedback.js?v=20261008-v38-4-170"></script><script src="weather-window.js?v=20261008-v38-4-170"></script>
+    <script src="action-feedback.js?v=20261008-v38-4-170"></script><script src="weather-window.js?v=20261009-v38-4-174"></script>
     <script src="social-admin.js?v=20261008-v38-4-170"></script>
     <script src="source-freshness.js?v=20261008-v38-4-170"></script>
     <script src="dashboard-enhancements.js?v=20261008-v38-4-170"></script>
