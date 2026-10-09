@@ -78,13 +78,15 @@
   50% { transform: rotate(calc(var(--ww-tree-lean, 0deg) + var(--ww-tree-sway, 1.8deg))); }
 }
 @keyframes weather-window-rain { to { transform: translateY(13px); opacity: .45; } }
-@media (max-width: 760px) {
+@media (max-width: 1280px) {
   .weather-window-card { grid-template-columns: 1fr; }
   .weather-window-scene { min-height: 210px; }
   .weather-window-scene svg { min-height: 210px; }
   .weather-window-details { padding: 18px; }
 }
 @media (max-width: 420px) {
+  .weather-window-scene, .weather-window-scene svg { min-height: 170px; }
+  .weather-window-scene .ww-weather-station { transform: translate(.95px, 9.05px) scale(1.05); }
   .weather-window-readings { gap: 6px; }
   .weather-window-readings span { padding: 8px 7px; font-size: .66rem; }
   .weather-window-readings strong { font-size: .8rem; }

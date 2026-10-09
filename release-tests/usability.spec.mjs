@@ -131,3 +131,11 @@ test('all four flowers stay inside the weather scene and respect reduced motion'
  }
  await page.emulateMedia({reducedMotion:'reduce'});expect(await page.locator('.ww-flower').first().evaluate(f=>getComputedStyle(f).animationName)).toBe('none');
 });
+
+ test('roof station remains fully visible across phone tablet and desktop widths',async({page})=>{
+ for(const width of [320,390,768,1024,1120,1280,1281,1366,1920]){
+ await page.setViewportSize({width,height:900});await page.goto('/index.html');await expect(page.locator('#weatherWindowScene')).toHaveAttribute('data-wind','breezy');
+ const result=await page.locator('.ww-weather-station').evaluate(e=>{const b=e.getBoundingClientRect(),s=e.closest('.weather-window-scene').getBoundingClientRect();return {inside:b.left>=s.left&&b.right<=s.right&&b.top>=s.top&&b.bottom<=s.bottom,width:b.width,height:b.height};});
+ expect(result.inside,`station clipped at ${width}px`).toBe(true);expect(result.width).toBeGreaterThanOrEqual(15);expect(result.height).toBeGreaterThanOrEqual(30);
+ }
+ });
