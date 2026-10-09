@@ -8,3 +8,13 @@ const preferences=new Map();const localStorage={getItem:k=>preferences.get(k),se
 vm.runInNewContext(fs.readFileSync(new URL('../dashboard-enhancements.js',import.meta.url),'utf8'),{document,window,localStorage,location:{hash:''},Event,MutationObserver:class{observe(){}}});
 const [button,body]=section.children;assert.equal(body.children[0],content,'existing content is retained');assert.equal(body.dataset.collapsed,'true');button.events.click();assert.equal(body.dataset.collapsed,'false');assert.equal(button.getAttribute('aria-expanded'),'true');assert.equal(resizes,1,'charts resize when revealed');assert.equal(preferences.get('parknacross:section:mobile-detail-ardamine-weather-window'),'open');button.events.click();assert.equal(body.dataset.collapsed,'true');assert.equal(preferences.get('parknacross:section:mobile-detail-ardamine-weather-window'),'closed');scene.events.keydown({key:'Enter',preventDefault(){}});assert.equal(info.open,true);assert.equal(scene.getAttribute('aria-expanded'),'true');assert.match(explanation.textContent,/hourly forecast/);assert.match(measured.textContent,/Wind measured/);
 console.log('PASS: mobile disclosure preserves content, opens/closes accessibly, resizes charts and supports keyboard Weather Window details.');
+for(const mobileView of [true,false]){
+ const graphs=new Element();graphs.append(new Element());const frames=[];let scrolls=0;
+ const document={body:new Element(),querySelector:s=>s==='#graphs'?graphs:null,getElementById:()=>null,createElement:()=>{const e=new Element();e.scrollIntoView=options=>{assert.equal(options.block,'start');assert.equal(options.behavior,'instant');scrolls++;};return e;}};
+ const window={matchMedia:()=>({matches:mobileView,addEventListener(){}}),addEventListener(){},dispatchEvent(){},requestAnimationFrame:fn=>frames.push(fn)};
+ vm.runInNewContext(fs.readFileSync(new URL('../dashboard-enhancements.js',import.meta.url),'utf8'),{document,window,localStorage:{getItem:()=>null,setItem(){}},location:{hash:''},Event});
+ const button=graphs.children[0];button.events.click();assert.equal(scrolls,0,'scroll waits for chart layout');
+ while(frames.length)frames.shift()();assert.equal(scrolls,mobileView?1:0,'only an explicitly opened mobile chart section scrolls to its start');
+ button.events.click();button.events.click();button.events.click();while(frames.length)frames.shift()();assert.equal(scrolls,mobileView?1:0,'closing before layout prevents a delayed jump');
+}
+console.log('PASS: mobile charts open at the start after layout; desktop and cancelled openings do not scroll.');

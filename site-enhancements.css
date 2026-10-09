@@ -23,6 +23,7 @@
  .mobile-detail-body { display:block; grid-column:1/-1; width:100%; }
  .astronomy-strip .mobile-detail-body { display:grid; gap:16px; }
  .mobile-detail-body[data-collapsed="true"] { display:none!important; }
+ #graphs .mobile-detail-toggle { scroll-margin-top:16px; }
  .compact-dashboard main { display:flex; flex-direction:column; }
  .compact-dashboard main > * { order:10; }
  .compact-dashboard main > .hero-main-card { order:0; }

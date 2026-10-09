@@ -10,7 +10,14 @@
    const preferenceKey='parknacross:section:'+body.id;let expanded=false;try{expanded=localStorage.getItem(preferenceKey)==='open';}catch(_){}
    const remember=open=>{try{localStorage.setItem(preferenceKey,open?'open':'closed');}catch(_){}};
    const button=document.createElement('button');button.type='button';button.className='mobile-detail-toggle';button.setAttribute('aria-controls',body.id);button.setAttribute('aria-expanded','false');button.textContent=`${label} ▾`;body.dataset.collapsed='true';section.append(button,body);if(expanded){button.setAttribute('aria-expanded','true');body.dataset.collapsed='false';button.textContent=`${label} ▴`;}
-   button.addEventListener('click',()=>{const open=button.getAttribute('aria-expanded')!=='true';button.setAttribute('aria-expanded',String(open));body.dataset.collapsed=String(!open);button.textContent=`${label} ${open?'▴':'▾'}`;remember(open);if(open)window.dispatchEvent(new Event('resize'));});
+   button.addEventListener('click',()=>{const open=button.getAttribute('aria-expanded')!=='true';button.setAttribute('aria-expanded',String(open));body.dataset.collapsed=String(!open);button.textContent=`${label} ${open?'▴':'▾'}`;remember(open);if(open){window.dispatchEvent(new Event('resize'));
+     // Wait for chart layout and browser scroll anchoring before positioning
+     // the newly opened mobile section. Otherwise the following section can
+     // remain anchored in view, taking the visitor to the bottom of the charts.
+     if(selector==='#graphs'&&mobile.matches)window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>{
+       if(mobile.matches&&button.getAttribute('aria-expanded')==='true')button.scrollIntoView({block:'start',behavior:'instant'});
+     }));
+   }});
    const revealAnchor=()=>{const target=document.getElementById(location.hash.slice(1));if(target&&(target===section||body.contains(target))){button.setAttribute('aria-expanded','true');body.dataset.collapsed='false';button.textContent=`${label} ▴`;remember(true);}};
    window.addEventListener('hashchange',revealAnchor);revealAnchor();
  }
