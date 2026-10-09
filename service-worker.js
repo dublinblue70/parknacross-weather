@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-181-rooftop-weather-station";
+const CACHE_NAME = "parknacross-v38-4-182-coast-capitalisation";
 const STATIC_ASSETS = [
   "./",
   "./site-request.js",

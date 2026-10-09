@@ -34,7 +34,7 @@
    if(usable(swimState.rain)&&Number(swimState.rain)>0)parts.push(`rain rate ${n(swimState.rain)} mm/h`);else if(usable(swimState.rain))parts.push("no rain detected at the station");
    if(swimState.tide)parts.push(swimState.tide);
    if(swimState.warning)parts.push(swimState.warning);
-   set("swimSummary",parts.length?`${parts.join(". ")}. Check the official forecast and assess conditions at the water yourself.`:"Conditions are temporarily unavailable. Check official forecasts before travelling.");
+   set("swimSummary",parts.length?`${parts.map(part=>part.charAt(0).toUpperCase()+part.slice(1)).join(". ")}. Check the official forecast and assess conditions at the water yourself.`:"Conditions are temporarily unavailable. Check official forecasts before travelling.");
    if(swimState.observedAt){const ms=sourceEpoch(swimState.observedAt);if(ms!==null)set("swimUpdated",`Parknacross station reading · observed ${formatSourceStamp(ms)}.`);}
  }
  async function get(p){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),API_TIMEOUT_MS);try{const r=await fetch(`${API}${p}`,{cache:"no-store",signal:controller.signal});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.json()}finally{clearTimeout(timer)}}
