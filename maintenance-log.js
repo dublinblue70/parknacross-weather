@@ -1,7 +1,5 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
-  {date:"2026-10-08",type:"Website",title:"Comprehensive audit fixes",detail:"Corrected Summary calendar dates and partial-feed handling, finished archive failure states, added report completeness and visitor-feed checks, improved touch controls and privacy information, and expanded Safari/offline testing."},
-  {date:"2026-10-08",type:"Website",title:"Follow-up audit fixes",detail:"Aligned lightning graph zoom, clarified full-period summaries, repaired archive coverage and date loading, protected offline updates and preserved custom export dates."},
-  {date:"2026-10-08",type:"Website",title:"Whole-site reliability and clarity update",detail:"Improved warning handling, archive photo loading, request deadlines, status monitoring, offline updates and report labels."},
+  {date:"2026-10-08",type:"Website",title:"Website reliability and usability improvements",detail:"Completed a whole-site audit: corrected calendar dates, archive coverage and photo loading; improved graph zoom and summaries; strengthened data-feed handling, request timeouts, warnings and status monitoring; clarified report completeness and labels; preserved custom download dates; improved touch controls, privacy information and offline updates; and expanded Safari and offline testing."},
   {date:"2026-10-07",type:"Website",title:"Sky calendar, graph and admin improvements",detail:"Added visitor sky-photo browsing, improved graph inspection and zoom, and updated private admin tools."},
   {
     date: "2026-09-26",
