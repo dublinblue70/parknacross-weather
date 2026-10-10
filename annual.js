@@ -201,7 +201,7 @@ async function load() {
 }
 async function loadVerified() {
   try {
-    const statsPromise=getStats().catch(()=>null),coveragePromise=window.ParknacrossReportQuality?.load()||Promise.resolve(null);const d=await get(), stats=null;
+    const coveragePromise=window.ParknacrossReportQuality?.load()||Promise.resolve(null);const d=await get(), stats=null;
 
     allRows = Array.isArray(d.days) ? d.days : [];
     const record = stats?.records?.peak_gust;

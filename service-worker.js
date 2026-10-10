@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-189-audit-fixes";
+const CACHE_NAME = "parknacross-v38-4-190-review-improvements";
 const STATIC_ASSETS = [
   "./api-routing.js",
   "./footer-links.css",
@@ -12,6 +12,7 @@ const STATIC_ASSETS = [
   "./admin-tools.js",
   "./site-enhancements.css",
   "./source-freshness.js",
+  "./comparison-alignment.js",
   "./dashboard-enhancements.js",
   "./summary.html",
   "./radar.html",
@@ -104,7 +105,8 @@ const STATIC_ASSETS = [
 ];
 
 // Every advertised offline page must retain its local dependencies before activation.
-const ESSENTIAL_ASSETS=STATIC_ASSETS;
+const OPTIONAL_ASSETS = new Set(["./admin.html", "./admin-tools.js", "./social-admin.js", "./photo-calendar.js", "./weather-window-preview.js", "./intelligence.html", "./ardamine-weather.html", "./courtown-weather.html", "./north-wexford-weather.html", "./north-wexford-coastal-weather.html", "./og-image.png", "./north-wexford-coast.jpg", "./pwa-dashboard-wide.jpg", "./pwa-graphs-wide.jpg", "./pwa-dashboard-narrow.jpg"]);
+const ESSENTIAL_ASSETS=STATIC_ASSETS.filter(asset=>!OPTIONAL_ASSETS.has(asset));
 async function verifyEssentialCache(){const cache=await caches.open(CACHE_NAME);for(const asset of ESSENTIAL_ASSETS){const response=await cache.match(new URL(asset,self.registration.scope).toString());if(!response?.ok)throw new Error(`Incomplete offline update: ${asset}`);}}
 self.addEventListener("install", event => {
   event.waitUntil((async () => {

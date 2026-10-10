@@ -47,6 +47,7 @@ function batteryStatus(voltage) {
 }
 
 let history24 = [];
+let supportingRequestsFinished = false;
 let history7d = [];
 let stats = null;
 let rainSummary = null;
@@ -1341,10 +1342,12 @@ function updateDashboard(current) {
    * This prevents a previously stored bad daily maximum from overriding the
    * corrected observation stream.
    */
-  const todayHigh = usable(highReading?.temperature_c)
+  const dailyExtremaReady = today.length > 0 || Boolean(dailyToday);
+  const dailyExtremaPlaceholder = supportingRequestsFinished ? "Unavailable" : "Loading";
+  const todayHigh = !dailyExtremaReady ? null : usable(highReading?.temperature_c)
     ? Number(highReading.temperature_c)
     : usable(dailyToday?.high_c) ? Number(dailyToday.high_c) : null;
-  const todayLow = usable(lowReading?.temperature_c)
+  const todayLow = !dailyExtremaReady ? null : usable(lowReading?.temperature_c)
     ? Number(lowReading.temperature_c)
     : usable(dailyToday?.low_c) ? Number(dailyToday.low_c) : null;
   /*
@@ -1353,12 +1356,12 @@ function updateDashboard(current) {
    * in the raw archive but excluded from derived peak-gust statistics.
    */
   const peakGustReading = gustReading;
-  const peakGust = peakGustReading && usable(peakGustReading.wind_gust_kmh)
+  const peakGust = !dailyExtremaReady ? null : peakGustReading && usable(peakGustReading.wind_gust_kmh)
     ? Number(peakGustReading.wind_gust_kmh)
     : !hasRawGustHistory && usable(dailyToday?.peak_gust_kmh)
       ? Number(dailyToday.peak_gust_kmh)
       : null;
-  const solarPeak = extrema(dailyToday?.solar_peak_w_m2, solarReading?.solar_w_m2, current.solar_w_m2, "max");
+  const solarPeak = !dailyExtremaReady ? null : extrema(dailyToday?.solar_peak_w_m2, solarReading?.solar_w_m2, current.solar_w_m2, "max");
   const todayHighReading = highReading && usable(todayHigh) && Math.abs(Number(highReading.temperature_c) - todayHigh) < 0.05 ? highReading : null;
   const todayLowReading = lowReading && usable(todayLow) && Math.abs(Number(lowReading.temperature_c) - todayLow) < 0.05 ? lowReading : null;
   const archiveHigh = usable(dailyToday?.high_c) ? Number(dailyToday.high_c) : null;
@@ -1424,9 +1427,9 @@ function updateDashboard(current) {
   );
   document.body.classList.add(condition.className);
 
-  set("todayLow", n(todayLow));
-  set("todayHigh", n(todayHigh));
-  set("peakGust", n(peakGust));
+  set("todayLow", dailyExtremaReady ? n(todayLow) : dailyExtremaPlaceholder);
+  set("todayHigh", dailyExtremaReady ? n(todayHigh) : dailyExtremaPlaceholder);
+  set("peakGust", dailyExtremaReady ? n(peakGust) : dailyExtremaPlaceholder);
   if (peakGustReading) {
     const gustTime = readingTime(peakGustReading);
     const qualityNote = gustOutliers.size
@@ -1451,7 +1454,7 @@ function updateDashboard(current) {
     );
   }
   set("summaryRain", n(rainToday));
-  set("solarPeak", n(solarPeak, 0));
+  set("solarPeak", dailyExtremaReady ? n(solarPeak, 0) : dailyExtremaPlaceholder);
 
   const priorDay = dailyRecent.find(row => row?.day === yesterdayKey(todayKey)) || null;
   set(
@@ -1534,11 +1537,11 @@ function updateDashboard(current) {
   set("currentWind", `${n(current.wind_speed_kmh)} km/h`);
   set("currentGust", `${n(current.wind_gust_kmh)} km/h`);
 
-  set("recordHigh", `${n(todayHigh)} °C`);
+  set("recordHigh", dailyExtremaReady ? `${n(todayHigh)} °C` : dailyExtremaPlaceholder);
   set("recordHighTime", todayHighReading ? `at ${timeLabel(todayHighReading)}` : "--");
-  set("recordLow", `${n(todayLow)} °C`);
+  set("recordLow", dailyExtremaReady ? `${n(todayLow)} °C` : dailyExtremaPlaceholder);
   set("recordLowTime", todayLowReading ? `at ${timeLabel(todayLowReading)}` : "--");
-  set("recordGust", `${n(peakGust)} km/h`);
+  set("recordGust", dailyExtremaReady ? `${n(peakGust)} km/h` : dailyExtremaPlaceholder);
   set("recordGustTime", peakGustReading ? `at ${timeLabel(peakGustReading)}` : "--");
   set("recordRain", `${n(rainToday)} mm`);
 
@@ -1951,7 +1954,7 @@ async function loadForecast() {
     } catch (_) { /* Illustration cannot interrupt the forecast panel. */ }
     window.ParknacrossFreshness?.render("forecastFreshness",forecast,forecast.issued_at||forecast.issued||forecast.updated_at,24,"Forecast issued");
     latestForecastToday=forecast.today || "";
-    set("forecastToday", latestForecastToday || "Forecast unavailable.");
+    set("forecastToday", latestForecastToday || (forecast.tonight || forecast.tomorrow ? "No separate daytime forecast is supplied in this update. See tonight and tomorrow below." : "Today’s forecast is temporarily unavailable."));
     set("forecastTonight", forecast.tonight || "--");
     set("forecastTomorrow", forecast.tomorrow || "--");
     if(latestCurrent)updateWhatToWear(latestCurrent,latestRainDetected);
@@ -1960,6 +1963,8 @@ async function loadForecast() {
     set("forecastFreshness","Official forecast feed is unavailable.");
     latestForecastToday="";
     set("forecastToday", "Official forecast temporarily unavailable.");
+    set("forecastTonight", "Official forecast temporarily unavailable.");
+    set("forecastTomorrow", "Official forecast temporarily unavailable.");
     if(latestCurrent)updateWhatToWear(latestCurrent,latestRainDetected);
   }
 }
@@ -2281,6 +2286,7 @@ async function loadEverything() {
     getJSON(DAILY_RECENT_URL, "no-store")
   ]);
 
+  supportingRequestsFinished = true;
   if (results[0].status === "fulfilled" && Array.isArray(results[0].value.readings)) {
     history24 = results[0].value.readings;
     writeLocalCache("history24", history24);

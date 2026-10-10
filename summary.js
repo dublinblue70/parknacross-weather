@@ -124,7 +124,7 @@ function metrics(rows) {
 }
 
 function temperatureWord(high) { if (!usable(high)) return "mixed"; const v=Number(high); return v>=23?"warm":v>=17?"mild":v>=11?"cool":"cold"; }
-function rainPhrase(rain) { if (!usable(rain)) return "with rainfall data still building"; const v=Number(rain); if(v<0.1)return"and dry so far"; if(v<1)return`with just ${v.toFixed(1)} mm of rain`; if(v<5)return`with ${v.toFixed(1)} mm of rain`; if(v<15)return`with a fairly wet ${v.toFixed(1)} mm recorded`; return`with a wet ${v.toFixed(1)} mm recorded`; }
+function rainPhrase(rain) { if (!usable(rain)) return "with rainfall data still building"; const v=Number(rain); if(v<0.1)return"with no measurable rain"; if(v<1)return`with just ${v.toFixed(1)} mm of rain`; if(v<5)return`with ${v.toFixed(1)} mm of rain`; if(v<15)return`with a fairly wet ${v.toFixed(1)} mm recorded`; return`with a wet ${v.toFixed(1)} mm recorded`; }
 function windPhrase(gust) { if (!usable(gust)) return ""; const v=Number(gust); if(v<20)return"Winds have generally been light"; if(v<35)return"There has been a noticeable breeze"; if(v<50)return"It has been breezy at times"; if(v<70)return"It has been windy, with some strong gusts"; return"It has been very windy, with strong gusts"; }
 function averageDaily(rows, field) {
   const values=(rows||[]).map(row=>row?.[field]).filter(usable).map(Number);
@@ -156,14 +156,14 @@ function buildStory(m, yesterday, recentDays=[]) {
   }
   if(usable(m.rain)&&usable(yesterday?.rain)){
     const d=Number(m.rain)-Number(yesterday.rain);
-    if(Math.abs(d)>=0.5) comparisons.push(`${Math.abs(d).toFixed(1)} mm ${d>0?"wetter":"drier"} than yesterday so far`);
+    if(Math.abs(d)>=0.5) comparisons.push(`rainfall is ${Math.abs(d).toFixed(1)} mm ${d>0?"higher":"lower"} than yesterday’s completed total`);
   }
 
   const avgHigh=averageDaily(recentDays,"high_c");
   const avgRain=averageDaily(recentDays,"rain_mm");
   if(usable(high)&&usable(avgHigh)){
     const d=Number(high)-Number(avgHigh);
-    if(Math.abs(d)>=0.5) comparisons.push(`${Math.abs(d).toFixed(1)}°C ${d>0?"above":"below"} the recent 7-day average high`);
+    if(Math.abs(d)>=0.5) comparisons.push(`the high is ${Math.abs(d).toFixed(1)}°C ${d>0?"above":"below"} the recent 7-day average high`);
   }
   if(usable(m.rain)&&usable(avgRain)&&Number(m.rain)>=0.1){
     const d=Number(m.rain)-Number(avgRain);
@@ -239,8 +239,8 @@ function renderRainSummary(rain, todayRain) {
   const dry=usable(rain?.consecutive_dry_days)?Number(rain.consecutive_dry_days):null;
   set("drySpell",dry===null?"--":`${rain?.consecutive_dry_days_complete===false?"≥":""}${dry} day${dry===1?"":"s"}`);
   set("drySpellNote",rain?.consecutive_dry_days_complete===false
-    ? "Rain-free calendar days · includes today so far; count stops at the first missing archive day"
-    : "Rain-free calendar days · includes today so far");
+    ? "0.0 mm calendar days · includes today so far; count stops at the first missing archive day"
+    : "0.0 mm calendar days · includes today so far");
 }
 
 function renderSignificantWeather(rows){

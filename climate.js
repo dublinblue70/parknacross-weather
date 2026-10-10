@@ -25,18 +25,16 @@
 
     const official = officialR.status === "fulfilled" && usable(officialR.value?.temperature_c)
       ? Number(officialR.value.temperature_c) : null;
-    const local = currentR.status === "fulfilled" && usable(currentR.value?.temperature_c)
-      ? Number(currentR.value.temperature_c) : null;
-
-    const stamp=(data,officialFeed)=>{const raw=officialFeed?data?.report_time:(data?.received_at||(usable(data?.epoch)?Number(data.epoch)*1000:null));const date=new Date(raw||NaN);if(!Number.isFinite(date.getTime()))return "reading time unavailable";const age=(Date.now()-date.getTime())/60000;return `${date.toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}${age>(officialFeed?120:15)?" · stale reading":""}`;};
-    set("climateComparisonTime",`Johnstown Castle: ${officialR.status==="fulfilled"?stamp(officialR.value,true):"unavailable"} · Parknacross: ${currentR.status==="fulfilled"?stamp(currentR.value,false):"unavailable"}. Readings may be from different times.`);
     set("climateOfficialTemp", official === null ? "--" : `${official.toFixed(1)}°C`);
-    if (official !== null && local !== null) {
-      const d = local - official;
-      set("climateDelta", `${d >= 0 ? "+" : ""}${d.toFixed(1)}°C`);
+    const aligned = officialR.status === "fulfilled" ? await window.ParknacrossComparison?.load(officialR.value, currentR.status === "fulfilled" ? currentR.value : null, get) : null;
+    if (aligned) {
+      set("climateDelta", `${aligned.delta >= 0 ? "+" : ""}${aligned.delta.toFixed(1)}°C`);
+      set("climateComparisonTime", `Johnstown Castle ${window.ParknacrossComparison.clock(aligned.officialEpoch)} · Parknacross ${window.ParknacrossComparison.clock(aligned.localEpoch)} Irish time. Temperature difference uses observations matched within five minutes.`);
     } else {
-      set("climateDelta", "--");
+      set("climateDelta", "Unavailable");
+      set("climateComparisonTime", "A time-matched temperature difference is unavailable. No recent local observation within five minutes of the official report could be verified.");
     }
+
   }
 
   function events(items) {

@@ -39,11 +39,11 @@ const lightningWindow={addEventListener(){}};vm.runInNewContext(source('lightnin
 const series=lightningWindow.ParknacrossLightningSeries.buildSeries([{epoch:1800000000,lightning_strikes:0}],24,1800000000);assert.equal(series.times.length,series.count.length);assert.equal(typeof series.times[0],'number');
 
 // Failed chart downloads prevent an incomplete release replacing the old one.
-async function install(missing){const handlers={},cache=new Map();let skipped=0;
+async function install(missing,optional=false){const handlers={},cache=new Map();let skipped=0;
  const context={self:{registration:{scope:'https://example.test/'},addEventListener:(n,f)=>handlers[n]=f,skipWaiting:async()=>skipped++},caches:{open:async()=>({put:async(req,res)=>cache.set(req.url,res),match:async key=>cache.get(key)})},fetch:async req=>({ok:!req.url.endsWith(missing)}),Request,URL,AbortController,setTimeout,clearTimeout};
- vm.runInNewContext(source('service-worker.js'),context);let promise;handlers.install({waitUntil:p=>promise=p});await assert.rejects(promise,/Incomplete offline update/);assert.equal(skipped,0);
+ vm.runInNewContext(source('service-worker.js'),context);let promise;handlers.install({waitUntil:p=>promise=p});if(optional){await promise;assert.equal(skipped,1);}else{await assert.rejects(promise,/Incomplete offline update/);assert.equal(skipped,0);}
 }
-await install('chart.umd.min.js');await install('admin-tools.js');
+await install('chart.umd.min.js');await install('admin-tools.js',true);
 
 // HTTP errors and cache-write failures preserve the working asset.
 const handlers={},cached=new Response('working chart',{status:200});let writes=0;

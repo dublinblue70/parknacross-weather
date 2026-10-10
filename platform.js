@@ -76,25 +76,14 @@
     // individual station measurements may be earlier. Never treat fetch time
     // as the observation time or present an unverified difference as live.
     if (currentR.status === "fulfilled" && official) {
-      const local = usable(currentR.value.temperature_c) ? Number(currentR.value.temperature_c) : null;
-      const officialTemperature = usable(official.temperature_c) ? Number(official.temperature_c) : null;
-      const localRawTime = currentR.value.received_at ?? currentR.value.timestamp ?? currentR.value.epoch;
-      const officialRawTime = official.report_time;
-      const localAge = ageFrom(localRawTime), reportAge = ageFrom(officialRawTime);
-      if (local !== null && officialTemperature !== null && localAge !== null &&
-          localAge <= MAX_LOCAL_AGE_MS && reportAge !== null && reportAge <= MAX_REPORT_AGE_MS) {
-        const d = local - officialTemperature;
-        set("contextComparisonSource", officialIsCached ? "Last official reading" : "Official comparison");
-        set("contextTempDelta", `${d >= 0 ? "+" : ""}${d.toFixed(1)}°C`);
-        set("contextJohnstownTemp", `${officialIsCached ? "Last available " : ""}Johnstown Castle ${officialTemperature.toFixed(1)}°C · Parknacross ${local.toFixed(1)}°C · Met report ${reportClock(officialRawTime)}${officialIsCached ? " · official feed currently unavailable" : " (station reading may be older)"}`);
+      const aligned = await window.ParknacrossComparison?.load(official, currentR.value, get);
+      set("contextComparisonSource", "Time-matched comparison");
+      if (aligned) {
+        set("contextTempDelta", `${aligned.delta >= 0 ? "+" : ""}${aligned.delta.toFixed(1)}°C`);
+        set("contextJohnstownTemp", `Johnstown Castle ${aligned.official.toFixed(1)}°C · Parknacross ${aligned.local.toFixed(1)}°C · official ${window.ParknacrossComparison.clock(aligned.officialEpoch)} · local ${window.ParknacrossComparison.clock(aligned.localEpoch)} Irish time${officialIsCached ? " · last available official report" : ""}. Observations matched within five minutes.`);
       } else {
-        set("contextComparisonSource", officialIsCached ? "Last official reading" : "Official comparison");
-        set("contextTempDelta", officialIsCached ? "Official reading is old" : "Comparison unavailable");
-        set("contextJohnstownTemp", reportAge === null
-          ? "Met report time unavailable; temperature difference withheld."
-          : reportAge > MAX_REPORT_AGE_MS
-            ? `${officialIsCached ? "Last available official report" : "Official report"} was ${reportClock(officialRawTime)}; it is too old for a fair comparison.`
-            : "A recent local reading is unavailable; difference withheld.");
+        set("contextTempDelta", "Matched reading unavailable");
+        set("contextJohnstownTemp", "No recent Parknacross observation within five minutes of the official report is available. A temperature difference is withheld until matching observations are available.");
       }
     } else if (currentR.status === "fulfilled") {
       set("contextComparisonSource", "Official feed retrying");

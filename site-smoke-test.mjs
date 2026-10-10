@@ -143,9 +143,9 @@ const requiredChecks = [
   ["sky.js", "showRetry(true)"],
   ["styles.css", "#skyRetryButton[hidden]{display:none!important}"],
   ["styles.css", ".nav-more-menu a:visited"],
-  ["downloads.html", ".nav-more-menu a:visited"],
+  ["styles.css", ".nav-more-menu a:visited"],
   ["status.html", ".nav-more-menu a:visited"],
-  ["downloads.html", ".nav-more-menu a.active:hover"],
+  ["styles.css", ".nav-more-menu a.active:hover"],
   ["status.html", ".nav-more-menu a.active:hover"],
   ["navigation.js", "data-nav-more-popup"],
   ["navigation.js", "Site & app"],
@@ -297,7 +297,7 @@ const downloadsHtml = await readFile(join(root, "downloads.html"), "utf8");
 const downloadsScript = await readFile(join(root, "downloads.js"), "utf8");
 if (!downloadsHtml.includes('id="exportFrom"') || !downloadsHtml.includes('id="exportTo"') || !downloadsScript.includes("Date.parse(`${to}T12:00:00Z`)") || !downloadsScript.includes("&to=${encodeURIComponent(to)}&fresh=1")) failures.push("downloads must provide validated custom Irish-local date ranges");
 const rainScript = await readFile(join(root, "rain.js"), "utf8");
-if (!rainScript.includes("Rain-free calendar days · includes today so far")) failures.push("rain.js: dry spell must identify the current partial day");
+if (!rainScript.includes("0.0 mm calendar days · includes today so far")) failures.push("rain.js: dry spell must identify the current partial day");
 if ((dashboardApp.match(/updateDashboard\(current\);/g)||[]).length < 3) failures.push("app.js: dashboard progressive rendering is missing");
 if (!dashboardApp.includes('parknacross:weather-window-observation') || !dashboardApp.includes('publishWeatherWindowObservation(current, latestRainDetected, isNight)')) failures.push("app.js: optional weather-window update must use an isolated event");
 try {

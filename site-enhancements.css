@@ -34,3 +34,13 @@
  .admin-page { padding:14px; }
  .admin-card { padding:16px; }
 }
+
+.public-photo-calendar button,#publicPhotoMonthPrev,#publicPhotoMonthNext,#publicPhotoClose,#publicPhotoRetry,#publicPhotoImageRetry {font:inherit;padding:10px 14px;border:1px solid #375265;border-radius:10px;color:#eef8ff;background:#112936;cursor:pointer;}
+#publicPhotoCalendar button {font:inherit;border:1px solid #375265;border-radius:10px;padding:10px;color:#eef8ff;background:#112936;cursor:pointer;min-height:44px;}
+#publicPhotoCalendar button:disabled,#publicPhotoMonthNext:disabled {opacity:.45;cursor:default;}
+#publicPhotoCalendar button[aria-pressed="true"] {border-color:#74ddff;background:#184057;}
+.chart-advanced {width:100%;border-top:1px solid rgba(190,220,238,.14);padding-top:10px;}
+.chart-advanced summary {cursor:pointer;color:#b7dbe8;padding:8px 0;}
+.chart-advanced-body {display:flex;gap:12px;flex-wrap:wrap;padding:12px 0;}
+.chart-advanced-body label {display:grid;gap:8px;flex:1 1 180px;}
+.chart-explorer-controls:has(.chart-advanced:not([open])) {min-height:0;}

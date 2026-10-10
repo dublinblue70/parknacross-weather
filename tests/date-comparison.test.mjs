@@ -12,4 +12,6 @@ assert.equal(autumn.length,3);assert.equal(autumn[0].x,115);assert.equal(autumn[
 const spring=points([row('2026-03-29T00:55:00Z',12),row('2026-03-29T01:00:00Z',11)],'2026-03-29','temperature_c');
 assert.equal(spring[0].x,55);assert.equal(spring[1].y,null);assert.equal(spring[2].x,120);
 assert.equal(points([row('2026-10-08T08:00:00Z',null)],'2026-10-08','temperature_c')[0].y,null);
+const midnight=points([row('2026-10-09T22:55:00Z',12),row('2026-10-09T23:00:00Z',11)],'2026-10-10','temperature_c');
+assert.equal(midnight.length,1);assert.equal(midnight[0].x,0,'Irish midnight belongs to the new calendar day');
 console.log('PASS: Irish-time alignment, day filtering, missing values, measured zero, archive gaps and DST clock changes.');
