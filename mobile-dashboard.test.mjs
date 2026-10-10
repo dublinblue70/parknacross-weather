@@ -1,0 +1,20 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+class Element{constructor(){this.children=[];this.events={};this.attrs={};this.dataset={};this.classList={add(){}};}get firstChild(){return this.children[0]||null;}append(...nodes){for(const n of nodes){if(n.parent)n.parent.children.splice(n.parent.children.indexOf(n),1);this.children.push(n);n.parent=this;}}addEventListener(name,fn){this.events[name]=fn;}setAttribute(name,v){this.attrs[name]=v;}getAttribute(name){return this.attrs[name];}contains(node){return this.children.includes(node)||this.children.some(n=>n.contains?.(node));}}
+const section=new Element(),content=new Element();section.append(content);
+const scene=new Element(),info=new Element(),explanation=new Element(),measured=new Element(),source=new Element(),observation=new Element();source.textContent='Clear · hourly forecast';observation.textContent='Wind measured locally.';
+const nodes={weatherWindowScene:scene,weatherWindowInfo:info,weatherWindowExplanation:explanation,weatherWindowMeasured:measured,weatherWindowSkySource:source,weatherWindowObservation:observation};info.id='weatherWindowInfo';
+const document={body:new Element(),querySelector:selector=>selector==='.weather-window-section'?section:null,getElementById:id=>nodes[id]||null,createElement:()=>new Element()};
+const preferences=new Map();const localStorage={getItem:k=>preferences.get(k),setItem:(k,v)=>preferences.set(k,v)};let resizes=0;const window={matchMedia:()=>({addEventListener(){}}),addEventListener(){},dispatchEvent:()=>resizes++};
+vm.runInNewContext(fs.readFileSync(new URL('../dashboard-enhancements.js',import.meta.url),'utf8'),{document,window,localStorage,location:{hash:''},Event,MutationObserver:class{observe(){}}});
+const [button,body]=section.children;assert.equal(body.children[0],content,'existing content is retained');assert.equal(body.dataset.collapsed,'true');button.events.click();assert.equal(body.dataset.collapsed,'false');assert.equal(button.getAttribute('aria-expanded'),'true');assert.equal(resizes,1,'charts resize when revealed');assert.equal(preferences.get('parknacross:section:mobile-detail-ardamine-weather-window'),'open');button.events.click();assert.equal(body.dataset.collapsed,'true');assert.equal(preferences.get('parknacross:section:mobile-detail-ardamine-weather-window'),'closed');scene.events.keydown({key:'Enter',preventDefault(){}});assert.equal(info.open,true);assert.equal(scene.getAttribute('aria-expanded'),'true');assert.match(explanation.textContent,/hourly forecast/);assert.match(measured.textContent,/Wind measured/);
+console.log('PASS: mobile disclosure preserves content, opens/closes accessibly, resizes charts and supports keyboard Weather Window details.');
+for(const mobileView of [true,false]){
+ const graphs=new Element();graphs.append(new Element());const frames=[];let scrolls=0;
+ const document={body:new Element(),querySelector:s=>s==='#graphs'?graphs:null,getElementById:()=>null,createElement:()=>{const e=new Element();e.scrollIntoView=options=>{assert.equal(options.block,'start');assert.equal(options.behavior,'instant');scrolls++;};return e;}};
+ const window={matchMedia:()=>({matches:mobileView,addEventListener(){}}),addEventListener(){},dispatchEvent(){},requestAnimationFrame:fn=>frames.push(fn)};
+ vm.runInNewContext(fs.readFileSync(new URL('../dashboard-enhancements.js',import.meta.url),'utf8'),{document,window,localStorage:{getItem:()=>null,setItem(){}},location:{hash:''},Event});
+ const button=graphs.children[0];button.events.click();assert.equal(scrolls,0,'scroll waits for chart layout');
+ while(frames.length)frames.shift()();assert.equal(scrolls,mobileView?1:0,'only an explicitly opened mobile chart section scrolls to its start');
+ button.events.click();button.events.click();button.events.click();while(frames.length)frames.shift()();assert.equal(scrolls,mobileView?1:0,'closing before layout prevents a delayed jump');
+}
+console.log('PASS: mobile charts open at the start after layout; desktop and cancelled openings do not scroll.');

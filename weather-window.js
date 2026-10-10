@@ -98,10 +98,10 @@
     if (sourceLabel) sourceLabel.textContent = `${skyName}. ${provenance}.`;
     const speed = numberOrNull(current.wind_speed_kmh);
     const gust = numberOrNull(current.wind_gust_kmh);
-    const direction = compass(current.wind_direction_deg);
+    const direction = speed !== null && speed < 1 ? null : compass(current.wind_direction_deg);
     const rate = numberOrNull(current.rain_rate_mm_h);
     const solar = numberOrNull(current.solar_w_m2);
-    const windText = speed === null ? "Unavailable" : `${format(speed)} km/h${direction ? ` from ${direction}` : ""}${gust === null ? "" : ` · gust ${format(gust)} km/h`}`;
+    const windText = speed === null ? "Unavailable" : `${format(speed)} km/h${speed < 1 ? " · calm; direction unavailable" : direction ? ` from ${direction}` : ""}${gust === null ? "" : ` · gust ${format(gust)} km/h`}`;
     const rainText = rate === null ? "Unavailable" : `${format(rate)} mm/h`;
     const solarText = solar === null ? "Unavailable" : `${format(solar, 0)} W/m²`;
     if (windValue) windValue.textContent = windText;

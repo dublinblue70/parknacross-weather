@@ -60,6 +60,10 @@ assert.equal(element("weatherWindowScene").dataset.wind, "calm");
 assert.equal(element("weatherWindowScene").dataset.rain, "none", "recent rain is not drawn as current rainfall");
 assert.match(element("weatherWindowObservation").textContent, /Recent rain was detected/);
 
+observationListener({ detail: { current: { wind_speed_kmh: 0, wind_gust_kmh: 0, wind_direction_deg: 270, rain_rate_mm_h: 0, solar_w_m2: 0 } } });
+assert.match(element("weatherWindowWind").textContent, /calm; direction unavailable/);
+assert.doesNotMatch(element("weatherWindowWind").textContent, /from W/);
+
 observationListener({ detail: { current: {
   epoch: new Date("2026-10-06T11:00:00+01:00").getTime() / 1000,
   wind_speed_kmh: 4,
