@@ -226,217 +226,217 @@ function renderChecks(only=null) {
   }
 
   if (checkResults.tides) {
-  const tideEvents=Array.isArray(tides?.events)?tides.events:[];
-  const validTideEvents=tideEvents.filter(event=>event&&Number.isFinite(Date.parse(event.time))&&
-    (String(event.type).toLowerCase()==="high"||String(event.type).toLowerCase()==="low"));
-  if(tides.__error||!validTideEvents.length){
-    setBadge("tideBadge","warn","UNAVAILABLE");
-    setText("tideValue","No predictions");
-    setText("tideDetail",tides.__error?`Arklow prediction check failed: ${tides.__error.message||"request failed"}`:"The tide service returned no usable Arklow predictions.");
-    states.push("warn");
-  }else{
-    const next=validTideEvents.map(event=>({event,at:Date.parse(event.time)})).filter(item=>item.at>=Date.now()).sort((a,b)=>a.at-b.at)[0];
-    setBadge("tideBadge","good","LIVE");
-    setText("tideValue",`${validTideEvents.length} predictions`);
-    setText("tideDetail",next?`Next ${String(next.event.type).toLowerCase()} water: ${fmtIrishDateTime(next.event.time)} · Marine Institute Arklow`:`${tides.station||"Arklow"} predictions received; no later event in this window.`);
+    const tideEvents=Array.isArray(tides?.events)?tides.events:[];
+    const validTideEvents=tideEvents.filter(event=>event&&Number.isFinite(Date.parse(event.time))&&
+      (String(event.type).toLowerCase()==="high"||String(event.type).toLowerCase()==="low"));
+    if(tides.__error||!validTideEvents.length){
+      setBadge("tideBadge","warn","UNAVAILABLE");
+      setText("tideValue","No predictions");
+      setText("tideDetail",tides.__error?`Arklow prediction check failed: ${tides.__error.message||"request failed"}`:"The tide service returned no usable Arklow predictions.");
+      states.push("warn");
+    }else{
+      const next=validTideEvents.map(event=>({event,at:Date.parse(event.time)})).filter(item=>item.at>=Date.now()).sort((a,b)=>a.at-b.at)[0];
+      setBadge("tideBadge","good","LIVE");
+      setText("tideValue",`${validTideEvents.length} predictions`);
+      setText("tideDetail",next?`Next ${String(next.event.type).toLowerCase()} water: ${fmtIrishDateTime(next.event.time)} · Marine Institute Arklow`:`${tides.station||"Arklow"} predictions received; no later event in this window.`);
+    }
+
   }
 
   if (checkResults.m2) {
-  }
+    const buoy=m2?.m2_buoy;
+    const m2Value=buoy?.sea_surface_temperature_c;
+    const m2Time=buoy?.observation_time||buoy?.timestamp;
+    const m2Age=usableNumber(buoy?.observation_age_minutes)?Number(buoy.observation_age_minutes):
+      m2Time&&Number.isFinite(Date.parse(m2Time))?Math.max(0,(Date.now()-Date.parse(m2Time))/60000):null;
+    if(m2.__error||m2?.m2_observation_available!==true||!usableNumber(m2Value)||m2Age===null||m2Age>12*60){
+      setBadge("m2Badge","warn","UNAVAILABLE");
+      setText("m2Value","No current reading");
+      const reason=m2.__error?.message||m2?.errors?.m2_buoy||"No fresh M2 observation was returned";
+      setText("m2Detail",`${reason}. The local model may still be available on the coast page.`);
+      states.push("warn");
+    }else{
+      const m2State=m2Age<=180?"good":"warn";
+      setBadge("m2Badge",m2State,m2State==="good"?"LIVE":"AGING");
+      setText("m2Value",`${fmtNum(m2Value,1)} °C`);
+      setText("m2Detail",`M2 buoy observation ${fmtAge(m2Age*60)} old${m2Time?` · ${fmtIrishDateTime(m2Time)}`:""} · about 110 km offshore`);
+      if(m2State==="warn")states.push("warn");
+    }
 
-  const buoy=m2?.m2_buoy;
-  const m2Value=buoy?.sea_surface_temperature_c;
-  const m2Time=buoy?.observation_time||buoy?.timestamp;
-  const m2Age=usableNumber(buoy?.observation_age_minutes)?Number(buoy.observation_age_minutes):
-    m2Time&&Number.isFinite(Date.parse(m2Time))?Math.max(0,(Date.now()-Date.parse(m2Time))/60000):null;
-  if(m2.__error||m2?.m2_observation_available!==true||!usableNumber(m2Value)||m2Age===null||m2Age>12*60){
-    setBadge("m2Badge","warn","UNAVAILABLE");
-    setText("m2Value","No current reading");
-    const reason=m2.__error?.message||m2?.errors?.m2_buoy||"No fresh M2 observation was returned";
-    setText("m2Detail",`${reason}. The local model may still be available on the coast page.`);
-    states.push("warn");
-  }else{
-    const m2State=m2Age<=180?"good":"warn";
-    setBadge("m2Badge",m2State,m2State==="good"?"LIVE":"AGING");
-    setText("m2Value",`${fmtNum(m2Value,1)} °C`);
-    setText("m2Detail",`M2 buoy observation ${fmtAge(m2Age*60)} old${m2Time?` · ${fmtIrishDateTime(m2Time)}`:""} · about 110 km offshore`);
-    if(m2State==="warn")states.push("warn");
   }
 
   if (checkResults.health) {
-  }
+    if(health.__error) {
+      setBadge("apiBadge","bad","DOWN"); setText("apiValue","Unavailable"); setText("apiDetail","Weather data service could not be reached"); states.push("bad");
+      setBadge("ingestBadge","bad","UNKNOWN"); setText("ingestValue","Unavailable"); setText("ingestDetail","Archive collection status could not be reached.");
+    } else {
+      const db=health.database==="connected"; const ok=db&&["ok","warning"].includes(health.status);
+      const slow=ok&&apiElapsed>=8000;
+      setBadge("apiBadge",ok?(slow?"warn":"good"):"warn",ok?(slow?"SLOW":"OK"):"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",db?(slow?`Weather data service responded slowly (${(apiElapsed/1000).toFixed(1)} sec)`:"Weather data service connected"):"Weather data service needs checking"); states.push(ok?(slow?"warn":"good"):"warn");
 
-  if(health.__error) {
-    setBadge("apiBadge","bad","DOWN"); setText("apiValue","Unavailable"); setText("apiDetail","Weather data service could not be reached"); states.push("bad");
-    setBadge("ingestBadge","bad","UNKNOWN"); setText("ingestValue","Unavailable"); setText("ingestDetail","Archive collection status could not be reached.");
-  } else {
-    const db=health.database==="connected"; const ok=db&&["ok","warning"].includes(health.status);
-    const slow=ok&&apiElapsed>=8000;
-    setBadge("apiBadge",ok?(slow?"warn":"good"):"warn",ok?(slow?"SLOW":"OK"):"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",db?(slow?`Weather data service responded slowly (${(apiElapsed/1000).toFixed(1)} sec)`:"Weather data service connected"):"Weather data service needs checking"); states.push(ok?(slow?"warn":"good"):"warn");
+      const ingest=health.archive_ingest;
+      const age=usableNumber(ingest?.latest_age_seconds)?Number(ingest.latest_age_seconds):null;
+      const ingestState=age===null?"warn":age<=600?"good":age<=1800?"warn":"bad";
+      setBadge("ingestBadge",ingestState,age===null?"CHECK":ingestState==="good"?"CURRENT":ingestState==="warn"?"DELAYED":"STALE");
+      setText("ingestValue",age===null?"No timestamp":fmtAge(age));
+      const direct=ingest?.gateway_direct?.last_success_at?`Direct gateway: ${fmtIrishDateTime(ingest.gateway_direct.last_success_at)}`:"direct gateway awaiting first save";
+      const scheduled=ingest?.scheduled?.last_success_at?`scheduled sync: ${fmtIrishDateTime(ingest.scheduled.last_success_at)}`:"scheduled sync awaiting first success";
+      const recovery=ingest?.gateway_recovery?.last_success_at?`recovery sync: ${fmtIrishDateTime(ingest.gateway_recovery.last_success_at)}`:"recovery sync ready";
+      const error=ingest?.gateway_direct?.last_error||ingest?.scheduled?.last_error||ingest?.gateway_recovery?.last_error;
+      setText("ingestDetail",`${direct} · ${scheduled} · ${recovery}${error?` · latest error: ${error}`:""}`);
+      states.push(ingestState);
+    }
 
-    const ingest=health.archive_ingest;
-    const age=usableNumber(ingest?.latest_age_seconds)?Number(ingest.latest_age_seconds):null;
-    const ingestState=age===null?"warn":age<=600?"good":age<=1800?"warn":"bad";
-    setBadge("ingestBadge",ingestState,age===null?"CHECK":ingestState==="good"?"CURRENT":ingestState==="warn"?"DELAYED":"STALE");
-    setText("ingestValue",age===null?"No timestamp":fmtAge(age));
-    const direct=ingest?.gateway_direct?.last_success_at?`Direct gateway: ${fmtIrishDateTime(ingest.gateway_direct.last_success_at)}`:"direct gateway awaiting first save";
-    const scheduled=ingest?.scheduled?.last_success_at?`scheduled sync: ${fmtIrishDateTime(ingest.scheduled.last_success_at)}`:"scheduled sync awaiting first success";
-    const recovery=ingest?.gateway_recovery?.last_success_at?`recovery sync: ${fmtIrishDateTime(ingest.gateway_recovery.last_success_at)}`:"recovery sync ready";
-    const error=ingest?.gateway_direct?.last_error||ingest?.scheduled?.last_error||ingest?.gateway_recovery?.last_error;
-    setText("ingestDetail",`${direct} · ${scheduled} · ${recovery}${error?` · latest error: ${error}`:""}`);
-    states.push(ingestState);
   }
 
   if (checkResults.current) {
-  }
-
-  if(current.__error) {
-    setBadge("feedBadge","bad","FAIL"); setText("feedValue","No reading"); setText("feedDetail","Current weather reading could not be reached"); states.push("bad");
-    setBadge("soilBadge","warn","CHECK"); setText("soilValue","Unavailable"); setText("soilDetail","The latest soil-sensor reading could not be checked.");
-  } else {
-    const age=usableNumber(current.epoch)?Math.max(0,Math.floor(Date.now()/1000)-Number(current.epoch)):null;
-    const state=age===null?"warn":age<600?"good":age<1800?"warn":"bad";
-    setBadge("feedBadge",state,age===null?"CHECK":state==="good"?"LIVE":state==="warn"?"DELAY":"STALE"); setText("feedValue",fmtAge(age)); setText("feedDetail",current.received_at?`Latest reading: ${fmtIrishDateTime(current.received_at)} Irish time`:"Latest weather reading time unavailable"); states.push(state);
-    const hasSoil=usableNumber(current.soil_moisture_pct)||usableNumber(current.soil_temperature_c)||usableNumber(current.soil_ec_us_cm);
-    if(hasSoil){
-      const soilState=age!==null&&age<600?"good":"warn";
-      setBadge("soilBadge",soilState,soilState==="good"?"LIVE":"CHECK");
-      setText("soilValue",usableNumber(current.soil_moisture_pct)?`${fmtNum(current.soil_moisture_pct,1)}% moisture`:"Sensor detected");
-      const details=[];if(usableNumber(current.soil_temperature_c))details.push(`${fmtNum(current.soil_temperature_c,1)}°C soil`);if(usableNumber(current.soil_ec_us_cm))details.push(`${Math.round(Number(current.soil_ec_us_cm)).toLocaleString("en-IE")} µS/cm`);if(usableNumber(current.soil_channel))details.push(`channel ${Number(current.soil_channel)}`);
-      setText("soilDetail",`${details.join(" · ")}. Reading represents the probe location only.`);states.push(soilState);
-    }else{
-      setBadge("soilBadge","warn","WAITING");setText("soilValue","No current value");setText("soilDetail","No soil-sensor fields were present in the latest gateway observation.");states.push("warn");
+    if(current.__error) {
+      setBadge("feedBadge","bad","FAIL"); setText("feedValue","No reading"); setText("feedDetail","Current weather reading could not be reached"); states.push("bad");
+      setBadge("soilBadge","warn","CHECK"); setText("soilValue","Unavailable"); setText("soilDetail","The latest soil-sensor reading could not be checked.");
+    } else {
+      const age=usableNumber(current.epoch)?Math.max(0,Math.floor(Date.now()/1000)-Number(current.epoch)):null;
+      const state=age===null?"warn":age<600?"good":age<1800?"warn":"bad";
+      setBadge("feedBadge",state,age===null?"CHECK":state==="good"?"LIVE":state==="warn"?"DELAY":"STALE"); setText("feedValue",fmtAge(age)); setText("feedDetail",current.received_at?`Latest reading: ${fmtIrishDateTime(current.received_at)} Irish time`:"Latest weather reading time unavailable"); states.push(state);
+      const hasSoil=usableNumber(current.soil_moisture_pct)||usableNumber(current.soil_temperature_c)||usableNumber(current.soil_ec_us_cm);
+      if(hasSoil){
+        const soilState=age!==null&&age<600?"good":"warn";
+        setBadge("soilBadge",soilState,soilState==="good"?"LIVE":"CHECK");
+        setText("soilValue",usableNumber(current.soil_moisture_pct)?`${fmtNum(current.soil_moisture_pct,1)}% moisture`:"Sensor detected");
+        const details=[];if(usableNumber(current.soil_temperature_c))details.push(`${fmtNum(current.soil_temperature_c,1)}°C soil`);if(usableNumber(current.soil_ec_us_cm))details.push(`${Math.round(Number(current.soil_ec_us_cm)).toLocaleString("en-IE")} µS/cm`);if(usableNumber(current.soil_channel))details.push(`channel ${Number(current.soil_channel)}`);
+        setText("soilDetail",`${details.join(" · ")}. Reading represents the probe location only.`);states.push(soilState);
+      }else{
+        setBadge("soilBadge","warn","WAITING");setText("soilValue","No current value");setText("soilDetail","No soil-sensor fields were present in the latest gateway observation.");states.push("warn");
+      }
     }
+
   }
 
   if (checkResults.quality) {
-  }
+    if(quality.__error) {
+      setBadge("samplesBadge","warn","CHECK"); setText("samplesValue","--"); setText("samplesDetail","Weather quality check unavailable");
+      setBadge("gapBadge","warn","CHECK"); setText("gapValue","--"); setText("gapDetail","Weather quality check unavailable");
+      setBadge("batteryBadge","warn","UNAVAILABLE"); setText("batteryValue","--"); setText("batteryDetail","Battery reading could not be checked. This does not mean the batteries are low.");
+      setBadge("gustQualityBadge","warn","CHECK"); setText("gustQualityValue","--"); setText("gustQualityDetail","Weather quality check unavailable"); states.push("warn");
+    } else {
+      const samples=usableNumber(quality.samples_last_24h)?Number(quality.samples_last_24h):null; const sampleState=samples===null?"warn":samples>=100?"good":samples>=24?"warn":"bad";
+      setBadge("samplesBadge",sampleState,samples===null?"CHECK":sampleState==="good"?"OK":sampleState==="warn"?"LOW":"POOR"); setText("samplesValue",samples===null?"--":samples.toLocaleString("en-IE")); setText("samplesDetail",usableNumber(quality.median_interval_minutes)?`Typical time between saved readings: ${fmtNum(quality.median_interval_minutes,1)} min`:"Typical save interval unavailable"); states.push(sampleState);
+      const gap=usableNumber(quality.largest_recent_gap_minutes)?Number(quality.largest_recent_gap_minutes):null;
+      const gapState=gap===null?"warn":gap<=15?"good":"warn";
+      const gapLabel=gap===null?"CHECK":gap<=15?"OK":gap<=60?"GAP":"LARGE";
+      setBadge("gapBadge",gapState,gapLabel);
+      setText("gapValue",fmtDurationMinutes(gap));
+      setText("gapDetail",`Largest gap between saved readings · station feed: ${quality.feed_status||"unknown"}`);
+      states.push(gapState);
+      const battery=describeWs90Battery(quality);
+      setBadge("batteryBadge",battery.state,battery.label);
+      setText("batteryValue",battery.value);
+      setText("batteryDetail",battery.detail);
+      states.push(battery.state);
 
-  if(quality.__error) {
-    setBadge("samplesBadge","warn","CHECK"); setText("samplesValue","--"); setText("samplesDetail","Weather quality check unavailable");
-    setBadge("gapBadge","warn","CHECK"); setText("gapValue","--"); setText("gapDetail","Weather quality check unavailable");
-    setBadge("batteryBadge","warn","UNAVAILABLE"); setText("batteryValue","--"); setText("batteryDetail","Battery reading could not be checked. This does not mean the batteries are low.");
-    setBadge("gustQualityBadge","warn","CHECK"); setText("gustQualityValue","--"); setText("gustQualityDetail","Weather quality check unavailable"); states.push("warn");
-  } else {
-    const samples=usableNumber(quality.samples_last_24h)?Number(quality.samples_last_24h):null; const sampleState=samples===null?"warn":samples>=100?"good":samples>=24?"warn":"bad";
-    setBadge("samplesBadge",sampleState,samples===null?"CHECK":sampleState==="good"?"OK":sampleState==="warn"?"LOW":"POOR"); setText("samplesValue",samples===null?"--":samples.toLocaleString("en-IE")); setText("samplesDetail",usableNumber(quality.median_interval_minutes)?`Typical time between saved readings: ${fmtNum(quality.median_interval_minutes,1)} min`:"Typical save interval unavailable"); states.push(sampleState);
-    const gap=usableNumber(quality.largest_recent_gap_minutes)?Number(quality.largest_recent_gap_minutes):null;
-    const gapState=gap===null?"warn":gap<=15?"good":"warn";
-    const gapLabel=gap===null?"CHECK":gap<=15?"OK":gap<=60?"GAP":"LARGE";
-    setBadge("gapBadge",gapState,gapLabel);
-    setText("gapValue",fmtDurationMinutes(gap));
-    setText("gapDetail",`Largest gap between saved readings · station feed: ${quality.feed_status||"unknown"}`);
-    states.push(gapState);
-    const battery=describeWs90Battery(quality);
-    setBadge("batteryBadge",battery.state,battery.label);
-    setText("batteryValue",battery.value);
-    setText("batteryDetail",battery.detail);
-    states.push(battery.state);
-
-    const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):null;
-    const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):null;
-    if(gust24===null||gustTotal===null){
-      setBadge("gustQualityBadge","warn","CHECK");
-      setText("gustQualityValue","Unavailable");
-      setText("gustQualityDetail","Wind-reading quality counters could not be retrieved");
-      states.push("warn");
-    }else{
-      setBadge("gustQualityBadge",gust24>0?"warn":"good",gust24>0?"REVIEW":gustTotal>0?"RECORDED":"OK");
-      setText("gustQualityValue",gustTotal===0?"No anomalies":gust24>0?`${gust24} recent · ${gustTotal} total`:`${gustTotal} historical`);
-      const lastGust=usableNumber(quality.last_gust_exclusion_epoch)
-        ? new Date(Number(quality.last_gust_exclusion_epoch)*1000).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})
-        : null;
-      setText("gustQualityDetail",gustTotal>0
-        ? `${gustTotal} unusual wind reading${gustTotal===1?"":"s"} retained in the raw archive and excluded from derived peak-gust statistics${lastGust?` · last ${lastGust}`:""}`
-        : "No unusual wind readings found");
-      if(gust24>0)states.push("warn");
+      const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):null;
+      const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):null;
+      if(gust24===null||gustTotal===null){
+        setBadge("gustQualityBadge","warn","CHECK");
+        setText("gustQualityValue","Unavailable");
+        setText("gustQualityDetail","Wind-reading quality counters could not be retrieved");
+        states.push("warn");
+      }else{
+        setBadge("gustQualityBadge",gust24>0?"warn":"good",gust24>0?"REVIEW":gustTotal>0?"RECORDED":"OK");
+        setText("gustQualityValue",gustTotal===0?"No anomalies":gust24>0?`${gust24} recent · ${gustTotal} total`:`${gustTotal} historical`);
+        const lastGust=usableNumber(quality.last_gust_exclusion_epoch)
+          ? new Date(Number(quality.last_gust_exclusion_epoch)*1000).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})
+          : null;
+        setText("gustQualityDetail",gustTotal>0
+          ? `${gustTotal} unusual wind reading${gustTotal===1?"":"s"} retained in the raw archive and excluded from derived peak-gust statistics${lastGust?` · last ${lastGust}`:""}`
+          : "No unusual wind readings found");
+        if(gust24>0)states.push("warn");
+      }
     }
+
   }
 
   if (checkResults.reliability) {
-  }
+    if(reliability.__error || !usableNumber(reliability.archive_reliability_percent)) {
+      setBadge("reliabilityBadge","warn","CHECK");setText("reliabilityValue","--");setText("reliabilityDetail","Archive reliability check unavailable");states.push("warn");
+    } else {
+      const pct=Number(reliability.archive_reliability_percent);
+      const state=pct>=97?"good":"warn";
+      setBadge("reliabilityBadge",state,state==="good"?"COMPLETE":"PARTIAL");
+      setText("reliabilityValue",`${pct.toFixed(1)}%`);
+      const currentFeedLive=!current.__error&&usableNumber(current.epoch)&&(Date.now()/1000-Number(current.epoch))<600;
+      const monthLabel=new Intl.DateTimeFormat("en-IE",{timeZone:"Europe/Dublin",month:"long",year:"numeric"}).format(new Date());
+      setText("reliabilityDetail",`${monthLabel} coverage · ${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected five-minute slots saved${currentFeedLive?" · station feed currently live":""}. Overall archive completeness is shown on the History page.`);
+    }
 
-  if(reliability.__error || !usableNumber(reliability.archive_reliability_percent)) {
-    setBadge("reliabilityBadge","warn","CHECK");setText("reliabilityValue","--");setText("reliabilityDetail","Archive reliability check unavailable");states.push("warn");
-  } else {
-    const pct=Number(reliability.archive_reliability_percent);
-    const state=pct>=97?"good":"warn";
-    setBadge("reliabilityBadge",state,state==="good"?"COMPLETE":"PARTIAL");
-    setText("reliabilityValue",`${pct.toFixed(1)}%`);
-    const currentFeedLive=!current.__error&&usableNumber(current.epoch)&&(Date.now()/1000-Number(current.epoch))<600;
-    const monthLabel=new Intl.DateTimeFormat("en-IE",{timeZone:"Europe/Dublin",month:"long",year:"numeric"}).format(new Date());
-    setText("reliabilityDetail",`${monthLabel} coverage · ${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected five-minute slots saved${currentFeedLive?" · station feed currently live":""}. Overall archive completeness is shown on the History page.`);
   }
 
   if (checkResults.backup) {
-  }
+    if(backup.__error) {
+      setBadge("backupBadge","warn","CHECK");setText("backupValue","Unavailable");setText("backupDetail","Backup status unavailable");states.push("warn");
+    } else if(!backup.configured) {
+      setBadge("backupBadge","warn","NOT SET");
+      setText("backupValue","Not configured");
+      setText("backupDetail","Automatic archive backup has no configured destination. Configure Cloudflare R2 or an external backup endpoint.");
+      states.push("warn");
+    } else {
+      const backedUpAt = backup.last_success ? Date.parse(backup.last_success) : NaN;
+      const hoursSinceBackup = Number.isFinite(backedUpAt) ? (Date.now()-backedUpAt)/3600000 : Infinity;
+      const recentBackup = hoursSinceBackup >= -0.25 && hoursSinceBackup <= 48;
+      setBadge("backupBadge",recentBackup?"good":"warn",recentBackup?"ACTIVE":"CHECK");
+      setText("backupValue",recentBackup?"Automatic":"Backup needs checking");
+      setText("backupDetail",recentBackup
+        ? `Last successful backup: ${backup.last_backup_day||"--"}`
+        : backup.last_success
+          ? `Last successful backup is over 48 hours old or has an invalid timestamp · ${backup.last_backup_day||"date unavailable"}`
+          : "Waiting for a confirmed successful backup");
+      if(!recentBackup) states.push("warn");
+    }
 
-  if(backup.__error) {
-    setBadge("backupBadge","warn","CHECK");setText("backupValue","Unavailable");setText("backupDetail","Backup status unavailable");states.push("warn");
-  } else if(!backup.configured) {
-    setBadge("backupBadge","warn","NOT SET");
-    setText("backupValue","Not configured");
-    setText("backupDetail","Automatic archive backup has no configured destination. Configure Cloudflare R2 or an external backup endpoint.");
-    states.push("warn");
-  } else {
-    const backedUpAt = backup.last_success ? Date.parse(backup.last_success) : NaN;
-    const hoursSinceBackup = Number.isFinite(backedUpAt) ? (Date.now()-backedUpAt)/3600000 : Infinity;
-    const recentBackup = hoursSinceBackup >= -0.25 && hoursSinceBackup <= 48;
-    setBadge("backupBadge",recentBackup?"good":"warn",recentBackup?"ACTIVE":"CHECK");
-    setText("backupValue",recentBackup?"Automatic":"Backup needs checking");
-    setText("backupDetail",recentBackup
-      ? `Last successful backup: ${backup.last_backup_day||"--"}`
-      : backup.last_success
-        ? `Last successful backup is over 48 hours old or has an invalid timestamp · ${backup.last_backup_day||"date unavailable"}`
-        : "Waiting for a confirmed successful backup");
-    if(!recentBackup) states.push("warn");
   }
 
   if (checkResults.social) {
-  }
-
-  // The public API exposes *verified* delivery-day markers, not scheduled
-  // intent or post creation. This does not independently inspect Facebook/X.
-  const clockParts = new Intl.DateTimeFormat("en-GB", {
-    timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"
-  }).formatToParts(new Date());
-  const clock = Object.fromEntries(clockParts.map(part=>[part.type,part.value]));
-  const localToday = `${clock.year}-${clock.month}-${clock.day}`;
-  const localMinutes = Number(clock.hour)*60+Number(clock.minute);
-  const shouldHavePosted = localMinutes >= 12*60;
-  const socialNetworks = [
-    ["facebook","Facebook"], ["x","X"]
-  ];
-  for (const [key,name] of socialNetworks) {
-    if (social.__error) {
-      setBadge(`${key}Badge`,"warn","CHECK");
-      setText(`${key}Value`,"Unavailable");
-      setText(`${key}Detail`,"Posting status could not be checked. Check the platform directly.");
-      states.push("warn");
-      continue;
+    // The public API exposes *verified* delivery-day markers, not scheduled
+    // intent or post creation. This does not independently inspect Facebook/X.
+    const clockParts = new Intl.DateTimeFormat("en-GB", {
+      timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+    }).formatToParts(new Date());
+    const clock = Object.fromEntries(clockParts.map(part=>[part.type,part.value]));
+    const localToday = `${clock.year}-${clock.month}-${clock.day}`;
+    const localMinutes = Number(clock.hour)*60+Number(clock.minute);
+    const shouldHavePosted = localMinutes >= 12*60;
+    const socialNetworks = [
+      ["facebook","Facebook"], ["x","X"]
+    ];
+    for (const [key,name] of socialNetworks) {
+      if (social.__error) {
+        setBadge(`${key}Badge`,"warn","CHECK");
+        setText(`${key}Value`,"Unavailable");
+        setText(`${key}Detail`,"Posting status could not be checked. Check the platform directly.");
+        states.push("warn");
+        continue;
+      }
+      const verified = social[`${key}_verified_day`];
+      const attention = social[`${key}_status`] === "attention";
+      const deliveredToday = verified === localToday;
+      const severity = deliveredToday ? "good" : shouldHavePosted || attention ? "warn" : "good";
+      setBadge(`${key}Badge`, severity, deliveredToday ? "SENT" : shouldHavePosted || attention ? "CHECK" : "PENDING");
+      setText(`${key}Value`, deliveredToday ? "Today's post sent" : verified ? `Last sent: ${verified}` : "Not confirmed");
+      setText(`${key}Detail`, deliveredToday
+        ? "Worker reports verified delivery today. Confirm the visible post on the platform."
+        : shouldHavePosted || attention
+          ? "Today's post is not confirmed. Check Buffer and the platform."
+          : "Today's posting window has not finished; check again after 12:00.");
+      if (severity === "warn") states.push("warn");
     }
-    const verified = social[`${key}_verified_day`];
-    const attention = social[`${key}_status`] === "attention";
-    const deliveredToday = verified === localToday;
-    const severity = deliveredToday ? "good" : shouldHavePosted || attention ? "warn" : "good";
-    setBadge(`${key}Badge`, severity, deliveredToday ? "SENT" : shouldHavePosted || attention ? "CHECK" : "PENDING");
-    setText(`${key}Value`, deliveredToday ? "Today's post sent" : verified ? `Last sent: ${verified}` : "Not confirmed");
-    setText(`${key}Detail`, deliveredToday
-      ? "Worker reports verified delivery today. Confirm the visible post on the platform."
-      : shouldHavePosted || attention
-        ? "Today's post is not confirmed. Check Buffer and the platform."
-        : "Today's posting window has not finished; check again after 12:00.");
-    if (severity === "warn") states.push("warn");
+
   }
 
   if (checkResults.history) {
-  }
-
-  if(history.__error || !Array.isArray(history.readings)) {
-    renderIssues([{state:"warn",text:"Recent readings could not be checked. Existing live weather data is unchanged."}]); states.push("warn");
-  } else {
-    const qState=renderIssues(analyzeRows(history.readings)); states.push(qState);
-  }
+    if(history.__error || !Array.isArray(history.readings)) {
+      renderIssues([{state:"warn",text:"Recent readings could not be checked. Existing live weather data is unchanged."}]); states.push("warn");
+    } else {
+      const qState=renderIssues(analyzeRows(history.readings)); states.push(qState);
+    }
 
   }
 

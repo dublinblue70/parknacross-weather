@@ -14,7 +14,7 @@
     "test:install-browsers": "playwright install chromium webkit",
     "test:usability": "node tests/usability.test.mjs && node tests/mobile-dashboard.test.mjs && node tests/social-admin.test.mjs && node tests/archive-quality.test.mjs && node tests/admin-enhancements.test.mjs",
     "test:explore": "node tests/explore-weather.test.mjs",
-    "test:release": "node release-check.mjs && npm run test:usability && npm run test:explore && npm run test:weather-window-sky && node tests/date-comparison.test.mjs && node tests/api-routing.test.mjs && node tests/website-usability.test.mjs && node tests/site-failure-recovery.test.mjs",
+    "test:release": "node release-check.mjs && npm run test:usability && npm run test:explore && npm run test:weather-window-sky && node tests/status-progress.test.mjs && node tests/date-comparison.test.mjs && node tests/api-routing.test.mjs && node tests/website-usability.test.mjs && node tests/site-failure-recovery.test.mjs",
     "test:release-browser": "playwright test --config release-playwright.config.mjs",
     "test:pwa-browser": "playwright test --config pwa-playwright.config.mjs"
   },
