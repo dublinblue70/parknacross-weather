@@ -304,10 +304,10 @@ function renderChecks(only=null) {
       const hasSoil=usableNumber(current.soil_moisture_pct)||usableNumber(current.soil_temperature_c)||usableNumber(current.soil_ec_us_cm);
       if(hasSoil){
         const soilState=age!==null&&age<600?"good":"warn";
-        setBadge("soilBadge",soilState,soilState==="good"?"LIVE":"CHECK");
+        setBadge("soilBadge",soilState,soilState==="good"?"IN UPLOAD":"LAST KNOWN");
         setText("soilValue",usableNumber(current.soil_moisture_pct)?`${fmtNum(current.soil_moisture_pct,1)}% moisture`:"Sensor detected");
         const details=[];if(usableNumber(current.soil_temperature_c))details.push(`${fmtNum(current.soil_temperature_c,1)}°C soil`);if(usableNumber(current.soil_ec_us_cm))details.push(`${Math.round(Number(current.soil_ec_us_cm)).toLocaleString("en-IE")} µS/cm`);if(usableNumber(current.soil_channel))details.push(`channel ${Number(current.soil_channel)}`);
-        setText("soilDetail",`${details.join(" · ")}. Reading represents the probe location only.`);states.push(soilState);
+        setText("soilDetail",`${details.join(" · ")}. Value included in the latest gateway upload; the individual sensor transmission time is not supplied. Reading represents the probe location only.`);states.push(soilState);
       }else{
         setBadge("soilBadge","warn","WAITING");setText("soilValue","No current value");setText("soilDetail","No soil-sensor fields were present in the latest gateway observation.");states.push("warn");
       }
