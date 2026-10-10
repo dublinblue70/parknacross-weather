@@ -451,10 +451,10 @@ function renderChecks(only=null) {
   setText("overallTitle",overall==="good"?"All monitored systems look healthy":overall==="warn"?"Site is running, but something is worth checking":coreFailure?"A monitored service needs attention":"Historical archive is incomplete");
   setText("overallText",overall==="good"?"Website, weather data service, live readings and recent data checks passed.":overall==="warn"?"One or more checks produced a warning. Review the cards below.":coreFailure?"At least one core service failed or the latest weather reading is stale.":"The website, weather data service and latest observation are operating normally. Some earlier five-minute archive intervals are missing; this does not indicate a current station outage.");
   setText("lastRun",`${only?"Selected source rechecked; other cards retain their previous results · ":"Last checked "}${new Date().toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})}`);
-  const pending=16-Object.keys(checkResults).length;
+  const totalChecks=18,pending=totalChecks-Object.keys(checkResults).length;
   if(pending>0){
     setText("overallTitle",states.includes("bad")?"A monitored service needs attention":"Checking remaining sources…");
-    setText("overallText",`${Object.keys(checkResults).length} of 16 checks complete. Finished results are shown below; ${pending} source${pending===1?" is":"s are"} still being checked.`);
+    setText("overallText",`${Object.keys(checkResults).length} of ${totalChecks} checks complete. Finished results are shown below; ${pending} source${pending===1?" is":"s are"} still being checked.`);
     if(!states.includes("bad"))$("overall").className="overall";
     setText("lastRun","Checks in progress · results appear as each source responds");
   }
