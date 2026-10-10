@@ -1264,7 +1264,7 @@ async function refreshSoilFreshness(){
     }
     set(
       "soilFreshness",
-      `Garden soil sensor updated ${lightningRelative(data.received_epoch)}`
+      `Soil reading received ${lightningRelative(data.received_epoch)} · individual sensor transmission time is not supplied`
     );
   } catch (_) {
     latestGatewayUploadTime = null;
@@ -1290,6 +1290,7 @@ function publishWeatherWindowObservation(current, rainDetected, isNight) {
 }
 
 function updateDashboard(current) {
+  if(typeof CustomEvent==="function"&&window.dispatchEvent)window.dispatchEvent(new CustomEvent("parknacross:current-observation",{detail:{current,history:history24}}));
   const now = new Date();
   const today = history24.filter(reading => {
     const time = readingTime(reading);
@@ -1379,7 +1380,7 @@ function updateDashboard(current) {
   const pressure = pressureStats(current);
   const calmWind = usable(current.wind_speed_kmh) && Number(current.wind_speed_kmh) < 1;
   const direction = calmWind ? "Calm · direction unavailable" : compass(current.wind_direction_deg);
-  const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : correctedDailyRain(current);
+  const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : currentIsToday ? correctedDailyRain(current) : null;
   const isNight = updateSunInfo(current);
   const condition = conditionInfo(current, isNight);
   latestRainDetected=Boolean(condition.rainState?.isRaining);
@@ -1851,7 +1852,9 @@ function chartRowsWithGaps(rows, gapMinutes = 10) {
   return out;
 }
 
+let dashboardChartsInView = !window.IntersectionObserver;
 function updateCharts() {
+  if(!dashboardChartsInView)return;
   if(!charts.temperature||!charts.wind||!charts.pressure||!charts.solar||!charts.uv||!charts.rain)return;
   // Merge the latest live observation into cached history so chart endpoints
   // cannot visibly lag behind the live cards while the history cache catches up.
@@ -2505,6 +2508,7 @@ function setupPWA() {
 
 document.addEventListener("DOMContentLoaded", () => {
   try{createCharts();}catch(error){console.warn('Charts could not start:',error);set('dashboardChartSummary','Charts could not load. Live weather readings remain available; refresh to retry the charts.');}
+  if(window.IntersectionObserver&&$("graphs")){const observer=new IntersectionObserver(entries=>{dashboardChartsInView=entries.some(entry=>entry.isIntersecting);if(dashboardChartsInView)updateCharts();},{rootMargin:"400px"});observer.observe($("graphs"));}else dashboardChartsInView=true;
   if(!navigator.onLine){const saved=readLocalCache("current")?.value;if(saved){latestCurrent=saved;history24=readLocalCache("history24")?.value||[];updateDashboard(saved);updateCharts();markOfflineMode(saved);}}
   updateSunInfo();
   loadEverything();

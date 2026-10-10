@@ -1,5 +1,11 @@
-const CACHE_NAME = "parknacross-v38-4-192-review-improvements";
+const CACHE_NAME = "parknacross-v38-4-193-review-improvements";
 const STATIC_ASSETS = [
+  "./visitor-tools.css",
+  "./visitor-insights.js",
+  "./outdoor-outlook.js",
+  "./saved-graph-views.js",
+  "./background-alerts.js",
+  "./performance-insights.js",
   "./api-routing.js",
   "./footer-links.css",
   "./date-comparison.js",
@@ -218,6 +224,10 @@ self.addEventListener("fetch", event => {
       ignoreSearch: url.origin === self.location.origin
     }))
   );
+});
+
+self.addEventListener("push",event=>{
+ event.waitUntil((async()=>{let data;try{data=event.data?.json();}catch{return;}if(!data||typeof data.title!=="string")return;const sent=Date.parse(data.sent_at);if(!Number.isFinite(sent)||Date.now()-sent>10*60000||sent-Date.now()>90000)return;await self.registration.showNotification(data.title.slice(0,100),{body:String(data.body||"").slice(0,300),tag:String(data.tag||"parknacross-weather"),icon:"./icon-192.png",badge:"./icon-192.png",data:{url:"https://parknacrossweather.ie/index.html"}});})());
 });
 
 self.addEventListener("notificationclick", event => {

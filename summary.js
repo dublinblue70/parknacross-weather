@@ -298,13 +298,10 @@ function localTimestamp(date) {
   const part=type=>parts.find(p=>p.type===type)?.value||""; return `${part("year")}-${part("month")}-${part("day")} ${part("hour")}:${part("minute")}:${part("second")}`;
 }
 function csvCell(value){if(value===null||value===undefined)return"";const text=String(value);return /[",\r\n]/.test(text)?`"${text.replace(/"/g,'""')}"`:text;}
-function downloadTodayCsv(){
+async function downloadTodayCsv(){
   if(!currentTodayRows.length||!currentTodayKey)return;
-  const columns=[["timestamp_local",r=>localTimestamp(readingDate(r))],["timestamp_utc",r=>readingDate(r)?.toISOString()||""],["temperature_c",r=>r.temperature_c],["feels_like_c",r=>r.feels_like_c],["humidity_pct",r=>r.humidity],["dew_point_c",r=>r.dew_point_c],["wind_speed_kmh",r=>r.wind_speed_kmh],["wind_gust_kmh",r=>r.wind_gust_kmh],["wind_direction_deg",r=>r.wind_direction_deg],["pressure_hpa",r=>r.pressure_hpa],["rain_rate_mm_h",r=>r.rain_rate_mm_h],["rain_daily_mm",r=>correctedRain(r)],["solar_w_m2",r=>r.solar_w_m2],["uv_index",r=>r.uv_index],["battery_v",r=>r.battery_v],["soil_moisture_pct",r=>r.soil_moisture_pct],["soil_temperature_c",r=>r.soil_temperature_c],["soil_ec_us_cm",r=>r.soil_ec_us_cm],["soil_channel",r=>r.soil_channel]];
-  const rows=[...currentTodayRows].sort((a,b)=>(readingDate(a)?.getTime()||0)-(readingDate(b)?.getTime()||0));
-  const lines=[columns.map(([n])=>csvCell(n)).join(","),...rows.map(r=>columns.map(([,g])=>csvCell(g(r))).join(","))];
-  const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"}); const url=URL.createObjectURL(blob); const link=document.createElement("a");
-  link.href=url;link.download=`parknacross-weather-${currentTodayKey}.csv`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const button=$("downloadCsvButton");button.disabled=true;set("actionStatus","Preparing today's complete CSV…");
+  try{const response=await fetch(`${API_BASE}/export.csv?from=${currentTodayKey}&to=${currentTodayKey}`,{cache:"no-store",signal:AbortSignal.timeout(25000)});if(!response.ok)throw Error("CSV unavailable");const text=await response.text();const columns=text.replace(/^\uFEFF/,"").split(/\r?\n/)[0].split(",");if(!["observation_time_ireland","soil_moisture_pct","lightning_strikes","lightning_last_strike_time_ireland"].every(field=>columns.includes(field)))throw Error("Incomplete export fields");const url=URL.createObjectURL(new Blob(["\uFEFF"+text.replace(/^\uFEFF/,"")],{type:"text/csv;charset=utf-8"})),link=document.createElement("a");link.href=url;link.download=`parknacross-weather-${currentTodayKey}.csv`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);set("actionStatus","Complete CSV downloaded · weather, soil and lightning fields.");}catch(error){set("actionStatus","The CSV could not be prepared. Please retry or use Downloads.");}finally{button.disabled=!currentTodayRows.length;}
 }
 
 function cardinal(deg){if(!usable(deg))return"";const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return dirs[Math.round((Number(deg)%360)/22.5)%16];}

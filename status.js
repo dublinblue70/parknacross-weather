@@ -192,13 +192,15 @@ async function runChecks(only=null) {
     read("daily",()=>fetchJSON(`${API_BASE}/daily?days=8`).catch(e=>({__error:e}))),
     read("stats",()=>fetchJSON(`${API_BASE}/stats`).catch(e=>({__error:e}))),
     read("summaryHistory",()=>fetchJSON(`${API_BASE}/history?hours=48`).catch(e=>({__error:e}))),
+    read("rainEvents",()=>fetchJSON(`${API_BASE}/rain-events?days=30`).catch(e=>({__error:e}))),
+    read("coverage",()=>fetchJSON(`${API_BASE}/coverage?days=371`).catch(e=>({__error:e}))),
     read("exportPreview",()=>fetchJSON(`${API_BASE}/export-preview?from=${exportDay}&to=${exportDay}`).catch(e=>({__error:e})))
   ]);
   } finally { if(button)button.disabled=false;checksRunning=false; }
 }
 
 function renderChecks(only=null) {
-  const {health={},current={},quality={},history={},reliability={},backup={},social={},tides={},m2={},landWarnings={},marineWarnings={},site={},daily={},stats={},summaryHistory={},exportPreview={}}=checkResults;
+  const {health={},current={},quality={},history={},reliability={},backup={},social={},tides={},m2={},landWarnings={},marineWarnings={},site={},daily={},stats={},summaryHistory={},exportPreview={},rainEvents={},coverage={}}=checkResults;
   const apiElapsed=health.__elapsed_ms||0;
   let states=site.state?[site.state]:[];
   const latestEpoch=rows=>Math.max(0,...(Array.isArray(rows)?rows:[]).map(row=>usableNumber(row.epoch)?Number(row.epoch):Date.parse(row.received_at||"")/1000).filter(Number.isFinite));
@@ -209,6 +211,8 @@ function renderChecks(only=null) {
     ["dailyFeed",daily,Array.isArray(daily.days)&&daily.days.some(row=>recentDay(row.day)),"Recent daily summaries available"],
     ["recordsFeed",stats,usableNumber(stats.total_samples)&&Number(stats.total_samples)>0&&typeof stats.records==="object"&&stats.records!==null,"Archive statistics and records available"],
     ["summaryFeed",summaryHistory,Array.isArray(summaryHistory.readings)&&fresh(latestEpoch(summaryHistory.readings)),"Daily Summary observation feed is fresh"],
+    ["rainEventsFeed",rainEvents,Array.isArray(rainEvents.events)&&Number.isFinite(rainEvents.event_count),"Rain-event history available"],
+    ["coverageFeed",coverage,Array.isArray(coverage.days)&&coverage.days.length>0&&usableNumber(coverage.summary?.coverage_percent),"Per-day archive coverage available"],
     ["exportFeed",exportPreview,Number(exportPreview.count)>0&&Array.isArray(exportPreview.columns)&&exportPreview.columns.includes("epoch")&&fresh(exportPreview.last_epoch),"Recent export preview and field list available"]
   ]){
     if(!Object.values(checkResults).includes(data))continue;

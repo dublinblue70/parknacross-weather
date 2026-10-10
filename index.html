@@ -579,7 +579,7 @@
         }
       }
     </style>
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-171"><script src="site-request.js?v=20261010-v38-4-188"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script></head>
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-171"><script src="site-request.js?v=20261010-v38-4-188"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><script src="outdoor-outlook.js?v=20261010-v38-4-193" defer></script></head>
 
   <body class="weather-neutral">
     <div
@@ -1508,7 +1508,8 @@
           </div>
         </section>
 
-        <section
+        <details class="info-card visitor-detail"><summary>Why the station describes rain this way</summary><div id="rainEvidence" role="status">Checking recent rain evidence…</div></details>
+<section id="outdoorOutlook" class="visitor-outlook" aria-labelledby="outdoorHeading"><h2 id="outdoorHeading">Plan a little time outdoors</h2><div class="visitor-tools"><label>Activity<select id="outdoorActivity"><option value="walking">Walking</option><option value="cycling">Cycling</option><option value="gardening">Gardening</option></select></label><button id="refreshOutdoorOutlook" type="button">Refresh outlook</button></div><p id="outdoorStatus" role="status">Checking the next 24 hours…</p><p id="outdoorSource" class="visitor-note">Forecast guidance, separate from local station observations.</p><a href="https://www.met.ie/warnings-today.html" target="_blank" rel="noopener noreferrer">Check official warnings →</a></section><section
           class="trends-section"
           id="graphs"
           aria-labelledby="trendsHeading"
@@ -1702,7 +1703,7 @@
           </div>
           <button id="installButton" type="button" hidden>Install app</button>
         </section>
-      </main>
+      <details class="info-card visitor-detail"><summary>How fresh are the individual sensors?</summary><p id="sensorFreshnessDetail">Checking the latest gateway reading…</p></details></main>
 
       <footer>
         <span>© <span id="year"></span> Parknacross Weather</span>
@@ -1717,7 +1718,7 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="wind-rose.js?v=20260923-radial-restore"></script>
     <script src="offline.js?v=20261010-v38-4-190"></script>
-    <script src="alert-settings.js?v=20261004-v38-4-130-coastal-fallbacks"></script>
+    <script src="alert-settings.js?v=20261010-v38-4-193"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
     <script src="weather-window-sky.js?v=20261008-v38-4-170"></script>
     <script src="action-feedback.js?v=20261008-v38-4-170"></script><script src="weather-window.js?v=20261009-v38-4-179"></script>
@@ -1725,7 +1726,7 @@
     <script src="source-freshness.js?v=20261010-v38-4-187"></script>
     <script src="dashboard-enhancements.js?v=20261009-v38-4-185"></script>
     <script src="archive-quality.js?v=20261008-v38-4-170"></script>
-<script src="chart-explorer.js?v=20261010-v38-4-190"></script><script src="dashboard-preferences.js?v=20261008-v38-4-170"></script><script src="app.js?v=20261010-v38-4-192"></script>
+<script src="chart-explorer.js?v=20261010-v38-4-193"></script><script src="dashboard-preferences.js?v=20261008-v38-4-170"></script><script src="app.js?v=20261010-v38-4-193"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
@@ -1744,7 +1745,7 @@
     <script src="site-config.js?v=20261010-v38-4-188"></script>
     <script src="comparison-alignment.js?v=20261010-v38-4-190"></script><script src="platform.js?v=20261010-v38-4-190"></script>
     <script>
-      /* Lightning detector acquisition status; existing app.js?v=20261010-v38-4-192 displays detections and alerts. */
+      /* Lightning detector acquisition status; existing app.js?v=20261010-v38-4-193 displays detections and alerts. */
       (() => {
         const notice = document.getElementById("lightningSetupNotice");
         const status = document.getElementById("lightningSetupStatus");

@@ -89,7 +89,7 @@
       .storage-meter-copy { flex-direction: column; gap: 3px; }
     }
   </style>
-<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261010-v38-4-188"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script></head>
+<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261010-v38-4-188"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261010-v38-4-193" defer></script><script src="performance-insights.js?v=20261010-v38-4-193" defer></script></head>
 <body>
 <div class="shell">
   <header class="topbar">
@@ -256,10 +256,10 @@
         </div>
         <p class="info-note" id="alertsPermission" aria-live="polite">Permission not requested</p>
         <div class="alert-options">
-          <label><input id="alertRainStart" type="checkbox"> <span><strong>Rain starting</strong><small>Notify when the WS90 first detects measurable rain.</small></span></label>
-          <label><input id="alertGust" type="checkbox"> <span><strong>Strong gust</strong><small>Notify when a gust reaches 50 km/h.</small></span></label>
-          <label><input id="alertFrost" type="checkbox"> <span><strong>Freezing temperature</strong><small>Notify when the outdoor temperature reaches 0°C or below.</small></span></label>
-          <label><input id="alertHeavyRain" type="checkbox"> <span><strong>Heavy rain</strong><small>Notify when the rain rate reaches 10 mm/h.</small></span></label>
+          <label><input id="alertRainStart" type="checkbox"> <span><strong>Rain starting</strong><small>Notify when rainfall is confirmed: at least 0.2 mm in 20 minutes while rain remains active, or a rate of 2.5 mm/h or higher.</small></span></label>
+          <label><input id="alertGust" type="checkbox"> <span><strong>Strong gust</strong><small>Notify when a gust crosses your chosen threshold.</small></span></label>
+          <label><input id="alertFrost" type="checkbox"> <span><strong>Freezing temperature</strong><small>Notify when temperature falls to your chosen threshold.</small></span></label>
+          <label><input id="alertHeavyRain" type="checkbox"> <span><strong>Heavy rain</strong><small>Notify when the rain rate crosses your chosen threshold.</small></span></label>
           <label class="alert-lightning-option"><span><strong>Lightning proximity</strong><small>Choose a notification radius up to the detector’s approximate 40 km range. Alerts only operate after a genuine detection is received.</small></span>
             <select id="alertLightningDistance" aria-label="Lightning alert distance">
               <option value="0">Off</option>
@@ -270,7 +270,7 @@
             </select>
           </label>
         </div>
-        <p class="storage-note">These are local station notifications, not official weather warnings. Met Éireann remains the source for official warnings and safety-critical decisions.</p>
+        <details class="visitor-detail"><summary>Background alerts, thresholds &amp; quiet hours</summary><p id="backgroundAlertStatus" role="status">Checking background delivery…</p><div class="visitor-tools"><button id="backgroundAlertToggle" type="button" aria-pressed="false" disabled>Enable background alerts</button><button id="retryBackgroundAlerts" type="button">Retry / save settings</button><label>Gust threshold · km/h<input id="alertGustThreshold" type="number" min="20" max="100" value="50"></label><label>Rain-rate threshold · mm/h<input id="alertRainThreshold" type="number" min="2" max="50" value="10"></label><label>Low-temperature threshold · °C<input id="alertTemperatureThreshold" type="number" min="-5" max="5" value="0"></label><label><span>Quiet hours</span><input id="alertQuietEnabled" type="checkbox"></label><label>Quiet from · Irish hour<input id="alertQuietStart" type="number" min="0" max="23" value="22"></label><label>Quiet until · Irish hour<input id="alertQuietEnd" type="number" min="0" max="23" value="7"></label></div><p class="visitor-note">Quiet hours suppress notifications; missed alerts are not queued for later. A matching start and end mutes the whole day. Rain-start alerts are limited to once in three hours, gust alerts to once in two hours, low-temperature alerts to once in six hours, heavy-rain alerts to once an hour, and lightning alerts to once in 15 minutes.</p><h3>Recent background alerts sent</h3><button id="refreshAlertHistory" type="button">Refresh alert history</button><div id="recentWeatherAlerts" role="status"></div></details><p class="storage-note">These are local station notifications, not official weather warnings. Met Éireann remains the source for official warnings and safety-critical decisions.</p>
       </article>
     </section>
 
@@ -327,7 +327,7 @@
       </article>
     </section>
 
-  </main>
+  <details class="info-card visitor-detail"><summary>Page performance on this device</summary><p id="pagePerformance" role="status">Measuring this visit…</p></details></main>
 
   <footer>
     <span>© <span id="year"></span> Parknacross Weather</span>
@@ -540,7 +540,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<script src="offline.js?v=20261010-v38-4-190"></script><script src="alert-settings.js?v=20261004-v38-4-130-fresh-alert-gate"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="station-v2.js?v=20261008-v38-4-172"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="offline.js?v=20261010-v38-4-190"></script><script src="alert-settings.js?v=20261010-v38-4-193"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="station-v2.js?v=20261008-v38-4-172"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20261008-v38-4-170"></script>
 <script src="pwa-diagnostics.js?v=20261006-v38-4-144"></script>
 <script src="accessibility.js?v=20260924-v38-4-97"></script>

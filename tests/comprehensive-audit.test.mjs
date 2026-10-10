@@ -51,7 +51,7 @@ const monitor=await checkPublicSite({now:now*1000,fetcher:async url=>{
  if(url.endsWith('/stats'))return new Response('{}',{status:503});
  if(url.endsWith('/'))return new Response('PARKNACROSS WEATHER');
  if(url.includes('export.csv'))return new Response('epoch,observation_time_ireland\n1,time\n');
- const data=url.includes('/current')?{epoch:now}:url.includes('/history')?{readings:[{epoch:now}]}:url.includes('/daily')?{days:[{day:new Date(now*1000).toISOString().slice(0,10)}]}:{count:10,last_epoch:now,columns:['soil_moisture_pct','lightning_strikes']};
+ const data=url.includes('/rain-events')?{events:[],event_count:0}:url.includes('/coverage')?{days:[{day:'2026-10-10'}],summary:{coverage_percent:100}}:url.includes('/current')?{epoch:now}:url.includes('/history')?{readings:[{epoch:now}]}:url.includes('/daily')?{days:[{day:new Date(now*1000).toISOString().slice(0,10)}]}:{count:10,last_epoch:now,columns:['soil_moisture_pct','lightning_strikes']};
  return Response.json(data);
 }});assert.equal(monitor.find(row=>row.name==='Statistics').ok,false);assert.ok(monitor.filter(row=>row.name!=='Statistics').every(row=>row.ok));
 console.log('PASS: calendar transitions, isolated summary/history failures, cached timestamps, report coverage, throttled failed authentication and independent monitoring.');

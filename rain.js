@@ -4,14 +4,15 @@
  const n=(v,d=1)=>usable(v)?Number(v).toFixed(d):"--";
  const dt=v=>v?new Date(v).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"--";
  const dayKey=v=>{const d=v instanceof Date?v:new Date(v);if(Number.isNaN(d.getTime()))return null;const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d),get=t=>parts.find(p=>p.type===t)?.value;return `${get("year")}-${get("month")}-${get("day")}`};
- const correctedCurrentRain=c=>{if(!usable(c?.rain_daily_mm))return null;const when=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null),key=dayKey(when),correction=Number(window.PARKNACROSS_DATA_CORRECTIONS?.dailyRainMm?.[key]||0);return Math.round(Math.max(0,Number(c.rain_daily_mm)-correction)*10)/10};
+ const correctedCurrentRain=c=>{if(!usable(c?.rain_daily_mm))return null;const when=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null),key=dayKey(when);if(!when||key!==dayKey(new Date()))return null;const correction=Number(window.PARKNACROSS_DATA_CORRECTIONS?.dailyRainMm?.[key]||0);return Math.round(Math.max(0,Number(c.rain_daily_mm)-correction)*10)/10};
  async function get(p){let last;for(let attempt=0;attempt<2;attempt++){try{const r=await fetch(`${API}${p}`,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);const data=await r.json();if(data?.error)throw new Error(data.error);return data;}catch(error){last=error;if(!attempt)await new Promise(resolve=>setTimeout(resolve,500));}}throw last;}
  const rainState=(summary,history,current)=>{
-  const rate=usable(current?.rain_rate_mm_h)?Number(current.rain_rate_mm_h):usable(summary?.current_rate_mm_h)?Number(summary.current_rate_mm_h):null;
+  const stamp=current?.received_at?Date.parse(current.received_at):usable(current?.epoch)?Number(current.epoch)*1000:NaN,fresh=Number.isFinite(stamp)&&Date.now()-stamp<=600000&&stamp-Date.now()<=90000;
+  const rate=fresh&&usable(current?.rain_rate_mm_h)?Number(current.rain_rate_mm_h):null;
   const rows=Array.isArray(history?.readings)?history.readings:[],now=current?.received_at?new Date(current.received_at).getTime():(usable(current?.epoch)?Number(current.epoch)*1000:Date.now());let lastIncrease=null,prev=null;
   for(const row of rows){const t=row?.received_at?new Date(row.received_at).getTime():usable(row?.epoch)?Number(row.epoch)*1000:NaN,total=usable(row?.rain_daily_mm)?Number(row.rain_daily_mm):NaN;if(!Number.isFinite(t)||!Number.isFinite(total))continue;if(prev&&total>=prev.total+0.05)lastIncrease=t;prev={t,total};}
   const currentTotal=usable(current?.rain_daily_mm)?Number(current.rain_daily_mm):null;if(prev&&currentTotal!==null&&currentTotal>=prev.total+0.05)lastIncrease=now;if(rate!==null&&rate>0)lastIncrease=now;
-  const age=lastIncrease?Math.max(0,now-lastIncrease):Infinity;return{rate,isRaining:(rate!==null&&rate>0)||age<=5*60*1000,rainRecently:(rate===null||rate<=0)&&age>5*60*1000&&age<=15*60*1000,lastIncrease};
+  const age=lastIncrease?Math.max(0,now-lastIncrease):Infinity;return{rate,isRaining:(rate!==null&&rate>0)||fresh&&age<=5*60*1000,rainRecently:fresh&&(rate===null||rate<=0)&&age>5*60*1000&&age<=15*60*1000,lastIncrease};
  };
  function eventGraphLink(event){const start=Number(event.start_epoch),end=Number(event.end_epoch),now=Math.floor(Date.now()/1000);const from=Number.isFinite(start)&&start>0?Math.floor(start)-1800:null,to=Number.isFinite(end)&&end>=start?Math.min(now,Math.ceil(end)+1800):now;return from&&to>from&&to-from<=31*86400?`graphs.html?from=${from}&to=${to}#gRain`:'history.html';}
  let chart=null;
@@ -21,11 +22,11 @@
   if(chart){chart.data=config.data;chart.update();}else chart=new Chart($("rainDailyChart"),config);
  }
  async function load(){
-  try{const live=get("/current").then(c=>{set("rainNow",usable(c.rain_rate_mm_h)?`${n(c.rain_rate_mm_h)} mm/h`:"--");set("rainToday",usable(correctedCurrentRain(c))?`${n(correctedCurrentRain(c))} mm`:"--");return c;});
+  try{const live=get("/current").then(c=>{set("rainNow",rainState({}, {}, c).rate!==null?`${n(c.rain_rate_mm_h)} mm/h`:"--");set("rainToday",usable(correctedCurrentRain(c))?`${n(correctedCurrentRain(c))} mm`:"--");return c;});
    const results=await Promise.allSettled([get("/rain-summary"),get("/daily?days=30"),get("/history?hours=1"),live,get("/rain-events?days=30")]);
    const [s,d,h,c,e]=results.map(x=>x.status==="fulfilled"?x.value:{});
    if(results[0].status==="rejected"&&results[3].status==="rejected")throw new Error("Rainfall sources unavailable");
-   set("rainLoadStatus",results.some(x=>x.status==="rejected")?"Some rainfall sources are unavailable. Showing the readings that loaded successfully.":"All rainfall sources loaded.");const rs=rainState(s,h,c);
+   set("rainLoadStatus",results.some(x=>x.status==="rejected")?"Some rainfall sources are unavailable. Showing the readings that loaded successfully.":"All rainfall sources loaded.");const rs=rainState(s,h,c);window.ParknacrossRainEvidence?.render(c,h.readings||[],s.last_measurable_rain?.received_at);
    const todayRain=correctedCurrentRain(c)??(usable(s.today_mm)?Number(s.today_mm):null);
    set("rainNow",rs.isRaining&&!(rs.rate>0)?"Rain detected":rs.rate===null?"--":`${n(rs.rate)} mm/h`);set("rainToday",usable(todayRain)?`${n(todayRain)} mm`:"--");set("rainYesterday",`${n(s.yesterday_mm)} mm`);set("rain7",`${n(s.last_7_days_mm)} mm`);
    set("rain7Note",s.last_7_days_complete===false&&Array.isArray(s.last_7_days_missing_dates)&&s.last_7_days_missing_dates.length?`Observed total · ${s.last_7_days_missing_dates.length} missing calendar day${s.last_7_days_missing_dates.length===1?"":"s"}`:"Complete 7-calendar-day total");

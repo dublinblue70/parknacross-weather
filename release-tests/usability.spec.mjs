@@ -116,7 +116,7 @@ test('weather chart peaks have headroom and dashboard pressure keeps a meaningfu
  await page.route('**/current',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({...current,pressure_hpa:1005.035})}));
  await page.route('**/history?**',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({readings:sample})}));
  for(const [url,ids] of [['/index.html',['temperatureChart','windChart','solarChart','uvChart','pressureChart']],['/graphs.html',['gTemp','gWind','gSolar','gUv','gPressure','gRain']]]){
-  await page.goto(url);
+  await page.goto(url);if(url==='/index.html')await page.locator('#graphs').scrollIntoViewIfNeeded();
   await expect.poll(()=>page.evaluate(ids=>ids.every(id=>{const c=Chart.getChart(document.getElementById(id));return c?.data.datasets[0]?.data.length>1;}),ids)).toBe(true);
   const scales=await page.evaluate(ids=>ids.map(id=>{const c=Chart.getChart(document.getElementById(id));const values=c.data.datasets.flatMap((d,i)=>c.isDatasetVisible(i)?d.data.map(p=>p?.y):[]).filter(v=>v!==null&&v!==undefined&&Number.isFinite(Number(v))).map(Number);return {id,min:c.scales.y.min,max:c.scales.y.max,peak:Math.max(...values)};}),ids);
   for(const s of scales){if(/Pressure|pressure/.test(s.id))expect(s.max-s.min).toBeGreaterThanOrEqual(2);else expect(s.max,`${s.id} peak needs headroom`).toBeGreaterThan(s.peak);if(/Wind|wind|Solar|solar|Uv|uv|Rain/.test(s.id))expect(s.min).toBe(0);}

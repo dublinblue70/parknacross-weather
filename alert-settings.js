@@ -19,7 +19,7 @@
     gust: false,
     frost: false,
     heavyRain: false,
-    lightningKm: 0
+    lightningKm: 0, gustKmh:50, heavyRainRate:10, freezingC:0, quietEnabled:false, quietStart:22, quietEnd:7
   };
 
   const readJSON = (key, fallback) => {
@@ -39,11 +39,14 @@
     const settings = { ...defaults, ...readJSON(SETTINGS_KEY, {}) };
     const lightningKm = Number(settings.lightningKm || 0);
     settings.lightningKm = LIGHTNING_DISTANCES.has(lightningKm) ? lightningKm : 0;
+    for(const [key,lo,hi] of [["gustKmh",20,100],["heavyRainRate",2,50],["freezingC",-5,5],["quietStart",0,23],["quietEnd",0,23]])settings[key]=usable(settings[key])?Math.max(lo,Math.min(hi,Number(settings[key]))):defaults[key];
+    settings.quietEnabled=settings.quietEnabled===true;
     return settings;
   }
 
   function saveSettings(settings) {
     writeJSON(SETTINGS_KEY, { ...defaults, ...settings });
+    if(typeof CustomEvent==="function"&&window.dispatchEvent)window.dispatchEvent(new CustomEvent("parknacross:alert-settings"));
   }
 
   function canNotify() {
@@ -70,6 +73,7 @@
 
   async function showNotification(title, body, tag) {
     if (!canNotify()) return false;
+    const settings=loadSettings(),hour=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Dublin",hour:"numeric",hourCycle:"h23"}).format(new Date()));if(settings.quietEnabled&&(settings.quietStart===settings.quietEnd||(settings.quietStart<settings.quietEnd?hour>=settings.quietStart&&hour<settings.quietEnd:hour>=settings.quietStart||hour<settings.quietEnd)))return false;
     const options = {
       body,
       tag,
@@ -172,7 +176,7 @@
     const settings = loadSettings();
     // All alerts based on the current station sample need the same freshness
     // gate. Otherwise a delayed high rain rate could notify long after it fell.
-    if (!settings.enabled || !canNotify() || !current || !freshObservation(current)) return;
+    if (window.PWBackgroundAlerts?.isActive() || !settings.enabled || !canNotify() || !current || !freshObservation(current)) return;
 
     const previous = readJSON(STATE_KEY, {});
     const rate = usable(current.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : 0;
@@ -204,8 +208,8 @@
     if (
       settings.gust &&
       gust !== null &&
-      gust >= 50 &&
-      (previousGust === null || previousGust < 50) &&
+      gust >= settings.gustKmh &&
+      (previousGust === null || previousGust < settings.gustKmh) &&
       cooldownReady("gust-50", 2 * 60 * 60 * 1000)
     ) {
       await showNotification(
@@ -218,12 +222,12 @@
     if (
       settings.frost &&
       temp !== null &&
-      temp <= 0 &&
-      (previousTemp === null || previousTemp > 0) &&
+      temp <= settings.freezingC &&
+      (previousTemp === null || previousTemp > settings.freezingC) &&
       cooldownReady("frost", 6 * 60 * 60 * 1000)
     ) {
       await showNotification(
-        "Freezing temperature at Parknacross",
+        settings.freezingC===0?"Freezing temperature at Parknacross":"Low temperature at Parknacross",
         `Temperature is ${temp.toFixed(1)}°C.`,
         "parknacross-frost"
       );
@@ -231,8 +235,8 @@
 
     if (
       settings.heavyRain &&
-      rate >= 10 &&
-      previousRate < 10 &&
+      rate >= settings.heavyRainRate &&
+      previousRate < settings.heavyRainRate &&
       cooldownReady("heavy-rain", 60 * 60 * 1000)
     ) {
       await showNotification(
@@ -258,7 +262,7 @@
   async function evaluateLightning(lightning) {
     const settings = loadSettings();
     const threshold = Math.min(40, Math.max(0, Number(settings.lightningKm || 0)));
-    if (!settings.enabled || !canNotify() || threshold <= 0 || !lightning?.available) return;
+    if (window.PWBackgroundAlerts?.isActive() || !settings.enabled || !canNotify() || threshold <= 0 || !lightning?.available) return;
 
     const reportedDistance = usable(lightning.distance_km)
       ? Number(lightning.distance_km)
@@ -305,6 +309,7 @@
     const lightning = document.getElementById("alertLightningDistance");
     if (lightning) lightning.value = String(settings.lightningKm || 0);
 
+    for(const [id,key] of Object.entries({alertGustThreshold:"gustKmh",alertRainThreshold:"heavyRainRate",alertTemperatureThreshold:"freezingC",alertQuietStart:"quietStart",alertQuietEnd:"quietEnd"})){const node=document.getElementById(id);if(node)node.value=String(settings[key]);}const quiet=document.getElementById("alertQuietEnabled");if(quiet)quiet.checked=settings.quietEnabled;
     const status = document.getElementById("alertsPermission");
     if (status) status.textContent = statusText(settings);
 
@@ -358,6 +363,7 @@
       saveSettings(settings);
     });
 
+    for(const [id,key,lo,hi] of [["alertGustThreshold","gustKmh",20,100],["alertRainThreshold","heavyRainRate",2,50],["alertTemperatureThreshold","freezingC",-5,5],["alertQuietStart","quietStart",0,23],["alertQuietEnd","quietEnd",0,23]])document.getElementById(id)?.addEventListener("change",event=>{const settings=loadSettings(),v=Number(event.target.value);if(Number.isFinite(v)&&event.target.value!=="")settings[key]=Math.max(lo,Math.min(hi,v));saveSettings(settings);refreshUI();});document.getElementById("alertQuietEnabled")?.addEventListener("change",event=>{const settings=loadSettings();settings.quietEnabled=event.target.checked;saveSettings(settings);});
     refreshUI();
   }
 

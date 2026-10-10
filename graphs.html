@@ -20,7 +20,7 @@
 
     <title>Weather Graphs &amp; Trends | Parknacross, Co. Wexford</title>
     <link rel="canonical" href="https://parknacrossweather.ie/graphs.html" />
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-171"><script src="site-request.js?v=20261010-v38-4-188"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="date-comparison.css?v=20261010-v38-4-188"></head>
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-171"><script src="site-request.js?v=20261010-v38-4-188"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="date-comparison.css?v=20261010-v38-4-188"><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="saved-graph-views.js?v=20261010-v38-4-193" defer></script></head>
   <body>
     <div class="shell">
       <header class="topbar">
@@ -84,7 +84,7 @@
           >
             Weather charts are loading.
           </p>
-          <ul class="chart-highlights" aria-label="Selected-period chart highlights">
+          <details id="savedGraphViews" class="info-card visitor-detail"><summary>Save a favourite graph view</summary><div class="visitor-tools"><label>View name<input id="savedGraphName" maxlength="45" placeholder="e.g. Soil over the last week"></label><label>Measurement<select id="savedGraphMetric"><option value="gTemp">Temperature</option><option value="gWind">Wind &amp; gusts</option><option value="gPressure">Pressure</option><option value="gRain">Rain</option><option value="gSolar">Solar &amp; UV</option><option value="gSoilMoisture">Soil moisture</option></select></label><button id="saveGraphView" type="button">Save current view</button><label>Saved views<select id="savedGraphPicker"></select></label><button id="openSavedGraph" type="button" disabled>Open</button><button id="removeSavedGraph" type="button" disabled>Remove</button></div><p id="savedGraphStatus" role="status">Up to eight named views stay on this device. Saving includes the current zoom.</p></details><ul class="chart-highlights" aria-label="Selected-period chart highlights">
             <li><span>Temperature range</span><strong id="highlightTemp">Loading…</strong></li>
             <li><span>Peak gust</span><strong id="highlightGust">Loading…</strong></li>
             <li><span>Pressure range</span><strong id="highlightPressure">Loading…</strong></li>
@@ -285,7 +285,7 @@
     <script src="wind-rose.js?v=20260923-radial-restore"></script>
     <script src="site-config.js?v=20261010-v38-4-188"></script>
     <script src="archive-quality.js?v=20261008-v38-4-170"></script>
-<script src="graph-selection.js?v=20261008-v38-4-170"></script><script src="maintenance-log.js?v=20261009-v38-4-177"></script><script src="maintenance-markers.js?v=20261009-v38-4-173"></script><script src="chart-explorer.js?v=20261010-v38-4-190"></script><script src="graphs.js?v=20261009-v38-4-178"></script>
+<script src="graph-selection.js?v=20261010-v38-4-193"></script><script src="maintenance-log.js?v=20261009-v38-4-177"></script><script src="maintenance-markers.js?v=20261009-v38-4-173"></script><script src="chart-explorer.js?v=20261010-v38-4-193"></script><script src="graphs.js?v=20261009-v38-4-178"></script>
     <script src="lightning-charts.js?v=20261009-axis-mobile-fix"></script>
     <script src="date-comparison.js?v=20261010-v38-4-188"></script>
     <!-- Cloudflare Web Analytics -->

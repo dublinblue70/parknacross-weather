@@ -1,3 +1,4 @@
+// v38.4.95 — bounded calendar work, encrypted background alerts and outdoor outlook.
 // Parknacross v38.4.94 — fast admin authentication and live readings before schema work; background cloud recovery.
 // Visitor photo calendar exposes dates and counts only; admin archives stay private.
 // Parknacross v38.4.91 — bounded event history, public date-matched sky photos and export previews; retains earlier sky, social and archive features.
@@ -81,7 +82,7 @@ const TEMP_OUTLIER_DELTA_C = 2.5;
 const TEMP_OUTLIER_BASELINE_C = 1.0;
 const TEMP_OUTLIER_WINDOW_SECONDS = 30 * 60;
 const TEMP_OUTLIER_MIN_NEIGHBORS = 3;
-const EDGE_CACHE_VERSION = "v38-4-90-source-freshness";
+const EDGE_CACHE_VERSION = "v38-4-95-efficient-archive";
 const SKY_PHOTO_KEY = "today/current";
 const SKY_PHOTO_MAX_BYTES = 10 * 1024 * 1024;
 const SKY_PHOTO_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -111,15 +112,11 @@ function isValidStationDayKey(dayKey) {
   return date.toISOString().slice(0, 10) === dayKey;
 }
 
+const STATION_DAY_FORMATTER = new Intl.DateTimeFormat("en-GB", {timeZone:STATION_TIME_ZONE,year:"numeric",month:"2-digit",day:"2-digit"});
 function stationDayKey(value = new Date()) {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: STATION_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).formatToParts(date);
+  const parts = STATION_DAY_FORMATTER.formatToParts(date);
   const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
   return `${map.year}-${map.month}-${map.day}`;
 }
@@ -1077,6 +1074,20 @@ function parseHourlySkyForecast(xml, nowEpoch = Math.floor(Date.now() / 1000)) {
   }
   return [...points.values()].sort((a,b) => a.epoch-b.epoch);
 }
+
+async function getOutdoorOutlook() {
+ const xml=await fetchMetEireannPointForecastXml(),now=Math.floor(Date.now()/1000),rows=new Map();
+ const rowAt=epoch=>{if(!rows.has(epoch))rows.set(epoch,{epoch,temperature_c:null,wind_kmh:null,rain_mm:null,daylight:null});return rows.get(epoch);};
+ for(const b of xml.matchAll(/<time\b[^>]*from="([^"]+)"[^>]*to="([^"]+)"[^>]*>([\s\S]*?)<\/time>/gi)){
+  const from=Date.parse(b[1])/1000,to=Date.parse(b[2])/1000,body=b[3];if(!Number.isFinite(from)||!Number.isFinite(to)||from<now-3600||from>now+25*3600)continue;
+  if(from===to){const row=rowAt(from),temp=body.match(/<temperature[^>]*value="([^"]+)"/i),wind=body.match(/<windSpeed[^>]*(?:mps|value)="([^"]+)"/i);row.temperature_c=temp?socialBoundedNumber(temp[1],-40,50):null;row.wind_kmh=wind?socialBoundedNumber(Number(wind[1])*3.6,0,200):null;}
+  else if(to-from===3600){const precip=body.match(/<precipitation[^>]*value="([^"]+)"/i);if(precip)rowAt(from).rain_mm=socialBoundedNumber(precip[1],0,100);}
+ }
+ const points=[...rows.values()].sort((a,b)=>a.epoch-b.epoch);for(const row of points){const sun=solarAltitude(row.epoch+1800,52.6247,-6.25);row.daylight=sun>0;}
+ return {source:"Met Éireann point forecast",fetched_at:new Date().toISOString(),forecast:true,points};
+}
+// Solar altitude at the middle of each forecast hour; no fixed daylight-hour assumption.
+function solarAltitude(epoch,latitude,longitude){const d=epoch/86400-10957.5,rad=Math.PI/180,g=(357.529+.98560028*d)*rad,q=(280.459+.98564736*d)*rad,L=q+(1.915*Math.sin(g)+.020*Math.sin(2*g))*rad,e=(23.439-.00000036*d)*rad,ra=Math.atan2(Math.cos(e)*Math.sin(L),Math.cos(L)),dec=Math.asin(Math.sin(e)*Math.sin(L)),sidereal=(280.16+360.9856235*d+longitude)*rad,h=sidereal-ra,lat=latitude*rad;return Math.asin(Math.sin(lat)*Math.sin(dec)+Math.cos(lat)*Math.cos(dec)*Math.cos(h))/rad;}
 
 async function getHourlySkyForecast() {
   const xml = await fetchMetEireannPointForecastXml();
@@ -2143,6 +2154,63 @@ function requestRateLimited(request, bucket, limit, now=Date.now()) {
 function rateLimitedResponse(){return json({error:"Too many requests. Please wait a minute and try again."},429,{"Cache-Control":"no-store","Retry-After":"60"});}
 function unauthorizedResponse(request){return requestRateLimited(request,"failed-admin",30)?rateLimitedResponse():json({error:"Unauthorized"},401,{"Cache-Control":"no-store"});}
 
+// Web Push uses separate ephemeral encryption keys and a persistent VAPID signing key.
+const PUSH_TABLE='weather_push_subscriptions_v1';
+const PUSH_VAPID_KEY='weather_push_vapid_v1';
+const pushBytes=s=>Uint8Array.from(atob(String(s).replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+const pushBase64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const pushConcat=(...items)=>{const out=new Uint8Array(items.reduce((n,x)=>n+x.length,0));let p=0;for(const x of items){out.set(x,p);p+=x.length;}return out;};
+const pushText=s=>new TextEncoder().encode(s);
+async function pushHash(value){return pushBase64(await crypto.subtle.digest('SHA-256',pushText(value)));}
+function pushEndpointAllowed(endpoint){try{const u=new URL(endpoint);return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&u.href.length<=2048&&u.pathname.length>1&&(u.hostname==='fcm.googleapis.com'||u.hostname==='updates.push.services.mozilla.com'||u.hostname==='web.push.apple.com'||u.hostname.endsWith('.notify.windows.com'));}catch{return false;}}
+function pushPreferences(value={}){const bounded=(v,lo,hi,fallback)=>Number.isFinite(Number(v))?Math.max(lo,Math.min(hi,Number(v))):fallback;return {rainStart:value.rainStart===true,gust:value.gust===true,frost:value.frost===true,heavyRain:value.heavyRain===true,lightningKm:[0,10,15,25,40].includes(Number(value.lightningKm))?Number(value.lightningKm):0,gustKmh:bounded(value.gustKmh,20,100,50),heavyRainRate:bounded(value.heavyRainRate,2,50,10),freezingC:bounded(value.freezingC,-5,5,0),quietEnabled:value.quietEnabled===true,quietStart:bounded(value.quietStart,0,23,22),quietEnd:bounded(value.quietEnd,0,23,7)};}
+let pushSchemaDb=null;
+async function ensurePushSchema(env){if(pushSchemaDb===env.DB)return;await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ${PUSH_TABLE} (id TEXT PRIMARY KEY,endpoint TEXT NOT NULL,p256dh TEXT NOT NULL,auth TEXT NOT NULL,token_hash TEXT NOT NULL,preferences TEXT NOT NULL,state TEXT NOT NULL DEFAULT '{}',updated_epoch INTEGER NOT NULL)`).run();pushSchemaDb=env.DB;}
+async function pushVapid(env){let row=await env.DB.prepare(`SELECT value FROM ${META_TABLE} WHERE key=?`).bind(PUSH_VAPID_KEY).first();if(!row?.value){const keys=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']),privateJwk=await crypto.subtle.exportKey('jwk',keys.privateKey),publicKey=pushBase64(await crypto.subtle.exportKey('raw',keys.publicKey));await env.DB.prepare(`INSERT OR IGNORE INTO ${META_TABLE}(key,value) VALUES (?,?)`).bind(PUSH_VAPID_KEY,JSON.stringify({privateJwk,publicKey})).run();row=await env.DB.prepare(`SELECT value FROM ${META_TABLE} WHERE key=?`).bind(PUSH_VAPID_KEY).first();}if(!row?.value)throw Error('Background signing key unavailable');return JSON.parse(row.value);}
+async function pushHmac(key,data){const k=await crypto.subtle.importKey('raw',key,{name:'HMAC',hash:'SHA-256'},false,['sign']);return new Uint8Array(await crypto.subtle.sign('HMAC',k,data));}
+async function pushEncrypt(subscription,payload){
+ const ua=pushBytes(subscription.p256dh),auth=pushBytes(subscription.auth),ephemeral=await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveBits']),publicKey=new Uint8Array(await crypto.subtle.exportKey('raw',ephemeral.publicKey)),userKey=await crypto.subtle.importKey('raw',ua,{name:'ECDH',namedCurve:'P-256'},false,[]),shared=new Uint8Array(await crypto.subtle.deriveBits({name:'ECDH',public:userKey},ephemeral.privateKey,256)),salt=crypto.getRandomValues(new Uint8Array(16));
+ const prkKey=await pushHmac(auth,shared),ikm=await pushHmac(prkKey,pushConcat(pushText('WebPush: info\0'),ua,publicKey,new Uint8Array([1]))),prk=await pushHmac(salt,ikm),cek=(await pushHmac(prk,pushConcat(pushText('Content-Encoding: aes128gcm\0'),new Uint8Array([1])))).slice(0,16),nonce=(await pushHmac(prk,pushConcat(pushText('Content-Encoding: nonce\0'),new Uint8Array([1])))).slice(0,12),key=await crypto.subtle.importKey('raw',cek,'AES-GCM',false,['encrypt']);
+ const plain=pushText(JSON.stringify(payload));if(plain.length>3000)throw Error('Push message too large');const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:nonce},key,pushConcat(plain,new Uint8Array([2]))));const header=new Uint8Array(21);header.set(salt);new DataView(header.buffer).setUint32(16,4096);header[20]=publicKey.length;return pushConcat(header,publicKey,cipher);
+}
+async function sendWeatherPush(subscription,message,vapid){const endpoint=new URL(subscription.endpoint),header=pushBase64(pushText(JSON.stringify({typ:'JWT',alg:'ES256'}))),claims=pushBase64(pushText(JSON.stringify({aud:endpoint.origin,exp:Math.floor(Date.now()/1000)+3600,sub:'mailto:info@parknacrossweather.ie'}))),input=header+'.'+claims,key=await crypto.subtle.importKey('jwk',vapid.privateJwk,{name:'ECDSA',namedCurve:'P-256'},false,['sign']),signature=pushBase64(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},key,pushText(input)));return fetch(endpoint.href,{method:'POST',headers:{Authorization:`vapid t=${input}.${signature}, k=${vapid.publicKey}`,'Content-Encoding':'aes128gcm','Content-Type':'application/octet-stream',TTL:'300',Urgency:'normal'},body:await pushEncrypt(subscription,message),redirect:'error',signal:AbortSignal.timeout(10000)});}
+async function handlePushRequest(request,env,url){
+ const noStore={'Cache-Control':'no-store'};
+ if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.95'},200,noStore);}
+ if(request.method!=='POST')return json({error:'Method not allowed'},405,noStore);
+ if(request.headers.get('Origin')!=='https://parknacrossweather.ie'&&request.headers.get('Origin')!=='https://www.parknacrossweather.ie')return json({error:'Origin not allowed'},403,noStore);
+ if(requestRateLimited(request,'push-settings',10))return rateLimitedResponse();
+ if(Number(request.headers.get('Content-Length')||0)>8192)return json({error:'Request too large'},413,noStore);const text=await request.text();if(text.length>8192)return json({error:'Request too large'},413,noStore);let body;try{body=JSON.parse(text);}catch{return json({error:'Invalid request'},400,noStore);}
+ const sub=body.subscription||{},endpoint=String(sub.endpoint||'');if(!pushEndpointAllowed(endpoint))return json({error:'Unsupported push service'},400,noStore);const id=await pushHash(endpoint);await ensurePushSchema(env);
+ const existing=await env.DB.prepare(`SELECT * FROM ${PUSH_TABLE} WHERE id=?`).bind(id).first(),token=request.headers.get('Authorization')?.replace(/^Bearer /,'')||'',authorised=existing&&token&&await pushHash(token)===existing.token_hash;
+ if(existing&&!authorised)return json({error:'Subscription ownership could not be verified'},401,noStore);
+ if(body.action==='status'){if(!authorised)return json({error:'Subscription not found'},404,noStore);let state={};try{state=JSON.parse(existing.state);}catch{}return json({active:true,preferences:JSON.parse(existing.preferences),history:(state.history||[]).slice(-20)},200,noStore);}
+ if(body.action==='remove'){if(authorised)await env.DB.prepare(`DELETE FROM ${PUSH_TABLE} WHERE id=?`).bind(id).run();return json({active:false},200,noStore);}
+ if(body.action!=='save')return json({error:'Unknown action'},400,noStore);
+ try{if(pushBytes(sub.keys?.p256dh).length!==65||pushBytes(sub.keys?.auth).length!==16)throw Error('keys');await crypto.subtle.importKey('raw',pushBytes(sub.keys.p256dh),{name:'ECDH',namedCurve:'P-256'},false,[]);}catch{return json({error:'Invalid subscription keys'},400,noStore);}
+ if(!existing){const count=await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${PUSH_TABLE}`).first();if(Number(count?.n)>=200)return json({error:'Background alert capacity reached'},503,noStore);}
+ const managementToken=existing?token:pushBase64(crypto.getRandomValues(new Uint8Array(32))),prefs=pushPreferences(body.preferences);
+ await env.DB.prepare(`INSERT INTO ${PUSH_TABLE}(id,endpoint,p256dh,auth,token_hash,preferences,state,updated_epoch) VALUES (?,?,?,?,?,?,'{}',?) ON CONFLICT(id) DO UPDATE SET preferences=excluded.preferences,updated_epoch=excluded.updated_epoch`).bind(id,endpoint,sub.keys.p256dh,sub.keys.auth,await pushHash(managementToken),JSON.stringify(prefs),Math.floor(Date.now()/1000)).run();return json({active:true,management_token:managementToken},200,noStore);
+}
+function backgroundWeatherEvents(current,previous,prefs,now=Math.floor(Date.now()/1000)){
+ const value=(row,k)=>usableNumber(row?.[k])?Number(row[k]):null,at=value(current,'epoch');if(at===null||now-at>600||at-now>90||at<=Number(previous.epoch||0))return {events:[],state:previous};
+ const day=stationDayKey(new Date(at*1000)),total=value(current,'rain_daily_mm'),rate=value(current,'rain_rate_mm_h'),gust=value(current,'wind_gust_kmh'),temp=value(current,'temperature_c'),samples=(previous.samples||[]).filter(s=>s.day===day&&at-s.epoch<=1200&&s.epoch<at);samples.push({epoch:at,day,total});
+ const baseline=samples.find(s=>s.total!==null),increment=baseline&&total!==null?Math.max(0,total-baseline.total):0,oldTotal=value(previous,'rain_daily_mm'),activeIncrease=previous.day===day&&at-Number(previous.epoch)<=300&&total!==null&&oldTotal!==null?Math.max(0,total-oldTotal):0,confirmed=(rate>0||activeIncrease>=.05)&&(rate>=2.5||increment>=.2-1e-6);
+ const events=[];if(previous.epoch){if(prefs.rainStart&&confirmed&&!previous.confirmed)events.push({kind:'rain-start',title:'Rain starting at Parknacross',body:`Confirmed rainfall · ${rate===null?'rate unavailable':rate.toFixed(1)+' mm/h'}.`,cooldown:10800});if(prefs.gust&&gust!==null&&gust>=prefs.gustKmh&&(value(previous,'wind_gust_kmh')===null||value(previous,'wind_gust_kmh')<prefs.gustKmh))events.push({kind:'gust',title:'Strong gust at Parknacross',body:`A ${gust.toFixed(1)} km/h gust was recorded.`,cooldown:7200});if(prefs.frost&&temp!==null&&temp<=prefs.freezingC&&(value(previous,'temperature_c')===null||value(previous,'temperature_c')>prefs.freezingC))events.push({kind:'temperature',title:'Low temperature at Parknacross',body:`Temperature reached ${temp.toFixed(1)}°C.`,cooldown:21600});if(prefs.heavyRain&&rate!==null&&rate>=prefs.heavyRainRate&&(value(previous,'rain_rate_mm_h')===null||value(previous,'rain_rate_mm_h')<prefs.heavyRainRate))events.push({kind:'heavy-rain',title:'Heavy rain at Parknacross',body:`Rain rate reached ${rate.toFixed(1)} mm/h.`,cooldown:3600});const strike=value(current,'lightning_time_epoch'),distance=value(current,'lightning_distance_km');if(prefs.lightningKm>0&&value(current,'lightning_strikes')>0&&strike!==null&&now-strike>=-90&&now-strike<=600&&strike>Number(previous.lightning_time_epoch||0)&&distance!==null&&distance>=0&&distance<=prefs.lightningKm)events.push({kind:'lightning',title:'Lightning near Parknacross',body:`A detection was reported approximately ${Math.round(distance)} km away.`,cooldown:900});}
+ const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:STATION_TIME_ZONE,hour:'numeric',hourCycle:'h23'}).format(new Date(now*1000))),quiet=prefs.quietEnabled&&(prefs.quietStart===prefs.quietEnd||(prefs.quietStart<prefs.quietEnd?(hour>=prefs.quietStart&&hour<prefs.quietEnd):hour>=prefs.quietStart||hour<prefs.quietEnd));
+ return {events:quiet?[]:events.filter(e=>now-Number(previous.cooldowns?.[e.kind]||0)>=e.cooldown),state:{...previous,epoch:at,day,samples,confirmed,rain_daily_mm:total,rain_rate_mm_h:rate,wind_gust_kmh:gust,temperature_c:temp,lightning_time_epoch:value(current,'lightning_time_epoch')}};
+}
+async function runBackgroundAlerts(env,current=null){
+ // A schema absent on older installations means nobody has subscribed yet.
+ let result;try{result=await env.DB.prepare(`SELECT * FROM ${PUSH_TABLE} ORDER BY updated_epoch ASC LIMIT 200`).all();}catch{return;}if(!result.results?.length)return;
+ const now=Math.floor(Date.now()/1000),lease=await env.DB.prepare(`INSERT INTO ${META_TABLE}(key,value) VALUES ('weather_push_run_lock_v1',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value WHERE CAST(value AS INTEGER) < ?`).bind(String(now+55),now).run();if(Number(lease.meta?.changes)===0)return;
+ current=current||await readGatewayLiveReading(env,now)||await getLatest(env);if(!current)return;const vapid=await pushVapid(env);
+ // Work in bounded batches. Rotate attempted subscriptions to avoid starvation.
+ for(const sub of result.results.slice(0,30)){let previous={};try{previous=JSON.parse(sub.state);}catch{}const prefs=pushPreferences(JSON.parse(sub.preferences)),review=backgroundWeatherEvents(current,previous,prefs,now);let failed=false;for(const event of review.events){try{const sent=await sendWeatherPush(sub,{title:event.title,body:event.body,tag:'parknacross-'+event.kind,url:'https://parknacrossweather.ie/index.html',sent_at:new Date(now*1000).toISOString()},vapid);if(sent.status===404||sent.status===410){await env.DB.prepare(`DELETE FROM ${PUSH_TABLE} WHERE id=?`).bind(sub.id).run();failed=true;break;}if(!sent.ok){failed=true;break;}review.state.cooldowns={...review.state.cooldowns,[event.kind]:now};review.state.history=[...(review.state.history||[]),{at:new Date(now*1000).toISOString(),title:event.title,body:event.body,status:'Accepted by push service'}].slice(-20);}catch{failed=true;break;}}
+ if(!failed)await env.DB.prepare(`UPDATE ${PUSH_TABLE} SET state=?,updated_epoch=? WHERE id=?`).bind(JSON.stringify(review.state),now,sub.id).run();else await env.DB.prepare(`UPDATE ${PUSH_TABLE} SET updated_epoch=? WHERE id=?`).bind(now,sub.id).run();
+ }
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
@@ -2152,13 +2220,15 @@ export default {
     const url = new URL(request.url);
     if(request.method==="POST"&&["/sky-photo/likes","/sky-photo/likes/name"].includes(url.pathname)&&requestRateLimited(request,"photo-writes",30))return rateLimitedResponse();
 
+    if(url.pathname.startsWith("/push/")){try{return await handlePushRequest(request,env,url);}catch(error){console.warn("Background alert settings unavailable");return json({error:"Background alert service temporarily unavailable"},503,{"Cache-Control":"no-store"});}}
+
     // Admin sign-in is a secret check, not an archive query. Never wait for
     // D1 migrations before accepting or rejecting the key.
     if (url.pathname === "/admin/capabilities") {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.94",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.95",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2547,6 +2617,7 @@ export default {
               headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "30" }
             });
           }
+          if(ctx?.waitUntil)ctx.waitUntil(runBackgroundAlerts(env,liveReading).catch(()=>console.warn("Background alert evaluation failed")));
           const recovery = recoverArchiveFromGateway(env, receivedEpoch);
           if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(recovery);
           else await recovery;
@@ -2600,6 +2671,7 @@ export default {
             headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "30" }
           });
         }
+        if(ctx?.waitUntil)ctx.waitUntil(runBackgroundAlerts(env,liveReading).catch(()=>console.warn("Background alert evaluation failed")));
         const recovery = recoverArchiveFromGateway(env, receivedEpoch);
         if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(recovery);
         else await recovery;
@@ -3211,6 +3283,8 @@ export default {
         return await cachedJson(request, ctx, 300, () => getJohnstownObservation());
       }
 
+      if (url.pathname === "/outdoor-outlook") {return await cachedJson(request,ctx,900,()=>getOutdoorOutlook());}
+
       if (url.pathname === "/met/point") {
         return await cachedJson(request, ctx, 900, () => getPointForecast(env, { persist: false }));
       }
@@ -3286,6 +3360,8 @@ export default {
         } catch (_) {}
         console.warn("Scheduled Ecowitt sync failed:", error);
       }
+
+      try {await runBackgroundAlerts(env);}catch(error){console.warn("Scheduled background alerts failed");}
 
       try {
         await seedConfirmedGustExclusion(env);
@@ -5220,6 +5296,17 @@ async function buildRainSummary(env) {
     current_event: currentEvent
   };
 }
+function orderedStationDayResolver() {
+  let day = null, range = null;
+  return epoch => {
+    if (!range || epoch < range.startEpoch || epoch >= range.endEpoch) {
+      day = stationDayKey(new Date(epoch * 1000));
+      range = stationDayEpochRange(day);
+    }
+    return day;
+  };
+}
+
 async function buildRainEvents(env, url) {
   const requested = Number(url.searchParams.get("days") || 30);
   const days = Math.max(1, Math.min(90, Number.isFinite(requested) ? requested : 30));
@@ -5272,11 +5359,12 @@ async function buildRainEvents(env, url) {
     lastWetEpoch = null;
   };
 
+  const dayForEpoch = orderedStationDayResolver();
   for (const row of rows) {
     const epoch = Number(row.epoch);
     if (!Number.isFinite(epoch)) continue;
 
-    const day = stationDayKey(new Date(epoch * 1000));
+    const day = dayForEpoch(epoch);
     const total = nullableNumber(row.rain_daily_mm);
     const rate = nullableNumber(row.rain_rate_mm_h) || 0;
 
@@ -5622,39 +5710,44 @@ async function buildReliability(env) {
   };
 }
 
+function stationDaySqlExpression(firstDay, lastDay) {
+  const summer=[];
+  for(let year=Number(firstDay.slice(0,4));year<=Number(lastDay.slice(0,4));year++){
+    const start=Date.parse(lastSundayDayKey(year,2)+"T01:00:00Z")/1000;
+    const end=Date.parse(lastSundayDayKey(year,9)+"T01:00:00Z")/1000;
+    summer.push(`(epoch >= ${start} AND epoch < ${end})`);
+  }
+  return `strftime('%Y-%m-%d', epoch + CASE WHEN ${summer.join(' OR ')} THEN 3600 ELSE 0 END, 'unixepoch')`;
+}
+
 async function buildArchiveCoverage(env, requestedDays = 371) {
   const today = stationDayKey(new Date());
   const cutoffDay = shiftDayKey(today, -(Math.max(1, requestedDays) - 1));
   const cutoffRange = stationDayEpochRange(cutoffDay);
   const nowEpoch = Math.floor(Date.now() / 1000);
+  // Return one aggregate per Irish calendar day, not every saved observation.
+  // Epoch remains indexed in WHERE; DST adjustment affects only the grouping.
   const result = await env.DB.prepare(
-    `SELECT epoch FROM ${TABLE} WHERE epoch >= ? AND epoch <= ? ORDER BY epoch ASC`
-  ).bind(Number(cutoffRange?.startEpoch || 0), nowEpoch).all();
-
-  const firstStoredRow = await env.DB.prepare(`SELECT MIN(epoch) AS first_epoch FROM ${TABLE}`).first();
-  const collectionFirstEpoch = nullableNumber(firstStoredRow?.first_epoch);
-  const collectionFirstDay = collectionFirstEpoch === null ? null : stationDayKey(new Date(collectionFirstEpoch*1000));
-  const coverageStartDay = collectionFirstDay === null ? shiftDayKey(today,1) : collectionFirstDay < cutoffDay ? cutoffDay : collectionFirstDay;
-  const bucketsByDay = new Map();
-  let firstEpoch = null;
-  for (const row of result.results || []) {
-    const epoch = Number(row.epoch);
-    if (!Number.isFinite(epoch)) continue;
-    const day = stationDayKey(new Date(epoch * 1000));
-    if (!day || day < cutoffDay || day > today) continue;
-    if (firstEpoch === null || epoch < firstEpoch) firstEpoch = epoch;
-    if (!bucketsByDay.has(day)) bucketsByDay.set(day, new Set());
-    bucketsByDay.get(day).add(Math.floor(epoch / 300));
-  }
+    `SELECT ${stationDaySqlExpression(cutoffDay,today)} AS day,
+            COUNT(DISTINCT CAST(epoch / 300 AS INTEGER)) AS actual_slots,
+            MIN(epoch) AS first_epoch
+     FROM ${TABLE} WHERE epoch >= ? AND epoch <= ? GROUP BY day ORDER BY day`
+  ).bind(Number(cutoffRange?.startEpoch || 0),nowEpoch).all();
+  const firstStoredRow=await env.DB.prepare(`SELECT MIN(epoch) AS first_epoch FROM ${TABLE}`).first();
+  const collectionFirstEpoch=nullableNumber(firstStoredRow?.first_epoch);
+  const collectionFirstDay=collectionFirstEpoch===null?null:stationDayKey(new Date(collectionFirstEpoch*1000));
+  const coverageStartDay=collectionFirstDay===null?shiftDayKey(today,1):collectionFirstDay<cutoffDay?cutoffDay:collectionFirstDay;
+  const aggregates=new Map((result.results||[]).map(row=>[row.day,row]));
+  const firstEpoch=result.results?.length?nullableNumber(result.results[0].first_epoch):null;
 
   const rows = [];
   let totalActual = 0;
   let totalExpected = 0;
   for (let day = coverageStartDay; day <= today; day = shiftDayKey(day,1)) {
-    const buckets = bucketsByDay.get(day) || new Set();
+    const aggregate = aggregates.get(day);
     const range = stationDayEpochRange(day);
     if (!range) continue;
-    const actual = buckets.size;
+    const actual = Number(aggregate?.actual_slots || 0);
     let startEpoch = Number(range.startEpoch);
     let endEpoch = day === today ? nowEpoch : Number(range.endEpoch);
     if (collectionFirstEpoch !== null && collectionFirstEpoch > startEpoch) startEpoch = collectionFirstEpoch;
