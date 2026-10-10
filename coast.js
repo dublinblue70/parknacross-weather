@@ -7,7 +7,7 @@
  const timeOpts={timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit"};
  const dateOpts={timeZone:"Europe/Dublin",weekday:"short",day:"numeric",month:"short"};
  let localObservationEpoch=null;
- const sourceEpoch=raw=>{if(typeof raw==="number"||(typeof raw==="string"&&/^\d{10,13}$/.test(raw))){const value=Number(raw);return value<1e12?value*1000:value;}const parsed=Date.parse(raw||"");return Number.isFinite(parsed)?parsed:null;};
+ const sourceEpoch=raw=>{if(typeof raw==="number"||(typeof raw==="string"&&/^\d{10,13}$/.test(raw))){const value=Number(raw);return value<1e12?value*1000:value;}const parsed=Date.parse(typeof raw==="string"&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(raw)?raw+"Z":raw||"");return Number.isFinite(parsed)?parsed:null;};
  const ageLabel=ms=>{const minutes=Math.max(0,Math.floor((Date.now()-ms)/60000));return minutes<2?"just now":minutes<60?`${minutes} min ago`:minutes<1440?`${Math.floor(minutes/60)} hr ago`:`${Math.floor(minutes/1440)} days ago`;};
  const formatSourceStamp=raw=>{const ms=sourceEpoch(raw);return ms===null?"time unavailable":`${new Date(ms).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})} Irish time · ${ageLabel(ms)}`;};
  function updateLocalFreshness(){const node=$("coastLocalFreshness");if(!node)return;node.textContent=localObservationEpoch===null?"Parknacross local readings · observation time unavailable":`Parknacross local readings · observed ${formatSourceStamp(localObservationEpoch)}`;}

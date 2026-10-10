@@ -147,3 +147,12 @@ test('slow external marine check does not label the weather data service slow',a
  await page.route('**/met/marine?**',async r=>{await new Promise(resolve=>setTimeout(resolve,8300));await r.fulfill({contentType:'application/json',body:JSON.stringify({local_warning_relevant:false})});});
  await page.goto('/status.html');await expect(page.locator('#apiBadge')).toHaveText('OK',{timeout:20000});await expect(page.locator('#apiDetail')).toHaveText('Weather data service connected');
 });
+
+test.describe('source times for a visitor outside Ireland',()=>{
+ test.use({timezoneId:'Asia/Kolkata'});
+ test('UTC marine model time is displayed accurately in Irish time',async({page})=>{
+ const raw=new Date().toISOString().slice(0,16),stamp=raw+'Z';const expected=new Date(stamp).toLocaleString('en-IE',{timeZone:'Europe/Dublin',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+ await page.route('**/marine/sea-temperature',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({local_model:{sea_surface_temperature_c:15,model_time:raw},m2_buoy:{sea_surface_temperature_c:14.8,observation_time:stamp}})}));
+ await page.goto('/coast.html');await expect(page.locator('#localSeaTempTime')).toContainText(expected);await expect(page.locator('#localSeaFreshness')).toContainText(expected);
+ });
+});

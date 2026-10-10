@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-186-status-service-timing";
+const CACHE_NAME = "parknacross-v38-4-187-source-timezones";
 const STATIC_ASSETS = [
   "./",
   "./site-request.js",

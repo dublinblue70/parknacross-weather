@@ -1199,7 +1199,9 @@ function updateSoilPanel(current) {
   if (moisture !== null && baseline) {
     const change = moisture - Number(baseline.soil_moisture_pct);
     const direction = change >= 2 ? "Wetter" : change <= -2 ? "Drying" : "Steady";
-    set("soilMoistureTrend", `${direction} · ${change > 0 ? "+" : ""}${change.toFixed(0)} points since earlier`);
+    const baselineTime=Number(baseline.epoch)*1000;
+    const comparisonDay=stationDateKeyFromTime(baselineTime)===stationDateKeyFromTime(nowEpoch*1000)?"today":new Date(baselineTime).toLocaleDateString("en-IE",{timeZone:STATION_TIME_ZONE,day:"numeric",month:"short"});
+    set("soilMoistureTrend", `${direction} · ${change > 0 ? "+" : ""}${change.toFixed(0)} percentage points since ${timeLabel(baseline)} ${comparisonDay} (Irish time)`);
   } else {
     set("soilMoistureTrend", "Trend building from saved readings");
   }

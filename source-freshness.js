@@ -1,6 +1,6 @@
 (() => {
  'use strict';
- const validDate=value=>{if(value===null||value===undefined||value==='')return null;const n=typeof value==='number'?value<1e12?value*1000:value:Date.parse(value);return Number.isFinite(n)?n:null;};
+ const validDate=value=>{if(value===null||value===undefined||value==='')return null;const n=typeof value==='number'?value<1e12?value*1000:value:Date.parse(typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(value)?value+'Z':value);return Number.isFinite(n)?n:null;};
  const stamp=value=>{const n=validDate(value);if(n===null)return 'time unavailable';const minutes=Math.floor((Date.now()-n)/60000);return new Date(n).toLocaleString('en-IE',{timeZone:'Europe/Dublin',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' Irish time'+(minutes>=0?` · ${minutes<60?minutes+' min':Math.floor(minutes/60)+' hr'} ago`:'');};
  function render(id,data,sourceTime,maxAgeHours=24,label='Source update'){
    const node=document.getElementById(id);if(!node)return;
