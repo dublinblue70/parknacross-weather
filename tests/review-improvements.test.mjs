@@ -27,6 +27,9 @@ const coverage={collection_start_day:'2026-09-11',days:[{day:'2026-09-11',actual
 const note=describe(rows,'2026',coverage,new Date('2026-09-13T12:00:00Z'));
 assert.match(note,/2\/3 calendar days/);assert.match(note,/253 earlier days were before station recording began/);assert.match(note,/1 day has no archived/);assert.match(note,/2 recorded days have incomplete/);
 
+const firstDayNote=describe([{day:'2026-09-11'}],'2026',{collection_start_day:'2026-09-11',days:[]},new Date('2026-09-11T12:00:00Z'));
+assert.match(firstDayNote,/1\/1 calendar days/);assert.match(firstDayNote,/253 earlier days were before station recording began/);
+
 // Optional screenshot/admin failures cannot prevent installation; missing core code must.
 async function installWithFailure(failure) {
   const stored=new Map(),handlers={},self={registration:{scope:'https://site.test/'},location:{origin:'https://site.test'},addEventListener:(name,fn)=>handlers[name]=fn,skipWaiting:async()=>self.activated=true};

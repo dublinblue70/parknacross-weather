@@ -16,7 +16,7 @@
     const effectiveStart = collectionStart && collectionStart > start ? collectionStart : start;
     const dayCount = (from, to) => Math.max(0, Math.round((Date.parse(to+'T12:00:00Z')-Date.parse(from+'T12:00:00Z'))/86400000)+1);
     const expectedDays = dayCount(effectiveStart, through);
-    const beforeRecording = collectionStart ? dayCount(start, shift(effectiveStart < through ? effectiveStart : shift(through,1), -1)) : 0;
+    const beforeRecording = collectionStart ? dayCount(start, shift(effectiveStart <= through ? effectiveStart : shift(through,1), -1)) : 0;
     const captured = new Set(rows.map(row => row.day).filter(day => day >= effectiveStart && day <= through));
     const byDay = new Map((coverage?.days || []).map(row => [row.day, row]));
     let actual = 0, expected = 0, incomplete = 0, unknown = 0;

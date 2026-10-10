@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-190-review-improvements";
+const CACHE_NAME = "parknacross-v38-4-191-review-improvements";
 const STATIC_ASSETS = [
   "./api-routing.js",
   "./footer-links.css",
