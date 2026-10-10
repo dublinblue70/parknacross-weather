@@ -145,8 +145,8 @@ test('all four flowers stay inside the weather scene and respect reduced motion'
 test('slow external marine check does not label the weather data service slow',async({page})=>{
  await page.route('**/health',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({status:'ok',database:'connected',archive_ingest:{latest_age_seconds:30}})}));
  await page.route('**/met/marine?**',async r=>{await new Promise(resolve=>setTimeout(resolve,8300));await r.fulfill({contentType:'application/json',body:JSON.stringify({local_warning_relevant:false})});});
- await page.goto('/status.html');await expect(page.locator('#apiBadge')).toHaveText('OK',{timeout:3000});await expect(page.locator('#apiDetail')).toHaveText('Weather data service connected');
- await expect(page.locator('#overallText')).toContainText('checks complete');await expect(page.locator('#refreshButton')).toBeEnabled({timeout:20000});
+ await page.goto('/status.html');await expect(page.locator('#apiBadge')).toHaveText('Healthy',{timeout:3000});await expect(page.locator('#apiDetail')).toHaveText('Weather data service connected');
+ await expect(page.locator('#healthProgress')).toContainText('17 of 18 sources checked');await expect(page.locator('#refreshButton')).toBeEnabled({timeout:20000});
 });
 
 for(const file of ['graphs.html','history.html'])test(`${file} compares Irish-time dates, clears changed dates and recovers from failure`,async({page})=>{
