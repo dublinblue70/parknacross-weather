@@ -1,6 +1,6 @@
 (() => {
  'use strict';
- const key='parknacross:saved-graphs:v1',metrics={gTemp:'Temperature',gWind:'Wind & gusts',gPressure:'Pressure',gRain:'Rain',gSolar:'Solar & UV',gSoilMoisture:'Soil moisture'};
+ const key='parknacross:saved-graphs:v1',metrics={gTemp:'Temperature',gWind:'Wind & gusts',gPressure:'Pressure',gRain:'Rain',gSolar:'Solar radiation',gUv:'UV index',gSoilMoisture:'Soil moisture',gSoilDetail:'Soil temperature',gSoilEc:'Soil conductivity'};
  function valid(view){return view&&typeof view.name==='string'&&view.name.length>0&&view.name.length<=45&&metrics[view.metric]&&([6,24,48,168,720].includes(view.hours)||(Number.isFinite(view.from)&&Number.isFinite(view.to)&&view.from>0&&view.to>view.from&&view.to-view.from<=31*86400));}
  function read(){try{return (JSON.parse(localStorage.getItem(key)||'[]')).filter(valid).slice(0,8);}catch{return [];}}
  function url(view){const u=new URL('graphs.html',location.href);if(view.from&&view.to){u.searchParams.set('from',Math.floor(view.from));u.searchParams.set('to',Math.floor(view.to));}else u.searchParams.set('hours',view.hours);u.searchParams.set('metric',view.metric);u.hash=view.metric;return u;}
