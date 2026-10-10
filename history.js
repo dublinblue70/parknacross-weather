@@ -71,7 +71,7 @@ function heatmapDayInfo(day){
 }
 function showHeatmapDay(day,select=false){
   const info=heatmapDayInfo(day);set("heatmapDayDetail",info.text);
-  const link=$("heatmapOpenDay");if(link){link.hidden=!info.canOpen;link.href=`history.html?day=${day}#dayDetailTitle`;link.onclick=event=>{event.preventDefault();openArchiveDay(day);};}
+  const link=$("heatmapOpenDay");if(link){link.hidden=!info.canOpen;link.href=`history.html?day=${day}#dayDetailTitle`;link.setAttribute("aria-label",`Open archived observations for ${longDay(day)}`);link.onclick=event=>{event.preventDefault();openArchiveDay(day);};}
   if(select){selectedHeatmapDay=day;$("archiveHeatmap")?.querySelectorAll(".heatmap-day").forEach(cell=>{const active=cell.dataset.day===day;cell.classList.toggle("selected",active);cell.setAttribute("aria-pressed",String(active));cell.tabIndex=active?0:-1;});}
 }
 function renderHeatmap(){
@@ -94,7 +94,6 @@ function renderHeatmap(){
   }
   const columns=Math.ceil(cells.length/7);
   months.forEach((month,i)=>{const next=months[i+1]?.column||columns+1,span=next-month.column;if(span<2&&i===0)return;const label=document.createElement("span");label.className="heatmap-month";label.textContent=month.label;label.style.gridRow="1";label.style.gridColumn=`${month.column} / span ${Math.max(2,span)}`;host.appendChild(label);});
-  host.onpointerleave=()=>showHeatmapDay(selectedHeatmapDay||selectedArchiveDay||today);
   const active=selectedHeatmapDay||selectedArchiveDay||today;if(!cells.some(cell=>cell.tabIndex===0)&&cells.length)cells.at(-1).tabIndex=0;showHeatmapDay(active);
   set("heatmapDateRange",`${dateLabel(first+"T12:00:00Z")} – ${dateLabel(today+"T12:00:00Z")} · Irish local dates`);
   if(!heatmapPositioned&&host.parentElement){host.parentElement.scrollLeft=Math.max(0,host.scrollWidth-host.parentElement.clientWidth);heatmapPositioned=true;}
