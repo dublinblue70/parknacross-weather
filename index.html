@@ -1216,12 +1216,12 @@
             <small class="astronomy-note">Approximate astronomical values for Parknacross.</small>
           </article>
           <article class="sky-cycle-card season-card" aria-labelledby="seasonHeading">
-            <div class="season-heading"><div><span class="section-eyebrow">Annual outlook · <span id="seasonYear">----</span></span><h3 id="seasonHeading">Seasonal turning points</h3></div><p>Typical dates for Ireland; exact dates vary slightly each year.</p></div>
-            <ol class="season-markers" aria-label="Typical annual equinoxes and solstices">
-              <li><strong>Spring equinox</strong><span>Around 20 March</span></li>
-              <li><strong>Summer solstice</strong><span>Around 21 June</span></li>
-              <li><strong>Autumn equinox</strong><span>Around 22 September</span></li>
-              <li><strong>Winter solstice</strong><span>Around 21 December</span></li>
+            <div class="season-heading"><div><span class="section-eyebrow">Annual outlook · <span id="seasonYear">----</span></span><h3 id="seasonHeading">Seasonal turning points</h3></div><p id="seasonDateNote">Astronomical dates · Irish local time.</p></div>
+            <ol class="season-markers" aria-label="Annual equinoxes and solstices in Irish local time">
+              <li><strong>Spring equinox</strong><span data-season-date>Checking date…</span></li>
+              <li><strong>Summer solstice</strong><span data-season-date>Checking date…</span></li>
+              <li><strong>Autumn equinox</strong><span data-season-date>Checking date…</span></li>
+              <li><strong>Winter solstice</strong><span data-season-date>Checking date…</span></li>
             </ol>
             <p class="season-next" id="seasonNextMarker">Finding the next seasonal marker…</p>
           </article>
@@ -1726,7 +1726,7 @@
     <script src="source-freshness.js?v=20261010-v38-4-187"></script>
     <script src="dashboard-enhancements.js?v=20261009-v38-4-185"></script>
     <script src="archive-quality.js?v=20261008-v38-4-170"></script>
-<script src="chart-explorer.js?v=20261010-v38-4-193"></script><script src="dashboard-preferences.js?v=20261008-v38-4-170"></script><script src="app.js?v=20261010-v38-4-193"></script>
+<script src="chart-explorer.js?v=20261010-v38-4-193"></script><script src="dashboard-preferences.js?v=20261008-v38-4-170"></script><script src="app.js?v=20261010-v38-4-194"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
@@ -1745,7 +1745,7 @@
     <script src="site-config.js?v=20261010-v38-4-188"></script>
     <script src="comparison-alignment.js?v=20261010-v38-4-190"></script><script src="platform.js?v=20261010-v38-4-190"></script>
     <script>
-      /* Lightning detector acquisition status; existing app.js?v=20261010-v38-4-193 displays detections and alerts. */
+      /* Lightning detector acquisition status; existing app.js?v=20261010-v38-4-194 displays detections and alerts. */
       (() => {
         const notice = document.getElementById("lightningSetupNotice");
         const status = document.getElementById("lightningSetupStatus");

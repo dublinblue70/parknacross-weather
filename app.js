@@ -865,29 +865,40 @@ function updateMoonInfo(now = new Date()) {
   });
 }
 
+// Published UTC seasonal instants, converted to Irish local dates when displayed.
+// 2026: https://aa.usno.navy.mil/calculated/seasons?year=2026&tz=0&dst=false
+// 2027–2030: https://www.cnrc.canada.ca/en/certifications-evaluations-standards/canadas-official-time/when-do-seasons-start
+const SEASON_INSTANTS = {
+  2026: ["03-20T14:46:00Z", "06-21T08:24:00Z", "09-23T00:05:00Z", "12-21T20:50:00Z"],
+  2027: ["03-20T20:24:00Z", "06-21T14:10:00Z", "09-23T06:01:00Z", "12-22T02:42:00Z"],
+  2028: ["03-20T02:17:00Z", "06-20T20:01:00Z", "09-22T11:45:00Z", "12-21T08:19:00Z"],
+  2029: ["03-20T08:02:00Z", "06-21T01:48:00Z", "09-22T17:38:00Z", "12-21T14:14:00Z"],
+  2030: ["03-20T13:51:00Z", "06-21T07:31:00Z", "09-22T23:26:00Z", "12-21T20:09:00Z"]
+};
+function seasonMarkersForYear(year) {
+  const names = ["Spring equinox", "Summer solstice", "Autumn equinox", "Winter solstice"];
+  return (SEASON_INSTANTS[year] || []).map((value, i) => ({name: names[i], instant: new Date(`${year}-${value}`)}));
+}
 function updateSeasonInfo(now = new Date()) {
-  const stationDate = stationCalendarDate(now);
+  const year = stationCalendarDate(now).getFullYear(), markers = seasonMarkersForYear(year);
   const yearNode = $("seasonYear");
-  if (yearNode) yearNode.textContent = String(stationDate.getFullYear());
-  const markers = [
-    { month: 2, day: 20, name: "Spring equinox", dateLabel: "around 20 March" },
-    { month: 5, day: 21, name: "Summer solstice", dateLabel: "around 21 June" },
-    { month: 8, day: 22, name: "Autumn equinox", dateLabel: "around 22 September" },
-    { month: 11, day: 21, name: "Winter solstice", dateLabel: "around 21 December" }
-  ];
-  let nextMarker = null;
-  for (let year = stationDate.getFullYear(); year <= stationDate.getFullYear() + 1 && !nextMarker; year += 1) {
-    nextMarker = markers
-      .map(marker => ({ ...marker, instant: stationInstant(year, marker.month, marker.day, 12) }))
-      .find(marker => marker.instant > now) || null;
-  }
+  if (yearNode) yearNode.textContent = String(year);
+  set("seasonDateNote", markers.length ? `Astronomical dates for ${year} · Irish local time.` : `Astronomical dates for ${year} are unavailable.`);
+  const dateLabel = instant => instant.toLocaleDateString("en-IE", {timeZone: STATION_TIME_ZONE, day: "numeric", month: "long"});
+  document.querySelectorAll("[data-season-date]").forEach((node, i) => {
+    const marker = markers[i];
+    node.textContent = marker ? dateLabel(marker.instant) : "Date unavailable";
+    if (marker) node.title = marker.instant.toLocaleString("en-IE", {timeZone: STATION_TIME_ZONE, year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"}) + " Irish time";
+    else node.removeAttribute("title");
+  });
+  const nextMarker = [...markers, ...seasonMarkersForYear(year + 1)].find(marker => marker.instant > now);
   const nextNode = $("seasonNextMarker");
   if (nextNode) {
-    if (!nextMarker) {
-      nextNode.textContent = "Seasonal date unavailable.";
-    } else {
+    if (!nextMarker) nextNode.textContent = "Next seasonal date unavailable.";
+    else {
       const days = Math.max(1, Math.ceil((nextMarker.instant.getTime() - now.getTime()) / 86400000));
-      nextNode.textContent = `Next typical marker: ${nextMarker.name} ${nextMarker.dateLabel} · about ${days} day${days === 1 ? "" : "s"} away.`;
+      const nextYear = stationCalendarDate(nextMarker.instant).getFullYear();
+      nextNode.textContent = `Next seasonal turning point: ${nextMarker.name} · ${dateLabel(nextMarker.instant)}${nextYear === year ? "" : " " + nextYear} · about ${days} day${days === 1 ? "" : "s"} away.`;
     }
   }
 }

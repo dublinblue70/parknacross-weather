@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-193-review-improvements";
+const CACHE_NAME = "parknacross-v38-4-194-seasonal-dates";
 const STATIC_ASSETS = [
   "./visitor-tools.css",
   "./visitor-insights.js",
