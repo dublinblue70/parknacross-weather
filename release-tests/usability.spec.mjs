@@ -158,6 +158,7 @@ for(const file of ['graphs.html','history.html'])test(`${file} compares Irish-ti
  const chart=await page.evaluate(()=>{const c=Chart.getChart(document.getElementById('comparisonChart'));return{first:c.data.datasets[0].data[0],second:c.data.datasets[1].data[0],min:c.options.scales.x.min,max:c.options.scales.x.max}});
  expect(chart.first.x).toBe(540);expect(chart.second.x).toBe(540);expect(chart.min).toBe(0);expect(chart.max).toBe(1440);
  if(file==='graphs.html'){
+   await page.getByText('Advanced zoom options',{exact:true}).click();
    await page.getByRole('button',{name:'Zoom to selected interval',exact:true}).click();
    expect(await page.evaluate(()=>Chart.getChart(document.getElementById('comparisonChart')).options.scales.x.max)).toBe(1440);
  }
