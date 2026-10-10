@@ -17,7 +17,7 @@
     <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20261008-v38-4-170" />
+    <link rel="stylesheet" href="styles.css?v=20261010-v38-4-195" />
     <title>
       Ardamine Weather History | Rainfall &amp; Records, North Wexford
     </title>
@@ -156,18 +156,20 @@
               <h2 id="completenessHeading">Archive coverage</h2>
               <p>
                 Shows how many expected five-minute readings were saved each day
-                over the past year. Click any day with data to inspect it.
+                over the past year. Hover, focus or tap a day for its details, then choose Open day to inspect saved observations.
               </p>
             </div>
             <span class="source-badge source-observed">Observed locally</span>
           </div>
-          <div class="archive-heatmap-wrap">
+          <p id="heatmapDateRange" class="heatmap-date-range"></p>
+          <div class="archive-heatmap-frame"><div class="heatmap-weekdays" aria-hidden="true"><span></span><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span></span></div><div class="archive-heatmap-wrap">
             <div
               id="archiveHeatmap"
               class="archive-heatmap"
-              aria-label="365-day archive completeness heatmap"
+              aria-label="Daily archive coverage over the past year"
             ></div>
           </div>
+          </div><div class="heatmap-day-inspector"><p id="heatmapDayDetail" role="status">Choose a day to see its date and coverage.</p><a id="heatmapOpenDay" href="history.html" hidden>Open day →</a></div>
           <div class="heatmap-legend" aria-label="Completeness legend">
             <span
               ><i style="background: rgba(110, 241, 203, 0.72)"></i
@@ -185,8 +187,10 @@
             >
             <span
               ><i style="background: rgba(255, 255, 255, 0.025)"></i>No
-              data</span
+              readings</span
             >
+            <span><i class="heatmap-before-key"></i>Before archiving began</span>
+            <span><i class="heatmap-unknown-key"></i>Unavailable</span>
           </div>
           <p id="heatmapSummary" class="info-note" style="margin-top: 10px">
             Calculating archive completeness…
@@ -353,7 +357,7 @@
 
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="archive-quality.js?v=20261008-v38-4-170"></script>
-<script src="maintenance-log.js?v=20261009-v38-4-177"></script><script src="maintenance-markers.js?v=20261009-v38-4-173"></script><script src="history-links.js?v=20261008-v38-4-170"></script><script src="history.js?v=20261010-v38-4-188"></script>
+<script src="maintenance-log.js?v=20261009-v38-4-177"></script><script src="maintenance-markers.js?v=20261009-v38-4-173"></script><script src="history-links.js?v=20261008-v38-4-170"></script><script src="history.js?v=20261010-v38-4-195"></script>
     <script src="site-config.js?v=20261010-v38-4-188"></script>
     <script src="date-comparison.js?v=20261010-v38-4-188"></script>
     <!-- Cloudflare Web Analytics -->

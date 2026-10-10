@@ -2556,3 +2556,20 @@ footer > .footer-links a:focus-visible {
 
 .heatmap-day:focus-visible { outline:3px solid #fff; outline-offset:1px; }
 @media (pointer:coarse) { .archive-heatmap { grid-template-rows:repeat(7,44px);grid-auto-columns:44px;gap:4px; }.heatmap-day { width:44px;height:44px; } }
+
+/* Date context and day inspection for annual archive coverage. */
+.archive-heatmap-frame{--heatmap-cell:28px;display:grid;grid-template-columns:30px minmax(0,1fr);gap:7px;align-items:start}
+.archive-heatmap{grid-template-rows:22px repeat(7,var(--heatmap-cell,28px));grid-auto-columns:var(--heatmap-cell,28px);gap:3px;min-width:0}
+.heatmap-day{width:var(--heatmap-cell,28px);height:var(--heatmap-cell,28px);cursor:pointer}
+.heatmap-weekdays{display:grid;grid-template-rows:22px repeat(7,var(--heatmap-cell));gap:3px;color:var(--muted);font-size:.65rem;align-items:center}
+.heatmap-month{font-size:.7rem;color:var(--muted);align-self:center;white-space:nowrap;overflow:hidden}
+.heatmap-date-range{color:var(--muted);font-size:.75rem;margin:0 0 10px}
+.heatmap-day.before-archive,.heatmap-before-key{background:repeating-linear-gradient(135deg,rgba(255,255,255,.012),rgba(255,255,255,.012) 3px,rgba(255,255,255,.06) 3px,rgba(255,255,255,.06) 4px)}
+.heatmap-day.coverage-unknown,.heatmap-unknown-key{background:transparent;outline:1px dashed rgba(255,255,255,.25);outline-offset:-1px}
+.heatmap-day.current{box-shadow:0 0 0 1px #fff inset}
+.heatmap-day.selected{outline:2px solid #fff;outline-offset:1px}
+.heatmap-day-inspector{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:10px;font-size:.78rem;min-height:44px}
+.heatmap-day-inspector p{margin:0;flex:1 1 240px;color:var(--muted)}
+.heatmap-day-inspector a{display:inline-flex;min-height:44px;align-items:center;color:var(--accent,#74ddff)}
+.heatmap-day-inspector a[hidden]{display:none}
+@media(pointer:coarse){.archive-heatmap-frame{--heatmap-cell:44px}.archive-heatmap{gap:4px}.heatmap-weekdays{gap:4px}}
