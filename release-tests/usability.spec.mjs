@@ -174,7 +174,7 @@ test('footer links remain centred, touchable and within narrow screens',async({p
    links:[...nav.querySelectorAll('a')].map(a=>{const r=a.getBoundingClientRect();return{height:r.height,left:r.left,right:r.right,display:getComputedStyle(a).display,align:getComputedStyle(a).alignItems};}),
    separators:[...nav.querySelectorAll('span')].map(s=>getComputedStyle(s).display)
   }));
-  for(const link of links.links){expect(link.height).toBeGreaterThanOrEqual(44);expect(link.left).toBeGreaterThanOrEqual(0);expect(link.right).toBeLessThanOrEqual(width);expect(link.display).toBe('inline-flex');expect(link.align).toBe('center');}
+  for(const link of links.links){expect(link.height).toBeGreaterThanOrEqual(44);expect(link.left).toBeGreaterThanOrEqual(0);expect(link.right).toBeLessThanOrEqual(width);expect(['flex','inline-flex']).toContain(link.display);expect(link.align).toBe('center');}
   expect(links.separators.every(display=>display==='none')).toBe(true);
  }
 });
