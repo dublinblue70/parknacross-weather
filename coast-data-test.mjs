@@ -53,4 +53,14 @@ assert.equal(failed.get("nextTide").textContent, "Unavailable");
 assert.equal(failed.get("localSeaTempTime").textContent, "Coastal estimate temporarily unavailable");
 assert.equal(failed.get("marineOutlook").textContent, "Marine forecast temporarily unavailable");
 
+const calm = await runApi(async url => ({ok:true,async json(){
+  if(url.endsWith("/current"))return {wind_speed_kmh:0,wind_gust_kmh:0,wind_direction_deg:270};
+  if(url.includes("/marine/tides"))return {events:[]};
+  return {};
+}}));
+assert.match(calm.get("coastDir").textContent,/Calm · direction unavailable/);
+assert.equal(calm.get("coastExposure").textContent,"Calm");
+assert.match(calm.get("coastExposureDetail").textContent,/No meaningful wind direction/);
+assert.match(calm.get("swimSummary").textContent,/calm wind 0\.0 km\/h · direction unavailable/i);
+
 console.log("Coast data fallback tests passed.");

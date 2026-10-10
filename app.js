@@ -1232,7 +1232,7 @@ function renderSinceLastVisit(current){
   const changes=[];
   const delta=(field,threshold,digits,unit,label)=>{if(!usable(snapshot[field])||!usable(previous[field]))return;const d=Number(snapshot[field])-Number(previous[field]);if(Math.abs(d)<threshold)changes.push(`${label} stayed steady`);else changes.push(`${label} ${d>0?"rose":"fell"} ${Math.abs(d).toFixed(digits)}${unit}`);};
   delta("temperature_c",.3,1,"°C","temperature");delta("pressure_hpa",.5,1," hPa","pressure");
-  if(stationDayKey(snapshot.epoch)===stationDayKey(previous.epoch)){const rain=Math.max(0,Number(snapshot.rain_daily_mm||0)-Number(previous.rain_daily_mm||0));changes.push(rain>=.1?`${rain.toFixed(1)} mm of rain was recorded`:"no additional rain was recorded");delta("soil_moisture_pct",1,0," points","soil moisture");}
+  if(stationDayKey(snapshot.epoch)===stationDayKey(previous.epoch)){const rain=Math.max(0,Number(snapshot.rain_daily_mm||0)-Number(previous.rain_daily_mm||0));changes.push(rain>=.1?`${rain.toFixed(1)} mm of rain was recorded`:"no additional rain was recorded");if(usable(snapshot.soil_moisture_pct)&&usable(previous.soil_moisture_pct)){const change=Number(snapshot.soil_moisture_pct)-Number(previous.soil_moisture_pct);if(Math.abs(change)<1)changes.push("soil moisture stayed steady");else changes.push(`soil moisture ${change>0?"rose":"fell"} ${Math.abs(change).toFixed(0)} percentage point${Math.abs(change)===1?"":"s"}`);}}
   if(!changes.length)return;const panel=$("sinceVisitPanel");if(panel)panel.hidden=false;set("sinceVisitText",`${changes.slice(0,4).join("; ")}. Compared with your visit ${lightningRelative(previous.epoch)}.`);
 }
 
@@ -1367,7 +1367,8 @@ function updateDashboard(current) {
     ? `Latest saved daily summary: ${archiveHigh === null ? "--" : `${n(archiveHigh)}°`} / ${archiveLow === null ? "--" : `${n(archiveLow)}°`}`
     : "Latest saved daily summary is still building");
   const pressure = pressureStats(current);
-  const direction = compass(current.wind_direction_deg);
+  const calmWind = usable(current.wind_speed_kmh) && Number(current.wind_speed_kmh) < 1;
+  const direction = calmWind ? "Calm · direction unavailable" : compass(current.wind_direction_deg);
   const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : correctedDailyRain(current);
   const isNight = updateSunInfo(current);
   const condition = conditionInfo(current, isNight);
@@ -1477,7 +1478,7 @@ function updateDashboard(current) {
   set("gustVal", `${n(current.wind_gust_kmh)} km/h`);
   set(
     "dirVal",
-    usable(current.wind_direction_deg)
+    calmWind ? direction : usable(current.wind_direction_deg)
       ? `${direction} (${Math.round(Number(current.wind_direction_deg))}°)`
       : direction
   );
@@ -1526,7 +1527,7 @@ function updateDashboard(current) {
   }
   set(
     "currentDirection",
-    usable(current.wind_direction_deg)
+    calmWind ? direction : usable(current.wind_direction_deg)
       ? `${direction} · ${Math.round(Number(current.wind_direction_deg))}°`
       : direction
   );
