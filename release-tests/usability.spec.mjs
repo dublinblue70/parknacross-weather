@@ -141,3 +141,9 @@ test('all four flowers stay inside the weather scene and respect reduced motion'
  expect(result.inside,`station clipped at ${width}px`).toBe(true);expect(result.width).toBeGreaterThanOrEqual(15);expect(result.height).toBeGreaterThanOrEqual(30);
  }
  });
+
+test('slow external marine check does not label the weather data service slow',async({page})=>{
+ await page.route('**/health',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({status:'ok',database:'connected',archive_ingest:{latest_age_seconds:30}})}));
+ await page.route('**/met/marine?**',async r=>{await new Promise(resolve=>setTimeout(resolve,8300));await r.fulfill({contentType:'application/json',body:JSON.stringify({local_warning_relevant:false})});});
+ await page.goto('/status.html');await expect(page.locator('#apiBadge')).toHaveText('OK',{timeout:20000});await expect(page.locator('#apiDetail')).toHaveText('Weather data service connected');
+});

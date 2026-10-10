@@ -172,10 +172,9 @@ async function runChecks(only=null) {
   $("overall").className="overall";
 
   const sitePromise=read("site",checkSite);
-  const apiStarted=performance.now();
   const exportDay=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
   const [health,current,quality,history,reliability,backup,social,tides,m2,landWarnings,marineWarnings,site,daily,stats,summaryHistory,exportPreview] = await Promise.all([
-    read("health",()=>fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e}))),
+    read("health",async()=>{const started=performance.now();const data=await fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e}));return {...data,__elapsed_ms:Math.round(performance.now()-started)};}),
     read("current",()=>fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e}))),
     read("quality",()=>fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e}))),
     read("history",()=>fetchJSON(`${API_BASE}/history?hours=24`).catch(e=>({__error:e}))),
@@ -195,7 +194,7 @@ async function runChecks(only=null) {
     read("exportPreview",()=>fetchJSON(`${API_BASE}/export-preview?from=${exportDay}&to=${exportDay}`).catch(e=>({__error:e})))
   ]);
 
-  const apiElapsed=Math.round(performance.now()-apiStarted);
+  const apiElapsed=health.__elapsed_ms||0;
   let states=[site.state];
   const latestEpoch=rows=>Math.max(0,...(Array.isArray(rows)?rows:[]).map(row=>usableNumber(row.epoch)?Number(row.epoch):Date.parse(row.received_at||"")/1000).filter(Number.isFinite));
   const fresh=epoch=>usableNumber(epoch)&&Number(epoch)>0&&Math.abs(Date.now()/1000-Number(epoch))<=900;
@@ -259,7 +258,7 @@ async function runChecks(only=null) {
   } else {
     const db=health.database==="connected"; const ok=db&&["ok","warning"].includes(health.status);
     const slow=ok&&apiElapsed>=8000;
-    setBadge("apiBadge",ok?(slow?"warn":"good"):"warn",ok?(slow?"SLOW":"OK"):"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",db?(slow?`Weather data checks completed slowly (${(apiElapsed/1000).toFixed(1)} sec)`:"Weather data service connected"):"Weather data service needs checking"); states.push(ok?(slow?"warn":"good"):"warn");
+    setBadge("apiBadge",ok?(slow?"warn":"good"):"warn",ok?(slow?"SLOW":"OK"):"CHECK"); setText("apiValue",db?"Connected":"Check"); setText("apiDetail",db?(slow?`Weather data service responded slowly (${(apiElapsed/1000).toFixed(1)} sec)`:"Weather data service connected"):"Weather data service needs checking"); states.push(ok?(slow?"warn":"good"):"warn");
 
     const ingest=health.archive_ingest;
     const age=usableNumber(ingest?.latest_age_seconds)?Number(ingest.latest_age_seconds):null;

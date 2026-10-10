@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-185-mobile-trends-start";
+const CACHE_NAME = "parknacross-v38-4-186-status-service-timing";
 const STATIC_ASSETS = [
   "./",
   "./site-request.js",
