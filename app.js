@@ -1197,8 +1197,10 @@ function updateSoilPanel(current) {
   const baseline = candidates
     .filter(row => Number(row.epoch) <= nowEpoch - 2 * 3600)
     .sort((a, b) => Math.abs(Number(a.epoch) - (nowEpoch - 6 * 3600)) - Math.abs(Number(b.epoch) - (nowEpoch - 6 * 3600)))[0];
+  let moistureChange = null;
   if (moisture !== null && baseline) {
     const change = moisture - Number(baseline.soil_moisture_pct);
+    moistureChange = change;
     const direction = change >= 2 ? "Wetter" : change <= -2 ? "Drying" : "Steady";
     const baselineTime=Number(baseline.epoch)*1000;
     const comparisonDay=stationDateKeyFromTime(baselineTime)===stationDateKeyFromTime(nowEpoch*1000)?"today":new Date(baselineTime).toLocaleDateString("en-IE",{timeZone:STATION_TIME_ZONE,day:"numeric",month:"short"});
@@ -1206,19 +1208,24 @@ function updateSoilPanel(current) {
   } else {
     set("soilMoistureTrend", "Trend building from saved readings");
   }
-  let eventText = "Soil moisture has not changed enough to show recent rain or watering.";
+  let eventText = moistureChange === null
+    ? "More saved readings are needed to describe the soil moisture trend."
+    : moistureChange >= 2
+      ? `Soil moisture has increased${moistureChange < 5 ? " slightly" : ""}. This alone cannot confirm rain or watering.`
+      : moistureChange <= -2
+        ? "Soil moisture has decreased since the earlier reading."
+        : "Soil moisture has remained broadly steady since the earlier reading.";
   for (let i = candidates.length - 1; i > 0; i--) {
     const newer=candidates[i],older=candidates[i-1],minutes=(Number(newer.epoch)-Number(older.epoch))/60;
     const rise=Number(newer.soil_moisture_pct)-Number(older.soil_moisture_pct);
     if(minutes>0&&minutes<=90&&rise>=3){
       const rainResponse=usable(newer.rain_rate_mm_h)&&Number(newer.rain_rate_mm_h)>0 || usable(newer.rain_daily_mm)&&usable(older.rain_daily_mm)&&Number(newer.rain_daily_mm)>Number(older.rain_daily_mm);
-      eventText=rainResponse
-        ? `Rain increased soil moisture by ${rise.toFixed(0)} percentage points over ${Math.round(minutes)} minutes.`
-        : `Soil moisture rose by ${rise.toFixed(0)} percentage points over ${Math.round(minutes)} minutes, possibly after watering.`;
+      const intervalEnd = new Date(Number(newer.epoch) * 1000).toLocaleString("en-IE", {timeZone: STATION_TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"});
+      eventText = `A soil moisture rise of ${rise.toFixed(0)} percentage points was recorded over ${Math.round(minutes)} minutes, ending ${intervalEnd} Irish time. ${rainResponse ? "Rain was also recorded during that interval." : "This alone cannot confirm rain or watering."}`;
       break;
     }
   }
-  if(candidates.length<3)eventText="Learning the normal soil pattern. More readings are needed to recognise rain or watering.";
+  if(candidates.length<3 && moistureChange === null)eventText="More saved readings are needed to describe the soil moisture trend.";
   set("soilEvent",eventText);
   set("soilSummary", "Live garden soil reading. Open Graphs to see how moisture, temperature and conductivity change over time.");
 }
