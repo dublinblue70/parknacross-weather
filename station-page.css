@@ -1,0 +1,23 @@
+/* Station page: visitor information first, diagnostic details on demand. */
+.station-jumps{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:22px;font-size:.88rem}
+.station-jumps a{min-height:44px;display:inline-flex;align-items:center;text-underline-offset:4px}
+.station-health-bar{grid-template-columns:repeat(3,minmax(0,1fr))}
+.station-health-item strong{overflow-wrap:anywhere}
+#stationFeed.warn{color:var(--amber)}#stationFeed.bad{color:var(--red)}
+.station-sensor-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr);gap:24px;align-items:center}
+.station-schematic{margin:0;min-width:0}.station-schematic svg{display:block;width:100%;height:auto}.station-schematic figcaption{font-size:.77rem;color:var(--muted);margin-top:10px}
+.station-sensor-buttons{display:grid;gap:10px}.station-sensor-buttons button{min-width:0;min-height:64px;text-align:left;border:1px solid var(--line);background:var(--surface-soft);color:var(--text);border-radius:12px;padding:14px 16px;cursor:pointer}
+.station-sensor-buttons button span,.station-sensor-buttons button small{display:block}.station-sensor-buttons button span{font-weight:700;font-size:.95rem}.station-sensor-buttons button small{margin-top:5px;color:var(--muted);font-size:.79rem}
+.station-sensor-buttons button[aria-pressed=true]{border-color:#77b9c4;background:#153241;box-shadow:inset 3px 0 #77b9c4}
+.station-sensor-buttons button:focus-visible,.station-fold summary:focus-visible{outline:3px solid #b3d6dd;outline-offset:4px}
+.station-sensor-detail{padding:20px;margin-top:20px;border-radius:14px;border:1px solid var(--line);background:var(--surface-soft);min-height:165px}
+.station-sensor-detail h3{margin:0 0 8px;font-size:1.12rem}.station-sensor-detail p,.station-copy{color:var(--muted);font-size:.92rem;line-height:1.7}.station-sensor-detail p{margin:0 0 10px;max-width:90ch}.station-sensor-detail a{display:inline-flex;min-height:44px;align-items:center;text-underline-offset:4px}
+.station-schematic [class^=station-drawing-]{transition:filter .2s}.station-schematic[data-active-sensor=array] .station-drawing-array,.station-schematic[data-active-sensor=lightning] .station-drawing-lightning,.station-schematic[data-active-sensor=soil] .station-drawing-soil,.station-schematic[data-active-sensor=gateway] .station-drawing-gateway{filter:drop-shadow(0 0 8px #b3ebed)}
+.station-context-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.station-context-grid article{padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}.station-context-grid h3{font-size:1rem;margin:0 0 8px}.station-context-grid p{color:var(--muted);line-height:1.65;font-size:.88rem;margin:0}
+.station-reliability-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.station-reliability-grid small{line-height:1.5}.station-reliability-grid .climate-card{min-width:0}
+.station-fold>summary{cursor:pointer;font-weight:650;min-height:44px;padding:12px 0;line-height:1.5}.station-fold[open]>summary{margin-bottom:16px;border-bottom:1px solid var(--line)}
+.station-maintenance-preview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}.station-maintenance-preview article{padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}.station-maintenance-preview time{display:block;font-size:.83rem;color:var(--muted)}.station-entry-type{display:block;margin-top:10px;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:#93c9cf}.station-maintenance-preview h3{font-size:.97rem;line-height:1.5;margin:6px 0 10px}.station-maintenance-preview a{display:inline-flex;min-height:44px;align-items:center;font-size:.85rem}
+#meetSensors,#understandingReadings,#stationReliability,#stationMaintenance,#stationTechnical{scroll-margin-top:100px}
+@media(max-width:750px){.station-sensor-layout{grid-template-columns:1fr}.station-sensor-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.station-maintenance-preview{grid-template-columns:1fr}.station-health-bar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.station-context-grid,.station-reliability-grid{grid-template-columns:1fr}.station-sensor-buttons button{padding:12px}.station-sensor-buttons button small{font-size:.73rem}.station-sensor-detail{padding:16px}}
+@media(prefers-reduced-motion:reduce){.station-schematic [class^=station-drawing-]{transition:none}}

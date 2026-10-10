@@ -25,8 +25,10 @@
         }));
         const [quality, reliability, lightning] = sources.map(result => result.status === "fulfilled" ? result.value : null);
         const q = quality || {};
-        set("qualityFeed", q.feed_status || "Unavailable");
-        set("qualityAge", usable(q.latest_age_seconds) ? `${Math.round(Number(q.latest_age_seconds) / 60)} min since latest reading` : "Latest observation");
+        const badge = document.getElementById("stationFeed");
+        const currentLabel = badge && /^(Live|Delayed|Stale|Unavailable|Check timestamp)$/.test(badge.textContent) ? badge.textContent : null;
+        set("qualityFeed", currentLabel || q.feed_status || "Unavailable");
+        set("qualityAge", currentLabel ? (document.getElementById("stationLastUpdatedRelative")?.textContent || "Time unavailable") : usable(q.latest_age_seconds) ? `${Math.round(Number(q.latest_age_seconds) / 60)} min since latest reading` : "Latest observation");
         set("quality24", usable(q.samples_last_24h) ? Number(q.samples_last_24h).toLocaleString("en-IE") : "--");
         set("qualityInterval", usable(q.median_interval_minutes) ? Number(q.median_interval_minutes).toFixed(1) + " min" : "--");
         set("qualityGap", formatGap(q.largest_recent_gap_minutes));
@@ -46,6 +48,13 @@
       }
     }
 
+    document.addEventListener("station-feed-updated", () => {
+      const badge = document.getElementById("stationFeed");
+      if (badge && /^(Live|Delayed|Stale|Unavailable|Check timestamp)$/.test(badge.textContent)) {
+        set("qualityFeed", badge.textContent);
+        set("qualityAge", document.getElementById("stationLastUpdatedRelative")?.textContent || "Time unavailable");
+      }
+    });
     loadQuality();
     (window.ParknacrossRefresh?.every || setInterval)(loadQuality, 5 * 60 * 1000);
   });

@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-195-archive-dates";
+const CACHE_NAME = "parknacross-v38-4-196-station-guide";
 const STATIC_ASSETS = [
   "./visitor-tools.css",
   "./visitor-insights.js",
@@ -84,6 +84,8 @@ const STATIC_ASSETS = [
   "./coast.js",
   "./sky.js",
   "./station-v2.js",
+  "./station-page.js",
+  "./station-page.css",
   "./maintenance-log.js",
   "./maintenance.js",
   "./status.js",
