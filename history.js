@@ -1,4 +1,4 @@
-const API_BASE = "https://parknacross-weather.dave-s-carter.workers.dev";
+const API_BASE = globalThis.PARKNACROSS_API_BASE || "https://parknacross-weather.dave-s-carter.workers.dev";
 const $ = id => document.getElementById(id);
 const set = (id, value) => { const e = $(id); if (e) e.textContent = value; };
 const usable = v => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v));

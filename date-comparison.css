@@ -1,0 +1,9 @@
+.date-comparison { margin: 24px 0; padding: clamp(16px,3vw,28px); }
+.comparison-form { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:18px 0 12px; }
+.comparison-form label { display:grid; gap:6px; flex:1 1 180px; min-width:0; font-size:.9rem; }
+.comparison-form input,.comparison-form select { width:100%; min-width:0; box-sizing:border-box; padding:10px 12px; min-height:44px; color:inherit; background:#102331; border:1px solid #466173; border-radius:8px; color-scheme:dark; font:inherit; }
+.comparison-form button { min-height:44px; }
+.comparison-summary { line-height:1.6; overflow-wrap:anywhere; }
+.date-comparison .chart-wrap { height:320px; }
+.date-comparison .chart-wrap[hidden] { display:none; }
+@media(max-width:480px){.comparison-form label{flex-basis:100%;}.comparison-form button{width:100%;}.date-comparison .chart-wrap{height:280px;}}

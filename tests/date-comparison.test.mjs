@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const window={};
+vm.runInNewContext(fs.readFileSync(new URL('../date-comparison.js',import.meta.url),'utf8'),{window,document:{getElementById:()=>null},Date,Intl,Number,Object,Array});
+const points=window.ParknacrossDateComparison.points;
+const row=(time,value)=>({epoch:Date.parse(time)/1000,temperature_c:value});
+const ordinary=points([row('2026-10-08T08:00:00Z',12),row('2026-10-08T08:05:00Z',null),row('2026-10-08T08:30:00Z',0),row('2026-10-07T08:00:00Z',25)],'2026-10-08','temperature_c');
+assert.equal(ordinary.length,4);assert.equal(ordinary[0].x,540);assert.equal(ordinary[1].y,null);assert.equal(ordinary[2].y,null,'break a real archive gap');assert.equal(ordinary[3].y,0,'zero is a measured value');
+const autumn=points([row('2026-10-25T00:55:00Z',12),row('2026-10-25T01:00:00Z',11)],'2026-10-25','temperature_c');
+assert.equal(autumn.length,3);assert.equal(autumn[0].x,115);assert.equal(autumn[1].y,null,'do not connect across the repeated autumn hour');assert.equal(autumn[2].x,60);
+const spring=points([row('2026-03-29T00:55:00Z',12),row('2026-03-29T01:00:00Z',11)],'2026-03-29','temperature_c');
+assert.equal(spring[0].x,55);assert.equal(spring[1].y,null);assert.equal(spring[2].x,120);
+assert.equal(points([row('2026-10-08T08:00:00Z',null)],'2026-10-08','temperature_c')[0].y,null);
+console.log('PASS: Irish-time alignment, day filtering, missing values, measured zero, archive gaps and DST clock changes.');

@@ -1,5 +1,5 @@
 "use strict";
-const API="https://parknacross-weather.dave-s-carter.workers.dev/export.csv";
+const API=(globalThis.PARKNACROSS_API_BASE||"https://parknacross-weather.dave-s-carter.workers.dev")+"/export.csv";
 const SENSOR_EXPORT_FIELDS=["soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm","lightning_distance_km","lightning_strikes","lightning_last_strike_time_ireland"];
 const $=id=>document.getElementById(id);
 function safeDate(){return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});}

@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
+<script src="api-routing.js?v=20261010-v38-4-188"></script>
+<link rel="stylesheet" href="footer-links.css?v=20261010-v38-4-188">
     <meta charset="UTF-8" />
     <meta
       name="viewport"
@@ -41,7 +43,7 @@
         }
       }
     </script>
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261009-v38-4-179"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script></head>
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261010-v38-4-188"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="date-comparison.css?v=20261010-v38-4-188"></head>
   <body>
     <div class="shell">
       <header class="topbar">
@@ -100,7 +102,7 @@
               <h2>Temperature & rainfall</h2>
               <p>Daily high and low in °C; rainfall total in mm. Blank days remain visible as gaps.</p>
             </div>
-            <div class="history-actions">
+            <div class="history-actions"><a class="secondary-button" href="#dateComparison">Compare two dates</a>
               <a
                 class="secondary-button"
                 href="https://parknacross-weather.dave-s-carter.workers.dev/export.csv?days=365"
@@ -320,6 +322,23 @@
             </article>
           </div>
         </section>
+
+<section id="dateComparison" class="info-card date-comparison" aria-labelledby="comparisonHeading">
+  <span class="section-eyebrow">Two-date comparison</span>
+  <h2 id="comparisonHeading">Compare two days</h2>
+  <p>See how temperature, wind, rain and other readings changed at the same time of day.</p>
+  <form id="comparisonForm" class="comparison-form">
+    <label for="comparisonFirst">First date<input id="comparisonFirst" type="date" required></label>
+    <label for="comparisonSecond">Second date<input id="comparisonSecond" type="date" required></label>
+    <label for="comparisonMetric">Measurement<select id="comparisonMetric">
+      <option value="temperature_c">Temperature · °C</option><option value="wind_speed_kmh">Wind speed · km/h</option><option value="wind_gust_kmh">Wind gust · km/h</option><option value="rain_rate_mm_h">Rain rate · mm/h</option><option value="pressure_hpa">Sea-level pressure · hPa</option><option value="soil_moisture_pct">Soil moisture · %</option>
+    </select></label>
+    <button id="compareDatesButton" type="submit" class="secondary-button">Compare dates</button>
+  </form>
+  <p id="comparisonStatus" class="action-status" role="status" aria-live="polite">Choose two dates, then select Compare dates. Both curves use Irish time; missing readings stay blank.</p>
+  <div class="chart-wrap" hidden><canvas id="comparisonChart" role="img" aria-label="Two-date weather comparison" hidden></canvas></div>
+  <p id="comparisonSummary" class="info-note comparison-summary"></p>
+</section>
       </main>
 
       <footer>
@@ -334,8 +353,9 @@
 
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="archive-quality.js?v=20261008-v38-4-170"></script>
-<script src="maintenance-log.js?v=20261009-v38-4-177"></script><script src="maintenance-markers.js?v=20261009-v38-4-173"></script><script src="history-links.js?v=20261008-v38-4-170"></script><script src="history.js?v=20261009-v38-4-178"></script>
-    <script src="site-config.js?v=20260912-mobile2"></script>
+<script src="maintenance-log.js?v=20261009-v38-4-177"></script><script src="maintenance-markers.js?v=20261009-v38-4-173"></script><script src="history-links.js?v=20261008-v38-4-170"></script><script src="history.js?v=20261010-v38-4-188"></script>
+    <script src="site-config.js?v=20261010-v38-4-188"></script>
+    <script src="date-comparison.js?v=20261010-v38-4-188"></script>
     <!-- Cloudflare Web Analytics -->
     <script
       type="module"

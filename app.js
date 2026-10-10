@@ -1,4 +1,4 @@
-const API_BASE = "https://parknacross-weather.dave-s-carter.workers.dev";
+const API_BASE = globalThis.PARKNACROSS_API_BASE || "https://parknacross-weather.dave-s-carter.workers.dev";
 const CURRENT_URL = `${API_BASE}/current`;
 const HISTORY_24_URL = `${API_BASE}/history?hours=24`;
 const HISTORY_7D_URL = `${API_BASE}/history?hours=168`;

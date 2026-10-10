@@ -1,5 +1,9 @@
-const CACHE_NAME = "parknacross-v38-4-187-source-timezones";
+const CACHE_NAME = "parknacross-v38-4-188-day-comparison";
 const STATIC_ASSETS = [
+  "./api-routing.js",
+  "./footer-links.css",
+  "./date-comparison.js",
+  "./date-comparison.css",
   "./",
   "./site-request.js",
   "./weather-warnings.js",
@@ -152,6 +156,7 @@ self.addEventListener("fetch", event => {
 
   if (
     url.hostname.includes("workers.dev") ||
+    url.hostname === "api.parknacrossweather.ie" ||
     url.hostname.includes("cdn.jsdelivr.net") ||
     url.hostname.includes("rainviewer.com") ||
     url.hostname.includes("openstreetmap.org") ||

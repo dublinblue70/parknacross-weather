@@ -1,0 +1,23 @@
+/* Keep touch targets centred and allow whole links to wrap on narrow screens. */
+footer > nav.footer-links {
+  display:inline-flex !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:4px 8px !important;
+  min-width:0;
+  max-width:100%;
+  white-space:normal !important;
+}
+footer > nav.footer-links a {
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  box-sizing:border-box;
+  min-height:44px;
+  padding:0 4px;
+  line-height:1.4;
+  white-space:nowrap;
+}
+/* Spacing separates the links without loose dots on a wrapped row. */
+footer > nav.footer-links > span[aria-hidden="true"] { display:none !important; }

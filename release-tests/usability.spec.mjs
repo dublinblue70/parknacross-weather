@@ -145,7 +145,38 @@ test('all four flowers stay inside the weather scene and respect reduced motion'
 test('slow external marine check does not label the weather data service slow',async({page})=>{
  await page.route('**/health',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({status:'ok',database:'connected',archive_ingest:{latest_age_seconds:30}})}));
  await page.route('**/met/marine?**',async r=>{await new Promise(resolve=>setTimeout(resolve,8300));await r.fulfill({contentType:'application/json',body:JSON.stringify({local_warning_relevant:false})});});
- await page.goto('/status.html');await expect(page.locator('#apiBadge')).toHaveText('OK',{timeout:20000});await expect(page.locator('#apiDetail')).toHaveText('Weather data service connected');
+ await page.goto('/status.html');await expect(page.locator('#apiBadge')).toHaveText('OK',{timeout:3000});await expect(page.locator('#apiDetail')).toHaveText('Weather data service connected');
+ await expect(page.locator('#overallText')).toContainText('checks complete');await expect(page.locator('#refreshButton')).toBeEnabled({timeout:20000});
+});
+
+for(const file of ['graphs.html','history.html'])test(`${file} compares Irish-time dates, clears changed dates and recovers from failure`,async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.route('**/day?date=**',r=>{const selected=new URL(r.request().url()).searchParams.get('date');return r.fulfill({contentType:'application/json',body:JSON.stringify({available:true,readings:[{epoch:Date.parse(selected+'T08:00:00Z')/1000,temperature_c:12,rain_rate_mm_h:0},{epoch:Date.parse(selected+'T08:05:00Z')/1000,temperature_c:13,rain_rate_mm_h:.1}]})});});
+ await page.goto('/'+file);
+ await page.locator('#comparisonFirst').fill('2026-10-07');await page.locator('#comparisonSecond').fill('2026-10-08');
+ await page.locator('#compareDatesButton').click();await expect(page.locator('#comparisonStatus')).toContainText('Comparing 7 Oct 2026 with 8 Oct 2026');await expect(page.locator('#comparisonSummary')).toContainText('2 temperature readings');await expect(page.locator('#comparisonChart')).toBeVisible();
+ const chart=await page.evaluate(()=>{const c=Chart.getChart(document.getElementById('comparisonChart'));return{first:c.data.datasets[0].data[0],second:c.data.datasets[1].data[0],min:c.options.scales.x.min,max:c.options.scales.x.max}});
+ expect(chart.first.x).toBe(540);expect(chart.second.x).toBe(540);expect(chart.min).toBe(0);expect(chart.max).toBe(1440);
+ if(file==='graphs.html'){
+   await page.getByRole('button',{name:'Zoom to selected interval',exact:true}).click();
+   expect(await page.evaluate(()=>Chart.getChart(document.getElementById('comparisonChart')).options.scales.x.max)).toBe(1440);
+ }
+ await page.locator('#comparisonMetric').selectOption('rain_rate_mm_h');await expect(page.locator('#comparisonSummary')).toContainText('0.0–0.1 mm/h');
+ await page.locator('#comparisonSecond').fill('2026-10-07');await expect(page.locator('#comparisonChart')).toBeHidden();await page.locator('#compareDatesButton').click();await expect(page.locator('#comparisonStatus')).toContainText('two different dates');
+ await page.locator('#comparisonSecond').fill('2026-10-08');await page.route('**/day?date=2026-10-08',r=>r.fulfill({status:503,body:'Unavailable'}));await page.locator('#compareDatesButton').click();await expect(page.locator('#comparisonStatus')).toContainText('could not be loaded');await expect(page.locator('#compareDatesButton')).toBeEnabled();await expect(page.locator('#comparisonChart')).toBeHidden();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2)).toBe(true);
+});
+
+test('footer links remain centred, touchable and within narrow screens',async({page})=>{
+ for(const width of [320,390,540,768,1280]){
+  await page.setViewportSize({width,height:844});await page.goto('/index.html');
+  const links=await page.locator('footer > nav.footer-links').evaluate(nav=>({
+   links:[...nav.querySelectorAll('a')].map(a=>{const r=a.getBoundingClientRect();return{height:r.height,left:r.left,right:r.right,display:getComputedStyle(a).display,align:getComputedStyle(a).alignItems};}),
+   separators:[...nav.querySelectorAll('span')].map(s=>getComputedStyle(s).display)
+  }));
+  for(const link of links.links){expect(link.height).toBeGreaterThanOrEqual(44);expect(link.left).toBeGreaterThanOrEqual(0);expect(link.right).toBeLessThanOrEqual(width);expect(link.display).toBe('inline-flex');expect(link.align).toBe('center');}
+  expect(links.separators.every(display=>display==='none')).toBe(true);
+ }
 });
 
 test.describe('source times for a visitor outside Ireland',()=>{

@@ -1,6 +1,6 @@
 "use strict";
 
-const API_BASE = "https://parknacross-weather.dave-s-carter.workers.dev";
+const API_BASE = globalThis.PARKNACROSS_API_BASE || "https://parknacross-weather.dave-s-carter.workers.dev";
 const REFRESH_MS = 5 * 60 * 1000;
 const $ = id => document.getElementById(id);
 
@@ -166,14 +166,15 @@ function renderIssues(issues) {
 let checkResults={},checksRunning=false;
 async function runChecks(only=null) {
   if(checksRunning)return;checksRunning=true;
-  const read=async(key,fn)=>{if(only&&only!==key&&checkResults[key])return checkResults[key];const data=await fn();checkResults[key]=data;return data;};
+  if(only)delete checkResults[only];else checkResults={};
+  const read=async(key,fn)=>{if(only&&only!==key&&checkResults[key])return checkResults[key];const data=await fn();checkResults[key]=data;renderChecks(only);return data;};
   const button=$("refreshButton"); if(button) button.disabled=true;
   setText("overallTitle","Checking systems…"); setText("overallText","Checking the website, weather station and saved data.");
   $("overall").className="overall";
 
   const sitePromise=read("site",checkSite);
   const exportDay=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
-  const [health,current,quality,history,reliability,backup,social,tides,m2,landWarnings,marineWarnings,site,daily,stats,summaryHistory,exportPreview] = await Promise.all([
+  try { await Promise.all([
     read("health",async()=>{const started=performance.now();const data=await fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e}));return {...data,__elapsed_ms:Math.round(performance.now()-started)};}),
     read("current",()=>fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e}))),
     read("quality",()=>fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e}))),
@@ -193,9 +194,13 @@ async function runChecks(only=null) {
     read("summaryHistory",()=>fetchJSON(`${API_BASE}/history?hours=48`).catch(e=>({__error:e}))),
     read("exportPreview",()=>fetchJSON(`${API_BASE}/export-preview?from=${exportDay}&to=${exportDay}`).catch(e=>({__error:e})))
   ]);
+  } finally { if(button)button.disabled=false;checksRunning=false; }
+}
 
+function renderChecks(only=null) {
+  const {health={},current={},quality={},history={},reliability={},backup={},social={},tides={},m2={},landWarnings={},marineWarnings={},site={},daily={},stats={},summaryHistory={},exportPreview={}}=checkResults;
   const apiElapsed=health.__elapsed_ms||0;
-  let states=[site.state];
+  let states=site.state?[site.state]:[];
   const latestEpoch=rows=>Math.max(0,...(Array.isArray(rows)?rows:[]).map(row=>usableNumber(row.epoch)?Number(row.epoch):Date.parse(row.received_at||"")/1000).filter(Number.isFinite));
   const fresh=epoch=>usableNumber(epoch)&&Number(epoch)>0&&Math.abs(Date.now()/1000-Number(epoch))<=900;
   const dayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
@@ -206,6 +211,7 @@ async function runChecks(only=null) {
     ["summaryFeed",summaryHistory,Array.isArray(summaryHistory.readings)&&fresh(latestEpoch(summaryHistory.readings)),"Daily Summary observation feed is fresh"],
     ["exportFeed",exportPreview,Number(exportPreview.count)>0&&Array.isArray(exportPreview.columns)&&exportPreview.columns.includes("epoch")&&fresh(exportPreview.last_epoch),"Recent export preview and field list available"]
   ]){
+    if(!Object.values(checkResults).includes(data))continue;
     const ok=!data.__error&&valid;
     setBadge(prefix+"Badge",ok?"good":"warn",ok?"CHECKED":"UNAVAILABLE");
     setText(prefix+"Value",ok?"Available":"Could not verify");
@@ -213,11 +219,13 @@ async function runChecks(only=null) {
     if(!ok)states.push("warn");
   }
   for(const [prefix,data,valid] of [["landWarning",landWarnings,Array.isArray(landWarnings?.warnings)],["marineWarning",marineWarnings,typeof marineWarnings?.local_warning_relevant==="boolean"]]){
+    if(!Object.values(checkResults).includes(data))continue;
     const ok=!data.__error&&valid;setBadge(prefix+"Badge",ok?"good":"warn",ok?"CHECKED":"UNAVAILABLE");
     setText(prefix+"Value",ok?(prefix==="landWarning"?`${window.ParknacrossWarnings.select(data.warnings).length} relevant warnings`:data.local_warning_relevant?"Relevant marine warning":"No relevant marine warning"):"Feed unavailable");
     setText(prefix+"Detail",ok?`Official feed checked ${fmtIrishDateTime(new Date().toISOString())}`:"The official warning feed could not be verified. Check Met Éireann directly.");if(!ok)states.push("warn");
   }
 
+  if (checkResults.tides) {
   const tideEvents=Array.isArray(tides?.events)?tides.events:[];
   const validTideEvents=tideEvents.filter(event=>event&&Number.isFinite(Date.parse(event.time))&&
     (String(event.type).toLowerCase()==="high"||String(event.type).toLowerCase()==="low"));
@@ -231,6 +239,9 @@ async function runChecks(only=null) {
     setBadge("tideBadge","good","LIVE");
     setText("tideValue",`${validTideEvents.length} predictions`);
     setText("tideDetail",next?`Next ${String(next.event.type).toLowerCase()} water: ${fmtIrishDateTime(next.event.time)} · Marine Institute Arklow`:`${tides.station||"Arklow"} predictions received; no later event in this window.`);
+  }
+
+  if (checkResults.m2) {
   }
 
   const buoy=m2?.m2_buoy;
@@ -250,6 +261,9 @@ async function runChecks(only=null) {
     setText("m2Value",`${fmtNum(m2Value,1)} °C`);
     setText("m2Detail",`M2 buoy observation ${fmtAge(m2Age*60)} old${m2Time?` · ${fmtIrishDateTime(m2Time)}`:""} · about 110 km offshore`);
     if(m2State==="warn")states.push("warn");
+  }
+
+  if (checkResults.health) {
   }
 
   if(health.__error) {
@@ -273,6 +287,9 @@ async function runChecks(only=null) {
     states.push(ingestState);
   }
 
+  if (checkResults.current) {
+  }
+
   if(current.__error) {
     setBadge("feedBadge","bad","FAIL"); setText("feedValue","No reading"); setText("feedDetail","Current weather reading could not be reached"); states.push("bad");
     setBadge("soilBadge","warn","CHECK"); setText("soilValue","Unavailable"); setText("soilDetail","The latest soil-sensor reading could not be checked.");
@@ -290,6 +307,9 @@ async function runChecks(only=null) {
     }else{
       setBadge("soilBadge","warn","WAITING");setText("soilValue","No current value");setText("soilDetail","No soil-sensor fields were present in the latest gateway observation.");states.push("warn");
     }
+  }
+
+  if (checkResults.quality) {
   }
 
   if(quality.__error) {
@@ -333,6 +353,9 @@ async function runChecks(only=null) {
     }
   }
 
+  if (checkResults.reliability) {
+  }
+
   if(reliability.__error || !usableNumber(reliability.archive_reliability_percent)) {
     setBadge("reliabilityBadge","warn","CHECK");setText("reliabilityValue","--");setText("reliabilityDetail","Archive reliability check unavailable");states.push("warn");
   } else {
@@ -343,6 +366,9 @@ async function runChecks(only=null) {
     const currentFeedLive=!current.__error&&usableNumber(current.epoch)&&(Date.now()/1000-Number(current.epoch))<600;
     const monthLabel=new Intl.DateTimeFormat("en-IE",{timeZone:"Europe/Dublin",month:"long",year:"numeric"}).format(new Date());
     setText("reliabilityDetail",`${monthLabel} coverage · ${reliability.actual_samples?.toLocaleString?.("en-IE")||reliability.actual_samples} of ${reliability.expected_samples?.toLocaleString?.("en-IE")||reliability.expected_samples} expected five-minute slots saved${currentFeedLive?" · station feed currently live":""}. Overall archive completeness is shown on the History page.`);
+  }
+
+  if (checkResults.backup) {
   }
 
   if(backup.__error) {
@@ -364,6 +390,9 @@ async function runChecks(only=null) {
         ? `Last successful backup is over 48 hours old or has an invalid timestamp · ${backup.last_backup_day||"date unavailable"}`
         : "Waiting for a confirmed successful backup");
     if(!recentBackup) states.push("warn");
+  }
+
+  if (checkResults.social) {
   }
 
   // The public API exposes *verified* delivery-day markers, not scheduled
@@ -400,10 +429,15 @@ async function runChecks(only=null) {
     if (severity === "warn") states.push("warn");
   }
 
+  if (checkResults.history) {
+  }
+
   if(history.__error || !Array.isArray(history.readings)) {
     renderIssues([{state:"warn",text:"Recent readings could not be checked. Existing live weather data is unchanged."}]); states.push("warn");
   } else {
     const qState=renderIssues(analyzeRows(history.readings)); states.push(qState);
+  }
+
   }
 
   const overall=states.includes("bad")?"bad":states.includes("warn")?"warn":"good";
@@ -413,8 +447,13 @@ async function runChecks(only=null) {
   setText("overallTitle",overall==="good"?"All monitored systems look healthy":overall==="warn"?"Site is running, but something is worth checking":coreFailure?"A monitored service needs attention":"Historical archive is incomplete");
   setText("overallText",overall==="good"?"Website, weather data service, live readings and recent data checks passed.":overall==="warn"?"One or more checks produced a warning. Review the cards below.":coreFailure?"At least one core service failed or the latest weather reading is stale.":"The website, weather data service and latest observation are operating normally. Some earlier five-minute archive intervals are missing; this does not indicate a current station outage.");
   setText("lastRun",`${only?"Selected source rechecked; other cards retain their previous results · ":"Last checked "}${new Date().toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short"})}`);
-  if(button) button.disabled=false;
-  checksRunning=false;
+  const pending=16-Object.keys(checkResults).length;
+  if(pending>0){
+    setText("overallTitle",states.includes("bad")?"A monitored service needs attention":"Checking remaining sources…");
+    setText("overallText",`${Object.keys(checkResults).length} of 16 checks complete. Finished results are shown below; ${pending} source${pending===1?" is":"s are"} still being checked.`);
+    if(!states.includes("bad"))$("overall").className="overall";
+    setText("lastRun","Checks in progress · results appear as each source responds");
+  }
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
