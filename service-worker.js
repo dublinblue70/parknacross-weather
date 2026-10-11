@@ -1,8 +1,7 @@
-const CACHE_NAME = "parknacross-v38-4-197-system-health";
+const CACHE_NAME = "parknacross-v38-4-198-dashboard";
 const STATIC_ASSETS = [
   "./visitor-tools.css",
   "./visitor-insights.js",
-  "./outdoor-outlook.js",
   "./saved-graph-views.js",
   "./background-alerts.js",
   "./performance-insights.js",
