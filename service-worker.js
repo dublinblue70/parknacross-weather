@@ -1,5 +1,6 @@
-const CACHE_NAME = "parknacross-v38-4-198-dashboard";
+const CACHE_NAME = "parknacross-v38-4-199-rain";
 const STATIC_ASSETS = [
+  "./rain-ui.css",
   "./visitor-tools.css",
   "./visitor-insights.js",
   "./saved-graph-views.js",
