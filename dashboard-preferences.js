@@ -2,7 +2,7 @@
  'use strict';
  const main=document.getElementById('dashboard');if(!main)return;
  const lightning=document.createElement('section');lightning.className='lightning-group';const firstLightning=document.getElementById('lightningSetupNotice');if(firstLightning){firstLightning.before(lightning);lightning.append(firstLightning);const liveLightning=document.getElementById('lightningPanel');if(liveLightning)lightning.append(liveLightning);}
- const definitions=[['sinceVisitPanel','Since your last visit'],['todaySkyPanel','Today’s sky'],['weather-window-section','Weather Window'],['lightning-group','Lightning'],['today-section','At a glance'],['wear-today-section','Clothing guide'],['astronomy-strip','Sun and moon'],['metrics-section','Detailed readings'],['soilPanel','Garden soil'],['forecast','Official forecast'],['climate-section','Station climate'],['signature-section','Local context'],['graphs','Weather graphs'],['records-section','Station records']];
+ const definitions=[['today-section','At a glance'],['sinceVisitPanel','Since your last visit'],['todaySkyPanel','Today’s sky'],['weather-window-section','Weather Window'],['lightning-group','Lightning'],['forecast','Official forecast'],['wear-today-section','Clothing guide'],['astronomy-strip','Sun and moon'],['metrics-section','Detailed readings'],['soilPanel','Garden soil'],['climate-section','Station climate'],['graphs','Weather graphs'],['records-section','Station records'],['signature-section','Local context']];
  const sections=definitions.map(([key,label])=>({key,label,node:document.getElementById(key)||main.querySelector('.'+key)})).filter(item=>item.node);
  const key='parknacross:dashboard-layout:v1';let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{};}catch(_){}
  const known=new Set(sections.map(s=>s.key));let order=Array.isArray(saved.order)?[...new Set(saved.order.filter(id=>known.has(id)))]:[];order.push(...sections.map(s=>s.key).filter(id=>!order.includes(id)));const hidden=new Set(Array.isArray(saved.hidden)?saved.hidden.filter(id=>known.has(id)):[]);
@@ -17,5 +17,6 @@
  const up=document.createElement('button'),down=document.createElement('button');up.type=down.type='button';up.textContent='↑';down.textContent='↓';up.setAttribute('aria-label','Move '+item.label+' up');down.setAttribute('aria-label','Move '+item.label+' down');li.append(up,down);rows.set(item.key,{node:li,check,up,down});
  check.addEventListener('change',()=>{if(check.checked)hidden.delete(item.key);else hidden.add(item.key);apply();if(persist())note.textContent=item.label+(check.checked?' shown.':' hidden.');});
  for(const [button,delta] of [[up,-1],[down,1]])button.addEventListener('click',()=>{const index=order.indexOf(item.key),next=index+delta;if(next<0||next>=order.length)return;[order[index],order[next]]=[order[next],order[index]];apply();button.focus();if(persist())note.textContent=item.label+' moved '+(delta<0?'up.':'down.');});}
+ main.append(controls);
  reset.addEventListener('click',()=>{order=sections.map(s=>s.key);hidden.clear();apply();if(persist())note.textContent='Default dashboard layout restored.';});apply();
 })();

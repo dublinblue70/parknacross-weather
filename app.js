@@ -2292,7 +2292,7 @@ async function loadEverything() {
       $("livePill")?.classList.add("offline");
       set("liveText", "STATION DATA UNAVAILABLE");
       markOfflineMode(null);
-      return;
+      return {live:false,incomplete:true};
     }
     latestCurrent = current;
     markOfflineMode(current);
@@ -2351,6 +2351,7 @@ async function loadEverything() {
   } else {
     window.PWAlerts?.evaluateCurrent?.(current);
   }
+  return {live:liveCurrent,incomplete:results.some(result=>result.status!=="fulfilled")};
 }
 
 async function refreshCurrent() {
@@ -2547,3 +2548,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 window.addEventListener('parknacross:network-restored',()=>refreshCurrent());
+
+// Manual refresh uses the same data paths and cache fallback as initial loading.
+let dashboardRefreshRunning=false;
+window.ParknacrossDashboardRefresh=async()=>{
+  if(dashboardRefreshRunning)return {busy:true};dashboardRefreshRunning=true;
+  try{const results=await Promise.allSettled([loadEverything(),loadForecast(),loadWarnings(),refreshLightning(),refreshSoilFreshness()]);return results[0].status==="fulfilled"?results[0].value||{live:false,incomplete:true}:{live:false,incomplete:true};}
+  finally{dashboardRefreshRunning=false;}
+};

@@ -579,9 +579,9 @@
         }
       }
     </style>
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-171"><script src="site-request.js?v=20261010-v38-4-188"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script></head>
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-171"><script src="site-request.js?v=20261010-v38-4-188"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261012-v38-4-201"></head>
 
-  <body class="weather-neutral">
+  <body class="weather-neutral dashboard-page">
     <div
       id="warningBanner"
       class="warning-banner level-yellow"
@@ -671,6 +671,7 @@
         <h1 class="visually-hidden">
           Live Ardamine weather from Parknacross Weather
         </h1>
+        <div class="dashboard-toolbar"><p id="dashboardDate">Today · Irish time</p><button id="dashboardRefresh" type="button">Refresh weather</button></div><p id="dashboardRefreshStatus" class="dashboard-refresh-status" role="status" aria-live="polite"></p>
         <section class="hero-main-card" aria-label="Current weather conditions">
           <div class="hero-top-row">
             <div class="hero-kicker">
@@ -738,14 +739,9 @@
 
         <p id="wearForecast" class="info-note wear-forecast-note" role="status" aria-live="polite" hidden></p>
 
-        <section class="local-search-intro" aria-label="Local weather coverage">
-          <strong>Live weather in Ardamine, Courtown and North Wexford.</strong>
-          Parknacross Weather is an independent personal weather station in
-          Ardamine, providing local temperature, rainfall, wind, pressure,
-          humidity, UV and solar observations, plus a location-specific
-          garden-soil reading, radar, coastal conditions and a growing archive.
-        </section>
 
+
+        <nav class="dashboard-shortcuts" aria-label="Dashboard sections"><a href="#todayHeading">Today</a><a href="#forecast">Forecast</a><a href="#observationsHeading">Readings</a><a href="#graphs">Charts</a><a href="summary.html">Daily summary →</a></nav>
         <section class="station-bar" aria-label="Station status">
           <div id="livePill" class="station-status live-pill">
             <span class="live-dot"></span>
@@ -764,6 +760,41 @@
             <span class="status-label">Data feed</span
             ><strong id="cloudStatus">Connecting</strong>
             <small id="gatewayReceived">Checking gateway…</small>
+          </div>
+        </section>
+
+        <section class="today-section" aria-labelledby="todayHeading">
+          <div class="section-heading compact-heading">
+            <div>
+              <span class="section-eyebrow">Today</span>
+              <h2 id="todayHeading">Today at a glance</h2><p id="dashboardCoverage" class="source-note" role="status">Checking today’s archive coverage…</p>
+            </div>
+          </div>
+
+          <div class="today-grid">
+            <article class="today-item">
+              <span>High / low today</span>
+              <strong
+                ><span id="todayHigh">--</span>° /
+                <span id="todayLow">--</span>°</strong
+              >
+              <small id="todayTempArchive">Latest saved daily summary: -- / --</small>
+              <small id="todayTempCompare">Yesterday comparison building</small>
+            </article>
+            <article class="today-item">
+              <span>Peak gust since midnight</span>
+              <strong><span id="peakGust">--</span> km/h</strong>
+              <small id="peakGustTime">Awaiting observations</small>
+            </article>
+            <article class="today-item">
+              <span>Rain since midnight</span>
+              <strong><span id="summaryRain">--</span> mm</strong>
+              <small id="todayRainCompare">Yesterday comparison building</small>
+            </article>
+            <article class="today-item">
+              <span>Solar peak</span>
+              <strong><span id="solarPeak">--</span> W/m²</strong>
+            </article>
           </div>
         </section>
 
@@ -1099,40 +1130,7 @@
           </div>
         </section>
 
-        <section class="today-section" aria-labelledby="todayHeading">
-          <div class="section-heading compact-heading">
-            <div>
-              <span class="section-eyebrow">Today</span>
-              <h2 id="todayHeading">At a glance</h2><p id="dashboardCoverage" class="source-note" role="status">Checking today’s archive coverage…</p>
-            </div>
-          </div>
 
-          <div class="today-grid">
-            <article class="today-item">
-              <span>Live high / low</span>
-              <strong
-                ><span id="todayHigh">--</span>° /
-                <span id="todayLow">--</span>°</strong
-              >
-              <small id="todayTempArchive">Latest saved daily summary: -- / --</small>
-              <small id="todayTempCompare">Yesterday comparison building</small>
-            </article>
-            <article class="today-item">
-              <span>Peak gust since midnight</span>
-              <strong><span id="peakGust">--</span> km/h</strong>
-              <small id="peakGustTime">Awaiting observations</small>
-            </article>
-            <article class="today-item">
-              <span>Rain</span>
-              <strong><span id="summaryRain">--</span> mm</strong>
-              <small id="todayRainCompare">Yesterday comparison building</small>
-            </article>
-            <article class="today-item">
-              <span>Solar peak</span>
-              <strong><span id="solarPeak">--</span> W/m²</strong>
-            </article>
-          </div>
-        </section>
 
         <section class="page-section wear-today-section" aria-labelledby="wearTodayHeading">
           <div class="section-heading compact-heading">
@@ -1703,6 +1701,13 @@
           </div>
           <button id="installButton" type="button" hidden>Install app</button>
         </section>
+        <section class="local-search-intro" aria-label="Local weather coverage">
+          <strong>Live weather in Ardamine, Courtown and North Wexford.</strong>
+          Parknacross Weather is an independent personal weather station in
+          Ardamine, providing local temperature, rainfall, wind, pressure,
+          humidity, UV and solar observations, plus a location-specific
+          garden-soil reading, radar, coastal conditions and a growing archive.
+        </section>
       <details class="info-card visitor-detail"><summary>How fresh are the individual sensors?</summary><p id="sensorFreshnessDetail">Checking the latest gateway reading…</p></details></main>
 
       <footer>
@@ -1726,7 +1731,7 @@
     <script src="source-freshness.js?v=20261010-v38-4-187"></script>
     <script src="dashboard-enhancements.js?v=20261009-v38-4-185"></script>
     <script src="archive-quality.js?v=20261008-v38-4-170"></script>
-<script src="chart-explorer.js?v=20261010-v38-4-193"></script><script src="dashboard-preferences.js?v=20261008-v38-4-170"></script><script src="app.js?v=20261010-v38-4-194"></script>
+<script src="chart-explorer.js?v=20261010-v38-4-193"></script><script src="dashboard-preferences.js?v=20261012-v38-4-201"></script><script src="app.js?v=20261012-v38-4-201"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
@@ -1745,7 +1750,7 @@
     <script src="site-config.js?v=20261010-v38-4-188"></script>
     <script src="comparison-alignment.js?v=20261010-v38-4-190"></script><script src="platform.js?v=20261010-v38-4-190"></script>
     <script>
-      /* Lightning detector acquisition status; existing app.js?v=20261010-v38-4-194 displays detections and alerts. */
+      /* Lightning detector acquisition status; existing app.js?v=20261012-v38-4-201 displays detections and alerts. */
       (() => {
         const notice = document.getElementById("lightningSetupNotice");
         const status = document.getElementById("lightningSetupStatus");
@@ -2636,5 +2641,5 @@
     <script src="pwa-update.js?v=20261008-v38-4-170"></script>
     <script src="accessibility.js?v=20260924-v38-4-97"></script>
     <script src="navigation.js?v=20260924-v38-4-97"></script>
-  <script src="site-help.js?v=20261008-v38-4-170"></script></body>
+  <script src="site-help.js?v=20261008-v38-4-170"></script><script src="dashboard-ui.js?v=20261012-v38-4-201"></script></body>
 </html>
