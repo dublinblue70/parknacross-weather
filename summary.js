@@ -7,6 +7,8 @@ const TIME_ZONE = "Europe/Dublin";
 let currentTodayRows = [];
 let currentTodayKey = null;
 let latestShareRow = null;
+let summaryLoading=false;
+function recentObservation(row){const date=readingDate(row);return Boolean(date&&Date.now()-date.getTime()<=600000&&date.getTime()-Date.now()<=90000);}
 const summarySources = new Map();
 function shiftLocalDay(day, amount) {
   const [year, month, date] = day.split("-").map(Number);
@@ -44,7 +46,7 @@ async function getJSON(path, cache = "default") {
   let lastError;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const response = await fetch(`${API_BASE}${path}`, { cache });
+      const response = await fetch(`${API_BASE}${path}`, { cache, ...(typeof AbortSignal!=="undefined"&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{}) });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (!data||typeof data!=="object"||data.error) throw new Error(data?.error||"Invalid data response");
@@ -334,6 +336,7 @@ async function shareCurrentWeather(){
 }
 
 async function loadSummary(){
+  if(summaryLoading)return;summaryLoading=true;const refresh=$("summaryRefresh");if(refresh){refresh.disabled=true;refresh.textContent="Refreshing…";}
   try{
     const paths=["/history?hours=48","/rain-summary","/current","/daily?days=8"];
     const results=await Promise.allSettled(paths.map(path=>getJSON(path,"no-store")));
@@ -343,22 +346,25 @@ async function loadSummary(){
       failed.push(["detailed observations","rain history","live update","recent comparisons"][index]);
       const saved=summarySources.get(paths[index]);return saved&&(index===0||saved.day===localDayKey(new Date()))?saved.value:{};
     });
-    const rows=Array.isArray(history.readings)?history.readings.filter(r=>readingDate(r)):[]; const now=new Date(),todayKey=localDayKey(now),grouped=new Map();
+    const rows=Array.isArray(history.readings)?history.readings.filter(r=>readingDate(r)&&readingDate(r).getTime()<=Date.now()+90000).sort((a,b)=>readingDate(a)-readingDate(b)):[]; const now=new Date(),todayKey=localDayKey(now),grouped=new Map();
     rows.forEach(row=>{const key=localDayKey(readingDate(row));if(!key)return;if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(row);});
-    const todayRows=mergeCurrent(grouped.get(todayKey)||[],current,todayKey);currentTodayRows=todayRows;currentTodayKey=todayKey;latestShareRow=current&&localDayKey(readingDate(current))===todayKey?current:(todayRows.length?todayRows[todayRows.length-1]:null);
+    const todayRows=mergeCurrent(grouped.get(todayKey)||[],current,todayKey);currentTodayRows=todayRows;currentTodayKey=todayKey;latestShareRow=current&&localDayKey(readingDate(current))===todayKey?current:(todayRows.length?todayRows[todayRows.length-1]:null);if(!recentObservation(latestShareRow))latestShareRow=null;
     const yesterdayKey=localDayKey(new Date(`${shiftLocalDay(todayKey,-1)}T12:00:00Z`));const yesterdayRows=yesterdayKey?(grouped.get(yesterdayKey)||[]):[];
     const todayMetrics=metrics(todayRows),yesterdayMetrics=renderYesterday(yesterdayRows);
     if (usable(current?.rain_daily_mm) && localDayKey(readingDate(current)) === todayKey) todayMetrics.rain = correctedRain(current);
     else if (usable(rain?.today_mm)) todayMetrics.rain = Number(rain.today_mm);
-    const rainDisplay = {...rain, unavailable:results[1].status==="rejected", current_rate_mm_h: usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : rain?.current_rate_mm_h};
-    set("summaryTitle",`Today in Parknacross · ${longDate(now)}`);set("summarySubtitle",todayRows.length?`${failed.length?"Available":"Live day-so-far"} summary from ${todayRows.length.toLocaleString("en-IE")} station readings${failed.length?"":", including the latest live update"} · latest observation ${shortTime(todayMetrics.latest)}.${failed.length?` Some sources could not refresh: ${failed.join(", ")}. Figures use available observations and may be incomplete.`:""}`:"Today's observations are temporarily unavailable.");
+    const rainDisplay = {...rain, unavailable:results[1].status==="rejected", current_rate_mm_h: recentObservation(current)&&usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : null};
+    set("summaryTitle","Today in Parknacross");set("summaryDate",`${longDate(now)} · Irish time`);
+    const fresh=recentObservation(todayRows.at(-1)),status=$("summaryDataStatus");if(status){status.textContent=!todayRows.length?"Unavailable":failed.length?"Some data unavailable":fresh?"Up to date":"Latest reading delayed";if(status.dataset)status.dataset.state=failed.length||!fresh?"review":"good";}
+    set("summaryUpdated",todayMetrics.latest?`Latest observation: ${exactDateTime(todayMetrics.latest)} · Irish time`:"No station observations available");set("summarySubtitle",todayRows.length?`${failed.length||!fresh?"Available":"Live day-so-far"} summary from ${todayRows.length.toLocaleString("en-IE")} station readings${failed.length?"":fresh?", including the latest live update":", using the latest available observations"} · latest observation ${shortTime(todayMetrics.latest)}.${failed.length?` Some sources could not refresh: ${failed.join(", ")}. Figures use available observations and may be incomplete.`:""}`:"Today's observations are temporarily unavailable.");
     const recentCompletedDays=(Array.isArray(daily?.days)?daily.days:[]).filter(row=>row.day!==todayKey).slice(-7);
     renderToday(todayMetrics,yesterdayMetrics,recentCompletedDays);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);renderSignificantWeather(rows);renderSoil(current);
     if(results[0].status==="rejected"){set("significantWeatherBadge","Unavailable");set("significantWeatherNarrative","The latest 24-hour review could not refresh. Available observations elsewhere remain visible.");}
     $("downloadCsvButton").disabled=!todayRows.length;$("shareWeatherButton").disabled=!latestShareRow;
-    set("actionStatus",todayRows.length?`${todayRows.length.toLocaleString("en-IE")} observations ready. Download or share using the buttons above.`:"No observations are available yet.");
+    set("actionStatus",todayRows.length?`${todayRows.length.toLocaleString("en-IE")} observations ready. Download or share using the buttons above.`:"No observations are available yet.");if(todayRows.length&&!latestShareRow)set("actionStatus","Available daily observations can be downloaded. Sharing current weather needs a recent reading.");
   }catch(error){console.error("Daily summary:",error);set("summarySubtitle","The daily summary is temporarily unavailable.");set("dayStory","Live station observations could not be loaded. Please try again shortly.");set("significantWeatherBadge","Unavailable");set("significantWeatherNarrative","The latest 24-hour observation review is temporarily unavailable.");currentTodayRows=[];currentTodayKey=null;latestShareRow=null;$("downloadCsvButton").disabled=true;$("shareWeatherButton").disabled=true;set("actionStatus","Summary tools are temporarily unavailable.");}
+  finally{summaryLoading=false;if(refresh){refresh.disabled=false;refresh.textContent="Refresh summary";}}
 }
 
-document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("downloadCsvButton")?.addEventListener("click",downloadTodayCsv);$("shareWeatherButton")?.addEventListener("click",shareCurrentWeather);loadSummary();loadOfficialWarningStatus();(window.ParknacrossRefresh?.every || setInterval)(loadSummary,60*1000);(window.ParknacrossRefresh?.every || setInterval)(loadOfficialWarningStatus,60*1000);});
+document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("summaryRefresh")?.addEventListener("click",()=>{loadSummary();loadOfficialWarningStatus();});$("downloadCsvButton")?.addEventListener("click",downloadTodayCsv);$("shareWeatherButton")?.addEventListener("click",shareCurrentWeather);loadSummary();loadOfficialWarningStatus();(window.ParknacrossRefresh?.every || setInterval)(loadSummary,60*1000);(window.ParknacrossRefresh?.every || setInterval)(loadOfficialWarningStatus,60*1000);});
 
