@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-201-dashboard";
+const CACHE_NAME = "parknacross-v38-4-202-mobile-controls";
 const STATIC_ASSETS = [
   "./dashboard-ui.css",
   "./dashboard-ui.js",
