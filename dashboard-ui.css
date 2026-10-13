@@ -55,3 +55,15 @@
  body.dashboard-page #forecast>.mobile-detail-body{box-sizing:border-box;margin-top:12px;padding:16px;border:1px solid var(--line-strong);border-radius:14px;background:rgba(255,255,255,.018)}
  body.dashboard-page .mobile-detail-toggle{grid-column:1/-1}
 }
+
+/* Keep explanatory card labels, headings and copy together. */
+body.dashboard-page .info-card>.section-eyebrow{display:block;margin:0;line-height:1.4}
+body.dashboard-page .info-card>h3{margin:6px 0 10px;font-size:1.05rem;line-height:1.35}
+body.dashboard-page .info-card>.info-note{margin:0;line-height:1.6}
+@media(max-width:640px){
+ body.dashboard-page .wear-today-section>.mobile-detail-body{padding-top:12px}
+ body.dashboard-page .wear-today-section .compact-heading{margin-bottom:16px}
+ body.dashboard-page .wear-today-section .section-heading p{margin:10px 0 0;font-size:.88rem;line-height:1.6}
+ body.dashboard-page .wear-today-section .two-column-cards{gap:12px}
+ body.dashboard-page .wear-today-section .source-note{margin:12px 0 0;padding:12px 16px;font-size:.78rem;line-height:1.6}
+}
