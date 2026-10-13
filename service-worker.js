@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-205-live-indicator";
+const CACHE_NAME = "parknacross-v38-4-206-forecast-alignment";
 const STATIC_ASSETS = [
   "./dashboard-ui.css",
   "./dashboard-ui.js",

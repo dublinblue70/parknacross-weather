@@ -48,3 +48,10 @@
  body.dashboard-page #livePill .live-dot{position:static;left:auto;top:auto;margin:0;transform:none;width:9px;height:9px}
  body.dashboard-page #livePill #liveText{min-width:0;margin:0;line-height:1.4}
 }
+
+/* Put forecast panel styling inside the mobile disclosure, not around its button. */
+@media(max-width:640px){
+ body.dashboard-page #forecast{padding:0;border:0;border-radius:0;background:none}
+ body.dashboard-page #forecast>.mobile-detail-body{box-sizing:border-box;margin-top:12px;padding:16px;border:1px solid var(--line-strong);border-radius:14px;background:rgba(255,255,255,.018)}
+ body.dashboard-page .mobile-detail-toggle{grid-column:1/-1}
+}
