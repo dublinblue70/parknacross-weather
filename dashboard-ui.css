@@ -61,9 +61,16 @@ body.dashboard-page .info-card>.section-eyebrow{display:block;margin:0;line-heig
 body.dashboard-page .info-card>h3{margin:6px 0 10px;font-size:1.05rem;line-height:1.35}
 body.dashboard-page .info-card>.info-note{margin:0;line-height:1.6}
 @media(max-width:640px){
- body.dashboard-page .wear-today-section>.mobile-detail-body{padding-top:12px}
+ body.dashboard-page .wear-today-section>.mobile-detail-body{padding-top:0}
  body.dashboard-page .wear-today-section .compact-heading{margin-bottom:16px}
  body.dashboard-page .wear-today-section .section-heading p{margin:10px 0 0;font-size:.88rem;line-height:1.6}
  body.dashboard-page .wear-today-section .two-column-cards{gap:12px}
  body.dashboard-page .wear-today-section .source-note{margin:12px 0 0;padding:12px 16px;font-size:.78rem;line-height:1.6}
+}
+
+/* Separate every expanded disclosure from its button with the same breathing room. */
+@media(max-width:640px){
+ body.dashboard-page .mobile-detail-body{margin-top:12px}
+ body.dashboard-page .weather-window-section .compact-heading{margin:0 0 16px}
+ body.dashboard-page .weather-window-section .section-heading p{margin:8px 0 0;font-size:.88rem;line-height:1.6}
 }

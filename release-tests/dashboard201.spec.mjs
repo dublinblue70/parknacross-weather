@@ -31,3 +31,18 @@ test('expanded clothing cards keep labels headings and text close together',asyn
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }
 });
+
+test('mobile Weather Window has breathing room below its button and before the scene',async({page})=>{
+ for(const width of [320,390,640]){
+  await page.setViewportSize({width,height:844});await page.goto('/index.html');
+  await expect(page.locator('#heroTemp')).toHaveText(/12/);
+  const button=page.locator('.weather-window-section>.mobile-detail-toggle');
+  if(await button.getAttribute('aria-expanded')!=='true')await button.click();
+  const b=await button.boundingBox(),heading=await page.locator('.weather-window-section .section-heading').boundingBox(),scene=await page.locator('.weather-window-card').boundingBox();
+  expect(heading.y-b.y-b.height).toBeGreaterThanOrEqual(12);
+  expect(heading.y-b.y-b.height).toBeLessThanOrEqual(14);
+  expect(scene.y-heading.y-heading.height).toBeGreaterThanOrEqual(16);
+  expect(scene.y-heading.y-heading.height).toBeLessThanOrEqual(18);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+});
