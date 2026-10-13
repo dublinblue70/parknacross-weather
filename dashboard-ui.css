@@ -2,3 +2,36 @@
 
 /* Keep mobile controls in document order; older flex ordering sent new controls to the bottom. */
 @media(max-width:640px){body.compact-dashboard.dashboard-page #dashboard{display:block}}
+
+/* Shared mobile card rhythm, without fixed heights that clip longer text. */
+@media(max-width:640px){
+ body.dashboard-page .hero-stat,
+ body.dashboard-page .today-item,
+ body.dashboard-page .station-status,
+ body.dashboard-page .metric-panel,
+ body.dashboard-page .info-card,
+ body.dashboard-page .forecast-card{
+  box-sizing:border-box;min-width:0;padding:16px;border:1px solid var(--line-strong);border-radius:14px;text-align:left;
+ }
+ body.dashboard-page .hero-side,
+ body.dashboard-page .today-grid,
+ body.dashboard-page .station-bar,
+ body.dashboard-page .metric-grid,
+ body.dashboard-page .forecast-grid{gap:12px;align-items:stretch}
+ body.dashboard-page .today-grid{border:0}
+ body.dashboard-page .today-item+.today-item{border:1px solid var(--line-strong)}
+ body.dashboard-page .hero-stat>span,
+ body.dashboard-page .today-item>span,
+ body.dashboard-page .station-status>.status-label{
+  display:block;min-height:2.8em;margin:0;font-size:.8rem;font-weight:500;line-height:1.4;color:var(--muted);
+ }
+ body.dashboard-page .hero-stat>strong,
+ body.dashboard-page .today-item>strong{margin:6px 0;font-size:1.15rem;line-height:1.35;font-variant-numeric:tabular-nums}
+ body.dashboard-page .hero-stat>small,
+ body.dashboard-page .today-item>small,
+ body.dashboard-page .station-status>small{display:block;margin-top:6px;font-size:.78rem;line-height:1.55;overflow-wrap:anywhere}
+ body.dashboard-page .info-card p,
+ body.dashboard-page .forecast-card p,
+ body.dashboard-page .metric-sub{font-size:.88rem;line-height:1.65;overflow-wrap:anywhere}
+ body.dashboard-page .mobile-detail-toggle{box-sizing:border-box;padding:16px;border-radius:14px;min-height:48px;line-height:1.5}
+}
