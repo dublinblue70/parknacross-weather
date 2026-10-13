@@ -41,3 +41,10 @@
  body.dashboard-page #soilPanel{padding:0;border:0;background:none;border-radius:0;margin-top:34px}
  body.dashboard-page #soilPanel>.mobile-detail-body{box-sizing:border-box;padding:16px;margin-top:12px;border:1px solid rgba(101,209,154,.25);border-radius:14px;background:linear-gradient(135deg,rgba(101,209,154,.07),rgba(123,215,239,.025))}
 }
+
+/* Reserve an independent column for the live indicator, including its halo. */
+@media(max-width:640px){
+ body.dashboard-page #livePill{display:grid;grid-template-columns:9px minmax(0,1fr);align-items:center;justify-content:start;column-gap:12px}
+ body.dashboard-page #livePill .live-dot{position:static;left:auto;top:auto;margin:0;transform:none;width:9px;height:9px}
+ body.dashboard-page #livePill #liveText{min-width:0;margin:0;line-height:1.4}
+}
