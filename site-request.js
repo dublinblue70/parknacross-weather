@@ -40,14 +40,22 @@
           let response;
           try{
             response=await nativeFetch(requestInput,{...init,signal:controller.signal});
+            if(!canFallback&&isApi&&method==="GET"&&url.pathname!=="/sky-photo/likes"&&response.status>=500&&!controller.signal.aborted){
+              response=await nativeFetch(requestInput,{...init,signal:controller.signal});
+            }
             if(canFallback&&response.status>=500&&!controller.signal.aborted){
               const alternative=new URL(url.href);alternative.host=fallbackHost;
               response=await nativeFetch(typeof input==='string'||input instanceof URL?alternative.href:new Request(alternative.href,input),{...init,signal:controller.signal});
             }
           }catch(error){
-            if(!canFallback||controller.signal.aborted)throw error;
+            if(controller.signal.aborted)throw error;
+            if(!canFallback){
+              if(!isApi||method!=="GET"||url.pathname==="/sky-photo/likes")throw error;
+              response=await nativeFetch(requestInput,{...init,signal:controller.signal});
+            }else{
             const alternative=new URL(url.href);alternative.host=fallbackHost;
             response=await nativeFetch(typeof input==='string'||input instanceof URL?alternative.href:new Request(alternative.href,input),{...init,signal:controller.signal});
+            }
           }
           if ([204,205,304].includes(response.status)) return response;
           // Include the response body in the deadline, not just its headers.

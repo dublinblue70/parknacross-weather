@@ -17,3 +17,18 @@ mode='auth';requests=[];assert.equal((await window.fetch(custom+'/admin/capabili
 mode='network';requests=[];await assert.rejects(window.fetch(custom+'/weather-window/sky',{method:'POST',body:'{}'}));assert.equal(requests.length,1,'never duplicate a write');
 mode='ok';requests=[];await window.fetch('https://example.test/current');assert.equal(requests[0].url.origin,'https://example.test');
 console.log('PASS: custom API routing, read fallback, rolling archive cache keys, Request inputs, auth errors and write protection.');
+
+let readAttempts=0,readMode='server';
+const single={PARKNACROSS_API_ROUTING:{customBase:'',fallbackBase:original},fetch:async()=>{
+ readAttempts++;
+ if(readMode==='network'&&readAttempts===1)throw Error('Temporary failure');
+ return new Response('{}',{status:readMode==='auth'?401:readMode==='server'&&readAttempts===1?503:200});
+}};
+vm.runInNewContext(source,{window:single,location:{href:'https://parknacrossweather.ie/'},URL,Request,Response,AbortController,setTimeout,clearTimeout});
+for(const path of ['/current','/met/marine','/marine/tides']){
+ readAttempts=0;readMode='server';assert.equal((await single.fetch(original+path)).status,200);assert.equal(readAttempts,2);
+}
+readAttempts=0;readMode='network';assert.equal((await single.fetch(original+'/current')).status,200);assert.equal(readAttempts,2);
+readAttempts=0;readMode='auth';assert.equal((await single.fetch(original+'/current')).status,401);assert.equal(readAttempts,1);
+readAttempts=0;readMode='server';assert.equal((await single.fetch(original+'/sky-photo/likes',{method:'POST'})).status,503);assert.equal(readAttempts,1);
+console.log('PASS: transient read recovery without replaying writes or authentication failures.');
