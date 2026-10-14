@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-213-soil-summary-link";
+const CACHE_NAME = "parknacross-v38-4-214-mobile-summary-timeout";
 const STATIC_ASSETS = [
   "./dashboard-ui.css",
   "./dashboard-ui.js",
