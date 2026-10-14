@@ -17,3 +17,21 @@ test('failed refresh clears previous results and retry recovers',async({page})=>
 test('mobile overview stays compact without horizontal overflow',async({page})=>{
  await page.setViewportSize({width:390,height:844});await page.goto('/rain.html');await expect(page.locator('#rainCondition')).toHaveText('No rain detected');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);const button=await page.locator('#rainRefresh').boundingBox();expect(button.height).toBeGreaterThanOrEqual(44);await page.getByText('Rainfall statistics & dry spells',{exact:true}).click();await expect(page.locator('#rainMonth')).toBeVisible();
 });
+
+test('daily rainfall list shows seven days, honest missing values and expandable bars',async({page})=>{
+ const days=Array.from({length:10},(_,i)=>{const d=new Date(day+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-i);return {day:d.toISOString().slice(0,10),rain_mm:i===2?null:i===0?0:i};});
+ await page.route('**/daily?**',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({days})}));
+ for(const width of [320,390,1280]){
+  await page.setViewportSize({width,height:900});await page.goto('/rain.html');
+  await page.getByText('View daily totals as a table',{exact:true}).click();
+  await expect(page.locator('#rainDailyTable tr')).toHaveCount(7);
+  await expect(page.locator('#rainDailyTable tr').first()).toContainText('Today');
+  await expect(page.locator('#rainDailyTable tr').nth(1)).toContainText('Yesterday');
+  await expect(page.locator('#rainDailyTable tr').nth(2)).toContainText('Unavailable');
+  await expect(page.locator('#rainDailyTable tr').first()).toContainText('0.0 mm');
+  await expect(page.locator('#rainDailyTable tr').nth(2).locator('.rain-day-bar')).toHaveCount(0);
+  await page.locator('#rainDailyMore').click();await expect(page.locator('#rainDailyTable tr')).toHaveCount(10);
+  await page.locator('#rainDailyMore').click();await expect(page.locator('#rainDailyTable tr')).toHaveCount(7);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+});

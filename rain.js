@@ -17,10 +17,22 @@
  function eventGraphLink(event){const start=Number(event.start_epoch),end=Number(event.end_epoch),now=Math.floor(Date.now()/1000);const from=Number.isFinite(start)&&start>0?Math.floor(start)-1800:null,to=Number.isFinite(end)&&end>=start?Math.min(now,Math.ceil(end)+1800):now;return from&&to>from&&to-from<=31*86400?`graphs.html?from=${from}&to=${to}#gRain`:'history.html';}
  let chart=null,loading=false;
  const calendarLabel=day=>/^\d{4}-\d{2}-\d{2}$/.test(day||"")?new Date(day+"T12:00:00Z").toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",weekday:"short",day:"numeric",month:"short"}):"Date unavailable";
+
+ let dailyRows=[],dailyExpanded=false;
+ function renderDailyTable(){
+  const table=$("rainDailyTable"),button=$("rainDailyMore");if(!table)return;
+  const visible=dailyExpanded?dailyRows:dailyRows.slice(0,7),peak=Math.max(0,...visible.filter(x=>usable(x.rain_mm)).map(x=>Number(x.rain_mm)));
+  const today=dayKey(new Date()),yesterdayDate=new Date(today+"T12:00:00Z");yesterdayDate.setUTCDate(yesterdayDate.getUTCDate()-1);const yesterday=dayKey(yesterdayDate);
+  table.innerHTML=visible.length?visible.map(row=>{
+   const value=usable(row.rain_mm)?Number(row.rain_mm):null,title=row.day===today?"Today":row.day===yesterday?"Yesterday":new Date(row.day+"T12:00:00Z").toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",weekday:"long"}),date=new Date(row.day+"T12:00:00Z").toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",year:"numeric"});
+   return `<tr class="${value===0?"rain-day-zero":value===null?"rain-day-missing":"rain-day-wet"}"><th scope="row"><span class="rain-day-primary">${title}${row.day===today?' <span class="rain-day-badge">so far</span>':""}</span><span class="rain-day-date">${date}</span></th><td><span class="rain-day-value">${value===null?"Unavailable":`<strong>${n(value)}</strong> <small>mm</small>`}</span>${value!==null&&value>0?`<span class="rain-day-bar" aria-hidden="true"><span style="width:${peak?Math.min(100,value/peak*100):0}%"></span></span>`:""}</td></tr>`;
+  }).join(""):'<tr><td colspan="2">No daily totals are available.</td></tr>';
+  if(button){button.hidden=dailyRows.length<=7;button.textContent=dailyExpanded?"Show fewer days":`Show more days (${dailyRows.length-7})`;button.setAttribute("aria-expanded",String(dailyExpanded));}
+ }
  function renderChart(days){
   const rows=Array.isArray(days)?[...days].filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.day||"")).sort((a,b)=>a.day.localeCompare(b.day)):[];
   set("rainChartNote",rows.length?"Recorded daily totals · today is still in progress; gaps mean missing data":"No daily totals are available.");
-  const table=$("rainDailyTable");if(table)table.innerHTML=rows.length?[...rows].reverse().map(row=>`<tr><th scope="row">${calendarLabel(row.day)}${row.day===dayKey(new Date())?" · so far":""}</th><td>${usable(row.rain_mm)?n(row.rain_mm)+" mm":"Unavailable"}</td></tr>`).join(""):'<tr><td colspan="2">No daily totals are available.</td></tr>';
+  dailyRows=[...rows].reverse();renderDailyTable();
   const config={type:"bar",data:{labels:rows.map(x=>new Date(x.day+"T12:00:00").toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})),datasets:[{data:rows.map(x=>usable(x.rain_mm)?Number(x.rain_mm):null),backgroundColor:"#7ca9ff",borderRadius:5}]},options:{maintainAspectRatio:false,scales:{x:{grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:12}},y:{beginAtZero:true,grace:"10%",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:"mm",color:"#9fb3c1"}}},plugins:{legend:{display:false}}}};
   if(chart){chart.data=config.data;chart.update();}else if(window.Chart)chart=new Chart($("rainDailyChart"),config);
  }
@@ -45,7 +57,7 @@
    else if(rs.rainRecently){set("rainEventTotal","Rain recently");set("rainEventStart","Within the last 15 min");set("rainEventText","Rain was detected recently at Parknacross.");}
    else if(rs.rate===null){set("rainEventTotal","Current rain status unavailable");set("rainEventStart","Live reading could not be checked");set("rainEventText","Current rain status cannot be confirmed. Showing available archive totals.");}
    else{set("rainEventTotal","No active event");set("rainEventStart","Station currently dry");set("rainEventText","No measurable rain has been detected recently at Parknacross.");}
-   if(results[1].status==="fulfilled")renderChart(d.days);else{if(chart){chart.destroy();chart=null;}set("rainChartNote","Daily rainfall history is temporarily unavailable. Try Refresh rain data.");const table=$("rainDailyTable");if(table)table.innerHTML='<tr><td colspan="2">Daily totals unavailable.</td></tr>';}
+   if(results[1].status==="fulfilled")renderChart(d.days);else{if(chart){chart.destroy();chart=null;}set("rainChartNote","Daily rainfall history is temporarily unavailable. Try Refresh rain data.");dailyRows=[];const more=$("rainDailyMore");if(more)more.hidden=true;const table=$("rainDailyTable");if(table)table.innerHTML='<tr><td colspan="2">Daily totals unavailable.</td></tr>';}
    set("rainEventCount",usable(e.event_count)?String(Number(e.event_count)):"--");
    set("largestRainEvent",e.largest_event&&usable(e.largest_event.total_mm)?`${n(e.largest_event.total_mm)} mm`:"--");
    set("largestRainEventDate",e.largest_event?.start_at?dt(e.largest_event.start_at):"--");
@@ -56,6 +68,6 @@
   }catch(e){set("rainEventText","Rainfall summary temporarily unavailable.");set("rainLoadStatus","Rainfall sources could not be reached. Use Refresh rain data to try again.");}
   finally{loading=false;if(button){button.disabled=false;button.textContent="Refresh rain data";}}
  }
- document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("rainRefresh")?.addEventListener?.("click",load);load();(window.ParknacrossRefresh?.every || setInterval)(load,60*1000);});
+ document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("rainRefresh")?.addEventListener?.("click",load);$("rainDailyMore")?.addEventListener("click",()=>{dailyExpanded=!dailyExpanded;renderDailyTable();});load();(window.ParknacrossRefresh?.every || setInterval)(load,60*1000);});
 })();
 
