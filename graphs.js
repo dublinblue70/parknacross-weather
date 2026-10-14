@@ -278,7 +278,8 @@
    set("rainChartStatus","No saved rain-rate readings are available for this period. The blank chart does not mean there was no rain.");
  }
  const hasSoil=rows.some(x=>usable(x?.soil_moisture_pct)||usable(x?.soil_temperature_c)||usable(x?.soil_ec_us_cm));
- $("soilMoistureCard").hidden=!hasSoil;$("soilDetailCard").hidden=!hasSoil;
+ // Keep soil chart cards visible even when the selected archive period has no readings.
+ $("soilMoistureCard").hidden=false;$("soilDetailCard").hidden=false;
  charts.sm.data.datasets[0].data=r.map(x=>point(x,"soil_moisture_pct"));charts.sd.data.datasets[0].data=r.map(x=>point(x,"soil_temperature_c"));charts.ec.data.datasets[0].data=r.map(x=>point(x,"soil_ec_us_cm"));
  const soilSummary=(field,unit,digits=1)=>{
    const values=rows.filter(x=>usable(x?.[field])).sort((a,b)=>rowEpoch(a)-rowEpoch(b));
@@ -288,6 +289,7 @@
  };
  set("soilTempStats",soilSummary("soil_temperature_c","°C"));
  set("soilEcStats",soilSummary("soil_ec_us_cm","µS/cm",0));
+ if(!hasSoil){set("soilMoistureStatus","No saved soil-sensor readings are available for this period.");set("soilDetailStatus","No saved soil-sensor readings are available for this period.");}
  const soilRows=rows.filter(x=>usable(x?.soil_moisture_pct)||usable(x?.soil_temperature_c)||usable(x?.soil_ec_us_cm));
  if(hasSoil){
    const firstSoil=new Date(Number(rowEpoch(soilRows[0]))*1000).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
