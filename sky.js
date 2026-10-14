@@ -7,17 +7,9 @@
   const likeButton = () => $("skyLikeButton");
   const likeCount = () => $("skyLikeCount");
   let currentPhotoId = "";
-  const likeKey = id => `parknacrossSkyLiked:${id}`;
+  const likeStorage = window.ParknacrossSkyLikesStorage;
   function visitorId() {
-    const key = "parknacrossSkyVisitorId:v1";
-    let id = localStorage.getItem(key);
-    if (!/^[0-9a-f]{32}$/i.test(id || "")) {
-      const bytes = new Uint8Array(16);
-      crypto.getRandomValues(bytes);
-      id = Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
-      localStorage.setItem(key, id);
-    }
-    return id;
+    return likeStorage.visitorId();
   }
   function renderLikeState(count, liked) {
     const button = likeButton(), label = likeCount(), row = likeRow();
@@ -38,8 +30,7 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (photoId !== currentPhotoId) return;
-      if (data.liked) localStorage.setItem(likeKey(photoId), "1");
-      else localStorage.removeItem(likeKey(photoId));
+      likeStorage.setLiked(photoId, Boolean(data.liked));
       renderLikeState(data.likes, Boolean(data.liked));
     } catch (_) {
       if (photoId !== currentPhotoId) return;
@@ -52,7 +43,7 @@
     const photoId = currentPhotoId, button = likeButton();
     if (!photoId || !button) return;
     try {
-      if (localStorage.getItem(likeKey(photoId)) === "1") {
+      if (likeStorage.hasLiked(photoId)) {
         button.disabled = true;
         return;
       }
@@ -63,7 +54,7 @@
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
-      localStorage.setItem(likeKey(photoId), "1");
+      likeStorage.setLiked(photoId, true);
       if (photoId === currentPhotoId) renderLikeState(data.likes, true);
     } catch (_) {
       if (photoId === currentPhotoId) {
