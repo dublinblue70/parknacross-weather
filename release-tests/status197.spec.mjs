@@ -46,3 +46,18 @@ test.describe('mobile health checks',()=>{test.use({viewport:{width:390,height:8
  const button=page.getByRole('button',{name:'Retry Arklow tide feed',exact:true});const box=await button.boundingBox();expect(box.height).toBeGreaterThanOrEqual(44);await page.locator('#health-tide summary').click();await expect(page.locator('#tideDetail')).toBeVisible();await expect(page.locator('#health-tide .health-response-time')).toContainText('seconds');
  tideOK=true;await button.tap();await complete(page);await expect(page.locator('#healthFilteredEmpty')).toBeVisible();await page.locator('#healthIssuesOnly').uncheck();await expect(page.locator('#health-feed')).toBeVisible();
 });});
+
+test('status badges stay at the top right beside titles at mobile and desktop widths',async({page})=>{
+ for(const width of [320,390,640,1280]){
+  await page.setViewportSize({width,height:900});await page.goto('/status.html');await complete(page);
+  await expect(page.locator('#health-rainEventsFeed .badge')).toHaveText('Healthy');
+  for(const head of await page.locator('.health-group .card-head').all()){
+   if(!await head.isVisible())continue;
+   const title=await head.locator('h2').boundingBox(),badge=await head.locator('.badge').boundingBox(),box=await head.boundingBox();
+   expect(Math.abs(title.y-badge.y)).toBeLessThan(2);
+   expect(title.x+title.width+8).toBeLessThanOrEqual(badge.x);
+   expect(Math.abs(badge.x+badge.width-box.x-box.width)).toBeLessThan(2);
+  }
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+});
