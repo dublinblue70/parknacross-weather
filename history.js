@@ -168,7 +168,8 @@ async function loadHistoricalSky(day){
  const ticket=++photoRequest,node=$("historicalSkyImage"),retry=$("historicalSkyRetry");if(!node)return;
  clearTimeout(historicalPhotoTimer);node.loading="eager";node.hidden=true;node.removeAttribute("src");set("historicalSkyCaption","");if(retry)retry.hidden=true;
  const active=()=>ticket===photoRequest&&day===selectedArchiveDay;
- const failed=message=>{if(!active())return;clearTimeout(historicalPhotoTimer);node.hidden=true;set("historicalSkyStatus",message);if(retry)retry.hidden=false;};
+ let imageURL="",retried=false;
+ const failed=message=>{if(!active())return;clearTimeout(historicalPhotoTimer);if(imageURL&&!retried){retried=true;set("historicalSkyStatus","Retrying this date’s sky photograph…");historicalPhotoTimer=setTimeout(()=>failed("This photograph is taking too long to load. Please retry."),20000);node.src=imageURL+"&attempt=2";return;}node.hidden=true;set("historicalSkyStatus",message);if(retry)retry.hidden=false;};
  set("historicalSkyStatus","Loading this date’s sky photograph…");historicalPhotoTimer=setTimeout(()=>failed("This photograph is taking too long to load. Please retry."),20000);
  try{
   const data=await getJSON(`${API_BASE}/sky-photo/history?day=${encodeURIComponent(day)}`);if(!active())return;
@@ -176,7 +177,7 @@ async function loadHistoricalSky(day){
   if(!data.photo){clearTimeout(historicalPhotoTimer);set("historicalSkyStatus","No sky photograph saved for this date.");return;}
   node.onload=()=>{if(active()){clearTimeout(historicalPhotoTimer);node.hidden=false;if(retry)retry.hidden=true;set("historicalSkyStatus","Archived visual observation · latest saved photo on this date.");}};
   node.onerror=()=>failed("This archived photograph could not be loaded. Please retry.");
-  node.src=`${API_BASE}/sky-photo/history/image?day=${encodeURIComponent(day)}&photo_id=${encodeURIComponent(data.photo.photo_id)}&retry=${ticket}`;set("historicalSkyCaption",data.photo.caption||"");
+  imageURL=`${API_BASE}/sky-photo/history/image?day=${encodeURIComponent(day)}&photo_id=${encodeURIComponent(data.photo.photo_id)}&retry=${ticket}-${Date.now()}`;clearTimeout(historicalPhotoTimer);historicalPhotoTimer=setTimeout(()=>failed("This photograph is taking too long to load. Please retry."),20000);node.src=imageURL;set("historicalSkyCaption",data.photo.caption||"");
  }catch(_){failed("Historical photo service unavailable. Please retry.");}
 }
 

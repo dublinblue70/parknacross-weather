@@ -63,7 +63,7 @@ test('mobile admin login starts even when external admin-controller downloads ar
 });
 
 test('history photograph recovers after image failure without changing the selected date',async({page})=>{
- let attempts=0;await page.route('**/sky-photo/history/image?**',route=>++attempts===1?route.fulfill({status:503,body:'Unavailable'}):route.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aN1sAAAAASUVORK5CYII=','base64')}));
+ let attempts=0;await page.route('**/sky-photo/history/image?**',route=>++attempts<=2?route.fulfill({status:503,body:'Unavailable'}):route.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aN1sAAAAASUVORK5CYII=','base64')}));
  await page.goto('/history.html?day='+day);await expect(page.locator('#historicalSkyRetry')).toBeVisible();await expect(page.locator('#historicalSkyImage')).toBeHidden();await page.locator('#historicalSkyRetry').click();await expect(page.locator('#historicalSkyImage')).toBeVisible();await expect(page.locator('#historicalSkyRetry')).toBeHidden();await expect(page).toHaveURL(new RegExp('day='+day));
 });
 test('dashboard warning failure is visible and points to official advice',async({page})=>{await page.route('**/met/warnings',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"Unavailable"}'}));await page.goto('/index.html');await expect(page.locator('#warningTitle')).toHaveText('Official weather warnings unavailable');await expect(page.locator('#warningLevel')).toHaveText('Status unavailable');await expect(page.locator('#heroTemp')).toHaveText(/12/);});
@@ -187,4 +187,17 @@ test.describe('source times for a visitor outside Ireland',()=>{
  await page.route('**/marine/sea-temperature',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({local_model:{sea_surface_temperature_c:15,model_time:raw},m2_buoy:{sea_surface_temperature_c:14.8,observation_time:stamp}})}));
  await page.goto('/coast.html');await expect(page.locator('#localSeaTempTime')).toContainText(expected);await expect(page.locator('#localSeaFreshness')).toContainText(expected);
  });
+});
+
+test('historical sky automatically retries and occupies its own full-width panel',async({page})=>{
+ let attempts=0;await page.route('**/sky-photo/history/image?**',r=>++attempts%2===1?r.fulfill({status:503,body:'Temporary image failure'}):r.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="600" height="800" fill="skyblue"/></svg>'}));
+ for(const width of [320,390,1280]){
+  await page.setViewportSize({width,height:900});await page.goto('/history.html?day='+day);
+  await expect(page.locator('#historicalSkyImage')).toBeVisible();await expect(page.locator('#historicalSkyStatus')).toContainText('Archived visual observation');
+  const photo=await page.locator('#historicalSky').boundingBox(),stats=await page.locator('.day-detail-grid').boundingBox();
+  expect(Math.abs(photo.x-stats.x)).toBeLessThan(1);expect(Math.abs(photo.width-stats.width)).toBeLessThan(1);expect(photo.y).toBeGreaterThan(stats.y+stats.height);
+  expect(await page.locator('#historicalSkyImage').evaluate(el=>Math.abs(el.getBoundingClientRect().width/el.getBoundingClientRect().height-el.naturalWidth/el.naturalHeight))).toBeLessThan(.01);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+ expect(attempts).toBe(6);
 });
