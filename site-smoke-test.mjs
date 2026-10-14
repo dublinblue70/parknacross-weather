@@ -136,6 +136,7 @@ const requiredChecks = [
   ["intelligence.html", "window.location.replace(\"summary.html\")"],
   ["summary.html", "Significant weather check"],
   ["summary.js", "renderSignificantWeather"],
+  ["summary.js", "AbortSignal.timeout(30000)"],
   ["coast.html", "Water Safety Ireland"],
   ["records.js", "under 0.2 mm/day"],
   ["monthly.html", "Under 0.2 mm"],
