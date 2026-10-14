@@ -1965,19 +1965,54 @@ async function getJSON(url, cacheMode = "default", timeoutMs = 12000) {
   throw lastError;
 }
 
+function localForecastDate(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: STATION_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
+}
+
+function forecastPeriodsForCurrentDay(forecast, now = new Date()) {
+  const todayDate = localForecastDate(now);
+  const issuedDate = localForecastDate(forecast.issued_at || forecast.issued || forecast.updated_at);
+  if (!todayDate || !issuedDate) return forecast;
+
+  const [todayYear, todayMonth, todayDay] = todayDate.split("-").map(Number);
+  const [issuedYear, issuedMonth, issuedDay] = issuedDate.split("-").map(Number);
+  const dayDifference = (Date.UTC(todayYear, todayMonth - 1, todayDay) -
+    Date.UTC(issuedYear, issuedMonth - 1, issuedDay)) / 86400000;
+
+  // Met Éireann's day parts are relative to the issue date. After midnight,
+  // the feed's "tomorrow" becomes today's forecast; the earlier periods have
+  // expired and must not be shown as current.
+  if (dayDifference !== 1 || !forecast.tomorrow) return forecast;
+
+  return {
+    ...forecast,
+    today: forecast.tomorrow,
+    tonight: "A separate forecast for tonight is not available in this Met Éireann update.",
+    tomorrow: "A forecast for tomorrow is not yet available in this Met Éireann update."
+  };
+}
+
 async function loadForecast() {
   try {
     const forecast = await getJSON(FORECAST_URL);
+    const periods = forecastPeriodsForCurrentDay(forecast);
     try {
       window.dispatchEvent(new CustomEvent("parknacross:weather-window-forecast", {
-        detail: { ...forecast, day: new Intl.DateTimeFormat("en-CA", {timeZone: STATION_TIME_ZONE, year:"numeric", month:"2-digit", day:"2-digit"}).format(new Date()), fetchedAt: Date.now() }
+        detail: { ...periods, day: localForecastDate(new Date()), fetchedAt: Date.now() }
       }));
     } catch (_) { /* Illustration cannot interrupt the forecast panel. */ }
     window.ParknacrossFreshness?.render("forecastFreshness",forecast,forecast.issued_at||forecast.issued||forecast.updated_at,24,"Forecast issued");
-    latestForecastToday=forecast.today || "";
-    set("forecastToday", latestForecastToday || (forecast.tonight || forecast.tomorrow ? "No separate daytime forecast is supplied in this update. See tonight and tomorrow below." : "Today’s forecast is temporarily unavailable."));
-    set("forecastTonight", forecast.tonight || "--");
-    set("forecastTomorrow", forecast.tomorrow || "--");
+    latestForecastToday=periods.today || "";
+    set("forecastToday", latestForecastToday || (periods.tonight || periods.tomorrow ? "No separate daytime forecast is supplied in this update. See tonight and tomorrow below." : "Today’s forecast is temporarily unavailable."));
+    set("forecastTonight", periods.tonight || "--");
+    set("forecastTomorrow", periods.tomorrow || "--");
     if(latestCurrent)updateWhatToWear(latestCurrent,latestRainDetected);
   } catch (error) {
     console.warn("Met Éireann forecast:", error);
