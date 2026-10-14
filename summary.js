@@ -46,7 +46,7 @@ async function getJSON(path, cache = "default") {
   let lastError;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const response = await fetch(`${API_BASE}${path}`, { cache, ...(typeof AbortSignal!=="undefined"&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{}) });
+      const response = await fetch(`${API_BASE}${path}`, { cache, ...(typeof AbortSignal!=="undefined"&&AbortSignal.timeout?{signal:AbortSignal.timeout(30000)}:{}) });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (!data||typeof data!=="object"||data.error) throw new Error(data?.error||"Invalid data response");
