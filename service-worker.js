@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-209-full-sky-photos";
+const CACHE_NAME = "parknacross-v38-4-208-safari-likes";
 const STATIC_ASSETS = [
   "./dashboard-ui.css",
   "./dashboard-ui.js",
@@ -13,6 +13,7 @@ const STATIC_ASSETS = [
   "./footer-links.css",
   "./date-comparison.js",
   "./date-comparison.css",
+  "./sky-like-storage.js",
   "./",
   "./site-request.js",
   "./weather-warnings.js",
