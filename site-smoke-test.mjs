@@ -271,7 +271,7 @@ try {
 }
 const skyPageHtml = await readFile(join(root, "sky.html"), "utf8");
 const skyStyles = await readFile(join(root, "styles.css"), "utf8");
-if (!skyStyles.includes(".sky-page-photo{position:relative;width:min(100%,960px);aspect-ratio:3/2")) failures.push("styles.css: Today’s Sky page photo must use the landscape dashboard format");
+if (!skyStyles.includes(".sky-page-photo .sky-image{display:block;width:100%;height:auto;min-height:0;max-height:none;aspect-ratio:auto;object-fit:contain")) failures.push("styles.css: Today’s Sky page photo must preserve its full image without cropping");
 if (!skyStyles.includes(".sky-page-photo .today-sky-caption-pill")) failures.push("styles.css: Today’s Sky caption pill must be styled on the photo");
 if (!skyPageHtml.includes("sky.js?v=20261005-photo-layout-v132")) failures.push("sky.html: landscape photo and caption fix cache version is missing");
 const summaryScript = await readFile(join(root, "summary.js"), "utf8");
