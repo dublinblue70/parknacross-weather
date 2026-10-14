@@ -295,6 +295,7 @@ const graphHtml = await readFile(join(root, "graphs.html"), "utf8");
 const graphScript = await readFile(join(root, "graphs.js"), "utf8");
 const historyScript = await readFile(join(root, "history.js"), "utf8");
 if (!graphHtml.includes("Units are printed on the axes") || !graphHtml.includes("Blank sections mean readings are missing, not zero") || !graphScript.includes("spanGaps:false")) failures.push("graphs must explain units and show archive gaps without connecting lines");
+if (!/id="soilMoistureCard"(?![^>]*\shidden)/.test(graphHtml) || !/id="soilDetailCard"(?![^>]*\shidden)/.test(graphHtml) || !graphScript.includes('$("soilMoistureCard").hidden=false;$("soilDetailCard").hidden=false;')) failures.push("graphs: soil charts must stay visible when the selected range has no saved soil readings");
 if (!historyScript.includes("Daily high °C") || !historyScript.includes("Daily low °C") || !historyScript.includes("spanGaps:false") || !historyScript.includes("no archived summary") || !historyHtml.includes('id="historyChartStatus"')) failures.push("history charts must leave missing calendar days visible as gaps");
 const downloadsHtml = await readFile(join(root, "downloads.html"), "utf8");
 const downloadsScript = await readFile(join(root, "downloads.js"), "utf8");
