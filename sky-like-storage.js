@@ -78,5 +78,23 @@
     }
   }
 
-  window.ParknacrossSkyLikesStorage = { visitorId, hasLiked, setLiked };
+  
+  async function loadLikes(api, photoId) {
+    let lastError;
+    for (let attempt=0;attempt<2;attempt+=1) {
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),10000);
+      try {
+        const response=await fetch(`${api}/sky-photo/likes?photo_id=${encodeURIComponent(photoId)}&visitor_id=${encodeURIComponent(visitorId())}&_=${Date.now()}`,{cache:"no-store",signal:controller.signal});
+        if(!response.ok)throw new Error(`HTTP ${response.status}`);
+        const data=await response.json();
+        if(!Number.isFinite(Number(data.likes))||Number(data.likes)<0)throw new Error("Invalid like count");
+        return data;
+      } catch(error) { lastError=error; }
+      finally { clearTimeout(timer); }
+      if(attempt===0)await new Promise(resolve=>setTimeout(resolve,600));
+    }
+    throw lastError;
+  }
+  window.ParknacrossSkyLikesStorage = { visitorId, hasLiked, setLiked, loadLikes };
 })();

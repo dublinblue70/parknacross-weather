@@ -19,29 +19,28 @@
     button.setAttribute("aria-pressed", liked ? "true" : "false");
     button.textContent = liked ? "♥ Liked" : "♡ Like";
     button.disabled = liked;
+    delete button.dataset.likesUnavailable;
     const n = Math.max(0, Number(count) || 0);
     label.textContent = `${n} ${n === 1 ? "like" : "likes"}`;
   }
   async function loadLikes(photoId) {
     const button = likeButton(), label = likeCount();
     try {
-      const id = visitorId();
-      const response = await fetch(`${API}/sky-photo/likes?photo_id=${encodeURIComponent(photoId)}&visitor_id=${encodeURIComponent(id)}&_=${Date.now()}`, {cache:"no-store"});
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
+      const data = await likeStorage.loadLikes(API,photoId);
       if (photoId !== currentPhotoId) return;
       likeStorage.setLiked(photoId, Boolean(data.liked));
       renderLikeState(data.likes, Boolean(data.liked));
     } catch (_) {
       if (photoId !== currentPhotoId) return;
       if (label) label.textContent = "Likes unavailable";
-      if (button) button.disabled = true;
+      if (button) { button.disabled = false; button.dataset.likesUnavailable = "true"; button.textContent = "Retry likes"; }
       if (likeRow()) likeRow().hidden = false;
     }
   }
   async function submitLike() {
     const photoId = currentPhotoId, button = likeButton();
     if (!photoId || !button) return;
+    if (button.dataset.likesUnavailable) { button.disabled=true; await loadLikes(photoId); return; }
     try {
       if (likeStorage.hasLiked(photoId)) {
         button.disabled = true;

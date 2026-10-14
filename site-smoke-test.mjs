@@ -271,12 +271,12 @@ try {
 }
 const skyPageHtml = await readFile(join(root, "sky.html"), "utf8");
 const skyStyles = await readFile(join(root, "styles.css"), "utf8");
-if (!dashboardHtml.includes('src="sky-like-storage.js?v=20261014-safari-likes"') || !skyPageHtml.includes('src="sky-like-storage.js?v=20261014-safari-likes"')) failures.push("sky photos: Safari-safe likes storage must load on both dashboard and Today’s Sky page");
+if (!dashboardHtml.includes('src="sky-like-storage.js?v=20261014-v38-4-210"') || !skyPageHtml.includes('src="sky-like-storage.js?v=20261014-v38-4-210"')) failures.push("sky photos: Safari-safe likes storage must load on both dashboard and Today’s Sky page");
 const dashboardSkyPhotoStyle = dashboardHtml.match(/\.today-sky-photo\s*\{([^}]+)\}/)?.[1] || "";
 if (!/height:\s*auto/.test(dashboardSkyPhotoStyle) || !/object-fit:\s*contain/.test(dashboardSkyPhotoStyle) || /max-height:\s*390px/.test(dashboardSkyPhotoStyle)) failures.push("index.html: dashboard sky photo must preserve its full image without cropping");
 if (!skyStyles.includes(".sky-page-photo .sky-image{display:block;width:100%;height:auto;min-height:0;max-height:none;aspect-ratio:auto;object-fit:contain")) failures.push("styles.css: Today’s Sky page photo must preserve its full image without cropping");
 if (!skyStyles.includes(".sky-page-photo .today-sky-caption-pill")) failures.push("styles.css: Today’s Sky caption pill must be styled on the photo");
-if (!skyPageHtml.includes("sky.js?v=20261005-photo-layout-v132")) failures.push("sky.html: landscape photo and caption fix cache version is missing");
+if (!skyPageHtml.includes("sky.js?v=20261014-v38-4-210")) failures.push("sky.html: landscape photo and caption fix cache version is missing");
 const summaryScript = await readFile(join(root, "summary.js"), "utf8");
 if (!summaryScript.includes("including the latest live update")) failures.push("summary.js: live readings must not be labelled as stored-only observations");
 if (!summaryScript.includes("includes today so far")) failures.push("summary.js: dry spell must identify the current partial day");
