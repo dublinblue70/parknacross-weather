@@ -1791,6 +1791,7 @@
       })();
     </script>
 
+    <script src="sky-like-storage.js?v=20261014-safari-likes"></script>
     <script>
       /* v38.4.51 — one exclusive media state and content-width caption pill. */
       (() => {
@@ -1832,6 +1833,7 @@
           "skyHistoricalImportStatus",
         );
         const base = window.PARKNACROSS_CONFIG?.apiBase?.replace(/\/$/, "");
+        const skyLikesStorage = window.ParknacrossSkyLikesStorage;
         let currentPhotoId = null;
         if (!panel || !media || !base) return;
 
@@ -1903,21 +1905,7 @@
         // One anonymous ID per browser, reused for every photo. The server enforces
         // one like per (photo, visitor), including repeated/concurrent POST requests.
         function skyVisitorId() {
-          const key = "parknacrossSkyVisitorId:v1";
-          let id = localStorage.getItem(key);
-          if (!/^[0-9a-f]{32}$/i.test(id || "")) {
-            const bytes = new Uint8Array(16);
-            crypto.getRandomValues(bytes);
-            id = Array.from(bytes, (byte) =>
-              byte.toString(16).padStart(2, "0"),
-            ).join("");
-            localStorage.setItem(key, id);
-          }
-          return id;
-        }
-
-        function likeStorageKey(photoId) {
-          return `parknacrossSkyLiked:${photoId}`;
+          return skyLikesStorage.visitorId();
         }
 
         function setLikeUI(count, liked) {
@@ -1943,8 +1931,7 @@
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
             if (photoId !== currentPhotoId) return;
-            if (data.liked) localStorage.setItem(likeStorageKey(photoId), "1");
-            else localStorage.removeItem(likeStorageKey(photoId));
+            skyLikesStorage.setLiked(photoId, Boolean(data.liked));
             setLikeUI(data.likes, Boolean(data.liked));
           } catch (_) {
             if (photoId === currentPhotoId) {
@@ -2071,7 +2058,7 @@
             const photoId = currentPhotoId;
             if (
               !photoId ||
-              localStorage.getItem(likeStorageKey(photoId)) === "1"
+              skyLikesStorage.hasLiked(photoId)
             )
               return;
             likeButton.disabled = true;
@@ -2088,7 +2075,7 @@
               const data = await response.json().catch(() => ({}));
               if (!response.ok)
                 throw new Error(data?.error || `HTTP ${response.status}`);
-              localStorage.setItem(likeStorageKey(photoId), "1");
+              skyLikesStorage.setLiked(photoId, true);
               if (photoId === currentPhotoId) {
                 setLikeUI(data.likes, true);
                 if (nameStatus && displayNameInput?.value.trim())
