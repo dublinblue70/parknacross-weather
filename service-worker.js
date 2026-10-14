@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-212-soil-graphs";
+const CACHE_NAME = "parknacross-v38-4-213-soil-summary-link";
 const STATIC_ASSETS = [
   "./dashboard-ui.css",
   "./dashboard-ui.js",
