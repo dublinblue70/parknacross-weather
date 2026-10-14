@@ -292,6 +292,8 @@ if (!radarScript.includes("playing=false") || !radarHtml.includes("Frames start 
 if (!coastHtml.includes('id="coastLocalFreshness"') || !coastScript.includes("Parknacross local readings · observed") || !coastScript.includes("formatSourceStamp(m.issued)")) failures.push("coastal observations and official marine forecasts must show source freshness");
 if (!coastHtml.includes('id="marineForecastUpdated"')) failures.push("coast.html: marine forecast issue time must have a visible status field");
 const graphHtml = await readFile(join(root, "graphs.html"), "utf8");
+const summaryPageHtml = await readFile(join(root, "summary.html"), "utf8");
+if (!summaryPageHtml.includes('href="graphs.html?hours=168#soilMoistureCard"')) failures.push("summary: soil chart link must open the weekly graph range at the soil charts");
 const graphScript = await readFile(join(root, "graphs.js"), "utf8");
 const historyScript = await readFile(join(root, "history.js"), "utf8");
 if (!graphHtml.includes("Units are printed on the axes") || !graphHtml.includes("Blank sections mean readings are missing, not zero") || !graphScript.includes("spanGaps:false")) failures.push("graphs must explain units and show archive gaps without connecting lines");
