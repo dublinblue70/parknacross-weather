@@ -18,3 +18,32 @@
 .rain-daily-more{display:block;margin:14px auto 4px;padding:10px 16px;min-height:44px;border:1px solid var(--line-strong);border-radius:10px;background:var(--panel);color:var(--text);font:inherit;cursor:pointer}
 .rain-daily-more[hidden]{display:none}
 @media(max-width:360px){.rain-page .rain-table-scroll{padding:0 6px}.rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{padding:12px 8px}.rain-day-primary{font-size:.82rem}.rain-day-badge{margin-left:2px}}
+
+/* Keep daily totals readable instead of stretching two columns across the page. */
+.rain-page .rain-table-details{max-width:760px;margin:20px auto 0;border:1px solid var(--line-strong);border-radius:14px;background:rgba(255,255,255,.015);overflow:hidden}
+.rain-page .rain-table-details>summary{padding:14px 18px}
+.rain-page .rain-table-details[open]>summary{border-bottom:1px solid var(--line-strong)}
+.rain-page .rain-table-scroll{padding:0 6px}
+.rain-page .rain-table-scroll table{table-layout:fixed}
+.rain-page .rain-table-scroll caption{padding:12px;font-size:.76rem;line-height:1.5}
+.rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{padding:11px 12px}
+.rain-page .rain-table-scroll th:first-child{width:55%}
+.rain-page .rain-table-scroll thead{background:rgba(174,210,232,.035)}
+.rain-page .rain-table-scroll tbody tr:hover{background:rgba(123,215,239,.035)}
+.rain-page .rain-table-scroll tbody tr:has(.rain-day-badge){background:rgba(123,215,239,.055)}
+.rain-page .rain-day-primary{font-size:.86rem;line-height:1.35}
+.rain-page .rain-day-date{font-size:.72rem;margin-top:3px;line-height:1.35}
+.rain-page .rain-day-value{line-height:1.35}
+.rain-page .rain-day-value strong{font-size:1rem}
+.rain-page .rain-day-bar{width:112px;max-width:100%;min-width:0;height:3px;margin:6px 0 0 auto}
+.rain-page .rain-daily-more{margin:12px auto}
+@media(min-width:600px){
+ .rain-page .rain-day-primary{display:inline-block;min-width:100px;margin-right:16px}
+ .rain-page .rain-day-date{display:inline-block;margin:0}
+ .rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{height:52px;box-sizing:border-box}
+}
+@media(max-width:360px){
+ .rain-page .rain-table-details>summary{padding:12px}
+ .rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{padding:10px 8px}
+ .rain-page .rain-day-bar{width:80px}
+}
