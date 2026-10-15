@@ -43,3 +43,26 @@
  .rain-day-total{gap:7px}
  .rain-day-primary{font-size:.8rem}.rain-day-badge{margin-left:2px}
 }
+
+/* Recent events share one compact list instead of a stack of oversized cards. */
+.rain-page .rain-events-section{max-width:800px}
+.rain-page .rain-events-section .section-heading{align-items:center;gap:12px;margin-bottom:12px}
+.rain-page .rain-events-section h2{font-size:1.25rem;margin:0 0 5px}
+.rain-page .rain-events-section .section-heading p{font-size:.8rem;margin:0;color:var(--muted)}
+.rain-page .rain-event-details{border-radius:10px;margin-bottom:12px}
+.rain-page .rain-event-details>summary{padding:10px 14px;min-height:44px;box-sizing:border-box;font-size:.8rem}
+.rain-page .rain-events-list{display:block;margin-top:0;border-top:1px solid var(--line-strong)}
+.rain-page .rain-event-row{grid-template-columns:minmax(140px,1fr) 80px 78px 132px;gap:16px;min-height:46px;padding:0 12px;border:0;border-bottom:1px solid rgba(174,210,232,.09);border-radius:0;background:transparent;font-variant-numeric:tabular-nums}
+.rain-page .rain-event-row:hover{background:rgba(123,215,239,.025)}
+.rain-page .rain-event-row a{min-height:44px;font-size:.84rem;line-height:1.35;text-decoration:none}
+.rain-page .rain-event-row a:hover{text-decoration:underline}
+.rain-page .rain-event-row strong{font-size:.84rem;font-weight:600;text-align:right}
+.rain-page .rain-event-row span{font-size:.74rem;text-align:right;white-space:nowrap}
+@media(max-width:600px){
+ .rain-page .rain-events-section .section-heading{align-items:flex-start;flex-wrap:wrap}
+ .rain-page .rain-event-row{grid-template-columns:minmax(0,1fr) auto;gap:0 14px;padding:0 10px 10px}
+ .rain-page .rain-event-row a{grid-column:1;grid-row:1}
+ .rain-page .rain-event-row strong{grid-column:2;grid-row:1}
+ .rain-page .rain-event-row span:nth-child(3){grid-column:1;grid-row:2;text-align:left}
+ .rain-page .rain-event-row span:nth-child(4){grid-column:2;grid-row:2}
+}
