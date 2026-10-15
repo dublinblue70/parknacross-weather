@@ -3,47 +3,43 @@
 /* Keep Chart.js within its fixed-height plotting area as adjacent details open. */
 .rain-page .chart-wrap{overflow:hidden;isolation:isolate}.rain-page .chart-wrap>canvas{position:absolute;inset:0;width:100%!important;height:100%!important}.rain-page .rain-table-details{position:relative;margin-top:16px}.rain-page .chart-title h2{margin:0;font-size:1.15rem}
 
-.rain-page .rain-table-scroll{padding:0 12px}
-.rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{padding:14px 12px;border-bottom:1px solid rgba(174,210,232,.09);vertical-align:middle}
-.rain-page .rain-table-scroll thead th{font-size:.75rem;font-weight:500;color:var(--muted)}
-.rain-day-primary{display:block;font-size:.9rem;font-weight:600;line-height:1.5}
-.rain-day-date{display:block;font-size:.75rem;font-weight:400;color:var(--muted);margin-top:3px}
-.rain-day-badge{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:6px;background:rgba(123,215,239,.12);color:var(--accent);font-size:.65rem;font-weight:500;white-space:nowrap}
-.rain-day-value{display:block;font-size:.9rem;white-space:nowrap;font-variant-numeric:tabular-nums}
-.rain-day-value strong{font-size:1.05rem;font-weight:650}.rain-day-value small{font-size:.75rem;color:var(--muted)}
-.rain-day-zero .rain-day-value,.rain-day-zero .rain-day-value strong{color:var(--muted);font-weight:400}
-.rain-day-missing .rain-day-value{color:var(--muted);font-size:.8rem}
-.rain-day-bar{display:block;width:100%;min-width:72px;height:4px;margin-top:7px;border-radius:4px;background:rgba(123,215,239,.08)}
-.rain-day-bar>span{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#4c9bbf,#7bd7ef)}
-.rain-daily-more{display:block;margin:14px auto 4px;padding:10px 16px;min-height:44px;border:1px solid var(--line-strong);border-radius:10px;background:var(--panel);color:var(--text);font:inherit;cursor:pointer}
-.rain-daily-more[hidden]{display:none}
-@media(max-width:360px){.rain-page .rain-table-scroll{padding:0 6px}.rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{padding:12px 8px}.rain-day-primary{font-size:.82rem}.rain-day-badge{margin-left:2px}}
-
-/* Keep daily totals readable instead of stretching two columns across the page. */
-.rain-page .rain-table-details{max-width:760px;margin:20px auto 0;border:1px solid var(--line-strong);border-radius:14px;background:rgba(255,255,255,.015);overflow:hidden}
-.rain-page .rain-table-details>summary{padding:14px 18px}
+/* Daily totals: a compact date ledger with inline comparison bars. */
+.rain-page .rain-table-details{max-width:640px;margin:20px auto 0;border:1px solid var(--line-strong);border-radius:14px;background:rgba(255,255,255,.015);overflow:hidden}
+.rain-page .rain-table-details>summary{padding:14px 18px;font-size:.88rem}
 .rain-page .rain-table-details[open]>summary{border-bottom:1px solid var(--line-strong)}
-.rain-page .rain-table-scroll{padding:0 6px}
+.rain-page .rain-table-scroll{padding:0 18px;overflow-x:auto}
 .rain-page .rain-table-scroll table{table-layout:fixed}
-.rain-page .rain-table-scroll caption{padding:12px;font-size:.76rem;line-height:1.5}
-.rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{padding:11px 12px}
-.rain-page .rain-table-scroll th:first-child{width:55%}
-.rain-page .rain-table-scroll thead{background:rgba(174,210,232,.035)}
-.rain-page .rain-table-scroll tbody tr:hover{background:rgba(123,215,239,.035)}
-.rain-page .rain-table-scroll tbody tr:has(.rain-day-badge){background:rgba(123,215,239,.055)}
-.rain-page .rain-day-primary{font-size:.86rem;line-height:1.35}
-.rain-page .rain-day-date{font-size:.72rem;margin-top:3px;line-height:1.35}
-.rain-page .rain-day-value{line-height:1.35}
-.rain-page .rain-day-value strong{font-size:1rem}
-.rain-page .rain-day-bar{width:112px;max-width:100%;min-width:0;height:3px;margin:6px 0 0 auto}
-.rain-page .rain-daily-more{margin:12px auto}
-@media(min-width:600px){
- .rain-page .rain-day-primary{display:inline-block;min-width:100px;margin-right:16px}
- .rain-page .rain-day-date{display:inline-block;margin:0}
- .rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{height:52px;box-sizing:border-box}
+.rain-page .rain-table-scroll caption{padding:12px 0 10px;font-size:.72rem;line-height:1.4}
+.rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{height:46px;box-sizing:border-box;padding:9px 0;border-bottom:1px solid rgba(174,210,232,.07);vertical-align:middle}
+.rain-page .rain-table-scroll thead th{height:30px;padding:0 0 8px;font-size:.7rem;font-weight:500;color:var(--muted)}
+.rain-page .rain-table-scroll thead th:first-child{width:60%}
+.rain-page .rain-table-scroll td{padding-left:18px}
+.rain-page .rain-table-scroll tbody tr:last-child>*{border-bottom:0}
+.rain-page .rain-table-scroll tbody tr:hover{background:rgba(123,215,239,.025)}
+.rain-day-primary{display:inline-block;min-width:115px;font-size:.84rem;font-weight:500;line-height:1.4}
+.rain-day-date{display:inline-block;font-size:.72rem;font-weight:400;color:var(--muted);line-height:1.4}
+.rain-day-badge{display:inline-block;margin-left:5px;padding:1px 5px;border-radius:4px;background:rgba(123,215,239,.1);color:var(--accent);font-size:.6rem;font-weight:500;vertical-align:1px;white-space:nowrap}
+.rain-day-total{display:grid;grid-template-columns:minmax(0,1fr) 70px;gap:16px;align-items:center}
+.rain-day-value{grid-column:2;grid-row:1;font-size:.85rem;line-height:1.4;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rain-day-value strong{font-size:.9rem;font-weight:600}.rain-day-value small{font-size:.7rem;color:var(--muted)}
+.rain-day-zero .rain-day-value strong{color:var(--muted);font-weight:400}
+.rain-day-missing .rain-day-value{color:var(--muted);font-size:.7rem}
+.rain-day-bar{grid-column:1;grid-row:1;display:block;height:3px;border-radius:3px;background:rgba(123,215,239,.08)}
+.rain-day-bar>span{display:block;height:100%;border-radius:3px;background:#7bd7ef}
+.rain-daily-more{display:block;margin:8px auto 12px;padding:8px 14px;min-height:44px;border:1px solid var(--line-strong);border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:.78rem;cursor:pointer}
+.rain-daily-more:hover{color:var(--text);background:rgba(123,215,239,.05)}.rain-daily-more[hidden]{display:none}
+@media(max-width:600px){
+ .rain-day-primary,.rain-day-date{display:block;min-width:0}
+ .rain-day-date{margin-top:2px;font-size:.68rem}
+ .rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{height:54px}
+ .rain-page .rain-table-scroll thead th:first-child{width:52%}
+ .rain-day-total{grid-template-columns:minmax(0,1fr) 65px;gap:10px}
 }
 @media(max-width:360px){
  .rain-page .rain-table-details>summary{padding:12px}
- .rain-page .rain-table-scroll th,.rain-page .rain-table-scroll td{padding:10px 8px}
- .rain-page .rain-day-bar{width:80px}
+ .rain-page .rain-table-scroll{padding:0 12px}
+ .rain-page .rain-table-scroll thead th:first-child{width:50%}
+ .rain-page .rain-table-scroll td{padding-left:10px}
+ .rain-day-total{gap:7px}
+ .rain-day-primary{font-size:.8rem}.rain-day-badge{margin-left:2px}
 }
