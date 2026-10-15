@@ -4,7 +4,7 @@
 .rain-page .chart-wrap{overflow:hidden;isolation:isolate}.rain-page .chart-wrap>canvas{position:absolute;inset:0;width:100%!important;height:100%!important}.rain-page .rain-table-details{position:relative;margin-top:16px}.rain-page .chart-title h2{margin:0;font-size:1.15rem}
 
 /* Daily totals: a compact date ledger with inline comparison bars. */
-.rain-page .rain-table-details{max-width:640px;margin:20px auto 0;border:1px solid var(--line-strong);border-radius:14px;background:rgba(255,255,255,.015);overflow:hidden}
+.rain-page .rain-table-details{max-width:640px;margin:20px 0 0;border:1px solid var(--line-strong);border-radius:14px;background:rgba(255,255,255,.015);overflow:hidden}
 .rain-page .rain-table-details>summary{padding:14px 18px;font-size:.88rem}
 .rain-page .rain-table-details[open]>summary{border-bottom:1px solid var(--line-strong)}
 .rain-page .rain-table-scroll{padding:0 18px;overflow-x:auto}
