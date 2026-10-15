@@ -80,12 +80,12 @@
       const monthName = new Intl.DateTimeFormat("en-IE", {timeZone:"Europe/Dublin",month:"long"}).format(new Date());
 
       set("climateRainHeading", `${monthName} rainfall`);
-      set("climateRainPct", rainPct !== null ? `${Math.round(rainPct)}%` : "--");
+      set("climateRainPct", stationMonthRain !== null ? `${n(stationMonthRain)} mm` : "--");
       const archiveSince = stR.status === "fulfilled" && usable(stR.value?.first_epoch)
         ? new Date(Number(stR.value.first_epoch)*1000).toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"long",year:"numeric"})
         : null;
       set("climateRainText", ltaMonthRain !== null
-        ? `${n(stationMonthRain)} mm at Parknacross so far this ${monthName}; Johnstown Castle's 1991–2020 ${monthName} average is ${n(ltaMonthRain)} mm. This is a partial-period comparison until the local archive covers the full month.`
+        ? `At Parknacross so far this ${monthName}${rainPct !== null ? ` · ${Math.round(rainPct)}% of Johnstown Castle’s full-${monthName} average` : ""}. The 1991–2020 average for the whole month is ${n(ltaMonthRain)} mm. This compares rainfall so far with a full month, not the average expected by today.`
         : `${n(stationMonthRain)} mm at Parknacross so far. A Johnstown Castle long-term rainfall comparison is not configured for ${monthName} yet.`);
       set("climateLocalMean", `${n(c.station_month_mean_temperature_c)}°C`);
       if (c.on_this_day?.available) {
