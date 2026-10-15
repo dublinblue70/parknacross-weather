@@ -106,7 +106,7 @@
   $('overallText').textContent=(bad||warn?'Review the core-service checks below. ':waiting?'Finished checks remain visible while other sources respond. ':'Website, latest observations and archive collection passed. ')+(other?`${other} supporting check${other===1?' has':'s have'} warnings; this does not by itself mean the weather station is offline.`:'Supporting services are shown separately.');
   const list=$('healthChanges');list.replaceChildren();
   for(const change of changes){const item=document.createElement('li');const card=cards.find(c=>c.key===change.key);item.textContent=`${change.kind==='recovered'?'Recovered':change.kind==='new'?'New issue':change.kind==='worsened'?'Needs more attention':'Status changed'} · ${card?.title||change.key} · ${formatTime(change.at)} Irish time`;list.append(item);}
-  if(!changes.length){const item=document.createElement('li');item.textContent='No changes recorded yet. A previous completed result is needed to detect a new issue or recovery.';list.append(item);}
+  if(!changes.length){const item=document.createElement('li');item.textContent=running&&!Object.keys(previous).length?'Checking the current status. Changes will appear here after the next check.':'No changes detected. This updates automatically about every five minutes.';list.append(item);}
   applyFilter();
  }
  window.ParknacrossHealthUI={start,update,label};
