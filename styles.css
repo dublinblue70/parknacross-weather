@@ -470,6 +470,31 @@ main { padding: 30px; }
 .metric-value .u { color: var(--muted); font-size: .9rem; }
 .metric-sub { margin-top: 16px; color: var(--muted); line-height: 1.65; font-size: .82rem; }
 .metric-sub strong { color: #e8f2f6; font-weight: 600; }
+.rain-evidence-disclosure {
+  margin-top: 14px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+.rain-evidence-disclosure summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: .72rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+.rain-evidence-disclosure #rainEvidence {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: .74rem;
+  line-height: 1.55;
+}
+.rain-evidence-disclosure #rainEvidence > strong:first-child {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+  font-size: .88rem;
+  line-height: 1.4;
+}
 
 .forecast-section {
   padding: 28px;
