@@ -1,5 +1,7 @@
-const CACHE_NAME = "parknacross-v38-4-216-mobile-summary-timeout";
+const CACHE_NAME = "parknacross-v38-4-216-local-rain-coastal-compass";
 const STATIC_ASSETS = [
+  "./local-planning.js",
+  "./local-planning.css",
   "./dashboard-ui.css",
   "./dashboard-ui.js",
   "./summary-ui.css",
