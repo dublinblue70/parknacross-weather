@@ -10,3 +10,5 @@
 .laundry-quality{flex:0 0 auto;padding:4px 7px;border-radius:999px;background:rgba(243,191,103,.13);color:#f3bf67;font-size:.65rem;font-weight:700}
 @media(max-width:760px){.laundry-window-list{grid-template-columns:minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.laundry-window-list *{transition:none!important}}
+
+@media(min-width:1150px){.local-planning{grid-template-columns:repeat(3,minmax(0,1fr))}.local-planning>[data-laundry-window]{grid-column:auto}}
