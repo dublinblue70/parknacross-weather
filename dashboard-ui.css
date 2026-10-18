@@ -209,3 +209,18 @@ body.dashboard-page .section-heading p { margin-top: 6px; font-size: .82rem; }
   body.dashboard-page .hero-condition { gap: 7px; }
   body.dashboard-page .summary-line { gap: 4px; }
 }
+
+
+/* Put the daily summary ahead of planning, while keeping all tools in the page. */
+body.dashboard-page #dashboard > .dashboard-toolbar { order: 1; }
+body.dashboard-page #dashboard > #dashboardRefreshStatus { order: 2; }
+body.dashboard-page #dashboard > .hero-main-card { order: 3; }
+body.dashboard-page #dashboard > .station-bar { order: 4; }
+body.dashboard-page #dashboard #dashboardOptionalSections { display: contents; }
+body.dashboard-page #dashboardOptionalSections > .today-section { order: 5; margin-top: 16px; }
+body.dashboard-page #dashboard > .local-planning { order: 6; }
+body.dashboard-page #dashboard > .dashboard-shortcuts { order: 7; }
+body.dashboard-page #dashboardOptionalSections > section:not(.today-section) { margin-top: 26px; }
+@media (max-width: 640px) {
+  body.dashboard-page #dashboardOptionalSections > section:not(.today-section) { margin-top: 22px; }
+}
