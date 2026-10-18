@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-217-frost-tracker-ui-solar-exposure";
+const CACHE_NAME = "parknacross-v38-4-217-frost-tracker-ui-solar-exposure-laundry-windows";
 const STATIC_ASSETS = [
   "./local-planning.js",
   "./local-planning.css",
