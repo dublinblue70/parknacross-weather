@@ -15,6 +15,7 @@
   <title>North Wexford Rain Radar | Parknacross Weather</title>
   <link rel="canonical" href="https://parknacrossweather.ie/radar.html">
   <style>
+    .radar-arrival-card{margin-top:16px}.radar-arrival-estimate{margin:8px 0 6px;font-size:1.08rem;font-weight:750;color:var(--text,#f4f8fb)}.radar-arrival-card .info-note{margin-bottom:0}
     .satellite-jump-links,.satellite-source-links{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:14px}.satellite-jump-links a,.satellite-source-links a{color:var(--accent);font-size:.83rem;font-weight:650;text-decoration:none}.satellite-jump-links a:hover,.satellite-source-links a:hover{text-decoration:underline}
     .satellite-section .section-heading p{margin:5px 0 0;color:var(--muted);font-size:.82rem}.satellite-stream-frame{display:block;width:100%;aspect-ratio:16/9;margin-top:14px;border:0;border-radius:12px;background:#07131f}.satellite-stream-status{margin:8px 0 0;color:var(--muted);font-size:.74rem;line-height:1.45}.satellite-source-links{margin-top:12px}.satellite-direct-link{display:inline-flex;align-items:center;gap:6px;margin-top:10px;color:var(--accent);font-size:.85rem;font-weight:700;text-decoration:none}.satellite-direct-link:hover{text-decoration:underline}.radar-controls .radar-center-button{white-space:nowrap}
   </style>
@@ -39,7 +40,13 @@
       <div class="radar-toolbar"><div><strong id="radarTime">Loading radar…</strong><span id="radarStatus">Retrieving recent frames</span></div>
         <div class="radar-controls"><button type="button" class="secondary-button radar-center-button" id="radarCenter" aria-label="Centre radar map on Parknacross">Centre map</button><button type="button" class="secondary-button" id="radarPlay">Play</button><input id="radarSlider" type="range" min="0" max="0" value="0" aria-label="Radar frame time"></div></div>
       <div id="radarMap" class="radar-map"></div>
-      <div class="source-note">Radar tiles: RainViewer. Map © OpenStreetMap contributors. Official warnings and forecasts remain Met Éireann. Frames start paused; press Play to animate them.</div>
+      <article class="info-card radar-arrival-card" aria-labelledby="radarArrivalHeading">
+        <span class="section-eyebrow">Short-range estimate</span>
+        <h2 id="radarArrivalHeading">Rain arrival near Parknacross</h2>
+        <p id="radarArrivalEstimate" class="radar-arrival-estimate" role="status" aria-live="polite">Checking recent radar movement…</p>
+        <p id="radarArrivalDetail" class="info-note">This estimate extrapolates recent radar echoes for up to one hour. It is not an official forecast or warning.</p>
+      </article>
+      <div class="source-note"><a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">Radar data by RainViewer ↗</a>. Map © OpenStreetMap contributors. Official warnings and forecasts remain Met Éireann. Frames start paused; press Play to animate them.</div>
     </section>
     <section class="page-section satellite-section" id="satelliteImagery" aria-labelledby="satelliteHeading">
       <div class="section-heading"><div><span class="section-eyebrow">Satellite stream</span><h2 id="satelliteHeading">Live cloud view over Europe</h2><p>A near-real-time video stream from EUMETSAT’s Meteosat-12 satellite (not a still image).</p></div></div>
@@ -60,7 +67,7 @@
     <span>Hyperlocal weather observations · Ardamine, Co. Wexford, Ireland</span>
   <nav class="footer-links" aria-label="Parknacross Weather links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a><span aria-hidden="true">·</span><a href="install.html">Install help</a><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></nav></footer>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="radar.js?v=20261010-v38-4-193"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="radar.js?v=20261018-v38-4-217"></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20261008-v38-4-170"></script>
 <script src="offline.js?v=20261010-v38-4-190"></script>
