@@ -74,3 +74,138 @@ body.dashboard-page .info-card>.info-note{margin:0;line-height:1.6}
  body.dashboard-page .weather-window-section .compact-heading{margin:0 0 16px}
  body.dashboard-page .weather-window-section .section-heading p{margin:8px 0 0;font-size:.88rem;line-height:1.6}
 }
+
+
+/* Streamlined dashboard: clear order, compact live summary, consistent section rhythm. */
+body.dashboard-page #dashboard {
+  display: flex;
+  flex-direction: column;
+}
+body.dashboard-page #dashboard > * { order: 10; }
+body.dashboard-page #dashboard > h1.visually-hidden { order: 0; }
+body.dashboard-page .dashboard-toolbar { order: 1; margin: 0 0 8px; }
+body.dashboard-page #dashboardRefreshStatus { order: 2; margin: 0 0 8px; }
+body.dashboard-page .hero-main-card { order: 3; padding: clamp(18px, 2.1vw, 28px); border-radius: 18px; }
+body.dashboard-page .station-bar { order: 4; margin-top: 12px; }
+body.dashboard-page .today-section { order: 5; margin-top: 18px; }
+body.dashboard-page .dashboard-shortcuts { order: 6; margin: 14px 0 0; gap: 7px; }
+body.dashboard-page .local-planning { order: 7; margin: 16px 0 0; gap: 12px; }
+body.dashboard-page #dashboard > section:not(.hero-main-card):not(.today-section):not(.local-planning) {
+  margin-top: 26px;
+}
+body.dashboard-page .hero-main-card::after { width: 190px; height: 190px; right: -78px; bottom: -116px; }
+body.dashboard-page .hero-top-row {
+  grid-template-columns: minmax(0, 1fr) 170px;
+  align-items: center;
+  gap: 16px;
+}
+body.dashboard-page .hero-kicker {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: .72rem;
+  letter-spacing: .09em;
+}
+body.dashboard-page .dashboard-thumb { width: 170px; border-radius: 11px; }
+body.dashboard-page .dashboard-thumb img { height: 62px; }
+body.dashboard-page .hero-layout {
+  margin-top: 16px;
+  gap: 20px;
+  align-items: center;
+}
+body.dashboard-page .hero-condition { gap: 16px; }
+body.dashboard-page .weather-orb {
+  width: 60px; height: 60px; flex-basis: 60px;
+  background: rgba(123,215,239,.05); box-shadow: none;
+}
+body.dashboard-page .weather-orb::before { width: 32px; height: 32px; }
+body.dashboard-page .temp { font-size: clamp(3.8rem, 6vw, 5.1rem); }
+body.dashboard-page .temp-unit { padding: 6px 0 0 7px; font-size: 1.5rem; }
+body.dashboard-page .condition-line { margin-top: 7px; font-size: .9rem; }
+body.dashboard-page .summary-line { margin-top: 9px; gap: 6px; font-size: .82rem; }
+body.dashboard-page .hero-side { border-radius: 13px; }
+body.dashboard-page .hero-stat { min-height: 72px; padding: 12px 14px; }
+body.dashboard-page .hero-stat span { font-size: .66rem; letter-spacing: .06em; }
+body.dashboard-page .hero-stat strong { margin-top: 5px; font-size: .96rem; }
+body.dashboard-page .hero-stat small { margin-top: 2px; font-size: .7rem; }
+body.dashboard-page .station-status { min-height: 62px; padding: 11px 15px; }
+body.dashboard-page .station-status strong { font-size: .84rem; }
+body.dashboard-page .status-label { font-size: .65rem; }
+body.dashboard-page .station-status small { font-size: .68rem; }
+body.dashboard-page .today-section .compact-heading { margin-bottom: 10px; }
+body.dashboard-page .today-section h2 { margin: 2px 0 0; font-size: 1.28rem; }
+body.dashboard-page .today-section .source-note { margin: 5px 0 0; font-size: .72rem; }
+body.dashboard-page .today-grid { margin-top: 0; gap: 1px; border: 1px solid var(--line); border-radius: 13px; overflow: hidden; }
+body.dashboard-page .today-item { min-height: 86px; padding: 13px 15px; }
+body.dashboard-page .today-item > span { font-size: .7rem; }
+body.dashboard-page .today-item strong { margin: 5px 0 3px; font-size: 1.05rem; }
+body.dashboard-page .today-item small { font-size: .7rem; line-height: 1.4; }
+body.dashboard-page .dashboard-shortcuts a { min-height: 36px; padding: 6px 11px; border-radius: 9px; font-size: .8rem; }
+body.dashboard-page .local-planning-card { padding: 15px; border-radius: 13px; }
+body.dashboard-page .local-planning-card h2 { font-size: .98rem; }
+body.dashboard-page .local-planning-card .lp-label { margin: 3px 0 9px; font-size: .62rem; }
+body.dashboard-page .local-planning-card .lp-summary { font-size: .92rem; }
+body.dashboard-page .local-planning-card .lp-source { margin-top: 9px; font-size: .66rem; }
+body.dashboard-page .local-planning-card button,
+body.dashboard-page .local-planning-card a { min-height: 38px; }
+body.dashboard-page .today-sky-panel { margin-top: 26px; }
+body.dashboard-page .section-heading { margin-bottom: 14px; }
+body.dashboard-page .section-heading h2 { font-size: 1.35rem; }
+body.dashboard-page .section-heading p { margin-top: 6px; font-size: .82rem; }
+
+@media (min-width: 901px) {
+  body.dashboard-page .hero-layout { grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); }
+}
+@media (min-width: 641px) and (max-width: 900px) {
+  body.dashboard-page .hero-layout { grid-template-columns: 1fr; }
+  body.dashboard-page .hero-side { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  body.dashboard-page .hero-stat { min-height: 66px; padding: 10px; }
+  body.dashboard-page .hero-stat:nth-child(odd),
+  body.dashboard-page .hero-stat:nth-child(-n+2) { border: 0; }
+  body.dashboard-page .hero-stat + .hero-stat { border-left: 1px solid var(--line); }
+  body.dashboard-page .hero-top-row { grid-template-columns: minmax(0, 1fr) 140px; }
+  body.dashboard-page .dashboard-thumb { width: 140px; }
+}
+@media (max-width: 640px) {
+  body.dashboard-page main { padding-top: 16px; }
+  body.dashboard-page .dashboard-toolbar { margin-bottom: 8px; }
+  body.dashboard-page .hero-main-card { padding: 16px; }
+  body.dashboard-page .hero-top-row { grid-template-columns: minmax(0,1fr) 96px; gap: 9px; }
+  body.dashboard-page .hero-kicker { align-items: flex-start; flex-direction: column; gap: 5px; font-size: .64rem; }
+  body.dashboard-page .location-label { font-size: .7rem; }
+  body.dashboard-page .dashboard-thumb { width: 96px; border-radius: 9px; }
+  body.dashboard-page .dashboard-thumb img { height: 54px; }
+  body.dashboard-page .hero-layout { margin-top: 12px; gap: 12px; }
+  body.dashboard-page .hero-condition { align-items: center; gap: 10px; }
+  body.dashboard-page .weather-orb { width: 48px; height: 48px; flex-basis: 48px; }
+  body.dashboard-page .weather-orb::before { width: 27px; height: 27px; }
+  body.dashboard-page .temp { font-size: clamp(3.2rem, 16vw, 4.2rem); }
+  body.dashboard-page .temp-unit { font-size: 1.2rem; }
+  body.dashboard-page .condition-line { font-size: .8rem; }
+  body.dashboard-page .summary-line { font-size: .73rem; line-height: 1.55; }
+  body.dashboard-page .hero-side { gap: 8px; border: 0; background: transparent; overflow: visible; }
+  body.dashboard-page .hero-stat { min-height: 0; padding: 10px; border: 1px solid var(--line)!important; border-radius: 10px; background: rgba(4,15,24,.26); }
+  body.dashboard-page .hero-stat span { min-height: 0; font-size: .64rem; }
+  body.dashboard-page .hero-stat strong { font-size: .92rem; }
+  body.dashboard-page .station-bar { margin-top: 10px; gap: 8px; border: 0; background: transparent; overflow: visible; }
+  body.dashboard-page .station-status { min-height: 0; padding: 11px; border: 1px solid var(--line)!important; border-radius: 10px; background: rgba(255,255,255,.018); }
+  body.dashboard-page .station-status + .station-status { border-top: 1px solid var(--line)!important; }
+  body.dashboard-page #livePill { display: flex; padding-left: 32px; }
+  body.dashboard-page #livePill .live-dot { left: 12px; }
+  body.dashboard-page .today-section { margin-top: 16px; }
+  body.dashboard-page .today-grid { gap: 8px; border: 0; border-radius: 0; overflow: visible; }
+  body.dashboard-page .today-item { min-height: 0; padding: 12px; border: 1px solid var(--line-strong)!important; border-radius: 10px; }
+  body.dashboard-page .today-item > span { min-height: 0; font-size: .7rem; }
+  body.dashboard-page .today-item strong { font-size: 1rem; }
+  body.dashboard-page .today-item small { font-size: .68rem; }
+  body.dashboard-page .local-planning-card { padding: 14px; }
+  body.dashboard-page .dashboard-shortcuts { gap: 6px; }
+  body.dashboard-page .dashboard-shortcuts a { min-height: 36px; padding: 6px 9px; font-size: .74rem; }
+  body.dashboard-page #dashboard > section:not(.hero-main-card):not(.today-section):not(.local-planning) { margin-top: 22px; }
+}
+@media (max-width: 390px) {
+  body.dashboard-page .hero-top-row { grid-template-columns: minmax(0,1fr) 78px; }
+  body.dashboard-page .dashboard-thumb { width: 78px; }
+  body.dashboard-page .hero-condition { gap: 7px; }
+  body.dashboard-page .summary-line { gap: 4px; }
+}
