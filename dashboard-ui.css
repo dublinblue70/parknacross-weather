@@ -224,3 +224,5 @@ body.dashboard-page #dashboardOptionalSections > section:not(.today-section) { m
 @media (max-width: 640px) {
   body.dashboard-page #dashboardOptionalSections > section:not(.today-section) { margin-top: 22px; }
 }
+
+body.dashboard-page #dashboardOptionalSections > * { order: 10; }
