@@ -59,7 +59,7 @@
   }
   function renderFrostTracker(days) {
     const validDays = (Array.isArray(days) ? days : [])
-      .filter(row => /^\\d{4}-\\d{2}-\\d{2}$/.test(row?.day || "")
+      .filter(row => /^\d{4}-\d{2}-\d{2}$/.test(row?.day || "")
         && Number(row?.temp_count) > 0
         && usable(row?.low_c))
       .map(row => ({ day: row.day, low: Number(row.low_c) }))
