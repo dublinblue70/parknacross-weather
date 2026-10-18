@@ -37,6 +37,72 @@
 
   }
 
+  const DUBLIN_TZ = "Europe/Dublin";
+  function dublinDayKey(date = new Date()) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: DUBLIN_TZ, year: "numeric", month: "2-digit", day: "2-digit"
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
+  }
+  function frostDateLabel(day) {
+    return new Date(`${day}T12:00:00Z`).toLocaleDateString("en-IE", {
+      timeZone: DUBLIN_TZ, day: "numeric", month: "short", year: "numeric"
+    });
+  }
+  function frostSeasonKey(day) {
+    const [year, month] = day.split("-").map(Number);
+    return month >= 7 ? year : year - 1;
+  }
+  function frostSeasonLabel(startYear) {
+    return `${startYear}–${String((startYear + 1) % 100).padStart(2, "0")}`;
+  }
+  function renderFrostTracker(days) {
+    const validDays = (Array.isArray(days) ? days : [])
+      .filter(row => /^\\d{4}-\\d{2}-\\d{2}$/.test(row?.day || "")
+        && Number(row?.temp_count) > 0
+        && usable(row?.low_c))
+      .map(row => ({ day: row.day, low: Number(row.low_c) }))
+      .sort((a, b) => a.day.localeCompare(b.day));
+    const groups = new Map();
+    for (const row of validDays) {
+      const year = frostSeasonKey(row.day);
+      if (!groups.has(year)) groups.set(year, { first: null, frostDays: 0, observedDays: 0 });
+      const group = groups.get(year);
+      group.observedDays += 1;
+      if (row.low <= 0) {
+        group.frostDays += 1;
+        if (!group.first) group.first = row.day;
+      }
+    }
+    if (!validDays.length) {
+      set("frostCurrentDate", "No temperature lows available");
+      set("frostCurrentDetail", "The archive does not currently contain usable daily minimums.");
+      set("frostSeasonCount", "--");
+      set("frostSeasonCoverage", "Waiting for valid archived station temperatures");
+      set("frostArchiveRange", "Unavailable");
+      $("frostSeasonHistory").innerHTML = '<div class="empty-state">Frost history will appear when usable temperature lows are available.</div>';
+      set("frostStatus", "The temperature archive is temporarily unavailable or contains no usable daily lows.");
+      return;
+    }
+    const today = dublinDayKey();
+    const currentYear = frostSeasonKey(today);
+    const current = groups.get(currentYear) || { first: null, frostDays: 0, observedDays: 0 };
+    set("frostSeasonLabel", `Current frost season · ${frostSeasonLabel(currentYear)}`);
+    set("frostCurrentDate", current.first ? frostDateLabel(current.first) : "No frost recorded yet");
+    set("frostCurrentDetail", current.first
+      ? `Earliest recorded station low at or below 0.0°C this season.`
+      : "No station low at or below 0.0°C has been recorded so far this season.");
+    set("frostSeasonCount", String(current.frostDays));
+    set("frostSeasonCoverage", `${current.observedDays.toLocaleString("en-IE")} day${current.observedDays === 1 ? "" : "s"} with valid saved lows; gaps remain unknown`);
+    set("frostArchiveRange", `${frostDateLabel(validDays[0].day)} – ${frostDateLabel(validDays[validDays.length - 1].day)}`);
+    const history = [...groups.entries()].sort((a, b) => b[0] - a[0]);
+    $("frostSeasonHistory").innerHTML = history.map(([year, group]) =>
+      `<article class="event-item"><time>${frostSeasonLabel(year)}</time><div><strong>${group.first ? `Earliest recorded frost · ${frostDateLabel(group.first)}` : "No frost recorded in available observations"}</strong><p>${group.frostDays} frost day${group.frostDays === 1 ? "" : "s"} among ${group.observedDays.toLocaleString("en-IE")} days with valid station lows.</p></div></article>`
+    ).join("");
+    set("frostStatus", `Based on ${validDays.length.toLocaleString("en-IE")} archived days with usable temperature lows. A missing or unrecorded day is not treated as frost-free.`);
+  }
+
   function events(items) {
     const e = $("eventTimeline");
     if (!items.length) {
@@ -96,6 +162,20 @@
 
     if (eR.status === "fulfilled") events(eR.value.events || []);
     else if(eR.status === "rejected")$("eventTimeline").textContent="Station milestones are temporarily unavailable.";
+
+    if (dR.status === "fulfilled" && !renderAvailable.frostRendered) {
+      renderAvailable.frostRendered = true;
+      renderFrostTracker(dR.value.days || []);
+    } else if (dR.status === "rejected" && !renderAvailable.frostErrorRendered) {
+      renderAvailable.frostErrorRendered = true;
+      set("frostCurrentDate", "Archive unavailable");
+      set("frostCurrentDetail", "Saved temperature lows could not be loaded.");
+      set("frostSeasonCount", "--");
+      set("frostSeasonCoverage", "Archive request failed");
+      set("frostArchiveRange", "Unavailable");
+      $("frostSeasonHistory").innerHTML = '<div class="empty-state">Frost history is temporarily unavailable. Please try again later.</div>';
+      set("frostStatus", "The Parknacross daily archive could not be reached.");
+    }
 
     if (dR.status === "fulfilled"&&!renderAvailable.chartRendered) {
       renderAvailable.chartRendered=true;
