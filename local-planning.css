@@ -12,3 +12,5 @@
 @media(prefers-reduced-motion:reduce){.laundry-window-list *{transition:none!important}}
 
 @media(min-width:1150px){.local-planning{grid-template-columns:repeat(3,minmax(0,1fr))}.local-planning>[data-laundry-window]{grid-column:auto}}
+.laundry-window-list{grid-template-columns:minmax(0,1fr)}
+@media(min-width:1150px){.rain-hour-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
