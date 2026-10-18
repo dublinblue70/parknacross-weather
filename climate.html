@@ -108,6 +108,36 @@
           <p id="frostDataNote" class="info-note" role="note">Only measured station lows of 0.0°C or below count as frost. Forecast temperatures are not counted as observed frost; days without a usable saved low remain unknown.</p>
           <p id="frostStatus" class="info-note" role="status" aria-live="polite">Loading the Parknacross temperature archive…</p>
         </section>
+        <section class="page-section" id="solarExposureTracker">
+          <div class="section-heading">
+            <div>
+              <span class="section-eyebrow">Measured solar radiation</span>
+              <h2>Solar exposure tracker</h2>
+              <p>Daily sunlight energy estimated from the station’s measured solar radiation, shown for the last seven local days.</p>
+            </div>
+          </div>
+          <div class="solar-exposure-grid">
+            <article class="context-card">
+              <span>Today’s measured exposure</span>
+              <strong id="solarTodayTotal">Loading…</strong>
+              <small id="solarTodayCoverage">Integrating available readings</small>
+            </article>
+            <article class="context-card">
+              <span>Last seven local days</span>
+              <strong id="solarWeekTotal">--</strong>
+              <small id="solarWeekCoverage">Measured interval coverage</small>
+            </article>
+            <section class="chart-card solar-chart-card" aria-label="Daily solar exposure chart">
+              <div class="chart-title">
+                <div><h3>Daily exposure</h3><p>Measured station radiation integrated over time</p></div>
+                <span>kWh/m²</span>
+              </div>
+              <div class="chart-wrap tall-chart"><canvas id="solarExposureChart" role="img" aria-label="Bar chart of measured daily solar exposure for the last seven local days"></canvas></div>
+            </section>
+          </div>
+          <p id="solarExposureNote" class="info-note" role="status" aria-live="polite">Loading up to seven days of archived solar readings…</p>
+          <p class="info-note" role="note">Station-derived solar exposure, not household solar-panel generation. Readings are integrated between adjacent samples; gaps longer than 15 minutes are left out.</p>
+        </section>
         <section class="page-section">
           <div class="section-heading">
             <div>
@@ -173,7 +203,7 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="offline.js?v=20261010-v38-4-190"></script>
     <script src="site-config.js?v=20261010-v38-4-188"></script>
-    <script src="comparison-alignment.js?v=20261010-v38-4-190"></script><script src="climate.js?v=20261018-first-frost-v1"></script>
+    <script src="comparison-alignment.js?v=20261010-v38-4-190"></script><script src="climate.js?v=20261018-solar-exposure-v1"></script>
     <!-- Cloudflare Web Analytics -->
     <script
       type="module"
