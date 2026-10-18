@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-216-local-rain-coastal-compass";
+const CACHE_NAME = "parknacross-v38-4-217-radar-arrival-estimate";
 const STATIC_ASSETS = [
   "./local-planning.js",
   "./local-planning.css",
