@@ -137,7 +137,8 @@
     const rows = solarHistoryRows(payload)
       .map(row => ({
         epoch: solarSampleEpoch(row),
-        watts: Number(row?.solar_w_m2)
+        watts: row?.solar_w_m2 === null || row?.solar_w_m2 === undefined || row?.solar_w_m2 === ""
+          ? NaN : Number(row.solar_w_m2)
       }))
       .filter(row => Number.isFinite(row.epoch) && Number.isFinite(row.watts)
         && row.watts >= 0 && row.watts <= 2000)
