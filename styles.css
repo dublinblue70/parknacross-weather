@@ -2599,3 +2599,10 @@ footer > .footer-links a:focus-visible {
 .heatmap-day-inspector a{display:inline-flex;min-height:44px;align-items:center;color:var(--accent,#74ddff)}
 .heatmap-day-inspector a[hidden]{display:none}
 @media(pointer:coarse){.archive-heatmap-frame{--heatmap-cell:44px}.archive-heatmap{gap:4px}.heatmap-weekdays{gap:4px}}
+
+
+/* Seven-day station solar exposure tracker. */
+.solar-exposure-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.solar-exposure-grid>.context-card{min-width:0}
+.solar-chart-card{grid-column:1/-1;min-width:0}
+@media(max-width:760px){.solar-exposure-grid{grid-template-columns:minmax(0,1fr)}.solar-chart-card{grid-column:auto}}
