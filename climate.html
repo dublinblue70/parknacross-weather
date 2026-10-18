@@ -77,6 +77,37 @@
             ><small>Parknacross minus Johnstown Castle</small>
           </article>
         </section>
+        <section class="page-section" id="firstFrostTracker">
+          <div class="section-heading">
+            <div>
+              <span class="section-eyebrow">Local temperature records</span>
+              <h2>First frost tracker</h2>
+              <p>Tracks the earliest frost recorded at the Parknacross station in each July–June frost season.</p>
+            </div>
+          </div>
+          <div class="climate-context-grid">
+            <article class="climate-focus">
+              <span class="section-eyebrow" id="frostSeasonLabel">Current frost season</span>
+              <strong id="frostCurrentDate">Loading…</strong>
+              <p id="frostCurrentDetail">Checking saved station lows…</p>
+            </article>
+            <article class="context-card">
+              <span>Recorded frost days this season</span>
+              <strong id="frostSeasonCount">--</strong>
+              <small id="frostSeasonCoverage">Days with valid saved station lows</small>
+            </article>
+            <article class="context-card">
+              <span>Temperature archive coverage</span>
+              <strong id="frostArchiveRange">--</strong>
+              <small>Range of days with usable local temperature lows</small>
+            </article>
+          </div>
+          <div id="frostSeasonHistory" class="event-timeline" aria-live="polite" style="margin-top:14px">
+            <div class="empty-state">Loading frost history…</div>
+          </div>
+          <p id="frostDataNote" class="info-note" role="note">Only measured station lows of 0.0°C or below count as frost. Forecast temperatures are not counted as observed frost; days without a usable saved low remain unknown.</p>
+          <p id="frostStatus" class="info-note" role="status" aria-live="polite">Loading the Parknacross temperature archive…</p>
+        </section>
         <section class="page-section">
           <div class="section-heading">
             <div>
@@ -142,7 +173,7 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="offline.js?v=20261010-v38-4-190"></script>
     <script src="site-config.js?v=20261010-v38-4-188"></script>
-    <script src="comparison-alignment.js?v=20261010-v38-4-190"></script><script src="climate.js?v=20261015-rainfall-context"></script>
+    <script src="comparison-alignment.js?v=20261010-v38-4-190"></script><script src="climate.js?v=20261018-first-frost-v1"></script>
     <!-- Cloudflare Web Analytics -->
     <script
       type="module"
