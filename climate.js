@@ -103,6 +103,109 @@
     set("frostStatus", `Based on ${validDays.length.toLocaleString("en-IE")} archived days with usable temperature lows. A missing or unrecorded day is not treated as frost-free.`);
   }
 
+  function solarHistoryRows(payload) {
+    if (Array.isArray(payload)) return payload;
+    for (const key of ["readings", "rows", "history", "data"]) {
+      if (Array.isArray(payload?.[key])) return payload[key];
+    }
+    return [];
+  }
+  function solarSampleEpoch(row) {
+    const value = row?.epoch ?? row?.timestamp ?? row?.recorded_at;
+    if (typeof value === "string" && !/^\\d+(?:\\.\\d+)?$/.test(value)) {
+      const parsed = Date.parse(value);
+      return Number.isFinite(parsed) ? parsed / 1000 : NaN;
+    }
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return NaN;
+    return numeric > 1e12 ? numeric / 1000 : numeric;
+  }
+  function solarDateKeys() {
+    const today = dublinDayKey();
+    const [year, month, day] = today.split("-").map(Number);
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(Date.UTC(year, month - 1, day - (6 - index), 12));
+      return dublinDayKey(date);
+    });
+  }
+  function solarDateLabel(day) {
+    return new Date(day + "T12:00:00Z").toLocaleDateString("en-IE", {
+      timeZone: DUBLIN_TZ, weekday: "short", day: "numeric", month: "short"
+    });
+  }
+  function renderSolarExposure(payload) {
+    const rows = solarHistoryRows(payload)
+      .map(row => ({
+        epoch: solarSampleEpoch(row),
+        watts: Number(row?.solar_w_m2)
+      }))
+      .filter(row => Number.isFinite(row.epoch) && Number.isFinite(row.watts)
+        && row.watts >= 0 && row.watts <= 2000)
+      .sort((a, b) => a.epoch - b.epoch);
+    const keys = solarDateKeys();
+    const totals = new Map(keys.map(key => [key, { wh: 0, seconds: 0 }]));
+    for (let index = 1; index < rows.length; index += 1) {
+      const before = rows[index - 1];
+      const after = rows[index];
+      const seconds = after.epoch - before.epoch;
+      if (seconds <= 0 || seconds > 900) continue;
+      const midpoint = new Date((before.epoch + seconds / 2) * 1000);
+      const key = dublinDayKey(midpoint);
+      const bucket = totals.get(key);
+      if (!bucket) continue;
+      bucket.wh += ((before.watts + after.watts) / 2) * seconds / 3600;
+      bucket.seconds += seconds;
+    }
+    const values = keys.map(key => totals.get(key));
+    const today = values[values.length - 1];
+    const weekWh = values.reduce((sum, item) => sum + item.wh, 0);
+    const weekSeconds = values.reduce((sum, item) => sum + item.seconds, 0);
+    set("solarTodayTotal", today.seconds ? `${(today.wh / 1000).toFixed(2)} kWh/m²` : "--");
+    set("solarTodayCoverage", today.seconds
+      ? `${(today.seconds / 3600).toFixed(1)} h of measured intervals today`
+      : "No valid measured intervals yet today");
+    set("solarWeekTotal", weekSeconds ? `${(weekWh / 1000).toFixed(2)} kWh/m²` : "--");
+    set("solarWeekCoverage", weekSeconds
+      ? `${(weekSeconds / 3600).toFixed(1)} h integrated across ${rows.length.toLocaleString("en-IE")} valid readings`
+      : "No valid solar intervals in the available archive");
+    const note = weekSeconds
+      ? `Based on ${rows.length.toLocaleString("en-IE")} valid stored readings from the rolling 7-day archive. ${(weekSeconds / 3600).toFixed(1)} hours of adjacent intervals were integrated; longer gaps and dates outside the available archive are excluded.`
+      : "Solar exposure is unavailable because the archive returned no valid adjacent readings.";
+    set("solarExposureNote", note);
+    if (window.Chart && $("solarExposureChart")) {
+      if (renderSolarExposure.chart) renderSolarExposure.chart.destroy();
+      renderSolarExposure.chart = new Chart($("solarExposureChart"), {
+        type: "bar",
+        data: {
+          labels: keys.map(solarDateLabel),
+          datasets: [{
+            data: values.map(item => item.seconds ? Number((item.wh / 1000).toFixed(3)) : null),
+            backgroundColor: "#f3bf67",
+            borderRadius: 6
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          scales: {
+            x: { grid: { color: "transparent" }, ticks: { color: "#9fb3c1" } },
+            y: { beginAtZero: true, grace: "10%", grid: { color: "rgba(174,210,232,.09)" }, ticks: { color: "#9fb3c1" }, title: { display: true, text: "kWh/m²", color: "#9fb3c1" } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { afterLabel: context => `${(values[context.dataIndex].seconds / 3600).toFixed(1)} h measured coverage` } }
+          }
+        }
+      });
+    }
+  }
+  function renderSolarUnavailable() {
+    set("solarTodayTotal", "--");
+    set("solarTodayCoverage", "Solar archive request failed");
+    set("solarWeekTotal", "--");
+    set("solarWeekCoverage", "Solar archive request failed");
+    set("solarExposureNote", "The solar archive could not be reached. Please try again later.");
+  }
+
   function events(items) {
     const e = $("eventTimeline");
     if (!items.length) {
@@ -120,6 +223,7 @@
     }
     set("year", new Date().getFullYear());
     loadCurrentComparison();
+    get("/history?hours=168").then(renderSolarExposure).catch(renderSolarUnavailable);
     (window.ParknacrossRefresh?.every || setInterval)(loadCurrentComparison, 5 * 60 * 1000);
 
     // /rain-summary includes the latest WS90 daily counter and is the same
