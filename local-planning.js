@@ -48,7 +48,7 @@
     const quality=temperature>=13&&wind>=6&&wind<=25?'Good'
      :temperature>=8&&wind>=4&&wind<=32?'Fair'
      :temperature>=5&&wind>=2?'Limited':null;
-    if(quality)runs.push({from:run[0].epoch*1000,to:(run[run.length-1].epoch+1)*1000,
+    if(quality)runs.push({from:run[0].epoch*1000,to:(run[run.length-1].epoch+3600)*1000,
      hours,temperature,wind,quality});
    }
    run=[];
