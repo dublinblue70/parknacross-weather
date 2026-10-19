@@ -1,0 +1,20 @@
+/* Keep the chart ranges on the first row and give each mobile action a usable tap target. */
+@media (max-width: 760px) {
+  .graph-range-controls {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .graph-range-controls > a[href="#dateComparison"],
+  .graph-range-controls > #graphRetry,
+  .graph-range-controls > #copyGraphLink {
+    grid-column: span 2;
+    width: 100%;
+    min-width: 0;
+    padding: 10px 6px;
+    font-size: 0.74rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: normal;
+  }
+}
