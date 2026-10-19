@@ -1165,18 +1165,18 @@ function updateWhatToWear(current, rainDetected = false) {
     const wet=/\brain\b|drizzl|shower|thunder|hail/i.test(text);
     const windy=/\bwindy\b|\bgust|strong wind|fresh wind|gale/i.test(text);
     const notes=[];
-    if(wet)notes.push("rain or showers are mentioned, so consider taking a waterproof");
-    if(windy)notes.push("stronger winds are mentioned, so a windproof layer may be useful");
+    if(wet)notes.push("Rain or showers forecast; consider a waterproof");
+    if(windy)notes.push("Stronger winds forecast; consider a windproof layer");
     forecastNote.hidden=!notes.length;
     if(!notes.length){
       forecastNote.textContent="";
     }else{
       const rainRate=usable(current?.rain_rate_mm_h)?Number(current.rain_rate_mm_h):null;
-      const localRain=rainRate!==null&&rainRate>0?`Rain is currently being measured at Parknacross at ${n(rainRate)} mm/h.`
-        :rainDetected?"Rain was detected at Parknacross within the last few minutes; the current rate is 0.0 mm/h."
-        :rainRate!==null?`The Parknacross station currently reports ${n(rainRate)} mm/h.`:"The current local rain reading is unavailable.";
-      const scopeNote=wet?`This is a forecast, not rain measured at Parknacross. ${localRain}`:"This is an official forecast, separate from the latest local station readings.";
-      forecastNote.textContent=`Met Éireann forecast · ${notes.join("; ")}. ${scopeNote}`;
+      const localRain=rainRate!==null&&rainRate>0?`Parknacross rain rate: ${n(rainRate)} mm/h.`
+        :rainDetected?"Recent rain detected at Parknacross; current rate: 0.0 mm/h."
+        :rainRate!==null?`Parknacross rain rate: ${n(rainRate)} mm/h.`:"Parknacross rain reading unavailable.";
+      const scopeNote=wet?`Met Éireann forecast; local readings are separate. ${localRain}`:"Official forecast; local readings are separate.";
+      forecastNote.textContent=`${notes.join(". ")}. ${scopeNote}`;
     }
   }
 }
