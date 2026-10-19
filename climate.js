@@ -81,6 +81,7 @@
       set("frostSeasonCount", "--");
       set("frostSeasonCoverage", "Waiting for valid archived station temperatures");
       set("frostArchiveRange", "Unavailable");
+      $("frostSeasonHistory").hidden = false;
       $("frostSeasonHistory").innerHTML = '<div class="empty-state">Frost history will appear when usable temperature lows are available.</div>';
       set("frostStatus", "The temperature archive is temporarily unavailable or contains no usable daily lows.");
       return;
@@ -92,11 +93,12 @@
     set("frostCurrentDate", current.first ? frostDateLabel(current.first) : "No frost recorded yet");
     set("frostCurrentDetail", current.first
       ? `Earliest recorded station low at or below 0.0°C this season.`
-      : "No station low at or below 0.0°C has been recorded so far this season.");
+      : "A recorded station low of 0.0°C or below marks the first frost.");
     set("frostSeasonCount", String(current.frostDays));
     set("frostSeasonCoverage", `${current.observedDays.toLocaleString("en-IE")} day${current.observedDays === 1 ? "" : "s"} with valid saved lows; gaps remain unknown`);
     set("frostArchiveRange", `${frostDateLabel(validDays[0].day)} – ${frostDateLabel(validDays[validDays.length - 1].day)}`);
-    const history = [...groups.entries()].sort((a, b) => b[0] - a[0]);
+    const history = [...groups.entries()].filter(([year]) => year < currentYear).sort((a, b) => b[0] - a[0]);
+    $("frostSeasonHistory").hidden = history.length === 0;
     $("frostSeasonHistory").innerHTML = history.map(([year, group]) =>
       `<article class="event-item"><time>${frostSeasonLabel(year)}</time><div><strong>${group.first ? `Earliest recorded frost · ${frostDateLabel(group.first)}` : "No frost recorded in available observations"}</strong><p>${group.frostDays} frost day${group.frostDays === 1 ? "" : "s"} among ${group.observedDays.toLocaleString("en-IE")} days with valid station lows.</p></div></article>`
     ).join("");
@@ -278,6 +280,7 @@
       set("frostSeasonCount", "--");
       set("frostSeasonCoverage", "Archive request failed");
       set("frostArchiveRange", "Unavailable");
+      $("frostSeasonHistory").hidden = false;
       $("frostSeasonHistory").innerHTML = '<div class="empty-state">Frost history is temporarily unavailable. Please try again later.</div>';
       set("frostStatus", "The Parknacross daily archive could not be reached.");
     }
