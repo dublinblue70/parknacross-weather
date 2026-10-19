@@ -273,8 +273,10 @@
     if (dR.status === "fulfilled" && !renderAvailable.frostRendered) {
       renderAvailable.frostRendered = true;
       renderFrostTracker(dR.value.days || []);
+      window.ParknacrossFingerprint?.render(dR.value.days || []);
     } else if (dR.status === "rejected" && !renderAvailable.frostErrorRendered) {
       renderAvailable.frostErrorRendered = true;
+      window.ParknacrossFingerprint?.unavailable();
       set("frostCurrentDate", "Archive unavailable");
       set("frostCurrentDetail", "Saved temperature lows could not be loaded.");
       set("frostSeasonCount", "--");

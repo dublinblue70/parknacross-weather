@@ -20,7 +20,7 @@
 
     <title>Parknacross Climate &amp; Weather Records | North Wexford</title>
     <link rel="canonical" href="https://parknacrossweather.ie/climate.html" />
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261014-v38-4-210"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script></head>
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261014-v38-4-210"></script><script src="weather-warnings.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="weather-fingerprint.css?v=20261019-fingerprint"></head>
   <body>
     <div class="shell">
       <header class="topbar">
@@ -76,6 +76,20 @@
             ><strong id="climateDelta">--</strong
             ><small>Parknacross minus Johnstown Castle</small>
           </article>
+        </section>
+        <section class="page-section weather-fingerprint" id="weatherFingerprint" aria-labelledby="fingerprintHeading">
+          <div class="fingerprint-top">
+            <div><span class="section-eyebrow">A year in colour · Observed locally</span><h2 id="fingerprintHeading">The Parknacross weather fingerprint</h2><p>Every circle tells a day’s story. Explore temperature, rain, wind and sunlight across the year.</p></div>
+            <div class="fingerprint-controls"><label for="fingerprintYear">Year<select id="fingerprintYear" disabled><option>Loading…</option></select></label><button class="secondary-button" id="fingerprintDownload" type="button" disabled>Download image</button></div>
+          </div>
+          <div class="fingerprint-key" aria-label="Segment positions, clockwise from top right">
+            <span style="--key-color:#ff8c78"><i aria-hidden="true"></i>↗ Temperature high</span><span style="--key-color:#65caff"><i aria-hidden="true"></i>↘ Rainfall</span><span style="--key-color:#78dfc0"><i aria-hidden="true"></i>↙ Peak gust</span><span style="--key-color:#f4d36f"><i aria-hidden="true"></i>↖ Solar peak</span>
+          </div>
+          <div class="fingerprint-detail" aria-live="polite" aria-atomic="true"><div id="fingerprintPortrait" class="fingerprint-portrait" aria-hidden="true"></div><div class="fingerprint-selected"><h3 id="fingerprintDate">Select a day</h3><dl id="fingerprintValues" class="fingerprint-values"></dl><p id="fingerprintDayNote">Loading saved daily observations…</p><a id="fingerprintArchive" href="history.html" hidden>Explore this day’s weather →</a></div></div>
+          <p class="fingerprint-scroll-hint">Swipe the mosaic sideways to explore every date. Tap a circle for details.</p>
+          <div class="fingerprint-scroll" tabindex="0" role="region" aria-label="Annual weather fingerprint mosaic; scroll horizontally on smaller screens"><div id="fingerprintGrid" class="fingerprint-grid"></div></div>
+          <p id="fingerprintStatus" class="info-note" role="status">Loading the weather fingerprint…</p>
+          <details class="fingerprint-guide"><summary>How to read the fingerprint</summary><p>Days run left to right; months run top to bottom. Each coloured segment grows with its reading: temperature high −5 to 30°C, rainfall 0 to 30 mm, peak gust 0 to 100 km/h, solar peak 0 to 1,000 W/m². Values outside these display ranges use the smallest or largest segment; the details show the actual reading. A small coloured segment includes a recorded zero; a dotted outline means not recorded.</p><p>Solar peak is the strongest recorded sunlight intensity, not sunshine duration or total solar energy. Today is incomplete; gaps in saved observations can affect any day’s totals and extremes. These fixed visual scales are not climate averages or warning thresholds. Use arrow keys to move between dates.</p></details>
         </section>
         <section class="page-section" id="firstFrostTracker">
           <div class="section-heading">
@@ -203,7 +217,7 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="offline.js?v=20261010-v38-4-190"></script>
     <script src="site-config.js?v=20261010-v38-4-188"></script>
-    <script src="comparison-alignment.js?v=20261010-v38-4-190"></script><script src="climate.js?v=20261019-frost-summary-tidy"></script>
+    <script src="comparison-alignment.js?v=20261010-v38-4-190"></script><script src="weather-fingerprint.js?v=20261019-fingerprint"></script><script src="climate.js?v=20261019-fingerprint"></script>
     <!-- Cloudflare Web Analytics -->
     <script
       type="module"

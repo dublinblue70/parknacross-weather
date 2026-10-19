@@ -1,5 +1,7 @@
-const CACHE_NAME = "parknacross-v38-4-220-live-dot-all-screens";
+const CACHE_NAME = "parknacross-v38-4-221-weather-fingerprint";
 const STATIC_ASSETS = [
+  "./weather-fingerprint.js",
+  "./weather-fingerprint.css",
   "./local-planning.js",
   "./local-planning.css",
   "./dashboard-ui.css",
