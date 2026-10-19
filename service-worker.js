@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-219-live-dot-alignment-v1";
+const CACHE_NAME = "parknacross-v38-4-220-dashboard-tidy-v1";
 const STATIC_ASSETS = [
   "./local-planning.js",
   "./local-planning.css",
