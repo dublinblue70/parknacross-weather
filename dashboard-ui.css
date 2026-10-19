@@ -290,3 +290,36 @@ body.dashboard-page #dashboardOptionalSections > * { order: 10; }
     min-width: max-content;
   }
 }
+
+/* Reserve space for the live dot and its halo at every viewport width. */
+body.dashboard-page #livePill {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr);
+  align-items: center;
+  justify-content: start;
+  justify-items: stretch;
+  column-gap: 12px;
+  padding: 11px 15px;
+  text-align: left;
+}
+body.dashboard-page #livePill .live-dot {
+  position: static;
+  grid-column: 1;
+  grid-row: 1;
+  width: 9px;
+  height: 9px;
+  margin: 0;
+  transform: none;
+  align-self: center;
+}
+body.dashboard-page #livePill #liveText {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  margin: 0;
+  justify-self: start;
+  align-self: center;
+  text-align: left;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
