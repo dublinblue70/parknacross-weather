@@ -17,6 +17,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261008-v38-4-170" />
+    <link rel="stylesheet" href="graphs-controls.css?v=20261019-mobile-actions" />
 
     <title>Weather Graphs &amp; Trends | Parknacross, Co. Wexford</title>
     <link rel="canonical" href="https://parknacrossweather.ie/graphs.html" />
@@ -72,7 +73,7 @@
               ><button type="button" data-hours="48">48h</button
               ><button type="button" data-hours="168">7d</button
               ><button type="button" data-hours="720">30d</button>
-              <a class="secondary-button" href="#dateComparison">Compare two dates</a>
+              <a class="secondary-button" href="#dateComparison">Compare dates</a>
               <button type="button" id="graphRetry" class="secondary-button">Refresh</button> <button type="button" id="copyGraphLink">Copy link to this view</button><span id="graphLinkStatus" role="status"></span>
             </div>
           </div>
@@ -257,7 +258,7 @@
 
 <section id="dateComparison" class="info-card date-comparison" aria-labelledby="comparisonHeading">
   <span class="section-eyebrow">Two-date comparison</span>
-  <h2 id="comparisonHeading">Compare two days</h2>
+  <h2 id="comparisonHeading">Compare two dates</h2>
   <p>See how temperature, wind, rain and other readings changed at the same time of day.</p>
   <form id="comparisonForm" class="comparison-form">
     <label for="comparisonFirst">First date<input id="comparisonFirst" type="date" required></label>
