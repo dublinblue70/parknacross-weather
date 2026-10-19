@@ -262,3 +262,31 @@ body.dashboard-page #dashboardOptionalSections > * { order: 10; }
     overflow-wrap: anywhere;
   }
 }
+
+
+/* Compact mobile advisory and keep dashboard shortcuts in a balanced grid. */
+@media (max-width: 640px) {
+  body.dashboard-page #wearForecast {
+    margin: 10px 0 0;
+    padding: 12px 14px;
+    font-size: .82rem;
+    line-height: 1.5;
+  }
+  body.dashboard-page .dashboard-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 12px;
+  }
+  body.dashboard-page .dashboard-shortcuts a {
+    justify-content: center;
+    padding: 6px 8px;
+    text-align: center;
+  }
+  body.dashboard-page .dashboard-shortcuts a:nth-child(4) { grid-column: 1; }
+  body.dashboard-page .dashboard-shortcuts a:last-child {
+    grid-column: 2 / 4;
+    justify-self: center;
+    min-width: max-content;
+  }
+}
