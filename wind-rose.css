@@ -4,3 +4,6 @@
 .wind-rose-explanation{max-width:430px;margin:0 auto 10px;font-size:.83rem;line-height:1.6;color:#c3d2de;text-align:center}
 .wind-rose-meta{max-width:440px;margin:0 auto;color:#91a9ba;font-size:.72rem;line-height:1.6;text-align:center}
 @media(max-width:480px){.wind-rose-wrap{height:310px}.wind-rose-legend{gap:7px 9px;font-size:.71rem}.wind-rose-explanation{font-size:.78rem}}
+
+.wind-rose-calm-note{max-width:430px;margin:0 auto 8px;color:#e3edf5;font-size:.83rem;line-height:1.6;text-align:center}
+@media(max-width:480px){.wind-rose-calm-note{font-size:.78rem}}

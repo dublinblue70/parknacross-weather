@@ -82,8 +82,10 @@
       ctx.save();ctx.fillStyle="#0b1925";ctx.beginPath();ctx.arc(r.xCenter,r.yCenter,hole-1,0,Math.PI*2);ctx.fill();
       ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle="#eaf3fa";
       const text=result?.intervalCount ? `${Math.round(result.calm/result.intervalCount*100)}%` : "—";
-      ctx.font=`700 ${Math.max(14,Math.min(23,hole*.66))}px system-ui`;ctx.fillText(text,r.xCenter,r.yCenter-6);
-      ctx.fillStyle="#a8bfce";ctx.font=`500 ${Math.max(9,Math.min(12,hole*.37))}px system-ui`;ctx.fillText(result?.intervalCount ? "calm" : "no data",r.xCenter,r.yCenter+12);
+      ctx.font=`700 ${Math.max(14,Math.min(23,hole*.66))}px system-ui`;ctx.fillText(text,r.xCenter,r.yCenter-9);
+      ctx.fillStyle="#a8bfce";ctx.font=`500 ${Math.max(8,Math.min(10,hole*.31))}px system-ui`;
+      if(result?.intervalCount){ctx.fillText("calm",r.xCenter,r.yCenter+7);ctx.fillText("readings",r.xCenter,r.yCenter+18);}
+      else ctx.fillText("no data",r.xCenter,r.yCenter+12);
       ctx.fillStyle="#dce9f2";ctx.font="700 12px system-ui";
       for(const [label,dx,dy] of [["N",0,-1],["E",1,0],["S",0,1],["W",-1,0]])ctx.fillText(label,r.xCenter+dx*(radius+18),r.yCenter+dy*(radius+18));
       ctx.restore();
@@ -99,7 +101,8 @@
         const item=document.createElement('span'),swatch=document.createElement('i');swatch.style.backgroundColor=band.color;swatch.setAttribute('aria-hidden','true');item.append(swatch,document.createTextNode(band.label));legend.append(item);
       });
       const units=document.createElement('span');units.className='wind-rose-unit';units.textContent='km/h';legend.append(units);wrap.after(legend);
-      const explanation=document.createElement('p');explanation.className='wind-rose-explanation';explanation.textContent='Longer spokes show where the wind blew from more often; colour shows the average speed for that direction.';legend.after(explanation);
+      const calmNote=document.createElement('p');calmNote.className='wind-rose-calm-note';calmNote.textContent='The centre shows the percentage of valid five-minute readings below 1 km/h (calm).';legend.after(calmNote);
+      const explanation=document.createElement('p');explanation.className='wind-rose-explanation';explanation.textContent='Longer spokes show where the wind blew from more often; colour shows the average speed for that direction.';calmNote.after(explanation);
     }
     return new Chart(canvas, {
       type:"polarArea",
@@ -140,12 +143,16 @@
     chart.data.datasets[0].backgroundColor=result.meanSpeeds.map(speed=>speed==null ? 'transparent' : speedColour(speed));
     chart.update('none');
     const calmPercent=result.intervalCount ? result.calm/result.intervalCount*100 : 0;
+    const calmNote=chart.canvas.closest('.wind-rose-wrap')?.parentElement?.querySelector('.wind-rose-calm-note');
+    if(calmNote)calmNote.textContent=result.intervalCount
+      ? `Centre: ${Math.round(calmPercent)}% of valid five-minute readings had wind below ${CALM_THRESHOLD_KMH} km/h (calm) during this period.`
+      : `The centre shows the percentage of valid five-minute readings below ${CALM_THRESHOLD_KMH} km/h (calm).`;
     const summary=result.intervalCount
-      ? `${result.intervalCount.toLocaleString('en-IE')} valid five-minute intervals · calm below ${CALM_THRESHOLD_KMH} km/h · outer ring ${maximum}% of non-calm intervals.`
+      ? `${result.intervalCount.toLocaleString('en-IE')} valid five-minute intervals · outer ring ${maximum}% of non-calm intervals.`
       : 'No usable wind-direction observations in this period.';
     if(metaElement)metaElement.textContent=summary;
     chart.canvas.setAttribute('aria-label',result.intervalCount
-      ? `Wind rose: ${calmPercent.toFixed(1)}% calm. `+LABELS.map((label,i)=>result.bins[i] ? `${label}: ${result.percentages[i].toFixed(1)}% of non-calm intervals, average ${result.meanSpeeds[i].toFixed(1)} km/h.` : '').filter(Boolean).join(' ')
+      ? `Wind rose: ${calmPercent.toFixed(1)}% calm. This is the share of valid five-minute readings with wind below ${CALM_THRESHOLD_KMH} km/h during this period. `+LABELS.map((label,i)=>result.bins[i] ? `${label}: ${result.percentages[i].toFixed(1)}% of non-calm intervals, average ${result.meanSpeeds[i].toFixed(1)} km/h.` : '').filter(Boolean).join(' ')
       : 'Wind rose: no usable observations in this period.');
     return result;
   }
