@@ -1,0 +1,6 @@
+.wind-rose-wrap{height:350px;max-width:380px;width:100%;margin:0 auto;position:relative}
+.wind-rose-legend{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:7px 12px;margin:6px auto 12px;max-width:450px;color:#e3edf5;font-size:.76rem;font-weight:600}
+.wind-rose-legend>span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}.wind-rose-legend i{width:12px;height:12px;border-radius:4px;display:inline-block}.wind-rose-unit{color:#a8bfce;font-weight:400}
+.wind-rose-explanation{max-width:430px;margin:0 auto 10px;font-size:.83rem;line-height:1.6;color:#c3d2de;text-align:center}
+.wind-rose-meta{max-width:440px;margin:0 auto;color:#91a9ba;font-size:.72rem;line-height:1.6;text-align:center}
+@media(max-width:480px){.wind-rose-wrap{height:310px}.wind-rose-legend{gap:7px 9px;font-size:.71rem}.wind-rose-explanation{font-size:.78rem}}

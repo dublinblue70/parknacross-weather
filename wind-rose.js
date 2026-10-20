@@ -30,59 +30,99 @@
       const previous = slots.get(bucket);
       if (!previous || epoch >= previous.epoch) slots.set(bucket, {epoch, speed, degrees});
     }
+    const speedSums = new Array(LABELS.length).fill(0);
     let directional = 0, calm = 0;
     for (const {speed, degrees} of slots.values()) {
       if (speed < CALM_THRESHOLD_KMH) { calm++; continue; }
-      bins[Math.round((degrees % 360) / 22.5) % LABELS.length]++;
+      const index = Math.round((degrees % 360) / 22.5) % LABELS.length;
+      bins[index]++;
+      speedSums[index] += speed;
       directional++;
     }
     return {bins, calm, directional, intervalCount: slots.size,
+      meanSpeeds: bins.map((count, index) => count ? speedSums[index] / count : null),
       percentages: bins.map(count => directional ? count / directional * 100 : 0)};
   }
 
+  const SPEED_BANDS = [
+    {max:5, label:"1–5", color:"#91d8f7"},
+    {max:15, label:"5–15", color:"#3f8cff"},
+    {max:25, label:"15–25", color:"#20c5b0"},
+    {max:40, label:"25–40", color:"#ffd052"},
+    {max:Infinity, label:"40+", color:"#fb4a9c"}
+  ];
+  const speedColour = speed => SPEED_BANDS.find(band => speed < band.max)?.color || SPEED_BANDS.at(-1).color;
+  // Use the Chart.js arc elements for both rendering and pointer hit testing.
+  // The central hole is reserved space, so it never counts towards spoke length.
+  const spokeLayout = {
+    id:"parknacrossWindSpokes",
+    afterDatasetUpdate(chart, args) {
+      const r=chart.scales.r, radius=r.drawingArea, hole=radius*.22;
+      const maximum=chart.$windRoseMaximum || 10;
+      args.meta.data.forEach((arc,index)=>{
+        const frequency=Number(chart.data.datasets[0].data[index] || 0);
+        Object.assign(arc,{
+          x:r.xCenter,y:r.yCenter,innerRadius:hole,
+          outerRadius:frequency>0 ? hole+(radius-hole)*frequency/maximum : hole,
+          startAngle:(index*22.5-90-9)*Math.PI/180,
+          endAngle:(index*22.5-90+9)*Math.PI/180
+        });
+      });
+    },
+    beforeDatasetsDraw(chart) {
+      const {ctx,scales:{r}}=chart, radius=r.drawingArea, hole=radius*.22;
+      ctx.save();ctx.strokeStyle="rgba(173,201,219,.18)";ctx.lineWidth=1;
+      for(const size of [hole,hole+(radius-hole)*.5,radius]){
+        ctx.beginPath();ctx.arc(r.xCenter,r.yCenter,size,0,Math.PI*2);ctx.stroke();
+      }
+      ctx.restore();
+    },
+    afterDatasetsDraw(chart) {
+      const {ctx,scales:{r}}=chart, radius=r.drawingArea, hole=radius*.22, result=chart.$windRose;
+      ctx.save();ctx.fillStyle="#0b1925";ctx.beginPath();ctx.arc(r.xCenter,r.yCenter,hole-1,0,Math.PI*2);ctx.fill();
+      ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle="#eaf3fa";
+      const text=result?.intervalCount ? `${Math.round(result.calm/result.intervalCount*100)}%` : "—";
+      ctx.font=`700 ${Math.max(14,Math.min(23,hole*.66))}px system-ui`;ctx.fillText(text,r.xCenter,r.yCenter-6);
+      ctx.fillStyle="#a8bfce";ctx.font=`500 ${Math.max(9,Math.min(12,hole*.37))}px system-ui`;ctx.fillText(result?.intervalCount ? "calm" : "no data",r.xCenter,r.yCenter+12);
+      ctx.fillStyle="#dce9f2";ctx.font="700 12px system-ui";
+      for(const [label,dx,dy] of [["N",0,-1],["E",1,0],["S",0,1],["W",-1,0]])ctx.fillText(label,r.xCenter+dx*(radius+18),r.yCenter+dy*(radius+18));
+      ctx.restore();
+    }
+  };
+
   function create(canvas) {
     if (!canvas || typeof Chart === "undefined") return null;
-
+    const wrap=canvas.closest('.wind-rose-wrap');
+    if(wrap && !wrap.nextElementSibling?.classList.contains('wind-rose-legend')){
+      const legend=document.createElement('div');legend.className='wind-rose-legend';legend.setAttribute('aria-label','Average wind speed by direction in kilometres per hour');
+      SPEED_BANDS.forEach(band=>{
+        const item=document.createElement('span'),swatch=document.createElement('i');swatch.style.backgroundColor=band.color;swatch.setAttribute('aria-hidden','true');item.append(swatch,document.createTextNode(band.label));legend.append(item);
+      });
+      const units=document.createElement('span');units.className='wind-rose-unit';units.textContent='km/h';legend.append(units);wrap.after(legend);
+      const explanation=document.createElement('p');explanation.className='wind-rose-explanation';explanation.textContent='Longer spokes show where the wind blew from more often; colour shows the average speed for that direction.';legend.after(explanation);
+    }
     return new Chart(canvas, {
-      type: "polarArea",
-      data: {
-        labels: [...LABELS],
-        datasets: [{
-          label: "Direction frequency %",
-          data: new Array(LABELS.length).fill(0),
-          backgroundColor: LABELS.map((_, index) =>
-            `hsla(${185 + index * 3},78%,68%,${0.34 + (index % 4) * 0.07})`
-          ),
-          borderColor: "rgba(174,225,244,.32)",
-          borderWidth: 1
-        }]
-      },
-      options: {
-        maintainAspectRatio: false,
-        scales: {
-          r: {
-            beginAtZero: true,
-            startAngle: 0,
-            grid: { color: "rgba(174,210,232,.11)" },
-            angleLines: { color: "rgba(174,210,232,.11)" },
-            ticks: {
-              display: true,
-              backdropColor: "rgba(7,19,31,.72)",
-              color: "#9fb3c1",
-              callback: value => `${value}%`
-            },
-            pointLabels: {
-              display: true,
-              color: "#bfd0e3",
-              font: { size: 11 }
-            }
-          }
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: context => `${context.label}: ${Number(context.raw || 0).toFixed(1)}%`
+      type:"polarArea",
+      plugins:[spokeLayout],
+      data:{labels:[...LABELS],datasets:[{
+        label:"Direction frequency %",data:new Array(LABELS.length).fill(0),
+        backgroundColor:new Array(LABELS.length).fill(SPEED_BANDS[0].color),borderWidth:0,hoverBorderColor:"#ffffff",hoverBorderWidth:1
+      }]},
+      options:{
+        maintainAspectRatio:false,animation:false,layout:{padding:30},
+        scales:{r:{display:false,beginAtZero:true,min:0,max:100}},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            displayColors:true,
+            callbacks:{
+              title:items=>`${items[0]?.label || ""} · wind from`,
+              label:context=>{
+                const result=context.chart.$windRose,index=context.dataIndex,speed=result?.meanSpeeds[index];
+                return [`${Number(context.raw || 0).toFixed(1)}% of non-calm intervals`,
+                  speed==null ? 'Average speed unavailable' : `Average speed ${speed.toFixed(1)} km/h`,
+                  `${result?.bins[index] || 0} five-minute intervals`];
+              }
             }
           }
         }
@@ -91,19 +131,22 @@
   }
 
   function update(chart, rows, metaElement, options = {}) {
-    if (!chart) return distribution(rows, options);
-
     const result = distribution(rows, options);
-    chart.data.datasets[0].data = result.percentages;
-    chart.update();
-
-    if (metaElement) {
-      const calmPercent = result.intervalCount ? result.calm / result.intervalCount * 100 : 0;
-      metaElement.textContent = result.directional
-        ? `${result.directional.toLocaleString("en-IE")} five-minute directional intervals · sectors use non-calm intervals only · calm below ${CALM_THRESHOLD_KMH} km/h: ${calmPercent.toFixed(1)}% (${result.calm.toLocaleString("en-IE")} intervals)`
-        : "No usable wind-direction observations in this period.";
-    }
-
+    if(!chart)return result;
+    chart.$windRose=result;
+    const maximum=Math.max(10,Math.ceil(Math.max(...result.percentages)/10)*10);
+    chart.$windRoseMaximum=maximum;
+    chart.data.datasets[0].data=result.percentages;
+    chart.data.datasets[0].backgroundColor=result.meanSpeeds.map(speed=>speed==null ? 'transparent' : speedColour(speed));
+    chart.update('none');
+    const calmPercent=result.intervalCount ? result.calm/result.intervalCount*100 : 0;
+    const summary=result.intervalCount
+      ? `${result.intervalCount.toLocaleString('en-IE')} valid five-minute intervals · calm below ${CALM_THRESHOLD_KMH} km/h · outer ring ${maximum}% of non-calm intervals.`
+      : 'No usable wind-direction observations in this period.';
+    if(metaElement)metaElement.textContent=summary;
+    chart.canvas.setAttribute('aria-label',result.intervalCount
+      ? `Wind rose: ${calmPercent.toFixed(1)}% calm. `+LABELS.map((label,i)=>result.bins[i] ? `${label}: ${result.percentages[i].toFixed(1)}% of non-calm intervals, average ${result.meanSpeeds[i].toFixed(1)} km/h.` : '').filter(Boolean).join(' ')
+      : 'Wind rose: no usable observations in this period.');
     return result;
   }
 
