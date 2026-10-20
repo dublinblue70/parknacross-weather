@@ -44,3 +44,17 @@ test('populated archive renders the desktop mosaic',async({page},testInfo)=>{
  rows=Array.from({length:210},(_,i)=>({day:new Date(Date.UTC(year,0,1+i,12)).toISOString().slice(0,10),high_c:5+(i%22),rain_mm:i%7===0?i%35:0,peak_gust_kmh:10+i%85,solar_peak_w_m2:100+i*13%900})).filter(r=>r.day<=today);
  await page.goto('/climate.html#weatherFingerprint');await expect(page.locator('#fingerprintDownload')).toBeEnabled();await page.locator('#weatherFingerprint').screenshot({path:testInfo.outputPath('fingerprint-desktop.png')});
 });
+
+for(const width of [390,1280])test(`all month rows keep equal spacing at ${width}px, including future months`,async({page},testInfo)=>{
+ await page.clock.setFixedTime(new Date('2026-10-20T12:00:00Z'));
+ await page.setViewportSize({width,height:900});
+ rows=[{day:'2026-10-20',high_c:15,rain_mm:0,peak_gust_kmh:13.3,solar_peak_w_m2:6}];
+ await page.goto('/climate.html#weatherFingerprint');
+ await expect(page.locator('#fingerprintStatus')).toContainText('2026 · 1 day');
+ const boxes=await page.locator('.fingerprint-row:not(.fingerprint-numbers)').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return {height:r.height,top:r.top};}));
+ expect(boxes).toHaveLength(12);
+ const gaps=boxes.slice(1).map((box,i)=>box.top-boxes[i].top);
+ expect(Math.max(...gaps)-Math.min(...gaps)).toBeLessThan(1);
+ expect(Math.max(...boxes.map(b=>b.height))-Math.min(...boxes.map(b=>b.height))).toBeLessThan(1);
+ await page.locator('#weatherFingerprint').screenshot({path:testInfo.outputPath('even-month-spacing.png')});
+});
