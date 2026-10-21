@@ -236,7 +236,7 @@ function renderChecks(only=null) {
     setText(prefix+"Detail",ok?detail:data.__error?"This data source could not be reached. Other sources may still work.":"The source is missing expected data or its observations are delayed.");
     if(!ok)states.push("warn");
   }
-  for(const [prefix,data,valid] of [["landWarning",landWarnings,Array.isArray(landWarnings?.warnings)],["marineWarning",marineWarnings,typeof marineWarnings?.local_warning_relevant==="boolean"]]){
+  for(const [prefix,data,valid] of [["landWarning",landWarnings,Array.isArray(landWarnings?.warnings)],["marineWarning",marineWarnings,marineWarnings?.local_warning_status_available!==false&&typeof marineWarnings?.local_warning_relevant==="boolean"]]){
     if(!Object.values(checkResults).includes(data))continue;
     const ok=!data.__error&&valid;setBadge(prefix+"Badge",ok?"good":"warn",ok?"CHECKED":"UNAVAILABLE");
     setText(prefix+"Value",ok?(prefix==="landWarning"?`${window.ParknacrossWarnings.select(data.warnings).length} relevant warnings`:data.local_warning_relevant?"Relevant marine warning":"No relevant marine warning"):"Feed unavailable");

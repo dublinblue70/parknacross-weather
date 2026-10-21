@@ -2134,9 +2134,7 @@ function renderWeatherWarning(list) {
 
   set(
     "warningText",
-    warning.description ||
-    warning.headline ||
-    "See Met Éireann for full warning details."
+    window.ParknacrossWarnings.plainText(warning.description || warning.headline || "See Met Éireann for full warning details.")
   );
 
   return true;
@@ -2152,6 +2150,17 @@ function renderMarineWarning(marine, weatherWarningVisible) {
    * The Worker filters marine warnings to EI811:
    * Wicklow Head → Carnsore Point, the sector containing Parknacross/Ardamine.
    */
+  if (marine?.local_warning_status_available === false) {
+    banner.hidden = false;
+    banner.classList.remove("level-yellow", "level-orange", "level-red");
+    banner.classList.add("level-unavailable");
+    banner.classList.toggle("stacked-warning", weatherWarningVisible);
+    set("marineWarningLevel", "Status unavailable");
+    set("marineWarningTitle", "Official marine warnings unavailable");
+    set("marineWarningTiming", "");
+    set("marineWarningText", "The local marine warning pages could not be verified. Open Met Éireann for the latest bulletin.");
+    return true;
+  }
   const gale = marineFlagIsActive(marine?.local_gale_warning);
   const smallCraft = marineFlagIsActive(marine?.local_small_craft_warning);
 

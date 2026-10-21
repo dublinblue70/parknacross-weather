@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-224-calm-explained";
+const CACHE_NAME = "parknacross-v38-4-225-independent-marine-warnings";
 const STATIC_ASSETS = [
   "./weather-fingerprint.js",
   "./weather-fingerprint.css",

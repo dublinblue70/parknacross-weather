@@ -1,3 +1,4 @@
+// v38.4.96 — marine warnings remain available independently of forecast failures.
 // v38.4.95 — bounded calendar work, encrypted background alerts and outdoor outlook.
 // Parknacross v38.4.94 — fast admin authentication and live readings before schema work; background cloud recovery.
 // Visitor photo calendar exposes dates and counts only; admin archives stay private.
@@ -82,7 +83,7 @@ const TEMP_OUTLIER_DELTA_C = 2.5;
 const TEMP_OUTLIER_BASELINE_C = 1.0;
 const TEMP_OUTLIER_WINDOW_SECONDS = 30 * 60;
 const TEMP_OUTLIER_MIN_NEIGHBORS = 3;
-const EDGE_CACHE_VERSION = "v38-4-95-efficient-archive";
+const EDGE_CACHE_VERSION = "v38-4-96-independent-marine-warnings";
 const SKY_PHOTO_KEY = "today/current";
 const SKY_PHOTO_MAX_BYTES = 10 * 1024 * 1024;
 const SKY_PHOTO_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -2176,7 +2177,7 @@ async function pushEncrypt(subscription,payload){
 async function sendWeatherPush(subscription,message,vapid,timeoutMs=5000){const endpoint=new URL(subscription.endpoint),header=pushBase64(pushText(JSON.stringify({typ:'JWT',alg:'ES256'}))),claims=pushBase64(pushText(JSON.stringify({aud:endpoint.origin,exp:Math.floor(Date.now()/1000)+3600,sub:'mailto:info@parknacrossweather.ie'}))),input=header+'.'+claims,key=await crypto.subtle.importKey('jwk',vapid.privateJwk,{name:'ECDSA',namedCurve:'P-256'},false,['sign']),signature=pushBase64(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},key,pushText(input)));return fetch(endpoint.href,{method:'POST',headers:{Authorization:`vapid t=${input}.${signature}, k=${vapid.publicKey}`,'Content-Encoding':'aes128gcm','Content-Type':'application/octet-stream',TTL:'300',Urgency:'normal'},body:await pushEncrypt(subscription,message),redirect:'error',signal:AbortSignal.timeout(timeoutMs)});}
 async function handlePushRequest(request,env,url){
  const noStore={'Cache-Control':'no-store'};
- if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.95'},200,noStore);}
+ if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.96'},200,noStore);}
  if(request.method!=='POST')return json({error:'Method not allowed'},405,noStore);
  if(request.headers.get('Origin')!=='https://parknacrossweather.ie'&&request.headers.get('Origin')!=='https://www.parknacrossweather.ie')return json({error:'Origin not allowed'},403,noStore);
  if(requestRateLimited(request,'push-settings',10))return rateLimitedResponse();
@@ -2228,7 +2229,7 @@ export default {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.95",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.96",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -5042,7 +5043,7 @@ async function getMetWarnings(){
   let list,source=primary;
   try{const response=await fetchTextWithTimeout(primary,{headers:{Accept:"application/json"}},4500);if(!response.response.ok)throw new Error(`Warnings HTTP ${response.response.status}`);list=JSON.parse(response.text);if(!Array.isArray(list))throw new Error("Unexpected warnings response");if(list.some(item=>!item||typeof item!=="object"))throw new Error("Invalid warning entry");}
   catch(error){source=fallback;const response=await fetchTextWithTimeout(fallback,{headers:{Accept:"text/html"}},4500);if(!response.response.ok)throw new Error(`Warning fallback HTTP ${response.response.status}`);list=parseWeatherWarningFallback(response.text);}
-  const warnings=list.filter(item=>! /potato|blight|farming|agricultur|environmental advisory/i.test([item.type,item.event,item.status,item.headline,item.description,item.desc].join(" "))).map(item=>({type:item.type||item.event||"",level:item.level||"",severity:item.severity||"",certainty:item.certainty||"",status:item.status||"",issued:item.issued||null,updated:item.updated||null,onset:item.onset||null,expires:item.expires||item.expiry||null,headline:item.headline||"",description:item.description||item.desc||""})).filter(item=>!item.expires||!Number.isFinite(Date.parse(item.expires))||Date.parse(item.expires)>Date.now());
+  const warnings=list.filter(item=>! /potato|blight|farming|agricultur|environmental advisory/i.test([item.type,item.event,item.status,item.headline,item.description,item.desc].join(" "))).map(item=>({type:item.type||item.event||"",level:item.level||"",severity:item.severity||"",certainty:item.certainty||"",status:item.status||"",issued:item.issued||null,updated:item.updated||null,onset:item.onset||null,expires:item.expires||item.expiry||null,headline:item.headline||"",description:cleanMetText(String(item.description||item.desc||"").replace(/<\/(?:p|li|div)>/gi,"\n"))})).filter(item=>!item.expires||!Number.isFinite(Date.parse(item.expires))||Date.parse(item.expires)>Date.now());
   return {county:"Wexford",warnings,source,checked_at:new Date().toISOString()};
 }
 
@@ -6670,7 +6671,7 @@ function parseMarineWarningSection(section, dayScope, url) {
   }
 
   return {
-    parsed: true,
+    parsed: warnings.length > 0,
     warnings
   };
 }
@@ -6910,16 +6911,25 @@ async function fetchLocalMarineWarningPage(dayScope) {
     throw new Error(`Met Éireann local marine warning HTTP ${response.status}`);
   }
 
-  return parseLocalMarineWarningPage(
-    await response.text(),
-    dayScope,
-    url
-  );
+  const html = await response.text();
+  const pageDate = htmlToPlainText(html).match(/Warnings and Advisories\s*[-–—]\s*(?:Today|Tomorrow)?\s*(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)?\s*(\d{1,2}\s+[A-Za-z]+\s+\d{4})/i);
+  const pageEpoch = pageDate ? parseMetIssuedTime(`${pageDate[1]} 12:00`) : null;
+  const expectedDay = shiftDayKey(stationDayKey(new Date()), dayScope === "tomorrow" ? 1 : 0);
+  if (!Number.isFinite(pageEpoch) || stationDayKey(new Date(pageEpoch)) !== expectedDay) {
+    throw new Error("Met Éireann local marine warning page date could not be verified");
+  }
+  const parsed = parseLocalMarineWarningPage(html, dayScope, url);
+  if (!parsed.parsed) throw new Error("Met Éireann local marine warning page could not be parsed");
+  if (parsed.warnings.some(w => {
+    const validity = parseWarningValidity(w.valid_text);
+    return !validity.onset || !validity.expires || Date.parse(validity.expires) <= Date.parse(validity.onset);
+  })) throw new Error("Met Éireann local marine warning validity could not be verified");
+  return parsed;
 }
 
 async function getMarineForecast() {
   const [feedResult, todayResult, tomorrowResult] = await Promise.all([
-    getMarineForecastFeed(),
+    getMarineForecastFeed().catch(error => ({sea:null,local:null,source:null,error:error?.message || String(error)})),
     fetchLocalMarineWarningPage("today").catch(error => ({
       parsed: false,
       day_scope: "today",
@@ -6936,7 +6946,8 @@ async function getMarineForecast() {
     }))
   ]);
 
-  const { sea, local } = feedResult;
+  const { sea: forecastSea, local } = feedResult;
+  const sea = forecastSea || {};
 
   const nationalGale = String(sea["gale-warning"] || "").toLowerCase();
   const nationalSmallCraft = String(sea["small-craft-warning"] || "").toLowerCase();
@@ -6947,6 +6958,8 @@ async function getMarineForecast() {
 
   for (const result of parsedPages) {
     for (const warning of result.warnings || []) {
+      const validity = parseWarningValidity(warning.valid_text);
+      if (!validity.expires || Date.parse(validity.expires) <= Date.now()) continue;
       const key = [
         warning.type,
         warning.headline || "",
@@ -6993,9 +7006,22 @@ async function getMarineForecast() {
 
   const localSmallCraft = pageSmallCraft || fallbackSmallCraft;
   const localGale = pageGale || fallbackGale;
+  localWarnings.sort((a,b) => {
+    const aTime = Date.parse(parseWarningValidity(a.valid_text).onset);
+    const bTime = Date.parse(parseWarningValidity(b.valid_text).onset);
+    return Number(aTime > Date.now()) - Number(bTime > Date.now()) || aTime - bTime;
+  });
   const primaryWarning = localWarnings[0] || null;
+  const warningStatusAvailable = localPagesAuthoritative || localWarnings.length > 0;
+  if (!forecastSea && !warningStatusAvailable) {
+    throw new Error("Marine forecast and local warning status could not be verified");
+  }
 
   return {
+    forecast_available: Boolean(forecastSea),
+    forecast_error: feedResult.error || null,
+    local_warning_status_available: warningStatusAvailable,
+    local_warnings: localWarnings,
     issued: sea.issued || null,
     until: sea.until || null,
 
@@ -7004,9 +7030,9 @@ async function getMarineForecast() {
     small_craft_warning: nationalSmallCraft,
 
     // Dashboard must use these geographically filtered fields.
-    local_warning_relevant: localSmallCraft || localGale,
-    local_small_craft_warning: localSmallCraft,
-    local_gale_warning: localGale,
+    local_warning_relevant: warningStatusAvailable ? localSmallCraft || localGale : null,
+    local_small_craft_warning: warningStatusAvailable ? localSmallCraft : null,
+    local_gale_warning: warningStatusAvailable ? localGale : null,
     local_warning_sector: LOCAL_MARINE_SECTOR,
     local_warning_code: LOCAL_MARINE_WARNING_CODE,
     local_warning_headline: primaryWarning?.headline || null,
