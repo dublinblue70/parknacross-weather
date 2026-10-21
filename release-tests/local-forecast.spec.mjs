@@ -15,6 +15,7 @@ for(const width of [390,1280])test(`Ardamine forecast replaces broad text at ${w
  await page.setViewportSize({width,height:900});await page.goto('/index.html#forecast');
  const toggle=page.locator('#forecast>.mobile-detail-toggle');if(await toggle.count()&&await toggle.getAttribute('aria-expanded')==='false')await toggle.click();
  await expect(page.locator('#forecastToday')).toContainText('Temperature: 10 °C');await expect(page.locator('#forecastToday')).toContainText('Wind: 30 km/h');
+ await expect(page.locator('#forecastTodaySummary')).toContainText('Dry conditions are forecast');await expect(page.locator('#forecastTonightSummary')).toContainText('Rain is forecast');await expect(page.locator('#forecastTomorrowSummary')).toContainText('only the hours shown');
  await expect(page.locator('#forecastTomorrowLabel')).toContainText('Tomorrow morning');await expect(page.locator('#forecastTomorrowCoverage')).toContainText('22 Oct');
  await expect(page.locator('#forecast')).not.toContainText('NATIONAL TEXT');await expect(page.locator('#forecast h2')).toHaveText('Ardamine forecast · Co. Wexford');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
@@ -22,5 +23,5 @@ for(const width of [390,1280])test(`Ardamine forecast replaces broad text at ${w
 });
 test('local forecast fails clearly instead of substituting national text',async({page})=>{
  fail=true;await page.goto('/index.html');await expect(page.locator('#forecastToday')).toContainText('Local hourly forecast temporarily unavailable');await expect(page.locator('#forecast')).not.toContainText('NATIONAL TEXT');
- fail=false;stale=true;await page.reload();await expect(page.locator('#forecastFreshness')).toContainText('could not be verified');
+ fail=false;stale=true;await page.reload();await expect(page.locator('#forecastFreshness')).toContainText('could not be verified');await expect(page.locator('#forecastTodaySummary')).toBeEmpty();
 });

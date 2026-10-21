@@ -1,3 +1,6 @@
 #forecast .forecast-grid>article>p[id^=forecast]{white-space:pre-line;line-height:1.9;margin-top:10px}
 #forecast .forecast-coverage{display:block;color:var(--muted,#a8bdcc);font-size:.75rem;font-weight:400;line-height:1.5;margin-top:10px;letter-spacing:0;text-transform:none}
 #forecast .forecast-local-note{margin:14px 0 0;color:var(--muted,#a8bdcc);font-size:.78rem;line-height:1.6}
+
+#forecast .forecast-grid>article>p.forecast-description{white-space:normal;line-height:1.65;margin:14px 0;color:var(--text,#e7eef5)}
+#forecast .forecast-description:empty{display:none}

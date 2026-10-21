@@ -582,7 +582,7 @@
         }
       }
     </style>
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-171"><script src="site-request.js?v=20261014-v38-4-210"></script><script src="weather-warnings.js?v=20261021-marine-warning-fix"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261019-live-dot-all-screens"><link rel="stylesheet" href="local-planning.css?v=20261018-laundry-v3"><link rel="stylesheet" href="wind-rose.css?v=20261020-calm-explained"><link rel="stylesheet" href="local-forecast.css?v=20261021-ardamine"></head>
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-171"><script src="site-request.js?v=20261014-v38-4-210"></script><script src="weather-warnings.js?v=20261021-marine-warning-fix"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261019-live-dot-all-screens"><link rel="stylesheet" href="local-planning.css?v=20261018-laundry-v3"><link rel="stylesheet" href="wind-rose.css?v=20261020-calm-explained"><link rel="stylesheet" href="local-forecast.css?v=20261021-descriptions"></head>
 
   <body class="weather-neutral dashboard-page">
     <div
@@ -1423,18 +1423,21 @@
           <div class="forecast-grid">
             <article>
               <span id="forecastTodayLabel">Today · remaining hours</span><small id="forecastTodayCoverage" class="forecast-coverage">Checking local hours…</small>
+              <p id="forecastTodaySummary" class="forecast-description"></p>
               <p id="forecastToday">Loading the Ardamine point forecast…</p>
             </article>
             <article>
               <span id="forecastTonightLabel">Tonight</span><small id="forecastTonightCoverage" class="forecast-coverage">Checking local hours…</small>
+              <p id="forecastTonightSummary" class="forecast-description"></p>
               <p id="forecastTonight">--</p>
             </article>
             <article>
               <span id="forecastTomorrowLabel">Tomorrow · available hours</span><small id="forecastTomorrowCoverage" class="forecast-coverage">Checking local hours…</small>
+              <p id="forecastTomorrowSummary" class="forecast-description"></p>
               <p id="forecastTomorrow">--</p>
             </article>
           </div>
-                  <p class="forecast-local-note">Summaries calculated from Met Éireann hourly model data for Ardamine. The hours shown are the available forecast window; tomorrow may cover only the morning. Wind is sustained speed, not gust speed. Station observations are shown separately.</p>
+                  <p class="forecast-local-note">Descriptions and figures are calculated from Met Éireann hourly model data for Ardamine. Cloud cover and wind direction are not provided in this feed. The hours shown are the available forecast window; tomorrow may cover only the morning. Wind is sustained speed, not gust speed. Station observations are shown separately.</p>
         </section>
 
         <section class="climate-section" aria-labelledby="climateHeading">
@@ -1770,7 +1773,7 @@
     <script src="source-freshness.js?v=20261010-v38-4-187"></script>
     <script src="dashboard-enhancements.js?v=20261021-local-forecast"></script>
     <script src="archive-quality.js?v=20261008-v38-4-170"></script>
-<script src="chart-explorer.js?v=20261010-v38-4-193"></script><script src="dashboard-preferences.js?v=20261021-local-forecast"></script><script src="local-forecast.js?v=20261021-ardamine"></script><script src="app.js?v=20261021-ardamine"></script>
+<script src="chart-explorer.js?v=20261010-v38-4-193"></script><script src="dashboard-preferences.js?v=20261021-local-forecast"></script><script src="local-forecast.js?v=20261021-descriptions"></script><script src="app.js?v=20261021-ardamine"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */

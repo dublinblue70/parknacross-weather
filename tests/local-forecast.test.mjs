@@ -3,7 +3,10 @@ const window={};vm.runInNewContext(fs.readFileSync(new URL('../local-forecast.js
 const describe=window.ParknacrossLocalForecast.describe,now=Date.parse('2026-10-21T08:30:00Z');
 const feed={fetched_at:new Date(now).toISOString(),points:Array.from({length:25},(_,i)=>({epoch:Date.parse('2026-10-21T09:00Z')/1000+i*3600,temperature_c:i===0?0:10,wind_kmh:0,rain_mm:0}))};
 let r=describe(feed,now);assert.ok(r);assert.match(r.periods[0].text,/0–10 °C/);assert.match(r.periods[0].text,/Wind: 0 km\/h/);assert.match(r.periods[0].text,/Dry/);assert.match(r.periods[2].label,/morning/);assert.match(r.periods[2].coverage,/22 Oct/);
+assert.match(r.periods[0].summary,/Dry conditions/);assert.match(r.periods[2].summary,/only the hours shown/);
 assert.equal(describe({...feed,fetched_at:'2026-10-21T06:00:00Z'},now),null);assert.equal(describe({...feed,fetched_at:'2026-10-22T06:00:00Z'},now),null);
 const gap={...feed,points:feed.points.filter((_,i)=>i!==1).map((p,i)=>i===0?{...p,rain_mm:null}:p)};r=describe(gap,now);assert.match(r.periods[0].text,/Rain in available hours/);assert.doesNotMatch(r.periods[0].text,/Dry/);assert.match(r.periods[0].coverage,/missing/);
+assert.match(r.periods[0].summary,/cannot be confirmed/);assert.doesNotMatch(r.periods[0].summary,/Dry conditions are forecast/);
+const wetFeed={...feed,points:feed.points.map((p,i)=>({...p,rain_mm:i===1?2:0,temperature_c:12-i/4,wind_kmh:40-i}))};r=describe(wetFeed,now);assert.match(r.periods[0].summary,/totalling about 2 mm/);assert.match(r.periods[0].summary,/wettest forecast hour starts at 11:00/);assert.match(r.periods[0].summary,/easing/);assert.doesNotMatch(r.periods[0].summary,/sunny|cloudy|showers/i);
 const dstNow=Date.parse('2026-10-24T16:00:00Z'),dstFeed={fetched_at:new Date(dstNow).toISOString(),points:Array.from({length:24},(_,i)=>({epoch:Date.parse('2026-10-24T17:00Z')/1000+i*3600,temperature_c:8,wind_kmh:10,rain_mm:1}))};r=describe(dstFeed,dstNow);assert.match(r.periods[1].text,/13 mm/);
 console.log('PASS: local periods, zero values, partial rain, stale/future data and the 13-hour autumn clock-change night.');
