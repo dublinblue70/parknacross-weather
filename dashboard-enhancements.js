@@ -1,7 +1,7 @@
 (() => {
  'use strict';
  document.body.classList.add('compact-dashboard');
- const groups=[['.weather-window-section','Ardamine Weather Window'],['.wear-today-section','What to wear'],['.astronomy-strip','Sun and moon'],['.metrics-section','Detailed station readings'],['#soilPanel','Garden soil'],['#forecast','Met Éireann forecast'],['.climate-section','Station climate'],['.signature-section','Local context'],['#graphs','Weather trend charts'],['#records','Station records']];
+ const groups=[['.weather-window-section','Ardamine Weather Window'],['.wear-today-section','What to wear'],['.astronomy-strip','Sun and moon'],['.metrics-section','Detailed station readings'],['#soilPanel','Garden soil'],['#forecast','Ardamine forecast'],['.climate-section','Station climate'],['.signature-section','Local context'],['#graphs','Weather trend charts'],['#records','Station records']];
  const mobile=window.matchMedia('(max-width:640px)');
  for(const [selector,label] of groups){
    const section=document.querySelector(selector);if(!section)continue;

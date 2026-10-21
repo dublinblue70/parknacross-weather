@@ -2000,6 +2000,17 @@ function forecastPeriodsForCurrentDay(forecast, now = new Date()) {
 }
 
 async function loadForecast() {
+  const localRequest = getJSON(`${API_BASE}/outdoor-outlook`).then(feed => {
+    if (!window.ParknacrossLocalForecast) throw new Error("Local forecast display unavailable");
+    window.ParknacrossLocalForecast.render(feed);
+  }).catch(error => {
+    console.warn("Ardamine forecast:", error);
+    if(window.ParknacrossLocalForecast)window.ParknacrossLocalForecast.unavailable();
+    else {
+      set("forecastFreshness", "Local forecast display could not load. Please refresh.");
+      for(const name of ["Today", "Tonight", "Tomorrow"])set("forecast"+name,"Local hourly forecast temporarily unavailable.");
+    }
+  });
   try {
     const forecast = await getJSON(FORECAST_URL);
     const periods = forecastPeriodsForCurrentDay(forecast);
@@ -2008,20 +2019,14 @@ async function loadForecast() {
         detail: { ...periods, day: localForecastDate(new Date()), fetchedAt: Date.now() }
       }));
     } catch (_) { /* Illustration cannot interrupt the forecast panel. */ }
-    window.ParknacrossFreshness?.render("forecastFreshness",forecast,forecast.issued_at||forecast.issued||forecast.updated_at,24,"Forecast issued");
     latestForecastToday=periods.today || "";
-    set("forecastToday", latestForecastToday || (periods.tonight || periods.tomorrow ? "No separate daytime forecast is supplied in this update. See tonight and tomorrow below." : "Today’s forecast is temporarily unavailable."));
-    set("forecastTonight", periods.tonight || "--");
-    set("forecastTomorrow", periods.tomorrow || "--");
     if(latestCurrent)updateWhatToWear(latestCurrent,latestRainDetected);
   } catch (error) {
     console.warn("Met Éireann forecast:", error);
-    set("forecastFreshness","Official forecast feed is unavailable.");
     latestForecastToday="";
-    set("forecastToday", "Official forecast temporarily unavailable.");
-    set("forecastTonight", "Official forecast temporarily unavailable.");
-    set("forecastTomorrow", "Official forecast temporarily unavailable.");
     if(latestCurrent)updateWhatToWear(latestCurrent,latestRainDetected);
+  } finally {
+    await localRequest;
   }
 }
 

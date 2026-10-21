@@ -12,6 +12,7 @@ async function prepare(page,{delayHistory,forecastFailure=false,installClock=tru
   if(path==='/daily')data={days:[]};
   if(path==='/rain-summary')data={today_mm:1.2};
   if(path==='/met/forecast'){if(forecastFailure)return route.fulfill({status:503,contentType:'application/json',body:'{}'});data={tonight:'Mainly dry tonight.',tomorrow:'Cloudy tomorrow.'};}
+  if(path==='/outdoor-outlook'){if(forecastFailure)return route.fulfill({status:503,body:'{}'});data={fetched_at:instant.toISOString(),points:Array.from({length:26},(_,i)=>({epoch:epoch+i*3600,temperature_c:10,wind_kmh:5,rain_mm:0}))};}
   if(path==='/met/warnings')data={warnings:[]};
   if(path==='/met/johnstown')data={temperature_c:12,report_time:'2026-10-10T17:00:00Z'};
   if(path==='/sky-photo/meta')data={available:false};
@@ -26,7 +27,7 @@ test('daily extremes wait for archive data while live readings appear immediatel
  release();await expect(page.locator('#todayHigh')).toHaveText('16.4');await expect(page.locator('#todayLow')).toHaveText('8.1');await expect(page.locator('#solarPeak')).toHaveText('575');
 });
 test('evening forecast explains a missing daytime section and clears failed forecast sections',async({page})=>{
- await prepare(page);await page.goto('/index.html');await expect(page.locator('#forecastToday')).toContainText('No separate daytime forecast');await expect(page.locator('#forecastTonight')).toHaveText('Mainly dry tonight.');
+ await prepare(page);await page.goto('/index.html');await expect(page.locator('#forecastToday')).toContainText('Daytime has ended');await expect(page.locator('#forecastTonight')).toContainText('Dry');
  await page.unroute('**/*.workers.dev/**');await prepare(page,{forecastFailure:true,installClock:false});await page.reload();
  await expect(page.locator('#forecastTonight')).toContainText('temporarily unavailable');await expect(page.locator('#forecastTomorrow')).toContainText('temporarily unavailable');
 });
