@@ -323,3 +323,6 @@ body.dashboard-page #livePill #liveText {
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
+
+/* Keep labels and values aligned when only the wind card has a gust line. */
+body.dashboard-page .hero-stat{justify-content:flex-start}
