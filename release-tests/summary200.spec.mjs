@@ -15,3 +15,27 @@ test('stale observations retain daily totals but cannot be shared as current wea
 test('failed refresh preserves labelled results and recovers on retry',async({page})=>{
  await page.goto('/summary.html');await expect(page.locator('#summaryDataStatus')).toHaveText('Up to date');const stamp=await page.locator('#summaryUpdated').textContent();fail=true;await page.getByRole('button',{name:'Refresh summary'}).click();await expect(page.locator('#summaryDataStatus')).toHaveText('Some data unavailable');await expect(page.locator('#summaryUpdated')).toHaveText(stamp);await expect(page.locator('#todayHigh')).toHaveText('12.0 °C');await expect(page.locator('#summarySubtitle')).toContainText('could not refresh');fail=false;await page.getByRole('button',{name:'Refresh summary'}).click();await expect(page.locator('#summaryDataStatus')).toHaveText('Up to date');
 });
+
+test('summary narrative headings and measurement cards share consistent left edges',async({page})=>{
+ for(const width of [320,390,768,1280]){
+  await page.setViewportSize({width,height:900});await page.goto('/summary.html');await expect(page.locator('#todayHigh')).toHaveText('12.0 °C');
+  const edge=(await page.locator('.page-hero').boundingBox()).x;
+  for(const heading of await page.locator('main>section .section-heading').all()){
+   if(!await heading.isVisible())continue;
+   for(const child of await heading.locator('h2,.section-eyebrow').all())expect(Math.abs((await child.boundingBox()).x-edge)).toBeLessThan(1);
+  }
+  expect(Math.abs((await page.locator('#dayStory').boundingBox()).x-edge)).toBeLessThan(1);
+  const cards=page.locator('#summaryOverview .climate-card'),values=[];
+  for(const card of await cards.all()){
+   const label=await card.locator('span').boundingBox(),value=await card.locator('strong').boundingBox(),note=await card.locator('small').boundingBox(),box=await card.boundingBox();
+   expect(Math.abs(label.x-value.x)).toBeLessThan(1);expect(Math.abs(label.x-note.x)).toBeLessThan(1);values.push({row:box.y,y:value.y});
+  }
+  for(const a of values)for(const b of values)if(Math.abs(a.row-b.row)<1)expect(Math.abs(a.y-b.y)).toBeLessThan(1);
+  for(const detail of await page.locator('details.summary-details').all()){
+   if(!await detail.isVisible())continue;await detail.locator('summary').first().click();
+   const body=await detail.locator('.summary-detail-content').boundingBox();
+   for(const heading of await detail.locator('.section-heading').all())expect(Math.abs((await heading.boundingBox()).x-body.x-parseFloat(await detail.locator('.summary-detail-content').evaluate(el=>getComputedStyle(el).paddingLeft)))).toBeLessThan(1);
+  }
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+});
