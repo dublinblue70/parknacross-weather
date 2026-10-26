@@ -22,6 +22,9 @@
     lightningKm: 0, gustKmh:50, heavyRainRate:10, freezingC:0, quietEnabled:false, quietStart:22, quietEnd:7
   };
 
+  let unsavedSettings = null;
+  let settingsStorageError = false;
+
   const readJSON = (key, fallback) => {
     try {
       const value = JSON.parse(localStorage.getItem(key) || "null");
@@ -32,11 +35,11 @@
   };
 
   const writeJSON = (key, value) => {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {}
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (_) { return false; }
   };
 
   function loadSettings() {
-    const settings = { ...defaults, ...readJSON(SETTINGS_KEY, {}) };
+    const settings = { ...defaults, ...(unsavedSettings || readJSON(SETTINGS_KEY, {})) };
     const lightningKm = Number(settings.lightningKm || 0);
     settings.lightningKm = LIGHTNING_DISTANCES.has(lightningKm) ? lightningKm : 0;
     for(const [key,lo,hi] of [["gustKmh",20,100],["heavyRainRate",2,50],["freezingC",-5,5],["quietStart",0,23],["quietEnd",0,23]])settings[key]=usable(settings[key])?Math.max(lo,Math.min(hi,Number(settings[key]))):defaults[key];
@@ -44,9 +47,22 @@
     return settings;
   }
 
-  function saveSettings(settings) {
-    writeJSON(SETTINGS_KEY, { ...defaults, ...settings });
+  function refreshSaveStatus() {
+    const node = document.getElementById("alertsSaveStatus");
+    if (node) node.textContent = settingsStorageError
+      ? "Your browser could not save these choices. They apply to this page only and may be lost when you leave. Allow site storage and select them again."
+      : "Your choices are saved automatically on this browser.";
+  }
+
+  function saveSettings(changes) {
+    // A caller may have waited for permission or a network request. Merge only
+    // its changed fields into the latest choices, never an old snapshot.
+    const settings = { ...loadSettings(), ...changes };
+    settingsStorageError = !writeJSON(SETTINGS_KEY, settings);
+    unsavedSettings = settingsStorageError ? settings : null;
+    refreshSaveStatus();
     if(typeof CustomEvent==="function"&&window.dispatchEvent)window.dispatchEvent(new CustomEvent("parknacross:alert-settings"));
+    return !settingsStorageError;
   }
 
   function canNotify() {
@@ -295,6 +311,7 @@
   }
 
   function refreshUI() {
+    refreshSaveStatus();
     const settings = loadSettings();
     const ids = {
       alertRainStart: settings.rainStart,
@@ -330,16 +347,14 @@
       }
       const settings = loadSettings();
       if (settings.enabled && canNotify()) {
-        settings.enabled = false;
-        saveSettings(settings);
+        saveSettings({ enabled: false });
         refreshUI();
         return;
       }
 
       let permission = Notification.permission;
       if (permission === "default") permission = await Notification.requestPermission();
-      settings.enabled = permission === "granted";
-      saveSettings(settings);
+      saveSettings({ enabled: permission === "granted" });
       refreshUI();
     });
 
@@ -351,19 +366,15 @@
     };
     for (const [id, key] of Object.entries(mapping)) {
       document.getElementById(id)?.addEventListener("change", event => {
-        const settings = loadSettings();
-        settings[key] = Boolean(event.target.checked);
-        saveSettings(settings);
+        saveSettings({ [key]: Boolean(event.target.checked) });
       });
     }
     document.getElementById("alertLightningDistance")?.addEventListener("change", event => {
-      const settings = loadSettings();
       const requested = Number(event.target.value || 0);
-      settings.lightningKm = LIGHTNING_DISTANCES.has(requested) ? requested : 0;
-      saveSettings(settings);
+      saveSettings({ lightningKm: LIGHTNING_DISTANCES.has(requested) ? requested : 0 });
     });
 
-    for(const [id,key,lo,hi] of [["alertGustThreshold","gustKmh",20,100],["alertRainThreshold","heavyRainRate",2,50],["alertTemperatureThreshold","freezingC",-5,5],["alertQuietStart","quietStart",0,23],["alertQuietEnd","quietEnd",0,23]])document.getElementById(id)?.addEventListener("change",event=>{const settings=loadSettings(),v=Number(event.target.value);if(Number.isFinite(v)&&event.target.value!=="")settings[key]=Math.max(lo,Math.min(hi,v));saveSettings(settings);refreshUI();});document.getElementById("alertQuietEnabled")?.addEventListener("change",event=>{const settings=loadSettings();settings.quietEnabled=event.target.checked;saveSettings(settings);});
+    for(const [id,key,lo,hi] of [["alertGustThreshold","gustKmh",20,100],["alertRainThreshold","heavyRainRate",2,50],["alertTemperatureThreshold","freezingC",-5,5],["alertQuietStart","quietStart",0,23],["alertQuietEnd","quietEnd",0,23]])document.getElementById(id)?.addEventListener("change",event=>{const v=Number(event.target.value);if(Number.isFinite(v)&&event.target.value!=="")saveSettings({[key]:Math.max(lo,Math.min(hi,v))});refreshUI();});document.getElementById("alertQuietEnabled")?.addEventListener("change",event=>{saveSettings({quietEnabled:event.target.checked});});
     refreshUI();
   }
 
@@ -375,5 +386,11 @@
     refreshUI
   };
 
-  document.addEventListener("DOMContentLoaded", bindUI);
+  // Controls already exist when this script loads at the end of Station.
+  if (document.getElementById("alertsEnableButton")) bindUI();
+  else document.addEventListener("DOMContentLoaded", bindUI);
+  window.addEventListener?.("pageshow", refreshUI);
+  window.addEventListener?.("storage", event => {
+    if (event.key === SETTINGS_KEY || event.key === null) refreshUI();
+  });
 })();
