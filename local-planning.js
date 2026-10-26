@@ -125,7 +125,7 @@
    text(wind,'wind-detail',`${speed}. Blowing towards ${v.toName} (${Math.round(v.to)}°).`);
   }
   async function get(path){const r=await fetch(base+path,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Feed unavailable');return r.json();}
-  async function loadRain(){if((!rain&&!laundry)||rainLoading)return;rainLoading=true;const buttons=[rain?.querySelector('button'),laundry?.querySelector('button')].filter(Boolean);buttons.forEach(b=>b.disabled=true);try{forecast=await get('/outdoor-outlook');}catch{forecast=null;}finally{rainLoading=false;buttons.forEach(b=>b.disabled=false);renderRain();renderLaundry();}}
+  async function loadRain(){if((!rain&&!laundry)||rainLoading)return;rainLoading=true;const buttons=[rain?.querySelector('button'),laundry?.querySelector('button')].filter(Boolean);buttons.forEach(b=>b.disabled=true);try{forecast=await get('/outdoor-outlook');window.dispatchEvent(new CustomEvent('parknacross:local-forecast',{detail:forecast}));}catch{forecast=null;window.dispatchEvent(new CustomEvent('parknacross:local-forecast',{detail:null}));}finally{rainLoading=false;buttons.forEach(b=>b.disabled=false);renderRain();renderLaundry();}}
   async function loadWind(){if(!wind||windLoading)return;windLoading=true;try{current=await get('/current');}catch{current=null;}finally{windLoading=false;renderWind();}}
   rain?.querySelector('button').addEventListener('click',loadRain);
   laundry?.querySelector('button').addEventListener('click',loadRain);

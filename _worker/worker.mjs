@@ -1,3 +1,4 @@
+// v38.4.231 — photo galleries, selected-field CSV streaming, annual coverage and confirmed station exposure history.
 // v38.4.96 — marine warnings remain available independently of forecast failures.
 // v38.4.95 — bounded calendar work, encrypted background alerts and outdoor outlook.
 // Parknacross v38.4.94 — fast admin authentication and live readings before schema work; background cloud recovery.
@@ -83,7 +84,7 @@ const TEMP_OUTLIER_DELTA_C = 2.5;
 const TEMP_OUTLIER_BASELINE_C = 1.0;
 const TEMP_OUTLIER_WINDOW_SECONDS = 30 * 60;
 const TEMP_OUTLIER_MIN_NEIGHBORS = 3;
-const EDGE_CACHE_VERSION = "v38-4-96-independent-marine-warnings";
+const EDGE_CACHE_VERSION = "v38-4-231-full-review";
 const SKY_PHOTO_KEY = "today/current";
 const SKY_PHOTO_MAX_BYTES = 10 * 1024 * 1024;
 const SKY_PHOTO_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -2177,7 +2178,7 @@ async function pushEncrypt(subscription,payload){
 async function sendWeatherPush(subscription,message,vapid,timeoutMs=5000){const endpoint=new URL(subscription.endpoint),header=pushBase64(pushText(JSON.stringify({typ:'JWT',alg:'ES256'}))),claims=pushBase64(pushText(JSON.stringify({aud:endpoint.origin,exp:Math.floor(Date.now()/1000)+3600,sub:'mailto:info@parknacrossweather.ie'}))),input=header+'.'+claims,key=await crypto.subtle.importKey('jwk',vapid.privateJwk,{name:'ECDSA',namedCurve:'P-256'},false,['sign']),signature=pushBase64(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},key,pushText(input)));return fetch(endpoint.href,{method:'POST',headers:{Authorization:`vapid t=${input}.${signature}, k=${vapid.publicKey}`,'Content-Encoding':'aes128gcm','Content-Type':'application/octet-stream',TTL:'300',Urgency:'normal'},body:await pushEncrypt(subscription,message),redirect:'error',signal:AbortSignal.timeout(timeoutMs)});}
 async function handlePushRequest(request,env,url){
  const noStore={'Cache-Control':'no-store'};
- if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.96'},200,noStore);}
+ if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.231'},200,noStore);}
  if(request.method!=='POST')return json({error:'Method not allowed'},405,noStore);
  if(request.headers.get('Origin')!=='https://parknacrossweather.ie'&&request.headers.get('Origin')!=='https://www.parknacrossweather.ie')return json({error:'Origin not allowed'},403,noStore);
  if(requestRateLimited(request,'push-settings',10))return rateLimitedResponse();
@@ -2229,7 +2230,7 @@ export default {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.96",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.231",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2499,6 +2500,17 @@ export default {
     try {
       await ensureSchema(env);
 
+      if(url.pathname==="/station-exposure"){
+        const metaKey="station_exposure_history_v1";
+        if(request.method==="GET"){const row=await env.DB.prepare(`SELECT value FROM ${META_TABLE} WHERE key=?`).bind(metaKey).first();let entries=[];try{entries=JSON.parse(row?.value||"[]");}catch{}return json({entries,description:"Only confirmed siting changes are listed. An empty log does not verify the mounting history."},200,{"Cache-Control":"no-store"});}
+        if(request.method!=="POST")return json({error:"Method not allowed"},405);
+        if(!(await adminDiagnosticAuthorized(request,env)))return unauthorizedResponse(request);
+        if(requestRateLimited(request,"exposure-edit",5))return rateLimitedResponse();
+        const text=await request.text();if(text.length>20000)return json({error:"Exposure log too large"},413);let body;try{body=JSON.parse(text);}catch{return json({error:"Invalid JSON"},400);}
+        if(!Array.isArray(body.entries)||body.entries.length>50)return json({error:"At most 50 siting entries are supported"},400);
+        const entries=[];for(const entry of body.entries){if(!isValidStationDayKey(entry.day)||entry.day>stationDayKey(new Date())||typeof entry.title!=="string"||entry.title.length<1||entry.title.length>100||typeof entry.detail!=="string"||entry.detail.length>500)return json({error:"Each entry needs a past/current date, title and detail"},400);entries.push({day:entry.day,title:entry.title.trim(),detail:entry.detail.trim()});}
+        entries.sort((a,b)=>a.day.localeCompare(b.day));await env.DB.prepare(`INSERT OR REPLACE INTO ${META_TABLE}(key,value) VALUES (?,?)`).bind(metaKey,JSON.stringify(entries)).run();return json({saved:true,entries},200,{"Cache-Control":"no-store"});
+      }
       if (url.pathname === "/export-preview") {
         if (request.method !== "GET") return json({error:"Method not allowed"},405);
         return await previewWeatherExport(env,url);
@@ -2517,7 +2529,11 @@ export default {
         const photoId = String(url.searchParams.get("photo_id") || "");
         if (photoId.length > 80) return json({error:"Invalid photo identifier"},400);
         const row = await env.DB.prepare(`SELECT photo_id,caption,uploaded_at,r2_key,content_type FROM ${SKY_PHOTO_ARCHIVE_TABLE} WHERE station_day = ? AND (? = '' OR photo_id = ?) ORDER BY uploaded_at DESC LIMIT 1`).bind(day,photoId,photoId).first();
-        if (url.pathname === "/sky-photo/history") return json({day,photo:row?{photo_id:row.photo_id,caption:row.caption||"",captured_at:row.uploaded_at}:null},200,{"Cache-Control":"public, max-age=300"});
+        if (url.pathname === "/sky-photo/history") {
+          const result=await env.DB.prepare(`SELECT photo_id,caption,uploaded_at FROM ${SKY_PHOTO_ARCHIVE_TABLE} WHERE station_day = ? ORDER BY uploaded_at ASC LIMIT 100`).bind(day).all();
+          const photos=(result.results||[]).map(item=>({photo_id:item.photo_id,caption:item.caption||"",captured_at:item.uploaded_at}));
+          return json({day,photos,photo:row?{photo_id:row.photo_id,caption:row.caption||"",captured_at:row.uploaded_at}:null},200,{"Cache-Control":"public, max-age=300"});
+        }
         if (!photoId || !row?.r2_key) return json({error:"Photograph not found for this date"},404);
         if (!env.SKY_PHOTOS?.get) return json({error:"Photo storage unavailable"},503);
         const object = await env.SKY_PHOTOS.get(String(row.r2_key));
@@ -3088,7 +3104,9 @@ export default {
       if (url.pathname === "/coverage") {
         const requested = Number(url.searchParams.get("days") || 371);
         const days = Math.max(1, Math.min(371, Number.isFinite(requested) ? requested : 371));
-        return await cachedJson(request, ctx, 300, () => buildArchiveCoverage(env, days));
+        const year=url.searchParams.get("year");
+        if(year!==null&&(!/^20\d{2}$/.test(year)||Number(year)>Number(stationDayKey(new Date()).slice(0,4))))return json({error:"Invalid coverage year"},400);
+        return await cachedJson(request, ctx, 300, () => buildArchiveCoverage(env, days, year));
       }
 
       if (url.pathname === "/daily") {
@@ -3253,10 +3271,14 @@ export default {
             return json({ error: "Unsupported export window", allowed_days: [7, 30, 90, 365] }, 400, { "Cache-Control": "public, max-age=300" });
           }
         }
+        const requestedFields=url.searchParams.get("fields"),fields=requestedFields?requestedFields.split(","):null;
+        const allFields=rowsToCsv([]).split(",");
+        if(fields&&(!fields.length||fields.length>allFields.length||fields.some(field=>!allFields.includes(field))||new Set(fields).size!==fields.length))return json({error:"Invalid export fields"},400);
         const cacheUrl = new URL(request.url);
         cacheUrl.search = "";
         if (range) { cacheUrl.searchParams.set("from", range.from); cacheUrl.searchParams.set("to", range.to); }
         else cacheUrl.searchParams.set("days", String(days));
+        if(fields)cacheUrl.searchParams.set("fields",fields.join(","));
         cacheUrl.searchParams.set("__cache_version", EDGE_CACHE_VERSION);
         const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
         const forceFresh = url.searchParams.get("fresh") === "1";
@@ -3268,7 +3290,7 @@ export default {
         } catch (error) {
           console.warn("CSV edge-cache read unavailable:", error);
         }
-        const response = exportCsv(await exportRows(env, days, range), days, forceFresh, range);
+        const response = exportCsv(await exportRows(env, days, range), days, forceFresh, range,fields);
         if (cache && !forceFresh) {
           try {
             const put = cache.put(cacheKey, response.clone());
@@ -5721,15 +5743,16 @@ function stationDaySqlExpression(firstDay, lastDay) {
   return `strftime('%Y-%m-%d', epoch + CASE WHEN ${summer.join(' OR ')} THEN 3600 ELSE 0 END, 'unixepoch')`;
 }
 
-async function buildArchiveCoverage(env, requestedDays = 371) {
+async function buildArchiveCoverage(env, requestedDays = 371, year = null) {
   const today = stationDayKey(new Date());
-  const cutoffDay = shiftDayKey(today, -(Math.max(1, requestedDays) - 1));
+  const cutoffDay = year ? year+"-01-01" : shiftDayKey(today, -(Math.max(1, requestedDays) - 1));
+  const throughDay=year&&year+"-12-31"<today?year+"-12-31":today;
   const cutoffRange = stationDayEpochRange(cutoffDay);
-  const nowEpoch = Math.floor(Date.now() / 1000);
+  const nowEpoch = year&&throughDay<today?stationDayEpochRange(throughDay).endEpoch-1:Math.floor(Date.now() / 1000);
   // Return one aggregate per Irish calendar day, not every saved observation.
   // Epoch remains indexed in WHERE; DST adjustment affects only the grouping.
   const result = await env.DB.prepare(
-    `SELECT ${stationDaySqlExpression(cutoffDay,today)} AS day,
+    `SELECT ${stationDaySqlExpression(cutoffDay,throughDay)} AS day,
             COUNT(DISTINCT CAST(epoch / 300 AS INTEGER)) AS actual_slots,
             MIN(epoch) AS first_epoch
      FROM ${TABLE} WHERE epoch >= ? AND epoch <= ? GROUP BY day ORDER BY day`
@@ -5744,7 +5767,7 @@ async function buildArchiveCoverage(env, requestedDays = 371) {
   const rows = [];
   let totalActual = 0;
   let totalExpected = 0;
-  for (let day = coverageStartDay; day <= today; day = shiftDayKey(day,1)) {
+  for (let day = coverageStartDay; day <= throughDay; day = shiftDayKey(day,1)) {
     const aggregate = aggregates.get(day);
     const range = stationDayEpochRange(day);
     if (!range) continue;
@@ -5943,14 +5966,15 @@ async function buildBackupStatus(env) {
   };
 }
 
-function rowsToCsv(rows) {
-  const headers = [
+function rowsToCsv(rows, selectedFields = null) {
+  let headers = [
     "epoch","received_at","observation_time_ireland","temperature_c","feels_like_c","humidity","dew_point_c",
     "wind_speed_kmh","wind_gust_kmh","wind_direction_deg","pressure_hpa",
     "rain_rate_mm_h","rain_daily_mm","solar_w_m2","uv_index","battery_v",
     "soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm",
     "lightning_distance_km","lightning_strikes","lightning_last_strike_time_ireland"
   ];
+  if(selectedFields)headers=headers.filter(field=>selectedFields.includes(field));
   const irelandTime = epoch => {
     const value = Number(epoch);
     if (!Number.isFinite(value) || value <= 0) return "";
@@ -6131,11 +6155,12 @@ async function exportRows(env, days, range = null) {
   }));
 }
 
-function exportCsv(rows, days = 365, forceFresh = false, range = null) {
+function exportCsv(rows, days = 365, forceFresh = false, range = null, fields = null) {
   /* Put recent WH52/lightning-capable observations at the top of a public
      download. Daily backup files remain chronological because they call
      rowsToCsv directly. */
-  const text = rowsToCsv([...rows].reverse());
+  const ordered=[...rows].reverse(),encoder=new TextEncoder();let offset=0,headerSent=false;
+  const text=new ReadableStream({pull(controller){if(!headerSent){controller.enqueue(encoder.encode(rowsToCsv([],fields)+"\n"));headerSent=true;return;}if(offset>=ordered.length){controller.close();return;}const chunk=rowsToCsv(ordered.slice(offset,offset+256),fields).split("\n").slice(1).join("\n");offset+=256;controller.enqueue(encoder.encode(chunk+(offset<ordered.length?"\n":"")));}});
   const filenameRange = range ? `${range.from}-to-${range.to}` : `${days}-days`;
   return new Response(text, {
     status: 200,

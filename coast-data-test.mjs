@@ -28,6 +28,7 @@ async function runApi(api) {
     setInterval() {},
     console: { error() {} }
   };
+  vm.runInNewContext(await readFile(new URL("./source-freshness.js",import.meta.url),"utf8"),context);
   vm.runInNewContext(source, context, { filename: "coast.js" });
   document.ready();
   await new Promise(resolve => setTimeout(resolve, 0));
@@ -54,7 +55,7 @@ assert.equal(failed.get("localSeaTempTime").textContent, "Coastal estimate tempo
 assert.equal(failed.get("marineOutlook").textContent, "Marine forecast temporarily unavailable");
 
 const calm = await runApi(async url => ({ok:true,async json(){
-  if(url.endsWith("/current"))return {wind_speed_kmh:0,wind_gust_kmh:0,wind_direction_deg:270};
+  if(url.endsWith("/current"))return {epoch:Date.now()/1000,wind_speed_kmh:0,wind_gust_kmh:0,wind_direction_deg:270};
   if(url.includes("/marine/tides"))return {events:[]};
   return {};
 }}));

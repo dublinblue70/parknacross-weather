@@ -14,6 +14,10 @@ export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https:
     ['Archive coverage',api+'/coverage?days=371',async r=>{const d=await r.json();assert.ok(Array.isArray(d.days)&&d.days.length&&d.summary&&Number.isFinite(d.summary.coverage_percent)&&!d.error,'Archive coverage unavailable');}],
     ['Statistics',api+'/stats',async r=>{const d=await r.json();assert.ok(Number(d.total_samples)>0&&d.records&&typeof d.records==='object'&&!d.error,'Archive statistics are missing');}],
     ['Export preview',api+`/export-preview?from=${exportFrom}&to=${exportDay}`,async r=>{const d=await r.json();assert.ok(Number(d.count)>0&&fresh(d.last_epoch)&&d.columns?.includes('soil_moisture_pct')&&d.columns?.includes('lightning_strikes'),'Export preview is incomplete or delayed');}],
+    ['Local hourly forecast',api+'/outdoor-outlook',async r=>{const d=await r.json();assert.ok(Array.isArray(d.points)&&d.points.some(p=>Number(p.epoch)*1000>=now)&&now-Date.parse(d.fetched_at)<5400000&&Date.parse(d.fetched_at)<=now+90000,'Local forecast is missing or delayed');}],
+    ['Public photo calendar',api+'/sky-photo/history/dates?month='+exportDay.slice(0,7),async r=>{const d=await r.json();assert.ok(d.month===exportDay.slice(0,7)&&Array.isArray(d.days),'Photo calendar data is invalid');}],
+    ['Background push configuration',api+'/push/public-key',async r=>{const d=await r.json();assert.ok(d.available===true&&typeof d.public_key==='string','Push configuration is unavailable');}],
+    ['Marine forecast',api+'/met/marine',async r=>{const d=await r.json();assert.ok(!d.error&&(d.forecast||d.local_forecast||d.local_blocks||d.areas||d.title||d.source),'Marine forecast is missing');}],
     ['CSV export',api+`/export.csv?from=${exportFrom}&to=${exportDay}`,async r=>{const text=await r.text();assert.ok(text.split(/\r?\n/).length>2&&text.split(/\r?\n/)[0].includes('observation_time_ireland'),'CSV export is missing observations or fields');}]
   ];
   // Limit concurrency and use a short retry to distinguish a transient failure.

@@ -1,5 +1,13 @@
-const CACHE_NAME = "parknacross-v38-4-230-notification-preferences";
+const CACHE_NAME = "parknacross-v38-4-231-full-review";
 const STATIC_ASSETS = [
+  "./radar-analysis-worker.js",
+  "./exposure-history.js",
+  "./feature-health.js",
+  "./review-ui.css",
+  "./review-tools.js",
+  "./weather-replay.js",
+  "./activity-planner.js",
+  "./graphs-controls.css",
   "./weather-fingerprint.js",
   "./weather-fingerprint.css",
   "./local-forecast.js",

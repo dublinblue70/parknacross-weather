@@ -149,7 +149,7 @@ function buildStory(m, yesterday, recentDays=[]) {
   }
   const first=`A ${temperatureWord(high)}${airFeel?` and ${airFeel}`:""} day so far ${rainPhrase(m.rain)}.`;
   const temp=usable(high)&&usable(low)?`Temperatures have ranged from ${Number(low).toFixed(1)}°C to ${Number(high).toFixed(1)}°C.`:"Temperature observations are still building.";
-  const wind=windPhrase(gust); const windSentence=wind?`${wind}${usable(gust)?`, reaching ${Number(gust).toFixed(1)} km/h`:""}.`:"";
+  const windSentence=(usable(m.avgWind)?`Average sustained wind was ${Number(m.avgWind).toFixed(1)} km/h. `:"")+(usable(gust)?`The highest recorded gust was ${Number(gust).toFixed(1)} km/h.`:"Peak gust observations are unavailable.");
 
   const comparisons=[];
   if(usable(high)&&usable(yesterday?.high?.temperature_c)){
@@ -174,7 +174,7 @@ function buildStory(m, yesterday, recentDays=[]) {
 
   const comparisonSentence=comparisons.length?`Compared with recent conditions, ${comparisons.slice(0,2).join(" and ")}.`:"";
   const uv=usable(m.uv?.uv_index)?`Peak UV so far is ${Number(m.uv.uv_index).toFixed(1)}.`:"";
-  return [first,temp,windSentence,comparisonSentence,uv].filter(Boolean).join(" ");
+  return [first,temp,windSentence,comparisonSentence,uv,"This summary uses available observations; gaps may affect its totals and extremes."].filter(Boolean).join(" ");
 }
 
 function renderToday(m, yesterday=null, recentDays=[]) {

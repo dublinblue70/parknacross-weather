@@ -65,7 +65,7 @@ function environmentWithArtificialPageCap(cap) {
   };
 }
 
-const csvStart = worker.indexOf("function rowsToCsv(rows)");
+const csvStart = worker.indexOf("function rowsToCsv(");
 const csvEnd = worker.indexOf("\nasync function runDailyBackup", csvStart);
 if (csvStart < 0 || csvEnd < 0) throw new Error("Could not locate the Worker CSV formatter");
 const rowsToCsv = Function(`return (${worker.slice(csvStart, csvEnd)})`)();

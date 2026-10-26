@@ -10,7 +10,7 @@
  const stamp=ms=>new Date(ms).toLocaleString('en-IE',{timeZone:TZ,day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
  function narrative(rows,i,complete){
   const sentences=[],rains=rows.filter(r=>r.rain!==null),temps=rows.filter(r=>r.temp!==null),winds=rows.filter(r=>r.wind!==null);
-  const period=['the remaining daytime hours','tonight','the available hours tomorrow'][i];
+  const period=i===3?'the rest of tonight':['the remaining daytime hours','tonight','the available hours tomorrow'][i];
   if(complete){
    const wet=rains.filter(r=>r.rain>0),total=rains.reduce((sum,r)=>sum+r.rain,0);
    if(!wet.length)sentences.push(`Dry conditions are forecast for ${period}.`);
@@ -45,10 +45,11 @@
    if(temp!==null||wind!==null||rain!==null)slots.set(ms,{ms,temp,wind,rain});
   }
   if(!slots.size)return null;
-  const groups=[[],[],[]];
+  const groups=[[],[],[]],overnight=[];
   for(const row of [...slots.values()].sort((a,b)=>a.ms-b.ms)){
    const local=parts(row.ms),date=key(local),hour=Number(local.hour);
-   if(date===todayKey&&hour<18)groups[0].push(row);
+   if(date===todayKey&&hour<6)overnight.push(row);
+   else if(date===todayKey&&hour<18)groups[0].push(row);
    else if((date===todayKey&&hour>=18)||(date===tomorrowKey&&hour<6))groups[1].push(row);
    else if(date===tomorrowKey&&hour>=6)groups[2].push(row);
   }
@@ -61,9 +62,12 @@
    const partial=!contiguous||temps.length!==rows.length||winds.length!==rows.length||rains.length!==rows.length;
    return {label,summary:narrative(rows,i,complete),coverage:`${stamp(first)} – ${stamp(end)} · Irish time${partial?' · some readings missing':''}`,text:`Temperature: ${range(temps,'°C')}\nWind: ${range(winds,'km/h')}\n${rain}`};
   });
-  return {periods,fetched};
+  let restOfNight=null;
+  if(overnight.length){const first=overnight[0].ms,end=overnight.at(-1).ms+HOUR,complete=overnight.every((r,i)=>r.rain!==null&&(!i||r.ms===overnight[i-1].ms+HOUR));restOfNight={label:'Rest of tonight',summary:narrative(overnight,3,complete),coverage:`${stamp(first)} – ${stamp(end)} · Irish time`};}
+  return {periods,fetched,restOfNight};
  }
  function unavailable(){
+  if($("forecastRestOfNight"))$("forecastRestOfNight").hidden=true;
   for(const name of ['Today','Tonight','Tomorrow']){
    if($('forecast'+name))$('forecast'+name).textContent='Local hourly forecast temporarily unavailable.';
    if($('forecast'+name+'Summary'))$('forecast'+name+'Summary').textContent='';
@@ -73,12 +77,17 @@
  }
  function render(feed,now=Date.now()){
   const result=describe(feed,now);if(!result){unavailable();return;}
+  window.dispatchEvent(new CustomEvent("parknacross:local-forecast",{detail:feed}));
   ['Today','Tonight','Tomorrow'].forEach((name,i)=>{
    $('forecast'+name+'Label').textContent=result.periods[i].label;
    $('forecast'+name+'Coverage').textContent=result.periods[i].coverage;
    $('forecast'+name).textContent=result.periods[i].text;
    $('forecast'+name+'Summary').textContent=result.periods[i].summary;
   });
+  let rest=$('forecastRestOfNight');
+  if(!rest){rest=document.createElement('article');rest.id='forecastRestOfNight';rest.className='forecast-card';$('forecastTodayLabel')?.closest('article,.forecast-card')?.before(rest);}
+  rest.replaceChildren();rest.hidden=!result.restOfNight;
+  if(result.restOfNight){for(const [tag,value] of [['h3',result.restOfNight.label],['p',result.restOfNight.summary],['small',result.restOfNight.coverage]]){const node=document.createElement(tag);node.textContent=value;rest.append(node);}}
   $('forecastFreshness').textContent=`Local hourly forecast retrieved ${stamp(result.fetched)} Irish time`;
  }
  window.ParknacrossLocalForecast={describe,render,unavailable};

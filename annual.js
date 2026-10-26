@@ -13,7 +13,7 @@ const avg = (values) => {
 };
 const maxRow = (rows, f) =>
   rows.reduce(
-    (b, r) => (!usable(r[f]) ? b : !b || Number(r[f]) > Number(b[f]) ? r : b),
+    (b, r) => (!usable(r[f]) ? b : !b || (Number(r[f]) > Number(b[f]) || (f === "peak_gust_kmh" && Number(r[f]) === Number(b[f]) && r.verified_gust)) ? r : b),
     null,
   );
 const minRow = (rows, f) =>
@@ -211,7 +211,7 @@ async function loadVerified() {
         { timeZone: "Europe/Dublin" },
       );
       const row = allRows.find((item) => item.day === day);
-      if (row) row.peak_gust_kmh = Number(record.value) + 0.0001;
+      if (row) {row.peak_gust_kmh = Number(record.value);row.verified_gust=true;}
     }
     const years = [
       ...new Set(
@@ -240,8 +240,9 @@ async function loadVerified() {
       render(picker.value);
     });
     render(selected);
-    coveragePromise.then(value=>{reportCoverage=value;render(picker.value);});
-    statsPromise.then(value=>{const rec=value?.records?.peak_gust;if(usable(rec?.epoch)&&usable(rec?.value)){const day=new Date(Number(rec.epoch)*1000).toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});const row=allRows.find(item=>item.day===day);if(row){row.peak_gust_kmh=Number(rec.value)+0.0001;render(picker.value);}}});
+    const updateYearCoverage=async()=>{const chosen=picker.value,value=await window.ParknacrossReportQuality?.loadYear(chosen);if(picker.value===chosen&&value){reportCoverage=value;render(chosen);}};picker.addEventListener("change",updateYearCoverage);updateYearCoverage();
+    coveragePromise.then(()=>updateYearCoverage());
+    statsPromise.then(value=>{const rec=value?.records?.peak_gust;if(usable(rec?.epoch)&&usable(rec?.value)){const day=new Date(Number(rec.epoch)*1000).toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});const row=allRows.find(item=>item.day===day);if(row){{row.peak_gust_kmh=Number(rec.value);row.verified_gust=true;}render(picker.value);}}});
   } catch (e) {
     console.error(e);
     set("annualSubtitle", "Annual archive temporarily unavailable.");

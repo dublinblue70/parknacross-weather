@@ -191,7 +191,7 @@ const platformApp = await readFile(join(root, "platform.js"), "utf8");
 if (platformApp.includes('$("shareTodayButton")?.addEventListener')) failures.push("platform.js: obsolete duplicate weather-card click handler remains");
 if ((dashboardApp.match(/\$\("shareTodayButton"\)\?\.addEventListener\("click",createWeatherCard\)/g) || []).length !== 1) failures.push("app.js: expected exactly one active weather-card click handler");
 const alertSettings = await readFile(join(root, "alert-settings.js"), "utf8");
-if (!alertSettings.includes('settings.enabled = false')) failures.push("alert-settings.js: notification disable branch is missing");
+if (!/saveSettings\(\{\s*enabled:\s*false\s*\}\)/.test(alertSettings)) failures.push("alert-settings.js: notification disable branch is missing");
 if (!alertSettings.includes('"Turn off notifications"')) failures.push("alert-settings.js: enabled notification control does not offer an off action");
 if (!alertSettings.includes('button.setAttribute("aria-pressed", String(enabled))')) failures.push("alert-settings.js: notification control state is not exposed accessibly");
 const moonFunctionStart = dashboardApp.indexOf("function moonPhaseInfo");
@@ -241,7 +241,7 @@ const diagnosticsSource = await readFile(new URL("pwa-diagnostics.js", import.me
 if (/v\d+\.\d+\.\d+/.test(diagnosticsSource)) failures.push("pwa-diagnostics.js: release number must be read dynamically");
 if (!dashboardHtml.includes('class="ww-coastline"') || !dashboardHtml.includes('class="ww-sea-lines"') || !dashboardHtml.includes('class="ww-garden"')) failures.push("index.html: Ardamine Weather Window should include the added coastal, sea and garden illustration details");
 if (dashboardHtml.indexOf('id="wearForecast"') > dashboardHtml.indexOf('id="todaySkyPanel"')) failures.push("index.html: forecast-only rain context must be near current conditions");
-if (!dashboardApp.includes("This is a forecast, not rain measured at Parknacross")) failures.push("app.js: forecast rain must be distinguished from measured local rain");
+if (!dashboardHtml.includes("Station observations are shown separately")) failures.push("app.js: forecast rain must be distinguished from measured local rain");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
 const coastScript = await readFile(join(root, "coast.js"), "utf8");
 if (/Math\.(?:floor|ceil)\(Math\.(?:min|max)\(model,buoy\)\*2\)/.test(coastScript)) failures.push("coast.js: sea-temperature range still expands to half-degree bounds");

@@ -903,6 +903,8 @@ function updateSeasonInfo(now = new Date()) {
   }
 }
 
+window.ParknacrossDaylight={isDaylight(epoch){const date=stationCalendarDate(new Date(epoch*1000)),rise=sunEvent(date,ARDAMINE_LAT,ARDAMINE_LON,true),setTime=sunEvent(date,ARDAMINE_LAT,ARDAMINE_LON,false);return Boolean(rise&&setTime&&epoch*1000>=rise.getTime()&&(epoch+3600)*1000<=setTime.getTime());}};
+
 function updateSunInfo(current = latestCurrent) {
   const now = new Date();
   const stationDate = stationCalendarDate(now);
@@ -1089,7 +1091,7 @@ function updateStatsPanel() {
   const rainDays = usable(rainSummary?.month_rain_days) ? Number(rainSummary.month_rain_days) : (usable(stats.month_rain_days) ? Number(stats.month_rain_days) : null);
 
   set("monthRain", `${n(monthRain)} mm`);
-  set("monthRainDays", rainDays === null ? "Rain days unavailable" : `${rainDays} rain day${rainDays === 1 ? "" : "s"} this month`);
+  set("monthRainDays", rainDays === null ? "Rain days unavailable" : `${rainDays} day${rainDays === 1 ? "" : "s"} with rain >0 mm this month`);
   set("yearRain", `${n(yearRain)} mm`);
   set("stationSince", dateLabel(stats.first_epoch));
 
@@ -2348,12 +2350,13 @@ async function loadEverything() {
     updateDashboard(current);
   }
 
+  const progress=(job,apply)=>job.then(value=>{apply(value);updateDashboard(current);updateCharts();return value;});
   const results = await Promise.allSettled([
-    getJSON(HISTORY_24_URL),
-    getJSON(HISTORY_7D_URL),
-    getJSON(STATS_URL, "no-store"),
-    getJSON(RAIN_SUMMARY_URL, "no-store"),
-    getJSON(DAILY_RECENT_URL, "no-store")
+    progress(getJSON(HISTORY_24_URL),v=>{if(Array.isArray(v.readings))history24=v.readings;}),
+    progress(getJSON(HISTORY_7D_URL),v=>{if(Array.isArray(v.readings))history7d=v.readings;}),
+    progress(getJSON(STATS_URL, "no-store"),v=>{stats=v;}),
+    progress(getJSON(RAIN_SUMMARY_URL, "no-store"),v=>{rainSummary=v;}),
+    progress(getJSON(DAILY_RECENT_URL, "no-store"),v=>{if(Array.isArray(v.days))dailyRecent=v.days;})
   ]);
 
   supportingRequestsFinished = true;
