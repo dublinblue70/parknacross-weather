@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-232-full-review";
+const CACHE_NAME = "parknacross-v38-4-232-remove-preference-tools";
 const STATIC_ASSETS = [
   "./radar-analysis-worker.js",
   "./exposure-history.js",

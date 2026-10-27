@@ -30,10 +30,10 @@ const b={window:{addEventListener(){}},document:{addEventListener(){},getElement
 const worker=read('_worker/worker.mjs'),csvContext={Intl,Date,Number,String,ReadableStream,TextEncoder,Response,BASE_CORS_COMPAT:()=>({})};vm.createContext(csvContext);vm.runInContext(worker.slice(worker.indexOf('function rowsToCsv('),worker.indexOf('async function runDailyBackup(')),csvContext);vm.runInContext(worker.slice(worker.indexOf('function exportCsv('),worker.indexOf('function BASE_CORS_COMPAT(')),csvContext);
 const input=[{epoch:1793001600,temperature_c:0,soil_moisture_pct:17},{epoch:1793001900,temperature_c:8,soil_moisture_pct:null}],csv=await csvContext.exportCsv(input,7,true,null,['epoch','temperature_c']).text();assert.equal(csv.trim(),'epoch,temperature_c\n1793001900,8\n1793001600,0');assert.equal(input[0].soil_moisture_pct,17);
 
-// Do not silently persist secrets in a preference backup.
-const tools=read('review-tools.js');assert.ok(!/allowed=\[[^\]]*(?:AdminKey|background-alerts|token)/.test(tools));assert.match(tools,/enabled:false/);
+// Device preference transfer tools have been removed.
+const tools=read('review-tools.js');assert.doesNotMatch(tools,/devicePreferences|cleanPreferences|Export preferences|Import preferences|Clear these preferences/);
 assert.match(read('service-worker.js'),/graphs-controls\.css/);
-console.log('PASS: aged radar ETA, elapsed arrivals, rest-of-night forecast, stale/future coastal observations, lost subscriptions, streamed selected-field CSV and preference credential exclusion.');
+console.log('PASS: aged radar ETA, elapsed arrivals, rest-of-night forecast, stale/future coastal observations, lost subscriptions, streamed selected-field CSV and removal of preference transfer tools.');
 
 // Historical coverage is bounded to the requested year, with real Irish DST slots.
 const {DatabaseSync}=await import('node:sqlite');
