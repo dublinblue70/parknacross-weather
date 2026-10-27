@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-233-mobile-shortcuts";
+const CACHE_NAME = "parknacross-v38-4-234-scene-explanation";
 const STATIC_ASSETS = [
   "./notification-storage.js",
   "./radar-analysis-worker.js",
