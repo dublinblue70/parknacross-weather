@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+export function validMarineForecast(data,now=Date.now()){
+  const issued=Date.parse(data?.issued_at||data?.issued||'');
+  return Boolean(!data?.error&&data?.forecast_available===true&&Number.isFinite(issued)&&now-issued>=-90000&&now-issued<=24*3600000&&['wind','weather','visibility'].every(field=>typeof data.local_area?.[field]==='string'&&data.local_area[field].trim().length>0));
+}
 export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https://parknacrossweather.ie',api='https://parknacross-weather.dave-s-carter.workers.dev'}={}) {
   const results=[];
   const exportDay=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now));
@@ -17,7 +21,7 @@ export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https:
     ['Local hourly forecast',api+'/outdoor-outlook',async r=>{const d=await r.json();assert.ok(Array.isArray(d.points)&&d.points.some(p=>Number(p.epoch)*1000>=now)&&now-Date.parse(d.fetched_at)<5400000&&Date.parse(d.fetched_at)<=now+90000,'Local forecast is missing or delayed');}],
     ['Public photo calendar',api+'/sky-photo/history/dates?month='+exportDay.slice(0,7),async r=>{const d=await r.json();assert.ok(d.month===exportDay.slice(0,7)&&Array.isArray(d.days),'Photo calendar data is invalid');}],
     ['Background push configuration',api+'/push/public-key',async r=>{const d=await r.json();assert.ok(d.available===true&&typeof d.public_key==='string','Push configuration is unavailable');}],
-    ['Marine forecast',api+'/met/marine',async r=>{const d=await r.json();assert.ok(!d.error&&(d.forecast||d.local_forecast||d.local_blocks||d.areas||d.title||d.source),'Marine forecast is missing');}],
+    ['Marine forecast',api+'/met/marine',async r=>{const d=await r.json();assert.ok(validMarineForecast(d,now),'Marine forecast is missing or delayed');}],
     ['CSV export',api+`/export.csv?from=${exportFrom}&to=${exportDay}`,async r=>{const text=await r.text();assert.ok(text.split(/\r?\n/).length>2&&text.split(/\r?\n/)[0].includes('observation_time_ireland'),'CSV export is missing observations or fields');}]
   ];
   // Limit concurrency and use a short retry to distinguish a transient failure.
