@@ -16,3 +16,12 @@ assert.equal(wind(90).exposure,'Onshore');assert.equal(wind(90).to,270);assert.e
 assert.equal(coastalWind({epoch:now/1000,wind_speed_kmh:0,wind_direction_deg:90},now).state,'calm');
 assert.equal(coastalWind({epoch:(now-11*60000)/1000,wind_speed_kmh:15,wind_direction_deg:90},now).state,'unavailable');
 console.log('PASS: forecast coverage, missing/zero/drizzle, stale feeds, Irish DST epochs, meteorological from/to bearings, coastal sectors and calm wind.');
+const {observedRain,rainHeadline}=ctx.window.ParknacrossLocalPlanning;
+const dryForecast=rainOutlook(feed([0,0,0,0,0,0]),now),wetStation=observedRain({received_at:new Date(now).toISOString(),rain_rate_mm_h:.6},now);
+assert.equal(rainHeadline(dryForecast,wetStation,now),'Rain detected at Parknacross now','observed rain takes precedence over a dry model forecast');
+assert.equal(rainHeadline(null,wetStation,now),'Rain detected at Parknacross now','forecast outage cannot hide a current rain observation');
+assert.match(rainHeadline(dryForecast,observedRain({epoch:now/1000,rain_rate_mm_h:0},now),now),/local showers remain possible/);
+for(const rate of [null,undefined,'',-1,NaN])assert.equal(observedRain({epoch:now/1000,rain_rate_mm_h:rate},now),null);
+assert.equal(observedRain({epoch:(now-11*60000)/1000,rain_rate_mm_h:5},now),null,'stale rain must not be described as current');
+assert.equal(observedRain({epoch:(now+120000)/1000,rain_rate_mm_h:5},now),null,'future rain must not be described as current');
+console.log('PASS: observed rain overrides dry/missing forecasts; zero is qualified, missing/stale/future readings stay unavailable.');

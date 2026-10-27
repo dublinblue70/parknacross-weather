@@ -15,6 +15,16 @@
   const wet=slots.find(s=>s.mm!==null&&s.mm>=.1),complete=slots.every(s=>s.mm!==null),covered=slots.filter(s=>s.mm!==null).length;
   return {slots,wet,complete,covered,retrieved:stamp(feed.fetched_at)};
  }
+ function observedRain(c,now=Date.now()){
+  const at=c?.received_at?stamp(c.received_at):c?.epoch?stamp(Number(c.epoch)):NaN,rate=number(c?.rain_rate_mm_h);
+  if(!fresh(at,10*60000,now)||rate===null||rate<0||rate>500)return null;
+  return {rate,time:at,detected:rate>0};
+ }
+ function rainHeadline(view,observed,now=Date.now()){
+  if(observed?.detected)return 'Rain detected at Parknacross now';
+  if(!view)return 'Hourly rain outlook unavailable';
+  return view.wet?(view.wet.from<=now?'Rain forecast this hour':`Rain forecast around ${new Date(view.wet.from).toLocaleTimeString('en-IE',{timeZone:'Europe/Dublin',hour:'2-digit',minute:'2-digit'})}`):view.complete?'Forecast shows little rain · local showers remain possible':'Limited rainfall forecast · local showers remain possible';
+ }
  function coastalWind(c,now=Date.now()){
   const time=c?.received_at?stamp(c.received_at):c?.epoch?stamp(Number(c.epoch)):NaN;
   if(!fresh(time,10*60000,now))return {state:'unavailable'};
@@ -66,18 +76,19 @@
   return {state:complete.length>=2?'available':'sparse',windows:runs.slice(0,3),
    covered:complete.length,receivedAt:fetched};
  }
- window.ParknacrossLocalPlanning={rainOutlook,coastalWind,laundryDryingWindows};
+ window.ParknacrossLocalPlanning={rainOutlook,observedRain,rainHeadline,coastalWind,laundryDryingWindows};
  document.addEventListener('DOMContentLoaded',()=>{
   const rain=document.querySelector('[data-rain-outlook]'),wind=document.querySelector('[data-coastal-compass]'),laundry=document.querySelector('[data-laundry-window]');if(!rain&&!wind&&!laundry)return;
   const base=(window.PARKNACROSS_CONFIG?.apiBase||window.PARKNACROSS_API_BASE||'https://parknacross-weather.dave-s-carter.workers.dev').replace(/\/$/,'');
   const text=(host,key,value)=>{const el=host?.querySelector(`[data-${key}]`);if(el)el.textContent=value;};
   const time=t=>new Date(t).toLocaleTimeString('en-IE',{timeZone:'Europe/Dublin',hour:'2-digit',minute:'2-digit'});
   let forecast=null,current=null,rainLoading=false,windLoading=false;
-  function renderRain(){if(!rain)return;const view=rainOutlook(forecast),list=rain.querySelector('[data-rain-slots]');list.replaceChildren();
-   if(!view){text(rain,'rain-summary','Hourly rain outlook unavailable');text(rain,'rain-context','Try Refresh, or open the radar for the latest rain picture.');text(rain,'rain-source','Forecast data is missing or too old to use.');return;}
-   text(rain,'rain-summary',view.wet?(view.wet.from<=Date.now()?'Rain forecast this hour':`Rain forecast around ${time(view.wet.from)}`):view.complete?'Little or no rain forecast in the next six hourly periods':'No rain signal in the available forecast hours');
-   text(rain,'rain-context',`${view.complete?'Six hourly periods':`${view.covered} of 6 hours available`} · timing confidence is limited; showers may miss Parknacross.`);
-   for(const s of view.slots){const item=document.createElement('li');item.dataset.level=s.mm===null?'missing':s.mm>=1?'wet':s.mm>=.1?'light':'dry';const label=document.createElement('span'),value=document.createElement('strong');label.textContent=`${s.from<=Date.now()?'Now':time(s.from)}–${time(s.to)}`;value.textContent=s.mm===null?'Unavailable':s.mm===0?'0.0 mm':s.mm<.1?'<0.1 mm':`${s.mm.toFixed(1)} mm`;item.append(label,value);list.append(item);}
+  function renderRain(){if(!rain)return;const view=rainOutlook(forecast),observed=observedRain(current),list=rain.querySelector('[data-rain-slots]');list.replaceChildren();
+   text(rain,'rain-summary',rainHeadline(view,observed));
+   text(rain,'rain-observed',observed?`Station observation · ${time(observed.time)} Irish time · ${observed.rate.toFixed(1)} mm/h${observed.detected?' detected.':'. Light rain may not register on the sensor.'}`:'Current station rain reading unavailable. Forecast amounts below do not confirm whether it is raining now.');
+   if(!view){text(rain,'rain-context','Try Refresh, or open the radar for the latest rain picture.');text(rain,'rain-source','Forecast data is missing or too old to use.');return;}
+   text(rain,'rain-context',`${view.complete?'Six forecast hours':`${view.covered} of 6 forecast hours available`} · ${observed?.detected&&!view.wet?'The forecast is missing the rain detected locally. ':''}Forecasts can miss light rain and local showers; 0 mm does not mean it is dry now.`);
+   for(const s of view.slots){const item=document.createElement('li');item.dataset.level=s.mm===null?'missing':s.mm>=1?'wet':s.mm>=.1?'light':'dry';const label=document.createElement('span'),value=document.createElement('strong');label.textContent=`${time(s.from)}–${time(s.to)}`;value.textContent=s.mm===null?'Unavailable':s.mm===0?'0.0 mm':s.mm<.1?'<0.1 mm':`${s.mm.toFixed(1)} mm`;item.append(label,value);list.append(item);}
    text(rain,'rain-source',`Met Éireann point forecast · retrieved ${time(view.retrieved)} Irish time. Amounts cover whole forecast hours, including the current hour; this is forecast rain, not detected rain or a radar arrival estimate.`);
   }
   function renderLaundry(){
@@ -126,14 +137,14 @@
   }
   async function get(path){const r=await fetch(base+path,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Feed unavailable');return r.json();}
   async function loadRain(){if((!rain&&!laundry)||rainLoading)return;rainLoading=true;const buttons=[rain?.querySelector('button'),laundry?.querySelector('button')].filter(Boolean);buttons.forEach(b=>b.disabled=true);try{forecast=await get('/outdoor-outlook');window.dispatchEvent(new CustomEvent('parknacross:local-forecast',{detail:forecast}));}catch{forecast=null;window.dispatchEvent(new CustomEvent('parknacross:local-forecast',{detail:null}));}finally{rainLoading=false;buttons.forEach(b=>b.disabled=false);renderRain();renderLaundry();}}
-  async function loadWind(){if(!wind||windLoading)return;windLoading=true;try{current=await get('/current');}catch{current=null;}finally{windLoading=false;renderWind();}}
-  rain?.querySelector('button').addEventListener('click',loadRain);
+  async function loadWind(){if((!wind&&!rain)||windLoading)return;windLoading=true;try{current=await get('/current');}catch{current=null;}finally{windLoading=false;renderWind();renderRain();}}
+  rain?.querySelector('button').addEventListener('click',()=>{loadRain();loadWind();});
   laundry?.querySelector('button').addEventListener('click',loadRain);
-  window.addEventListener('parknacross:current-observation',e=>{current=e.detail?.current||null;renderWind();});
+  window.addEventListener('parknacross:current-observation',e=>{current=e.detail?.current||null;renderWind();renderRain();});
   loadRain();loadWind();
   (window.ParknacrossRefresh?.every||setInterval)(()=>{renderRain();renderWind();renderLaundry();},60000);
   (window.ParknacrossRefresh?.every||setInterval)(loadRain,15*60000);
-  if(wind&&!document.querySelector('#heroTemp'))(window.ParknacrossRefresh?.every||setInterval)(loadWind,60000);
+  if((wind||rain)&&!document.querySelector('#heroTemp'))(window.ParknacrossRefresh?.every||setInterval)(loadWind,60000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderRain();renderWind();renderLaundry();loadRain();loadWind();}});
  });
 })();
