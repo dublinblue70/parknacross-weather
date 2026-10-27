@@ -1,5 +1,6 @@
-const CACHE_NAME = "parknacross-v38-4-230-notification-preferences";
+const CACHE_NAME = "parknacross-v38-4-231-warning-recovery";
 const STATIC_ASSETS = [
+  "./graphs-controls.css",
   "./weather-fingerprint.js",
   "./weather-fingerprint.css",
   "./local-forecast.js",

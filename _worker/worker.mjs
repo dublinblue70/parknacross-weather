@@ -5025,17 +5025,20 @@ function parseWarningValidity(text){
   return {onset:dates[0]?new Date(dates[0]).toISOString():null,expires:dates[1]?new Date(dates[1]).toISOString():null};
 }
 function parseWeatherWarningFallback(html){
-  const text=htmlToPlainText(html),section=extractNamedTextSection(text,"Weather Warnings",["Marine Warnings","Environmental Advisories"]);
-  if(!section)throw new Error("Official weather warning section missing");
+  // Anchor to the actual bulletin heading, never a navigation/menu mention.
+  const match=String(html||"").match(/<h2\b[^>]*>\s*Weather\s+Warnings\s*<\/h2>([\s\S]*?)(?=<h2\b[^>]*>\s*(?:Marine Warnings|Environmental Advisories)\s*<\/h2>|$)/i);
+  if(!match)throw new Error("Official weather warning section missing");
+  const section=htmlToPlainText(match[1]);
   if(/currently no warnings in operation|no weather warnings|no warnings in force/i.test(section))return [];
-  const headings=[...section.matchAll(/Status\s+(Yellow|Orange|Red)\s*[-–]\s*([^\n]+)/gi)];
+  const headings=[...section.matchAll(/^(?:Status\s*:?\s+)?(Yellow|Orange|Red)\s*[-–]\s*([^\n]+)/gim)];
   if(!headings.length)throw new Error("Official warning bulletin could not be verified");
   return headings.flatMap((m,i)=>{
-    const block=section.slice(m.index,headings[i+1]?.index||section.length);
-    if(!/\b(Wexford|Leinster|Ireland|nationwide|all counties)\b/i.test(m[2]))return [];
+    const block=section.slice(m.index,headings[i+1]?.index||section.length),area=m[2];
+    const relevant=/\b(Wexford|Leinster|nationwide|all counties)\b/i.test(area)||/\b(?:for|across)\s+(?:all\s+(?:of\s+)?)?Ireland\b/i.test(area);
+    if(!relevant)return [];
     const valid=block.match(/Valid\s*:?\s*([^\n]+)/i)?.[1];
     const times=parseWarningValidity(valid);if(!times.onset||!times.expires)throw new Error("Warning validity unavailable");
-    return [{level:m[1],headline:`Status ${m[1]} - ${m[2].trim()}`,description:block.split(/Valid\s*:/i)[0].slice(m[0].length).trim(),...times,issued:block.match(/Issued\s*:?\s*([^\n]+)/i)?.[1]||null}];
+    return [{level:m[1],headline:`Status ${m[1]} - ${area.trim()}`,description:block.split(/Valid\s*:/i)[0].slice(m[0].length).trim(),...times,issued:block.match(/Issued\s*:?\s*([^\n]+)/i)?.[1]||null}];
   });
 }
 async function getMetWarnings(){

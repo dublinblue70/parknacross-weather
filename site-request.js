@@ -36,10 +36,13 @@
           // Retry only reads on the existing service. Never replay a write or
           // mistake authentication/validation errors for a routing outage.
           const method=String(init.method || (typeof input==='object'?input.method:null) || 'GET').toUpperCase();
+          const officialWarningFallback=isApi&&method==="GET"&&url.pathname==="/met/warnings"&&typeof window.ParknacrossWarnings?.fetchOfficial==="function";
+          const warningResponse=async()=>new Response(JSON.stringify(await window.ParknacrossWarnings.fetchOfficial(controller.signal)),{status:200,headers:{"Content-Type":"application/json","Cache-Control":"no-store"}});
           const canFallback=Boolean(primary&&fallback&&isApi&&primary!==fallback&&method==='GET');
           let response;
           try{
             response=await nativeFetch(requestInput,{...init,signal:controller.signal});
+            if(officialWarningFallback&&response.status>=500)return await warningResponse();
             if(!canFallback&&isApi&&method==="GET"&&url.pathname!=="/sky-photo/likes"&&response.status>=500&&!controller.signal.aborted){
               response=await nativeFetch(requestInput,{...init,signal:controller.signal});
             }
@@ -49,6 +52,7 @@
             }
           }catch(error){
             if(controller.signal.aborted)throw error;
+            if(officialWarningFallback)return await warningResponse();
             if(!canFallback){
               if(!isApi||method!=="GET"||url.pathname==="/sky-photo/likes")throw error;
               response=await nativeFetch(requestInput,{...init,signal:controller.signal});
