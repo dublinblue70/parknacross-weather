@@ -28,7 +28,5 @@
    const toggle=()=>{details.open=!details.open;scene.setAttribute('aria-expanded',String(details.open));};
    scene.addEventListener('click',toggle);scene.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle();}});
    details.addEventListener('toggle',()=>scene.setAttribute('aria-expanded',String(details.open)));
-   const update=()=>{document.getElementById('weatherWindowExplanation').textContent=document.getElementById('weatherWindowSkySource')?.textContent||'Sky source unavailable.';document.getElementById('weatherWindowMeasured').textContent=document.getElementById('weatherWindowObservation')?.textContent||'Local readings are loading.';};
-   for(const id of ['weatherWindowSkySource','weatherWindowObservation']){const node=document.getElementById(id);if(node)new MutationObserver(update).observe(node,{childList:true,subtree:true,characterData:true});}update();
  }
 })();
