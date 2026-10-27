@@ -10,11 +10,11 @@ for(const [file,id,width] of [['graphs.html','gWindRose',390],['index.html','win
  await expect.poll(()=>page.evaluate(id=>Boolean(window.Chart?.getChart(document.getElementById(id))),id)).toBe(true);
  const result=await page.evaluate(({id,rows,end})=>{
   const c=Chart.getChart(document.getElementById(id));const result=ParknacrossWindRose.update(c,rows,null,{endEpoch:end,hours:24});
-  const arcs=c.getDatasetMeta(0).data;return {calm:result.calm,total:result.intervalCount,means:result.meanSpeeds,colours:c.data.datasets[0].backgroundColor,angles:arcs.map(a=>[a.startAngle,a.endAngle,a.innerRadius,a.outerRadius]),counts:result.bins};
+  const arcs=c.getDatasetMeta(1).data;return {calm:result.calm,total:result.intervalCount,means:result.meanSpeeds,colours:c.data.datasets.map(d=>d.backgroundColor),bandCounts:result.bandCounts,angles:arcs.map(a=>[a.startAngle,a.endAngle,a.innerRadius,a.outerRadius]),counts:result.bins};
  },{id,rows,end});
- expect(result.calm).toBe(69);expect(result.total).toBe(100);expect(result.means[2]).toBe(8);expect(result.means[10]).toBe(30);expect(result.colours[2]).toBe('#3f8cff');expect(result.colours[10]).toBe('#ffd052');
+ expect(result.calm).toBe(69);expect(result.total).toBe(100);expect(result.means[2]).toBe(8);expect(result.means[10]).toBe(30);expect(result.colours[1]).toBe('#3f8cff');expect(result.colours[3]).toBe('#ffd052');expect(result.bandCounts[1][2]).toBe(15);expect(result.bandCounts[3][10]).toBe(16);
  expect((result.angles[2][0]+result.angles[2][1])/2).toBeCloseTo(-Math.PI/4);expect(result.angles[2][3]).toBeGreaterThan(result.angles[2][2]);
- await expect(page.locator('#'+id)).toHaveAttribute('aria-label',/69.0% calm/);await expect(page.locator('.wind-rose-legend')).toContainText('km/h');await expect(page.locator('.wind-rose-explanation')).toContainText('average speed');
+ await expect(page.locator('#'+id)).toHaveAttribute('aria-label',/69.0% calm/);await expect(page.locator('.wind-rose-legend')).toContainText('km/h');await expect(page.locator('.wind-rose-explanation')).toContainText('Coloured segments');
  const card=page.locator('#'+id).locator('xpath=ancestor::article[1]');await card.screenshot({path:testInfo.outputPath('wind-rose.png')});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);expect(errors).toEqual([]);
 });

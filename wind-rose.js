@@ -28,18 +28,22 @@
       if (speed < 0 || !Number.isFinite(degrees) || degrees < 0 || degrees > 360) continue;
       const bucket = Math.floor(epoch / BUCKET_SECONDS);
       const previous = slots.get(bucket);
-      if (!previous || epoch >= previous.epoch) slots.set(bucket, {epoch, speed, degrees});
+      if (!previous || epoch >= previous.epoch) slots.set(bucket, {epoch, speed, degrees, gust:usable(row.wind_gust_kmh)&&Number(row.wind_gust_kmh)>=0?Number(row.wind_gust_kmh):null});
     }
     const speedSums = new Array(LABELS.length).fill(0);
-    let directional = 0, calm = 0;
-    for (const {speed, degrees} of slots.values()) {
+    const bandCounts=SPEED_BANDS.map(()=>new Array(LABELS.length).fill(0));
+    let directional = 0, calm = 0, maxSpeed=null, maxGust=null;
+    for (const {speed, degrees, gust} of slots.values()) {
+      maxSpeed=Math.max(maxSpeed??0,speed);if(gust!==null)maxGust=Math.max(maxGust??0,gust);
       if (speed < CALM_THRESHOLD_KMH) { calm++; continue; }
       const index = Math.round((degrees % 360) / 22.5) % LABELS.length;
       bins[index]++;
+      bandCounts[SPEED_BANDS.findIndex(band=>speed<band.max)][index]++;
       speedSums[index] += speed;
       directional++;
     }
-    return {bins, calm, directional, intervalCount: slots.size,
+    return {bins, calm, directional, intervalCount: slots.size, bandCounts, maxSpeed, maxGust,
+      bandPercentages:bandCounts.map(counts=>counts.map(count=>directional?count/directional*100:0)),
       meanSpeeds: bins.map((count, index) => count ? speedSums[index] / count : null),
       percentages: bins.map(count => directional ? count / directional * 100 : 0)};
   }
@@ -51,7 +55,7 @@
     {max:40, label:"25–40", color:"#ffd052"},
     {max:Infinity, label:"40+", color:"#fb4a9c"}
   ];
-  const speedColour = speed => SPEED_BANDS.find(band => speed < band.max)?.color || SPEED_BANDS.at(-1).color;
+
   // Use the Chart.js arc elements for both rendering and pointer hit testing.
   // The central hole is reserved space, so it never counts towards spoke length.
   const spokeLayout = {
@@ -60,10 +64,11 @@
       const r=chart.scales.r, radius=r.drawingArea, hole=radius*.22;
       const maximum=chart.$windRoseMaximum || 10;
       args.meta.data.forEach((arc,index)=>{
-        const frequency=Number(chart.data.datasets[0].data[index] || 0);
+        const frequency=Number(chart.data.datasets[args.index].data[index] || 0);
+        const before=chart.data.datasets.slice(0,args.index).reduce((sum,dataset)=>sum+Number(dataset.data[index]||0),0);
         Object.assign(arc,{
-          x:r.xCenter,y:r.yCenter,innerRadius:hole,
-          outerRadius:frequency>0 ? hole+(radius-hole)*frequency/maximum : hole,
+          x:r.xCenter,y:r.yCenter,innerRadius:hole+(radius-hole)*before/maximum,
+          outerRadius:hole+(radius-hole)*(before+frequency)/maximum,
           startAngle:(index*22.5-90-9)*Math.PI/180,
           endAngle:(index*22.5-90+9)*Math.PI/180
         });
@@ -96,21 +101,21 @@
     if (!canvas || typeof Chart === "undefined") return null;
     const wrap=canvas.closest('.wind-rose-wrap');
     if(wrap && !wrap.nextElementSibling?.classList.contains('wind-rose-legend')){
-      const legend=document.createElement('div');legend.className='wind-rose-legend';legend.setAttribute('aria-label','Average wind speed by direction in kilometres per hour');
+      const legend=document.createElement('div');legend.className='wind-rose-legend';legend.setAttribute('aria-label','Sustained wind speed bands in kilometres per hour');
       SPEED_BANDS.forEach(band=>{
         const item=document.createElement('span'),swatch=document.createElement('i');swatch.style.backgroundColor=band.color;swatch.setAttribute('aria-hidden','true');item.append(swatch,document.createTextNode(band.label));legend.append(item);
       });
       const units=document.createElement('span');units.className='wind-rose-unit';units.textContent='km/h';legend.append(units);wrap.after(legend);
       const calmNote=document.createElement('p');calmNote.className='wind-rose-calm-note';calmNote.textContent='The centre shows the percentage of valid five-minute readings below 1 km/h (calm).';legend.after(calmNote);
-      const explanation=document.createElement('p');explanation.className='wind-rose-explanation';explanation.textContent='Longer spokes show where the wind blew from more often; colour shows the average speed for that direction.';calmNote.after(explanation);
+      const explanation=document.createElement('p');explanation.className='wind-rose-explanation';explanation.textContent='Longer spokes show where the wind blew from more often. Coloured segments show how often sustained wind fell in each speed band; gusts are listed separately.';calmNote.after(explanation);
     }
     return new Chart(canvas, {
       type:"polarArea",
       plugins:[spokeLayout],
-      data:{labels:[...LABELS],datasets:[{
-        label:"Direction frequency %",data:new Array(LABELS.length).fill(0),
-        backgroundColor:new Array(LABELS.length).fill(SPEED_BANDS[0].color),borderWidth:0,hoverBorderColor:"#ffffff",hoverBorderWidth:1
-      }]},
+      data:{labels:[...LABELS],datasets:SPEED_BANDS.map(band=>({
+        label:`${band.label} km/h sustained · %`,data:new Array(LABELS.length).fill(0),
+        backgroundColor:band.color,borderWidth:0,hoverBorderColor:"#ffffff",hoverBorderWidth:1
+      }))},
       options:{
         maintainAspectRatio:false,animation:false,layout:{padding:30},
         scales:{r:{display:false,beginAtZero:true,min:0,max:100}},
@@ -122,9 +127,10 @@
               title:items=>`${items[0]?.label || ""} · wind from`,
               label:context=>{
                 const result=context.chart.$windRose,index=context.dataIndex,speed=result?.meanSpeeds[index];
-                return [`${Number(context.raw || 0).toFixed(1)}% of non-calm intervals`,
-                  speed==null ? 'Average speed unavailable' : `Average speed ${speed.toFixed(1)} km/h`,
-                  `${result?.bins[index] || 0} five-minute intervals`];
+                return [`${SPEED_BANDS[context.datasetIndex].label} km/h sustained wind`,
+                  `${Number(context.raw || 0).toFixed(1)}% of non-calm intervals`,
+                  `${result?.bandCounts[context.datasetIndex][index] || 0} five-minute intervals in this band`,
+                  speed==null ? 'Direction average unavailable' : `Direction average ${speed.toFixed(1)} km/h`];
               }
             }
           }
@@ -139,8 +145,7 @@
     chart.$windRose=result;
     const maximum=Math.max(10,Math.ceil(Math.max(...result.percentages)/10)*10);
     chart.$windRoseMaximum=maximum;
-    chart.data.datasets[0].data=result.percentages;
-    chart.data.datasets[0].backgroundColor=result.meanSpeeds.map(speed=>speed==null ? 'transparent' : speedColour(speed));
+    chart.data.datasets.forEach((dataset,index)=>{dataset.data=result.bandPercentages[index];});
     chart.update('none');
     const calmPercent=result.intervalCount ? result.calm/result.intervalCount*100 : 0;
     const calmNote=chart.canvas.closest('.wind-rose-wrap')?.parentElement?.querySelector('.wind-rose-calm-note');
@@ -148,11 +153,11 @@
       ? `Centre: ${Math.round(calmPercent)}% of valid five-minute readings had wind below ${CALM_THRESHOLD_KMH} km/h (calm) during this period.`
       : `The centre shows the percentage of valid five-minute readings below ${CALM_THRESHOLD_KMH} km/h (calm).`;
     const summary=result.intervalCount
-      ? `${result.intervalCount.toLocaleString('en-IE')} valid five-minute intervals · outer ring ${maximum}% of non-calm intervals.`
+      ? `${result.intervalCount.toLocaleString('en-IE')} valid five-minute intervals · outer ring ${maximum}% of non-calm intervals. Highest sustained reading: ${result.maxSpeed.toFixed(1)} km/h${result.maxGust===null?'':`; peak gust: ${result.maxGust.toFixed(1)} km/h`}.`
       : 'No usable wind-direction observations in this period.';
     if(metaElement)metaElement.textContent=summary;
     chart.canvas.setAttribute('aria-label',result.intervalCount
-      ? `Wind rose: ${calmPercent.toFixed(1)}% calm. This is the share of valid five-minute readings with wind below ${CALM_THRESHOLD_KMH} km/h during this period. `+LABELS.map((label,i)=>result.bins[i] ? `${label}: ${result.percentages[i].toFixed(1)}% of non-calm intervals, average ${result.meanSpeeds[i].toFixed(1)} km/h.` : '').filter(Boolean).join(' ')
+      ? `Wind rose: ${calmPercent.toFixed(1)}% calm. This is the share of valid five-minute readings with wind below ${CALM_THRESHOLD_KMH} km/h during this period. `+LABELS.map((label,i)=>result.bins[i] ? `${label}: ${result.percentages[i].toFixed(1)}% of non-calm intervals, average ${result.meanSpeeds[i].toFixed(1)} km/h; `+SPEED_BANDS.map((band,j)=>result.bandCounts[j][i]?`${band.label} km/h: ${result.bandCounts[j][i]} intervals`:null).filter(Boolean).join(', ')+'.' : '').filter(Boolean).join(' ')
       : 'Wind rose: no usable observations in this period.');
     return result;
   }
