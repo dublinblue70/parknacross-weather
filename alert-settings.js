@@ -380,6 +380,7 @@
 
   window.PWAlerts = {
     loadSettings,
+    hasSavedSettings: () => unsavedSettings !== null || readJSON(SETTINGS_KEY, null) !== null,
     saveSettings,
     evaluateCurrent,
     evaluateLightning,

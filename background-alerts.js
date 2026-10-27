@@ -30,7 +30,7 @@
   try{const sub=await Promise.race([subscription(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Subscription check timed out')),10000))]);
    if(!sub){repair=true;await reconnect();ui();return verified;}
    if(typeof Notification==='undefined'||Notification.permission!=='granted'){repair=true;status('Notification permission is off. Your choices are preserved.');ui();return false;}
-   try{const result=await request('status',sub);if(result.active!==true)throw Object.assign(Error('Subscription missing'),{status:404});verified=true;repair=false;}
+   try{const result=await request('status',sub);if(result.active!==true)throw Object.assign(Error('Subscription missing'),{status:404});verified=true;repair=false;if(result.preferences&&window.PWAlerts?.hasSavedSettings?.()===false){window.PWAlerts.saveSettings({...result.preferences,enabled:true});window.PWAlerts.refreshUI();}}
    catch(error){if(error.status===401||error.status===404){repair=true;await reconnect(error.status===401);}else{verified=true;status('Browser subscription exists; server status could not be verified. Previously saved background settings may still apply.');}}
   }catch{status('Subscription status could not be verified. Open this page again when connected.');}finally{checking=false;}
   ui();return verified;
