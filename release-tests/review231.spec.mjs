@@ -1,0 +1,35 @@
+import {test,expect} from '@playwright/test';
+const now=Date.parse('2026-10-26T12:30:00Z'),day='2026-10-26',current={epoch:now/1000,received_at:new Date(now).toISOString(),temperature_c:12,humidity:80,wind_speed_kmh:5,wind_gust_kmh:10,wind_direction_deg:90,pressure_hpa:1005,rain_daily_mm:3,rain_rate_mm_h:0,soil_moisture_pct:30},readings=Array.from({length:12},(_,i)=>({...current,epoch:now/1000-(11-i)*300,received_at:new Date(now-(11-i)*300000).toISOString()}));
+test.beforeEach(async({page})=>{
+ await page.clock.setFixedTime(new Date(now));
+ await page.route('**/static.cloudflareinsights.com/**',r=>r.fulfill({body:''}));
+ await page.route('**/*.workers.dev/**',route=>{const url=new URL(route.request().url()),p=url.pathname;let data={};
+  if(p==='/current')data=current;
+  else if(p==='/history')data={readings};
+  else if(p==='/day')data={available:true,summary:{day,high_c:12,low_c:12,rain_mm:3,sample_count:12},readings};
+  else if(p==='/daily')data={days:[{day,high_c:12,low_c:12,rain_mm:3,peak_gust_kmh:10,sample_count:12}]};
+  else if(p==='/stats')data={first_epoch:readings[0].epoch,total_samples:12,records:{}};
+  else if(p==='/coverage')data={days:[{day,actual_slots:12,expected_slots:150,coverage_percent:8}],summary:{coverage_percent:8}};
+  else if(p==='/rain-events')data={events:[],event_count:0};
+  else if(p==='/outdoor-outlook')data={fetched_at:new Date(now).toISOString(),points:Array.from({length:24},(_,i)=>({epoch:Math.ceil(now/3600000)*3600+i*3600,temperature_c:12,wind_kmh:5,rain_mm:0}))};
+  else if(p==='/sky-photo/history/dates')data={month:'2026-10',days:[{day,count:2}]};
+  else if(p==='/sky-photo/history')data={day,photo:{photo_id:'later',caption:'Later view'},photos:[{photo_id:'earlier',caption:'Earlier view',captured_at:'2026-10-26T10:00:00Z'},{photo_id:'later',caption:'Later view',captured_at:'2026-10-26T11:00:00Z'}]};
+  else if(p==='/sky-photo/history/image')return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="600" height="400" fill="skyblue"/></svg>'});
+  else if(p==='/sky-photo/meta')data={available:false};
+  else if(p==='/met/warnings')data={warnings:[]};
+  else if(p==='/push/public-key')data={available:false};
+  else if(p==='/station-exposure')data={entries:[]};
+  return route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
+ });
+});
+for(const width of [360,390,768,1024,1366])test(`dashboard remains aligned with new tools at ${width}px`,async({page},info)=>{
+ await page.setViewportSize({width,height:960});await page.goto('/index.html');await expect(page.locator('#heroRain')).toContainText('3.0');
+ const labels=page.locator('.hero-stat>span'),values=page.locator('.hero-stat>strong');const a=await labels.nth(0).boundingBox(),b=await labels.nth(1).boundingBox(),c=await values.nth(0).boundingBox(),d=await values.nth(1).boundingBox();expect(Math.abs(a.y-b.y)).toBeLessThan(1);expect(Math.abs(c.y-d.y)).toBeLessThan(1);
+ await expect(page.locator('#activityPlanner')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await page.screenshot({path:info.outputPath('dashboard-'+width+'.png'),fullPage:true});
+});
+test('saved photo navigation shows both images with their own captions',async({page})=>{await page.goto('/sky.html?day='+day);await expect(page.locator('#publicPhotoCaption')).toContainText('Later view');await expect(page.locator('#publicPhotoStatus')).toHaveText('Photograph 2 of 2 for '+day);await page.getByRole('button',{name:'← Previous photo',exact:true}).click();await expect(page.locator('#publicPhotoCaption')).toContainText('Earlier view');await expect(page.locator('#publicArchivePhoto')).toBeVisible();await expect(page.locator('#publicPhotoWeatherLink')).toHaveAttribute('href','history.html?day='+day+'#dayDetailTitle');});
+test('replay is keyboard accessible and preserves observed zero rain',async({page})=>{await page.goto('/history.html?replay='+day+'#weatherReplay');await expect(page.locator('#weatherReplay')).toContainText('12 saved readings');const slider=page.getByRole('slider',{name:'Inspect a saved observation'});await expect(slider).toBeEnabled();await slider.focus();await slider.press('End');await expect(slider).toHaveValue('11');await expect(page.locator('#weatherReplay')).toContainText('0.0 mm/h');});
+test('accessible chart table exposes numeric values and missing values',async({page})=>{await page.goto('/history.html');const disclosure=page.locator('.review-table-tools').first();await expect(disclosure).toBeVisible();await disclosure.locator('summary').click();await expect(disclosure.locator('table')).toBeVisible();await expect(disclosure.locator('tbody')).toContainText('12');});
+test('preference import excludes credentials and leaves alerts disabled',async({page})=>{await page.goto('/station.html');const data={format:'parknacross-preferences',version:1,values:{'parknacross.alerts.settings.v1':{enabled:true,rainStart:true,gustKmh:35,token:'must-not-import'}}};await page.locator('#devicePreferences input[type=file]').setInputFiles({name:'preferences.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(data))});await expect(page.locator('#devicePreferences')).toContainText('Preferences imported');const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('parknacross.alerts.settings.v1')));expect(saved.enabled).toBe(false);expect(saved.rainStart).toBe(true);expect(saved.token).toBeUndefined();});
+test('empty future fingerprint months have the same row spacing',async({page})=>{await page.setViewportSize({width:390,height:844});await page.goto('/climate.html');const rows=page.locator('.fingerprint-row:not(.fingerprint-numbers)');await expect(rows).toHaveCount(12);const boxes=await rows.evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height));expect(Math.max(...boxes)-Math.min(...boxes)).toBeLessThan(1);});

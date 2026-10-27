@@ -25,7 +25,7 @@ rejectDay(Error('Network unavailable'));await pending;assert.equal(el('dayHigh')
 
 // A late coverage response updates bounds but preserves an edited date range.
 const dateNodes=new Map(),dateEl=id=>{if(!dateNodes.has(id))dateNodes.set(id,{value:'',events:{},addEventListener(n,f){this.events[n]=f}});return dateNodes.get(id)};
-let startup;const dates={document:{getElementById:dateEl,querySelectorAll:()=>[],addEventListener:(n,f)=>startup=f},Date,Number,String,Math,fetch:()=>new Promise(()=>{})};
+let startup;const dates={AbortSignal,window:{},document:{createElement:()=>({append(){},addEventListener(){}}),createTextNode:text=>({textContent:text}),querySelector:()=>null,getElementById:dateEl,querySelectorAll:()=>[],addEventListener:(n,f)=>startup=f},Date,Number,String,Math,fetch:()=>new Promise(()=>{})};
 vm.createContext(dates);vm.runInContext(source('downloads.js'),dates);startup();dateEl('exportFrom').value='2026-09-20';dateEl('exportTo').value='2026-09-23';dateEl('exportFrom').events.input();vm.runInContext('setRangeDefaults("2026-09-11")',dates);
 assert.equal(dateEl('exportFrom').value,'2026-09-20');assert.equal(dateEl('exportTo').value,'2026-09-23');assert.equal(dateEl('exportFrom').min,'2026-09-11');
 

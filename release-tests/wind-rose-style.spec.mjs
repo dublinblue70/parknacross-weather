@@ -3,7 +3,7 @@ const end=Math.floor(Date.now()/1000/300)*300;
 const rows=Array.from({length:100},(_,i)=>({epoch:end-(100-i)*300,received_at:new Date((end-(100-i)*300)*1000).toISOString(),wind_speed_kmh:i<69?0:i<84?8:30,wind_direction_deg:i<84?45:225,wind_gust_kmh:35,temperature_c:12,dew_point_c:8,humidity_pct:75,pressure_hpa:1010,solar_w_m2:20,uv_index:0,rain_rate_mm_h:0,rain_daily_mm:0}));
 test.beforeEach(async({page})=>{
  await page.route('**/*.workers.dev/**',r=>{const p=new URL(r.request().url()).pathname;let data={};if(p==='/history')data={readings:rows};if(p==='/current')data={...rows.at(-1),epoch:Math.floor(Date.now()/1000),received_at:new Date().toISOString()};if(p==='/daily')data={days:[]};if(p==='/met/warnings')data={warnings:[]};return r.fulfill({contentType:'application/json',body:JSON.stringify(data)});});
- await page.route('**/static.cloudflareinsights.com/**',r=>r.fulfill({body:''}));
+ await page.route('**/static.cloudflareinsights.com/**',r=>r.fulfill({contentType:'application/javascript',body:''}));
 });
 for(const [file,id,width] of [['graphs.html','gWindRose',390],['index.html','windRose',1280]])test(`${file} has speed spokes and a calm centre at ${width}px`,async({page},testInfo)=>{
  await page.setViewportSize({width,height:900});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/'+file);

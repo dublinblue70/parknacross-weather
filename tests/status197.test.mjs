@@ -10,6 +10,10 @@ for(const date of ['2026-03-29T01:05:00Z','2026-10-25T02:05:00Z','2026-10-10T23:
 const now=Date.parse('2026-10-10T23:01:00Z'),requests=[];
 const results=await checkPublicSite({now,fetcher:async url=>{
  requests.push(url);const path=new URL(url).pathname;
+ if(url.includes('/outdoor-outlook'))return Response.json({fetched_at:new Date(now).toISOString(),points:[{epoch:now/1000+3600}]});
+ if(url.includes('/sky-photo/history/dates'))return Response.json({month:new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now)).slice(0,7),days:[]});
+ if(url.includes('/push/public-key'))return Response.json({available:true,public_key:'fixture'});
+ if(url.includes('/met/marine'))return Response.json({forecast_available:true,source:'Met Éireann'});
  const data=path==='/current'?{epoch:now/1000-60}:path==='/history'?{readings:[{epoch:now/1000-60}]}:path==='/daily'?{days:[{day:'2026-10-11'}]}:path==='/rain-events'?{events:[],event_count:0}:path==='/coverage'?{days:[{day:'2026-10-11'}],summary:{coverage_percent:100}}:path==='/stats'?{total_samples:200,records:{}}:{count:3,last_epoch:now/1000-60,columns:['soil_moisture_pct','lightning_strikes']};
  return{ok:true,json:async()=>data,text:async()=>path==='/export.csv'?'observation_time_ireland\nreading1\nreading2':'PARKNACROSS WEATHER'};
 }});

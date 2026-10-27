@@ -23,7 +23,12 @@ async function downloadUrl(url,label,button,description){
   if(button){button.disabled=true;button.textContent="Preparing…";}
   status(`Preparing ${description}…`);
   try{
-    const response=await fetch(url,{cache:"no-store"});
+    const chosen=window.ParknacrossExportFields?.selected();
+    if(chosen&&chosen.length===0)throw Error("Choose at least one measurement field");
+    const target=new URL(url);if(chosen)target.searchParams.set("fields",chosen.join(","));
+    const large=Number(target.searchParams.get("days"))>=90||(target.searchParams.has("from")&&(Date.parse(target.searchParams.get("to"))-Date.parse(target.searchParams.get("from")))/86400000>=30);
+    if(large||chosen){const previewUrl=new URL(target);previewUrl.pathname=previewUrl.pathname.replace(/export\.csv$/,"export-preview");previewUrl.searchParams.delete("fields");const check=await fetch(previewUrl,{cache:"no-store",signal:AbortSignal.timeout(20000)});if(!check.ok)throw Error("Export preview failed");const info=await check.json();if(!Number(info.count))throw Error("No saved readings in this period");const a=document.createElement("a");a.href=target.href;a.download=`parknacross-weather-${label}.csv`;document.body.appendChild(a);a.click();a.remove();status(`Download requested for ${Number(info.count).toLocaleString("en-IE")} observations · ${Number(info.coverage_percent).toFixed(1)}% five-minute coverage. Check your browser’s download list.`,"good");return;}
+    const response=await fetch(url,{cache:"no-store",signal:AbortSignal.timeout(30000)});
     if(!response.ok){let detail="";try{detail=(await response.json()).error||"";}catch{}throw new Error(detail||`HTTP ${response.status}`);}
     const csv=await response.text();if(!csv.trim())throw new Error("The export was empty");
     const{soilRows,lightningRows}=csvStats(csv),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),objectUrl=URL.createObjectURL(blob);
@@ -68,6 +73,12 @@ async function loadBackupStatus(){
   catch{el.textContent="Backup status is temporarily unavailable.";}
 }
 document.addEventListener("DOMContentLoaded",()=>{
+  const section=document.createElement("section"),heading=document.createElement("h2"),note=document.createElement("p"),choices=document.createElement("div"),all=document.createElement("button");section.className="review-panel";section.id="exportFields";heading.textContent="Choose CSV fields";note.textContent="Time fields are always included. Select all fields for a complete backup; a custom selection changes only the download, not the archive. Larger files download directly through the browser. Coverage appears before the request.";choices.className="review-grid";all.type="button";all.textContent="Select all measurements";
+  const fields=["temperature_c","feels_like_c","humidity","dew_point_c","wind_speed_kmh","wind_gust_kmh","wind_direction_deg","pressure_hpa","rain_rate_mm_h","rain_daily_mm","solar_w_m2","uv_index","battery_v",...SENSOR_EXPORT_FIELDS],boxes=[];
+  let selectionAvailable=false;note.textContent="Checking whether column selection is available. Complete CSV downloads remain available.";all.disabled=true;
+  for(const field of fields){const label=document.createElement("label"),box=document.createElement("input");box.type="checkbox";box.checked=true;box.disabled=true;box.value=field;boxes.push(box);label.append(box,document.createTextNode(" "+field));choices.append(label);}section.append(heading,note,all,choices);document.querySelector("main .grid")?.before(section);all.addEventListener("click",()=>boxes.forEach(box=>box.checked=true));window.ParknacrossExportFields={selected:()=>!selectionAvailable?null:!boxes.some(b=>b.checked)?[]:boxes.every(b=>b.checked)?null:["epoch","received_at","observation_time_ireland",...boxes.filter(b=>b.checked).map(b=>b.value)]};
+
+  fetch((globalThis.PARKNACROSS_API_BASE||"https://parknacross-weather.dave-s-carter.workers.dev")+"/site-capabilities",{cache:"no-store",signal:AbortSignal.timeout(10000)}).then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>{selectionAvailable=data.features?.selected_export_fields===true;boxes.forEach(box=>box.disabled=!selectionAvailable);all.disabled=!selectionAvailable;note.textContent=selectionAvailable?"Time fields are always included. Choose measurements below; complete exports remain available. Large files download directly through your browser.":"Column selection will be available after the data-service update. Complete CSV downloads remain available.";}).catch(()=>{note.textContent="Column selection could not be verified. Complete CSV downloads remain available.";});
   for(const id of ["exportFrom","exportTo"]){for(const event of ["input","change"])$(id)?.addEventListener(event,()=>{rangeEdited=true;});}
   document.querySelectorAll(".export").forEach(button=>button.addEventListener("click",()=>download(button.dataset.days,button.dataset.name,button)));
   $("customExportButton")?.addEventListener("click",event=>downloadCustom(event.currentTarget));

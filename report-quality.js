@@ -30,7 +30,7 @@
     const percentage = expected ? Math.min(100, actual / expected * 100).toFixed(1) : null;
     return `${captured.size}/${expectedDays} calendar days recorded through ${through}${collectionStart && collectionStart > start ? ` since station records began on ${collectionStart}` : ''}. ${beforeRecording ? `${beforeRecording} earlier day${beforeRecording===1?' was':'s were'} before station recording began, not archive gaps. ` : ''}${missing ? `${missing} day${missing===1?' has':'s have'} no archived observations. ` : ''}${percentage ? `${percentage}% of expected five-minute slots captured on days with checked coverage. ` : ''}${incomplete} recorded day${incomplete===1?' has':'s have'} incomplete coverage.${unknown ? ` Coverage could not be verified for ${unknown} recorded day${unknown===1?'':'s'}.` : ''} ${through===today ? 'Today is measured only up to the latest coverage check. ' : ''}Totals, averages and recorded extremes use available observations; missing readings may affect them.`;
   }
-  let request;
+  let request;const years=new Map();
   function load() {
     if (!request) {
       const base = window.PARKNACROSS_CONFIG?.apiBase || 'https://parknacross-weather.dave-s-carter.workers.dev';
@@ -44,5 +44,6 @@
     }
     return request;
   }
-  window.ParknacrossReportQuality = {describe, load};
+  async function loadYear(year){if(!/^20\d{2}$/.test(String(year)))return load();if(!years.has(year)){const base=window.PARKNACROSS_CONFIG?.apiBase||"https://parknacross-weather.dave-s-carter.workers.dev";years.set(year,Promise.all([load(),fetch(base+"/coverage?year="+year,{cache:"no-store",signal:AbortSignal.timeout(20000)}).then(r=>{if(!r.ok)throw Error("Coverage unavailable");return r.json();})]).then(([current,selected])=>({...selected,collection_start_day:current.collection_start_day})).catch(()=>load()));}return years.get(year);}
+  window.ParknacrossReportQuality = {describe, load,loadYear};
 })();

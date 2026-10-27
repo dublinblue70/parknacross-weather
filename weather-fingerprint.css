@@ -10,7 +10,7 @@
 .fingerprint-values>div:nth-child(1) dd{color:#ff8c78}.fingerprint-values>div:nth-child(2) dd{color:#65caff}.fingerprint-values>div:nth-child(3) dd{color:#78dfc0}.fingerprint-values>div:nth-child(4) dd{color:#f4d36f}
 .fingerprint-selected p{font-size:.76rem;color:#acbdc9;margin:12px 0 6px}.fingerprint-selected a{font-size:.8rem;color:#81d7ee}
 .fingerprint-scroll{overflow-x:auto;padding:2px 3px 12px;scrollbar-color:#496273 #0d1823;overscroll-behavior-x:contain}
-.fingerprint-grid{min-width:790px;display:grid;gap:3px}.fingerprint-row{display:grid;grid-template-columns:44px repeat(31,minmax(0,1fr));align-items:center;gap:2px}
+.fingerprint-grid{min-width:790px;display:grid;gap:3px}.fingerprint-row{min-height:32px;grid-auto-rows:32px;display:grid;grid-template-columns:44px repeat(31,minmax(0,1fr));align-items:center;gap:2px}
 .fingerprint-month{font-size:.75rem;color:#acbdc9}.fingerprint-numbers span{text-align:center;font-size:.6rem;color:#91a6b7}.fingerprint-numbers{margin-bottom:5px}
 .fingerprint-blank{display:block;width:100%;aspect-ratio:1;min-width:0}
 .fingerprint-day{display:block;width:100%;aspect-ratio:1;padding:0;border:1px solid transparent;border-radius:50%;background:transparent;cursor:pointer;min-width:0;min-height:0;line-height:0;touch-action:manipulation}
@@ -20,3 +20,5 @@
 @media(max-width:850px){.fingerprint-scroll-hint{display:block}.fingerprint-values{grid-template-columns:repeat(2,minmax(0,1fr))}.fingerprint-detail{gap:14px;padding:16px}.fingerprint-portrait{flex-basis:80px}.fingerprint-portrait svg{width:80px;height:80px}}
 @media(max-width:450px){.fingerprint-detail{align-items:start}.fingerprint-portrait{flex-basis:52px;margin-top:2px}.fingerprint-portrait svg{width:52px;height:52px}.fingerprint-values dd{font-size:.85rem}.fingerprint-values dt{font-size:.7rem}.fingerprint-controls{width:100%;justify-content:space-between}.fingerprint-key{gap:10px 16px}}
 @media print{.fingerprint-scroll{overflow:visible}.fingerprint-grid{min-width:0}.fingerprint-controls,.fingerprint-scroll-hint{display:none}}
+
+.fingerprint-day,.fingerprint-blank{width:min(100%,28px);height:auto;justify-self:center}

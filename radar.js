@@ -97,6 +97,10 @@
   if(coherent<4)return {kind:"uncertain",motion,nearEcho,areaEcho};
   return {kind:"arrival",minutes:first,confidence:motion.score>=0.25&&coherent>=12?"moderate":"low",motion,nearEcho,areaEcho};
  }
+ async function analyseRadar(older,newer,minutes){
+  if(typeof Worker==='undefined')return arrivalFromMasks(older,newer,minutes);
+  return new Promise((resolve,reject)=>{const worker=new Worker('radar-analysis-worker.js?v=20261026-v38-4-232'),timer=setTimeout(()=>{worker.terminate();reject(Error('Radar analysis timed out'));},5000),finish=()=>{clearTimeout(timer);worker.terminate();};worker.onmessage=event=>{finish();event.data.error?reject(Error(event.data.error)):resolve(event.data.result);};worker.onerror=()=>{finish();reject(Error('Radar analysis unavailable'));};worker.postMessage({older,newer,minutes});});
+ }
  async function updateArrivalEstimate(){
   if(arrivalBusy||!frames.length)return;
   arrivalBusy=true;
@@ -106,13 +110,15 @@
    const earlier=frames.filter(f=>latest.time-f.time>=20*60).slice(-1)[0];
    if(!earlier){setArrival("Waiting for more radar history","At least 20 minutes of recent radar movement is needed to estimate a direction and arrival.");return;}
    const [oldPatch,newPatch]=await Promise.all([loadRadarPatch(earlier),loadRadarPatch(latest)]);
-   const elapsed=(latest.time-earlier.time)/60,result=arrivalFromMasks(oldPatch,newPatch,elapsed);
-   if(result.kind==="now"){setArrival("A radar echo is over the Parknacross area","Radar shows precipitation close to the station marker now. Check the WS90 reading for the local observation.");return;}
+   const elapsed=(latest.time-earlier.time)/60,result=await analyseRadar(oldPatch,newPatch,elapsed);
+   if(result.kind==="now"){setArrival("A radar echo is over the Parknacross area","The latest image shows precipitation close to the station marker; it is "+Math.round(age)+" minutes old. Check the WS90 reading for the local observation.");return;}
    if(result.kind==="dry"){setArrival("No rain echo detected nearby","No precipitation echo is visible within roughly 90 km of the station in the latest frame.");return;}
    if(result.kind==="uncertain"){setArrival("Not enough consistent movement to estimate","Rain echoes are present, but their recent motion is too weak or scattered to give a useful arrival time.");return;}
    if(result.kind==="none"){setArrival("No approaching echo detected","Recent radar echoes are not on a clear track toward the Parknacross area within the next hour.");return;}
-   const lower=Math.floor(result.minutes/10)*10,upper=lower+10,windowText=lower<10?"within about 10 minutes":"in about "+lower+"–"+upper+" minutes";
-   setArrival("Rain may reach the Parknacross area "+windowText,"Short-range extrapolation from "+Math.round(elapsed)+" minutes of RainViewer radar frames · "+result.confidence+" confidence. Radar echoes can strengthen, weaken or change direction; this is not an official forecast.");
+   const remaining=(latest.time*1000+result.minutes*60000-Date.now())/60000;
+   if(remaining<=0){setArrival("The estimated arrival time has passed","The latest frame is "+Math.round(age)+" minutes old. Check the local rain reading and refresh for a new estimate.");return;}
+   const lower=Math.floor(remaining/10)*10,upper=lower+10,windowText=lower<10?"within about 10 minutes":"in about "+lower+"–"+upper+" minutes";
+   setArrival("Rain may reach the Parknacross area "+windowText,"Short-range extrapolation from "+Math.round(elapsed)+" minutes of RainViewer radar frames · "+result.confidence+" confidence · latest image "+Math.round(age)+" minutes old. Radar echoes can strengthen, weaken or change direction; this is not an official forecast.");
   }catch(error){
    setArrival("Radar arrival estimate unavailable","Recent radar images could not be analysed in this browser. The animated radar remains available above.");
   }finally{arrivalBusy=false;}

@@ -51,6 +51,10 @@ const monitor=await checkPublicSite({now:now*1000,fetcher:async url=>{
  if(url.endsWith('/stats'))return new Response('{}',{status:503});
  if(url.endsWith('/'))return new Response('PARKNACROSS WEATHER');
  if(url.includes('export.csv'))return new Response('epoch,observation_time_ireland\n1,time\n');
+ if(url.includes('/outdoor-outlook'))return Response.json({fetched_at:new Date(now*1000).toISOString(),points:[{epoch:now+3600}]});
+ if(url.includes('/sky-photo/history/dates'))return Response.json({month:new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now*1000)).slice(0,7),days:[]});
+ if(url.includes('/push/public-key'))return Response.json({available:true,public_key:'fixture'});
+ if(url.includes('/met/marine'))return Response.json({forecast_available:true,source:'Met Éireann'});
  const data=url.includes('/rain-events')?{events:[],event_count:0}:url.includes('/coverage')?{days:[{day:'2026-10-10'}],summary:{coverage_percent:100}}:url.includes('/current')?{epoch:now}:url.includes('/history')?{readings:[{epoch:now}]}:url.includes('/daily')?{days:[{day:new Date(now*1000).toISOString().slice(0,10)}]}:{count:10,last_epoch:now,columns:['soil_moisture_pct','lightning_strikes']};
  return Response.json(data);
 }});assert.equal(monitor.find(row=>row.name==='Statistics').ok,false);assert.ok(monitor.filter(row=>row.name!=='Statistics').every(row=>row.ok));

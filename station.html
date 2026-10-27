@@ -89,7 +89,7 @@
       .storage-meter-copy { flex-direction: column; gap: 3px; }
     }
   </style>
-<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-warning-recovery"></script><script src="weather-warnings.js?v=20261027-warning-recovery"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261026-persist-choices" defer></script><link rel="stylesheet" href="station-page.css?v=20261010-v38-4-196"></head>
+<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261026-v38-4-232" defer></script><link rel="stylesheet" href="station-page.css?v=20261010-v38-4-196"><link rel="stylesheet" href="review-ui.css?v=20261026-v38-4-232"></head>
 <body>
 <div class="shell">
   <header class="topbar">
@@ -157,20 +157,20 @@
           </svg><figcaption>Illustrated setup · sensor positions are schematic.</figcaption>
         </figure>
         <div class="station-sensor-buttons" role="group" aria-label="Explore station equipment">
-          <button type="button" data-sensor="array" aria-pressed="true" aria-controls="stationSensorDetail"><span>01 · Weather array</span><small>Ecowitt WS90 · on the roof</small></button>
+          <button type="button" data-sensor="array" aria-pressed="true" aria-controls="stationSensorDetail"><span>01 · Weather array</span><small>Ecowitt WS90 · outdoor array</small></button>
           <button type="button" data-sensor="lightning" aria-pressed="false" aria-controls="stationSensorDetail"><span>02 · Lightning detector</span><small>Ecowitt WH57 · nearby strikes</small></button>
           <button type="button" data-sensor="soil" aria-pressed="false" aria-controls="stationSensorDetail"><span>03 · Garden soil sensor</span><small>Ecowitt WH52 · a local planting spot</small></button>
           <button type="button" data-sensor="gateway" aria-pressed="false" aria-controls="stationSensorDetail"><span>04 · Indoor gateway</span><small>Ecowitt GW3001 · connects the sensors</small></button>
         </div>
       </div>
-      <div class="station-sensor-detail" id="stationSensorDetail" aria-live="polite" aria-atomic="true"><h3 id="stationSensorTitle">Roof-mounted weather array</h3><p id="stationSensorCopy">The WS90 measures outdoor air temperature, relative humidity, wind speed and direction, rainfall, solar radiation and UV. Wind is measured ultrasonically, with no rotating cups; rainfall uses a piezoelectric sensor.</p><a id="stationSensorLink" href="graphs.html">Explore weather charts →</a></div>
+      <div class="station-sensor-detail" id="stationSensorDetail" aria-live="polite" aria-atomic="true"><h3 id="stationSensorTitle">Outdoor weather array</h3><p id="stationSensorCopy">The WS90 measures outdoor air temperature, relative humidity, wind speed and direction, rainfall, solar radiation and UV. Wind is measured ultrasonically, with no rotating cups; rainfall uses a piezoelectric sensor.</p><a id="stationSensorLink" href="graphs.html">Explore weather charts →</a></div>
     </section>
 
     <section class="station-story"><details class="station-fold"><summary>Full station specification</summary>
       <h2>Equipment &amp; location</h2>
       <p>
         Parknacross Weather uses an Ecowitt WS90 ultrasonic outdoor array paired with an Ecowitt GW3001 gateway.
-        The WS90 is roof-mounted at a residential coastal location in Ardamine and records the local Parknacross microclimate.
+        The WS90 records the residential coastal microclimate in Parknacross, Ardamine. Confirmed installation dates, mounting heights and changes are listed in the exposure history below; an unlogged position should not be treated as a verified historical installation.
       </p>
       <p class="info-note">
         As a residential installation, the site is not intended to replicate an official World Meteorological Organization (WMO) reference station.
@@ -179,7 +179,7 @@
       <div class="station-specs">
         <div class="station-spec"><span>Outdoor array</span><strong>Ecowitt WS90</strong></div>
         <div class="station-spec"><span>Gateway</span><strong>Ecowitt GW3001</strong></div>
-        <div class="station-spec"><span>Mounting</span><strong>Roof-mounted ultrasonic array</strong></div>
+        <div class="station-spec"><span>Mounting</span><strong>Ultrasonic array · see exposure log</strong></div>
         <div class="station-spec"><span>Location</span><strong>Ardamine, north County Wexford, Ireland</strong></div>
         <div class="station-spec"><span>Approx. coordinates</span><strong>52.6°N · 6.3°W</strong></div>
         <div class="station-spec"><span>Elevation</span><strong>35 m above sea level</strong></div>
@@ -226,7 +226,7 @@
     <section class="page-section info-card" id="understandingReadings" aria-labelledby="understandingHeading">
       <div class="section-heading"><div><span class="section-eyebrow">Reading the weather</span><h2 id="understandingHeading">Understanding these observations</h2><p>A little context helps when comparing Parknacross with another station.</p></div></div>
       <div class="station-context-grid">
-        <article><h3>A residential coastal setting</h3><p>The array is mounted on a residential roof. Nearby buildings, the roof and shelter can influence wind and temperature. These observations describe this particular location; they are not an official reference-station record.</p></article>
+        <article><h3>A residential coastal setting</h3><p>Nearby buildings, roofs and shelter can influence wind and temperature. The exposure log records confirmed changes; mounting details and historical dates should be verified before comparing installation periods. These observations describe this particular location; they are not an official reference-station record.</p></article>
         <article><h3>Rain detected by impact</h3><p>The WS90 estimates rainfall using a piezoelectric sensor rather than a tipping bucket. Treat very small amounts with care when comparing rain totals with another gauge.</p></article>
         <article><h3>Lightning distance is approximate</h3><p>The detector reports nearby lightning with an estimated range up to about 40 km. A zero count means no strikes were reported by this detector, rather than proof that no lightning occurred.</p></article>
         <article><h3>Soil readings are very local</h3><p>The soil sensor describes its own planting location. Moisture and root-zone temperature can differ elsewhere in the garden. Conductivity describes electrical conductivity; it is not a direct measure of plant nutrition.</p></article>
@@ -593,11 +593,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<script src="offline.js?v=20261010-v38-4-190"></script><script src="alert-settings.js?v=20261026-persist-choices"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="maintenance-log.js?v=20261009-v38-4-177"></script><script src="station-page.js?v=20261010-v38-4-196"></script><script src="station-v2.js?v=20261010-v38-4-196"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="offline.js?v=20261010-v38-4-190"></script><script src="alert-settings.js?v=20261026-persist-choices"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="maintenance-log.js?v=20261026-v38-4-232"></script><script src="station-page.js?v=20261010-v38-4-196"></script><script src="station-v2.js?v=20261010-v38-4-196"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20261008-v38-4-170"></script>
 <script src="pwa-diagnostics.js?v=20261006-v38-4-144"></script>
 <script src="accessibility.js?v=20260924-v38-4-97"></script>
 <script src="navigation.js?v=20260924-v38-4-97"></script>
-<script src="site-help.js?v=20261008-v38-4-170"></script></body>
+<script src="site-help.js?v=20261008-v38-4-170"></script><script src="review-tools.js?v=20261026-v38-4-232" defer></script><script src="exposure-history.js?v=20261026-v38-4-232" defer></script></body>
 </html>
 
