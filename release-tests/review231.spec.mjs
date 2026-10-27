@@ -25,6 +25,7 @@ test.beforeEach(async({page})=>{
 for(const width of [360,390,768,1024,1366])test(`dashboard remains aligned with new tools at ${width}px`,async({page},info)=>{
  await page.setViewportSize({width,height:960});await page.goto('/index.html');await expect(page.locator('#heroRain')).toContainText('3.0');
  const labels=page.locator('.hero-stat>span'),values=page.locator('.hero-stat>strong');const a=await labels.nth(0).boundingBox(),b=await labels.nth(1).boundingBox(),c=await values.nth(0).boundingBox(),d=await values.nth(1).boundingBox();expect(Math.abs(a.y-b.y)).toBeLessThan(1);expect(Math.abs(c.y-d.y)).toBeLessThan(1);
+ const coverage=await page.locator('#dashboardCoverage').boundingBox(),todayGrid=await page.locator('.today-grid').boundingBox();expect(todayGrid.y-(coverage.y+coverage.height)).toBeLessThan(24);
  await expect(page.locator('#activityPlanner')).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  await page.screenshot({path:info.outputPath('dashboard-'+width+'.png'),fullPage:true});
 });
