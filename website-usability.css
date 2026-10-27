@@ -26,3 +26,12 @@
 @media (max-width: 600px) {
   .chart-explorer-controls .chart-cursor-values { height: 8.5em; min-height: 8.5em; max-height: 8.5em; }
 }
+
+/* Reserve the stable inspection area only after a time has been selected. */
+.chart-explorer-controls .chart-cursor-values[data-empty="true"] {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  scrollbar-gutter: auto;
+}
