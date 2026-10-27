@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-232-compact-zoom";
+const CACHE_NAME = "parknacross-v38-4-232-elevation-25m";
 const STATIC_ASSETS = [
   "./radar-analysis-worker.js",
   "./exposure-history.js",
