@@ -293,8 +293,37 @@
       </article>
     </section>
 
+    <section class="page-section" id="stationTechnical" aria-labelledby="technicalMonitoringHeading">
+      <div class="info-card storage-panel">
+        <div class="section-heading compact-heading">
+          <div>
+            <span class="section-eyebrow">Technical details</span>
+            <h2 id="technicalMonitoringHeading">System monitoring</h2>
+            <p>Independent availability and health checks for Parknacross Weather.</p>
+          </div>
+        </div>
+        <div class="section-heading compact-heading" >
+          <div>
+            <span class="section-eyebrow">System monitoring</span>
+            <h3>Availability &amp; health checks</h3>
+            <p>Independent uptime checks help identify website and service interruptions.</p>
+          </div>
+        </div>
+        <div class="storage-summary" aria-label="System monitoring configuration">
+          <div class="storage-stat"><span>Public website</span><strong>Monitored</strong><small>HTTPS availability</small></div>
+          <div class="storage-stat"><span>Weather API</span><strong>Monitored</strong><small>Cloudflare Worker /health endpoint</small></div>
+          <div class="storage-stat"><span>Database connectivity</span><strong>Health endpoint</strong><small>D1 connection is reported by the Worker; response-content monitoring requires a keyword check.</small></div>
+          <div class="storage-stat"><span>Check interval</span><strong>5 minutes</strong><small>UptimeRobot free monitoring</small></div>
+        </div>
+        <p class="storage-note">
+          Availability checks are handled by <a href="https://uptimerobot.com/" target="_blank" rel="noopener noreferrer">UptimeRobot</a>, with email alerts configured for failures. These entries describe the monitoring setup, not live uptime results. A successful HTTP response alone does not prove database connectivity; that requires checking the health response content.
+        </p>
+
+      </div>
+    </section>
+
     <section class="page-section">
-      <details class="info-card storage-panel station-fold" id="stationTechnical"><summary>Archive storage &amp; service allowances</summary>
+      <details class="info-card storage-panel station-fold" id="stationArchive"><summary>Archive storage &amp; service allowances</summary>
         <div class="section-heading compact-heading">
           <div>
             <span class="section-eyebrow">Weather archive</span>
@@ -345,22 +374,6 @@
         </div>
         <p class="storage-note">
           Archive capacity is estimated from recent growth and may change over time. The site shows a simple estimate of how much storage remains; the hosting service provides the official usage figures.
-        </p>
-        <div class="section-heading compact-heading" style="margin-top:1.5rem">
-          <div>
-            <span class="section-eyebrow">System monitoring</span>
-            <h2>Availability &amp; health checks</h2>
-            <p>Independent uptime checks help identify website and service interruptions.</p>
-          </div>
-        </div>
-        <div class="storage-summary" aria-label="System monitoring configuration">
-          <div class="storage-stat"><span>Public website</span><strong>Monitored</strong><small>HTTPS availability</small></div>
-          <div class="storage-stat"><span>Weather API</span><strong>Monitored</strong><small>Cloudflare Worker /health endpoint</small></div>
-          <div class="storage-stat"><span>Database connectivity</span><strong>Health endpoint</strong><small>D1 connection is reported by the Worker; response-content monitoring requires a keyword check.</small></div>
-          <div class="storage-stat"><span>Check interval</span><strong>5 minutes</strong><small>UptimeRobot free monitoring</small></div>
-        </div>
-        <p class="storage-note">
-          Availability checks are handled by <a href="https://uptimerobot.com/" target="_blank" rel="noopener noreferrer">UptimeRobot</a>, with email alerts configured for failures. These entries describe the monitoring setup, not live uptime results. A successful HTTP response alone does not prove database connectivity; that requires checking the health response content.
         </p>
       </details>
     </section>
