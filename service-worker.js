@@ -1,5 +1,6 @@
-const CACHE_NAME = "parknacross-v38-4-232-elevation-25m";
+const CACHE_NAME = "parknacross-v38-4-232-notification-persistence";
 const STATIC_ASSETS = [
+  "./notification-storage.js",
   "./radar-analysis-worker.js",
   "./exposure-history.js",
   "./feature-health.js",

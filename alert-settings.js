@@ -27,7 +27,7 @@
 
   const readJSON = (key, fallback) => {
     try {
-      const value = JSON.parse(localStorage.getItem(key) || "null");
+      const value = JSON.parse((key === SETTINGS_KEY && window.PWNotificationStorage ? window.PWNotificationStorage.getItem(key) : localStorage.getItem(key)) || "null");
       return value && typeof value === "object" ? value : fallback;
     } catch (_) {
       return fallback;
@@ -35,7 +35,7 @@
   };
 
   const writeJSON = (key, value) => {
-    try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (_) { return false; }
+    try { (key === SETTINGS_KEY && window.PWNotificationStorage ? window.PWNotificationStorage : localStorage).setItem(key, JSON.stringify(value)); return true; } catch (_) { return false; }
   };
 
   function loadSettings() {
@@ -390,6 +390,7 @@
   if (document.getElementById("alertsEnableButton")) bindUI();
   else document.addEventListener("DOMContentLoaded", bindUI);
   window.addEventListener?.("pageshow", refreshUI);
+  window.addEventListener?.("parknacross:notification-storage-ready", refreshUI);
   window.addEventListener?.("storage", event => {
     if (event.key === SETTINGS_KEY || event.key === null) refreshUI();
   });
