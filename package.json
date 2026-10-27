@@ -17,7 +17,8 @@
     "test:release": "node tests/local-planning.test.mjs && node release-check.mjs && npm run test:usability && npm run test:explore && npm run test:weather-window-sky && node tests/status-progress.test.mjs && node tests/date-comparison.test.mjs && node tests/api-routing.test.mjs && node tests/website-usability.test.mjs && node tests/site-failure-recovery.test.mjs",
     "test:release-browser": "playwright test --config release-playwright.config.mjs",
     "test:pwa-browser": "playwright test --config pwa-playwright.config.mjs",
-    "test:review": "node tests/review231.test.mjs"
+    "test:review": "node tests/review231.test.mjs",
+    "test:backup-restore": "node tests/backup-restore.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0"

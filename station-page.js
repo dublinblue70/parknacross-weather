@@ -12,7 +12,7 @@
   }
   window.ParknacrossStation = {feedState};
   const sensors = {
-    array: {title:'Roof-mounted weather array',copy:'The WS90 measures outdoor air temperature, relative humidity, wind speed and direction, rainfall, solar radiation and UV. Wind is measured ultrasonically, with no rotating cups; rainfall uses a piezoelectric sensor.',href:'graphs.html',link:'Explore weather charts →'},
+    array: {title:'Outdoor weather array',copy:'The WS90 measures outdoor air temperature, relative humidity, wind speed and direction, rainfall, solar radiation and UV. Wind is measured ultrasonically, with no rotating cups; rainfall uses a piezoelectric sensor.',href:'graphs.html',link:'Explore weather charts →'},
     lightning: {title:'Nearby lightning detector',copy:'The WH57 reports lightning detections and estimates their distance, with an approximate range up to 40 km. Distances are estimates and a zero count does not rule out lightning in the area.',href:'graphs.html#lightning',link:'Explore lightning charts →'},
     soil: {title:'Garden soil sensor',copy:'The WH52 measures moisture, root-zone temperature and electrical conductivity at its own planting location. These readings describe that spot, rather than every pot or bed in the garden.',href:'graphs.html#soilMoistureCard',link:'Explore soil charts →'},
     gateway: {title:'The connection indoors',copy:'The GW3001 receives wireless observations from the outdoor sensors and sends them to the weather data service. It also provides the barometric-pressure reading. The website refreshes about every minute and archives observations at roughly five-minute intervals.',href:'status.html',link:'Check data and sensor status →'}

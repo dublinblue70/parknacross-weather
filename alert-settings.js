@@ -192,7 +192,7 @@
     const settings = loadSettings();
     // All alerts based on the current station sample need the same freshness
     // gate. Otherwise a delayed high rain rate could notify long after it fell.
-    if (window.PWBackgroundAlerts?.isActive() || !settings.enabled || !canNotify() || !current || !freshObservation(current)) return;
+    if (window.PWBackgroundAlerts?.isActive() || window.PWBackgroundAlerts?.isChecking?.() || !settings.enabled || !canNotify() || !current || !freshObservation(current)) return;
 
     const previous = readJSON(STATE_KEY, {});
     const rate = usable(current.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : 0;
@@ -278,7 +278,7 @@
   async function evaluateLightning(lightning) {
     const settings = loadSettings();
     const threshold = Math.min(40, Math.max(0, Number(settings.lightningKm || 0)));
-    if (window.PWBackgroundAlerts?.isActive() || !settings.enabled || !canNotify() || threshold <= 0 || !lightning?.available) return;
+    if (window.PWBackgroundAlerts?.isActive() || window.PWBackgroundAlerts?.isChecking?.() || !settings.enabled || !canNotify() || threshold <= 0 || !lightning?.available) return;
 
     const reportedDistance = usable(lightning.distance_km)
       ? Number(lightning.distance_km)
