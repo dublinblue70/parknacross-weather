@@ -1,5 +1,5 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
-  {date:"2026-10-26",type:"Website",title:"Whole-site reliability and feature update",detail:"Corrected radar arrival timing, stale coastal summaries, notification subscription recovery and overnight forecast periods. Added accessible chart tables, day replay, rain-to-soil comparison, activity planning and source monitoring. Improved responsive alignment and archive reporting."},
+  {date:"2026-10-26",type:"Website",title:"Whole-site reliability and feature update",detail:"Corrected radar arrival timing, stale coastal summaries, notification subscription recovery and overnight forecast periods. Added accessible chart tables, day replay, rain-to-soil comparison, source monitoring. Improved responsive alignment and archive reporting."},
   {date:"2026-10-26",type:"Website",title:"Notification choices preserved",detail:"Selections are merged when permissions or background setup finishes, so a delayed response no longer overwrites newer choices."},
   {date:"2026-10-24",type:"Website",title:"Mobile chart and dashboard alignment",detail:"Improved archive-chart tooltips and aligned the daily observation cards and summary sections."},
   {date:"2026-10-21",type:"Website",title:"Local forecasts and marine warnings",detail:"Restored local forecast descriptions and improved marine warning feed handling."},

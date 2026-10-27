@@ -25,7 +25,7 @@ test.beforeEach(async({page})=>{
 for(const width of [360,390,768,1024,1366])test(`dashboard remains aligned with new tools at ${width}px`,async({page},info)=>{
  await page.setViewportSize({width,height:960});await page.goto('/index.html');await expect(page.locator('#heroRain')).toContainText('3.0');
  const labels=page.locator('.hero-stat>span'),values=page.locator('.hero-stat>strong');const a=await labels.nth(0).boundingBox(),b=await labels.nth(1).boundingBox(),c=await values.nth(0).boundingBox(),d=await values.nth(1).boundingBox();expect(Math.abs(a.y-b.y)).toBeLessThan(1);expect(Math.abs(c.y-d.y)).toBeLessThan(1);
- await expect(page.locator('#activityPlanner')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await expect(page.locator('#activityPlanner')).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  await page.screenshot({path:info.outputPath('dashboard-'+width+'.png'),fullPage:true});
 });
 test('saved photo navigation shows both images with their own captions',async({page})=>{await page.goto('/sky.html?day='+day);await expect(page.locator('#publicPhotoCaption')).toContainText('Later view');await expect(page.locator('#publicPhotoStatus')).toHaveText('Photograph 2 of 2 for '+day);await page.getByRole('button',{name:'← Previous photo',exact:true}).click();await expect(page.locator('#publicPhotoCaption')).toContainText('Earlier view');await expect(page.locator('#publicArchivePhoto')).toBeVisible();await expect(page.locator('#publicPhotoWeatherLink')).toHaveAttribute('href','history.html?day='+day+'#dayDetailTitle');});

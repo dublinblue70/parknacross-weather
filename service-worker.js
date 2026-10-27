@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-232-remove-preference-tools";
+const CACHE_NAME = "parknacross-v38-4-232-remove-outdoor-planner";
 const STATIC_ASSETS = [
   "./radar-analysis-worker.js",
   "./exposure-history.js",
@@ -6,7 +6,6 @@ const STATIC_ASSETS = [
   "./review-ui.css",
   "./review-tools.js",
   "./weather-replay.js",
-  "./activity-planner.js",
   "./graphs-controls.css",
   "./weather-fingerprint.js",
   "./weather-fingerprint.css",
