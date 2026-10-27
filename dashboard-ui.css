@@ -291,37 +291,47 @@ body.dashboard-page #dashboardOptionalSections > * { order: 10; }
   }
 }
 
-/* Reserve space for the live dot and its halo at every viewport width. */
+/* Align station cards from the same top-left inset, regardless of detail count. */
+body.dashboard-page .station-bar > .station-status {
+  justify-content: flex-start;
+  align-items: stretch;
+  padding: 12px;
+  gap: 6px;
+}
+body.dashboard-page .station-status > .status-label {
+  min-height: 2.8em;
+  margin: 0;
+}
+body.dashboard-page .station-status > strong,
+body.dashboard-page .station-status > small { margin: 0; }
 body.dashboard-page #livePill {
   display: grid;
-  grid-template-columns: 9px minmax(0, 1fr);
-  align-items: center;
-  justify-content: start;
-  justify-items: stretch;
-  column-gap: 12px;
-  padding: 11px 15px;
+  grid-template-columns: minmax(0, 1fr) 9px;
+  grid-template-rows: auto;
+  align-content: start;
+  align-items: start;
+  column-gap: 10px;
   text-align: left;
 }
-body.dashboard-page #livePill .live-dot {
-  position: static;
-  grid-column: 1;
-  grid-row: 1;
-  width: 9px;
-  height: 9px;
-  margin: 0;
-  transform: none;
-  align-self: center;
-}
 body.dashboard-page #livePill #liveText {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 1;
   min-width: 0;
   margin: 0;
-  justify-self: start;
-  align-self: center;
+  align-self: start;
   text-align: left;
   line-height: 1.4;
   overflow-wrap: anywhere;
+}
+body.dashboard-page #livePill .live-dot {
+  position: static;
+  grid-column: 2;
+  grid-row: 1;
+  width: 9px;
+  height: 9px;
+  margin: 5px 0 0;
+  transform: none;
+  align-self: start;
 }
 
 /* Keep labels and values aligned when only the wind card has a gust line. */

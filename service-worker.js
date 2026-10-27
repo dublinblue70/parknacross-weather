@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-232-heading-spacing";
+const CACHE_NAME = "parknacross-v38-4-232-status-alignment";
 const STATIC_ASSETS = [
   "./radar-analysis-worker.js",
   "./exposure-history.js",
