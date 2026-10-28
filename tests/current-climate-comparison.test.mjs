@@ -12,7 +12,7 @@ const result = latest(
   { temperature_c: 15.0, report_time: "2026-10-28T12:50:00Z" },
   { temperature_c: 14.9, received_at: "2026-10-28T13:30:00Z" }
 );
-assert.equal(result.delta, -0.1, "current difference uses latest values even when report times differ");
+assert.equal(Number(result.delta.toFixed(1)), -0.1, "current difference uses latest values even when report times differ");
 assert.equal(result.local, 14.9);
 assert.equal(result.official, 15.0);
 assert.notEqual(result.localEpoch, result.officialEpoch);
