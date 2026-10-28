@@ -26,15 +26,21 @@
     const official = officialR.status === "fulfilled" && usable(officialR.value?.temperature_c)
       ? Number(officialR.value.temperature_c) : null;
     set("climateOfficialTemp", official === null ? "--" : `${official.toFixed(1)}°C`);
-    const aligned = officialR.status === "fulfilled" ? await window.ParknacrossComparison?.load(officialR.value, currentR.status === "fulfilled" ? currentR.value : null, get) : null;
-    if (aligned) {
-      set("climateDelta", `${aligned.delta >= 0 ? "+" : ""}${aligned.delta.toFixed(1)}°C`);
-      set("climateComparisonTime", `Johnstown Castle ${window.ParknacrossComparison.clock(aligned.officialEpoch)} · Parknacross ${window.ParknacrossComparison.clock(aligned.localEpoch)} Irish time. Temperature difference uses observations matched within five minutes.`);
+
+    const comparison = officialR.status === "fulfilled" && currentR.status === "fulfilled"
+      ? window.ParknacrossComparison?.latest(officialR.value, currentR.value) : null;
+    if (comparison) {
+      set("climateDelta", `${comparison.delta >= 0 ? "+" : ""}${comparison.delta.toFixed(1)}°C`);
+      set("climateDeltaDetail", `Parknacross ${comparison.local.toFixed(1)}°C − Johnstown Castle ${comparison.official.toFixed(1)}°C`);
+      const clock = window.ParknacrossComparison.clock;
+      const localTime = comparison.localEpoch === null ? "time unavailable" : clock(comparison.localEpoch);
+      const officialTime = comparison.officialEpoch === null ? "time unavailable" : clock(comparison.officialEpoch);
+      set("climateComparisonTime", `Latest readings · Parknacross ${localTime} · Johnstown Castle ${officialTime} Irish time. The readings may be from different report times.`);
     } else {
       set("climateDelta", "Unavailable");
-      set("climateComparisonTime", "A time-matched temperature difference is unavailable. No recent local observation within five minutes of the official report could be verified.");
+      set("climateDeltaDetail", "Both latest temperatures are needed to compare.");
+      set("climateComparisonTime", "A current temperature difference is unavailable because both latest readings could not be verified.");
     }
-
   }
 
   const DUBLIN_TZ = "Europe/Dublin";
