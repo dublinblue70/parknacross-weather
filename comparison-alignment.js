@@ -16,6 +16,15 @@
     if (!row || Math.abs(observed - target) > 300) return null;
     return {local: Number(row.temperature_c), official: Number(official.temperature_c), delta: Number(row.temperature_c) - Number(official.temperature_c), localEpoch: observed, officialEpoch: target};
   }
+  function latest(official, local) {
+    if (!usable(official?.temperature_c) || !usable(local?.temperature_c)) return null;
+    const localEpoch = epoch(local.epoch ?? local.received_at);
+    const officialEpoch = epoch(official.report_time);
+    const localTemperature = Number(local.temperature_c);
+    const officialTemperature = Number(official.temperature_c);
+    if (!Number.isFinite(localTemperature) || !Number.isFinite(officialTemperature)) return null;
+    return {local: localTemperature, official: officialTemperature, delta: localTemperature - officialTemperature, localEpoch, officialEpoch};
+  }
   const clock = seconds => new Date(seconds * 1000).toLocaleString('en-IE', {timeZone: 'Europe/Dublin', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
   let cached = null, pending = null, bucket = null;
   async function load(official, current, get) {
@@ -26,5 +35,5 @@
     if (!pending) pending = get('/history?hours=4').then(data => {cached = data.readings || []; return cached;}).catch(() => {pending = null; return [];});
     return match(official, cached || await pending);
   }
-  window.ParknacrossComparison = {epoch, match, load, clock};
+  window.ParknacrossComparison = {epoch, match, latest, load, clock};
 })();
