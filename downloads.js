@@ -1,5 +1,5 @@
 "use strict";
-const API=(globalThis.PARKNACROSS_API_BASE||"https://parknacross-weather.dave-s-carter.workers.dev")+"/export.csv";
+const BASE=globalThis.PARKNACROSS_API_BASE||"https://parknacross-weather.dave-s-carter.workers.dev";const API=BASE+"/export.csv";
 const SENSOR_EXPORT_FIELDS=["soil_channel","soil_moisture_pct","soil_temperature_c","soil_ec_us_cm","lightning_distance_km","lightning_strikes","lightning_last_strike_time_ireland"];
 const $=id=>document.getElementById(id);
 function safeDate(){return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"});}
@@ -59,7 +59,7 @@ function setRangeDefaults(firstKey){
 async function loadArchiveCoverage(){
   const el=$("archiveCoverage");if(!el)return;
   try{
-    const [statsResponse,currentResponse]=await Promise.all([fetch("https://parknacross-weather.dave-s-carter.workers.dev/stats",{cache:"no-store"}),fetch("https://parknacross-weather.dave-s-carter.workers.dev/current",{cache:"no-store"})]);
+    const [statsResponse,currentResponse]=await Promise.all([fetch(BASE+"/stats",{cache:"no-store",signal:AbortSignal.timeout(15000)}),fetch(BASE+"/current",{cache:"no-store",signal:AbortSignal.timeout(15000)})]);
     if(!statsResponse.ok||!currentResponse.ok)throw new Error("Coverage unavailable");
     const stats=await statsResponse.json(),current=await currentResponse.json(),first=stats.first_epoch!==null&&stats.first_epoch!==undefined&&stats.first_epoch!==""?Number(stats.first_epoch):NaN,last=current.epoch!==null&&current.epoch!==undefined&&current.epoch!==""?Number(current.epoch):NaN,fromKey=Number.isFinite(first)?dateKey(first*1000):null,toKey=Number.isFinite(last)?dateKey(last*1000):safeDate();
     const from=fromKey?archiveDate(first*1000):null,to=Number.isFinite(last)?archiveDate(last*1000):archiveDate(current.received_at);
@@ -69,7 +69,7 @@ async function loadArchiveCoverage(){
 }
 async function loadBackupStatus(){
   const el=$("backupStatusText");if(!el)return;
-  try{const response=await fetch("https://parknacross-weather.dave-s-carter.workers.dev/backup-status",{cache:"no-store"});if(!response.ok)throw new Error(`HTTP ${response.status}`);const backup=await response.json();el.textContent=backup.configured?(backup.last_success?`Automatic completed-day backup is active. Last successful copy: ${backup.last_backup_day||"recently"}.`:"Backup storage is configured and will populate on the next scheduled run."):"Automatic backup is ready, but the separate backup destination has not been connected yet.";}
+  try{const response=await fetch(BASE+"/backup-status",{cache:"no-store",signal:AbortSignal.timeout(15000)});if(!response.ok)throw new Error(`HTTP ${response.status}`);const backup=await response.json();el.textContent=backup.configured?(backup.last_success?`Automatic completed-day backup is active. Last successful copy: ${backup.last_backup_day||"recently"}.`:"Backup storage is configured and will populate on the next scheduled run."):"Automatic backup is ready, but the separate backup destination has not been connected yet.";}
   catch{el.textContent="Backup status is temporarily unavailable.";}
 }
 document.addEventListener("DOMContentLoaded",()=>{
