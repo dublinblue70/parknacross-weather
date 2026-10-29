@@ -48,6 +48,13 @@
   }
 
   function refreshSaveStatus() {
+    const overview = document.getElementById("alertsOverview");
+    if (overview) {
+      const selected = loadSettings();
+      const count = [selected.rainStart, selected.gust, selected.frost, selected.heavyRain, selected.lightningKm > 0].filter(Boolean).length;
+      const state = !selected.enabled ? "Off on this device" : canNotify() ? "Enabled on this device" : "Selected, but device notification permission is not granted";
+      overview.textContent = `${state} · ${count} alert type${count === 1 ? "" : "s"} selected · Background delivery status is shown below.`;
+    }
     const node = document.getElementById("alertsSaveStatus");
     if (node) node.textContent = settingsStorageError
       ? "Your browser could not save these choices. They apply to this page only and may be lost when you leave. Allow site storage and select them again."
