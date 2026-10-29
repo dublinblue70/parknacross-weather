@@ -76,7 +76,7 @@ const requiredChecks = [
   ["status.js", "retained in the raw archive"],
   ["station.html", "Estimated database writes today"],
   ["navigation.js", "document.body.appendChild(menu)"],
-  ["sitemap.xml", "2026-10-08"],
+  ["sitemap.xml", "2026-10-29"],
   ["app.js", "dashboardTooltipTime"],
   ["graphs.js", "Partial archive"],
   ["history.html", "previousArchiveDay"],
