@@ -51,7 +51,7 @@
           </p>
         </section>
         <div class="rain-toolbar"><p id="rainUpdated" role="status">Waiting for a station reading…</p><button id="rainRefresh" type="button">Refresh rain data</button></div>
-        <p id="rainLoadStatus" class="info-note" role="status" aria-live="polite">Checking rainfall sources…</p>
+        <p id="rainLoadStatus" class="info-note" role="status" aria-live="polite">Checking rainfall sources…</p><p class="source-note">A zero rain-rate reading means the WS90 has not detected measurable rain; very light drizzle may be missed. The hourly forecast is not a live rain measurement.</p>
         <section class="page-section rain-hero-grid" aria-label="Current rain and recent totals">
           <article class="rain-primary">
             <span class="section-eyebrow">Right now</span><h2 id="rainCondition">Checking rain…</h2><strong id="rainNow">-- mm/h</strong><small>Rain rate · millimetres per hour</small>
@@ -76,7 +76,7 @@
 <p class="lp-label">Hourly forecast · Ardamine</p>
 <p class="lp-summary" data-rain-summary role="status">Checking the next six hourly periods…</p>
 <p class="lp-context" data-rain-observed>Checking the current station rain reading…</p>
-<p class="lp-context" data-rain-context>Forecast rain is separate from rain detected at the station.</p>
+<p class="lp-context" data-rain-context>Next six hours of forecast rain; separate from rain detected at the station.</p>
 <ol class="rain-hour-list" data-rain-slots aria-label="Forecast rainfall per hour in millimetres, not current station observations"></ol>
 <p class="lp-source" data-rain-source>Checking Met Éireann forecast availability…</p>
 <a href="radar.html">Check the rain radar →</a>
