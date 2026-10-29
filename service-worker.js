@@ -134,8 +134,8 @@ const STATIC_ASSETS = [
 ];
 
 // Every advertised offline page must retain its local dependencies before activation.
-const OPTIONAL_ASSETS = new Set(["./admin.html", "./admin-tools.js", "./social-admin.js", "./photo-calendar.js", "./weather-window-preview.js", "./intelligence.html", "./ardamine-weather.html", "./courtown-weather.html", "./north-wexford-weather.html", "./north-wexford-coastal-weather.html", "./og-image.png", "./north-wexford-coast.jpg", "./pwa-dashboard-wide.jpg", "./pwa-graphs-wide.jpg", "./pwa-dashboard-narrow.jpg"]);
-const ESSENTIAL_ASSETS=STATIC_ASSETS.filter(asset=>!OPTIONAL_ASSETS.has(asset));
+const ESSENTIAL_ASSETS = ["./", "./index.html", "./offline.html", "./styles.css", "./app.js", "./site-config.js", "./api-routing.js", "./pwa-update.js", "./manifest.webmanifest", "./favicon.svg"];
+const OPTIONAL_ASSETS = new Set(STATIC_ASSETS.filter(asset => !ESSENTIAL_ASSETS.includes(asset)));
 async function verifyEssentialCache(){const cache=await caches.open(CACHE_NAME);for(const asset of ESSENTIAL_ASSETS){const response=await cache.match(new URL(asset,self.registration.scope).toString());if(!response?.ok)throw new Error(`Incomplete offline update: ${asset}`);}}
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
