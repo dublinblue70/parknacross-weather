@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-234-history-photo-timestamp";
+const CACHE_NAME = "parknacross-v38-4-234-audit-mobile-reliability";
 const STATIC_ASSETS = [
   "./notification-storage.js",
   "./radar-analysis-worker.js",
