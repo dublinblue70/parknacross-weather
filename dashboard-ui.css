@@ -342,3 +342,10 @@ body.dashboard-page #livePill .live-dot {
 
 /* Keep labels and values aligned when only the wind card has a gust line. */
 body.dashboard-page .hero-stat{justify-content:flex-start}
+
+/* 2026-10-29 audit: put the quick navigation and verified station status
+   ahead of optional planning modules, without changing any anchor targets. */
+body.dashboard-page #dashboard > .dashboard-shortcuts { order: 4; margin: 12px 0 0; }
+body.dashboard-page #dashboard > .station-bar { order: 5; margin-top: 10px; }
+body.dashboard-page #dashboardOptionalSections > .today-section { order: 6; margin-top: 16px; }
+body.dashboard-page #dashboard > .local-planning { order: 7; margin-top: 20px; }
