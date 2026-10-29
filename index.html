@@ -745,7 +745,7 @@
 <p class="lp-label">Hourly forecast · Ardamine</p>
 <p class="lp-summary" data-rain-summary role="status">Checking the next six hourly periods…</p>
 <p class="lp-context" data-rain-observed>Checking the current station rain reading…</p>
-<p class="lp-context" data-rain-context>Forecast rain is separate from rain detected at the station.</p>
+<p class="lp-context" data-rain-context>Next six hours of forecast rain; this is separate from rain detected at the station.</p>
 <ol class="rain-hour-list" data-rain-slots aria-label="Forecast rainfall per hour in millimetres, not current station observations"></ol>
 <p class="lp-source" data-rain-source>Checking Met Éireann forecast availability…</p>
 <a href="radar.html">Check the rain radar →</a>
@@ -778,9 +778,9 @@
 
         <nav class="dashboard-shortcuts" aria-label="Dashboard sections"><a href="#todayHeading">Today</a><a href="#forecast">Forecast</a><a href="#observationsHeading">Readings</a><a href="#graphs">Charts</a><a href="summary.html">Daily summary →</a></nav>
         <section class="station-bar" aria-label="Station status">
-          <div id="livePill" class="station-status live-pill">
+          <div id="livePill" class="station-status live-pill checking">
             <span class="live-dot"></span>
-            <strong id="liveText">LIVE FROM PARKNACROSS</strong>
+            <strong id="liveText">CHECKING STATION…</strong>
           </div>
           <div class="station-status observation-status">
             <span class="status-label">Latest saved observation</span>
@@ -979,7 +979,7 @@
         <section class="weather-window-section" aria-labelledby="weatherWindowHeading">
           <div class="section-heading compact-heading">
             <div>
-              <span class="section-eyebrow">A live local portrait</span>
+              <span class="section-eyebrow">Animated local weather scene</span>
               <h2 id="weatherWindowHeading">The Ardamine Weather Window</h2>
               <p>A changing coastal scene guided by the forecast and local weather readings.</p>
             </div>
