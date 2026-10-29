@@ -115,7 +115,7 @@
 
     /* A changed controller is already active: reload rather than showing a
        second update prompt without a waiting worker behind it. */
-    if (hadController && navigator.serviceWorker.controller) reloadOnce();
+    if (hadController && navigator.serviceWorker.controller) showUpdateBanner();
     hadController = Boolean(navigator.serviceWorker.controller);
   });
 
