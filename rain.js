@@ -43,7 +43,7 @@
    const results=await Promise.allSettled([get("/rain-summary"),get("/daily?days=30"),get("/history?hours=1"),live,get("/rain-events?days=30")]);
    const [s,d,h,c,e]=results.map(x=>x.status==="fulfilled"?x.value:{});
    const stamp=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null);set("rainUpdated",stamp?`Station reading: ${dt(stamp)} · Irish time`:"Live station reading unavailable");
-   set("rainCondition",rainState(s,h,c).rate===null?"Live rain unavailable":rainState(s,h,c).isRaining?"Rain detected":rainState(s,h,c).rainRecently?"Rain recently":"No rain detected");
+   set("rainCondition",rainState(s,h,c).rate===null?"Live rain unavailable":rainState(s,h,c).isRaining?"Rain detected":rainState(s,h,c).rainRecently?"Rain recently":"No rain detected by the station");
    set("rainLoadStatus",results.some(x=>x.status==="rejected")?"Some rainfall sources are unavailable. Showing the readings that loaded successfully.":"");const rs=rainState(s,h,c);window.ParknacrossRainEvidence?.render(c,h.readings||[],s.last_measurable_rain?.received_at);
    const todayRain=correctedCurrentRain(c)??(usable(s.today_mm)?Number(s.today_mm):null);
    set("rainNow",rs.isRaining&&!(rs.rate>0)?"Rain detected":rs.rate===null?"--":`${n(rs.rate)} mm/h`);set("rainToday",usable(todayRain)?`${n(todayRain)} mm`:"--");set("rainYesterday",`${n(s.yesterday_mm)} mm`);set("rain7",`${n(s.last_7_days_mm)} mm`);
