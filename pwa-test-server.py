@@ -24,7 +24,7 @@ class Handler(SimpleHTTPRequestHandler):
             source = Path('service-worker.js').read_text()
             source = re.sub(r'const CACHE_NAME = "([^"]+)";', lambda match: 'const CACHE_NAME = "' + match.group(1) + '-lifecycle-' + candidate + '";', source, count=1)
             if candidate == 'failed':
-                source = source.replace('const STATIC_ASSETS = [', 'const STATIC_ASSETS = ["./pwa-test-missing.js",', 1)
+                source = source.replace('const ESSENTIAL_ASSETS = [', 'const ESSENTIAL_ASSETS = ["./pwa-test-missing.js",', 1)
             data = source.encode()
             self.send_response(200)
             self.send_header('Content-Type', 'application/javascript')
