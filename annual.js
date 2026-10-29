@@ -29,12 +29,12 @@ const dateLabel = (day) =>
       })
     : "--";
 async function get() {
-  const r = await fetch(`${API_BASE}/daily?days=3660`, { cache: "no-store" });
+  const r = await fetch(`${API_BASE}/daily?days=3660`, { cache: "no-store", ...(typeof AbortSignal!=="undefined"&&AbortSignal.timeout?{signal:AbortSignal.timeout(15000)}:{}) });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
 async function getStats() {
-  const r = await fetch(`${API_BASE}/stats`, { cache: "no-store" });
+  const r = await fetch(`${API_BASE}/stats`, { cache: "no-store", ...(typeof AbortSignal!=="undefined"&&AbortSignal.timeout?{signal:AbortSignal.timeout(15000)}:{}) });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
