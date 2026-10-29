@@ -6,7 +6,7 @@ const n=(v,d=1)=>usable(v)?Number(v).toFixed(d):"--";
 const TZ="Europe/Dublin";
 let currentReport=null;
 let reportCoverage=null;
-async function getJSON(path){const r=await fetch(`${API_BASE}${path}`,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();if(!d||typeof d!=="object"||d.error)throw new Error(d?.error||"Invalid data response");return d}
+async function getJSON(path){const r=await fetch(`${API_BASE}${path}`,{cache:"no-store",...(typeof AbortSignal!=="undefined"&&AbortSignal.timeout?{signal:AbortSignal.timeout(15000)}:{})});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();if(!d||typeof d!=="object"||d.error)throw new Error(d?.error||"Invalid data response");return d}
 function dateLabel(day){if(!day)return"--";const d=new Date(`${day}T12:00:00Z`);return new Intl.DateTimeFormat("en-IE",{day:"numeric",month:"short",timeZone:TZ}).format(d)}
 function monthLabel(key){const d=new Date(`${key}-15T12:00:00Z`);return new Intl.DateTimeFormat("en-IE",{month:"long",year:"numeric",timeZone:"UTC"}).format(d)}
 function currentMonthKey(){const parts=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,year:"numeric",month:"2-digit"}).formatToParts(new Date());const map=Object.fromEntries(parts.map(p=>[p.type,p.value]));return `${map.year}-${map.month}`}
