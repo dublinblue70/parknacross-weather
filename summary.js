@@ -354,7 +354,7 @@ async function loadSummary(){
     if (usable(current?.rain_daily_mm) && localDayKey(readingDate(current)) === todayKey) todayMetrics.rain = correctedRain(current);
     else if (usable(rain?.today_mm)) todayMetrics.rain = Number(rain.today_mm);
     const rainDisplay = {...rain, unavailable:results[1].status==="rejected", current_rate_mm_h: recentObservation(current)&&usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : null};
-    set("summaryTitle","Today in Parknacross");set("summaryDate",`${longDate(now)} · Irish time`);
+    set("summaryTitle","Today’s weather in Parknacross");set("summaryDate",`${longDate(now)} · Irish time`);
     const fresh=recentObservation(todayRows.at(-1)),status=$("summaryDataStatus");if(status){status.textContent=!todayRows.length?"Unavailable":failed.length?"Some data unavailable":fresh?"Up to date":"Latest reading delayed";if(status.dataset)status.dataset.state=failed.length||!fresh?"review":"good";}
     set("summaryUpdated",todayMetrics.latest?`Latest observation: ${exactDateTime(todayMetrics.latest)} · Irish time`:"No station observations available");set("summarySubtitle",todayRows.length?`${failed.length||!fresh?"Available":"Live day-so-far"} summary from ${todayRows.length.toLocaleString("en-IE")} station readings${failed.length?"":fresh?", including the latest live update":", using the latest available observations"} · latest observation ${shortTime(todayMetrics.latest)}.${failed.length?` Some sources could not refresh: ${failed.join(", ")}. Figures use available observations and may be incomplete.`:""}`:"Today's observations are temporarily unavailable.");
     const recentCompletedDays=(Array.isArray(daily?.days)?daily.days:[]).filter(row=>row.day!==todayKey).slice(-7);
