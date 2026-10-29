@@ -1063,7 +1063,7 @@ function updateFreshness(current) {
   if (!time || !pill) return;
 
   const age = Date.now() - time;
-  pill.classList.remove("delayed", "offline");
+  pill.classList.remove("delayed", "offline", "checking");
 
   if (age >= OFFLINE_AFTER_MS) {
     pill.classList.add("offline");
