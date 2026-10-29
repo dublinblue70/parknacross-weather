@@ -2606,3 +2606,9 @@ footer > .footer-links a:focus-visible {
 .solar-exposure-grid>.context-card{min-width:0}
 .solar-chart-card{grid-column:1/-1;min-width:0}
 @media(max-width:760px){.solar-exposure-grid{grid-template-columns:minmax(0,1fr)}.solar-chart-card{grid-column:auto}}
+
+/* Initial station state is neutral until a fresh live reading is verified. */
+.live-pill.checking:not(.offline):not(.delayed) .live-dot {
+  background: #91a9b6;
+  box-shadow: 0 0 0 5px rgba(145,169,182,.09);
+}
