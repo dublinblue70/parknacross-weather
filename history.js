@@ -185,6 +185,14 @@ function renderDayChart(rows){
   requestAnimationFrame(()=>{chart.resize();chart.update("none");});
   return measured.length;
 }
+function historicalSkyTimestamp(photo){
+ const raw=photo?.captured_at||photo?.uploaded_at;
+ if(!raw)return "Archived visual observation · photo time unavailable.";
+ const date=new Date(raw);
+ if(!Number.isFinite(date.getTime()))return "Archived visual observation · photo time unavailable.";
+ const formatted=new Intl.DateTimeFormat("en-IE",{timeZone:TZ,day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(date);
+ return `${photo.captured_at?"Taken":"Uploaded"} ${formatted} Irish time · Parknacross, Ardamine`;
+}
 let photoRequest=0;
 let historicalPhotoTimer=null;
 async function loadHistoricalSky(day){
@@ -198,7 +206,7 @@ async function loadHistoricalSky(day){
   const data=await getJSON(`${API_BASE}/sky-photo/history?day=${encodeURIComponent(day)}`);if(!active())return;
   if(data.day!==day)throw Error("Photo date mismatch");
   if(!data.photo){clearTimeout(historicalPhotoTimer);set("historicalSkyStatus","No sky photograph saved for this date.");return;}
-  node.onload=()=>{if(active()){clearTimeout(historicalPhotoTimer);node.hidden=false;if(retry)retry.hidden=true;set("historicalSkyStatus","Archived visual observation · latest saved photo on this date.");}};
+  node.onload=()=>{if(active()){clearTimeout(historicalPhotoTimer);node.hidden=false;if(retry)retry.hidden=true;set("historicalSkyStatus",historicalSkyTimestamp(data.photo));}};
   node.onerror=()=>failed("This archived photograph could not be loaded. Please retry.");
   imageURL=`${API_BASE}/sky-photo/history/image?day=${encodeURIComponent(day)}&photo_id=${encodeURIComponent(data.photo.photo_id)}&retry=${ticket}-${Date.now()}`;clearTimeout(historicalPhotoTimer);historicalPhotoTimer=setTimeout(()=>failed("This photograph is taking too long to load. Please retry."),20000);node.src=imageURL;set("historicalSkyCaption",data.photo.caption||"");
  }catch(_){failed("Historical photo service unavailable. Please retry.");}
