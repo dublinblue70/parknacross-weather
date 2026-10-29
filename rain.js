@@ -33,7 +33,7 @@
   const rows=Array.isArray(days)?[...days].filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.day||"")).sort((a,b)=>a.day.localeCompare(b.day)):[];
   set("rainChartNote",rows.length?"Recorded daily totals · today is still in progress; gaps mean missing data":"No daily totals are available.");
   dailyRows=[...rows].reverse();renderDailyTable();
-  const config={type:"bar",data:{labels:rows.map(x=>new Date(x.day+"T12:00:00").toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})),datasets:[{data:rows.map(x=>usable(x.rain_mm)?Number(x.rain_mm):null),backgroundColor:"#7ca9ff",borderRadius:5}]},options:{maintainAspectRatio:false,scales:{x:{grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:12}},y:{beginAtZero:true,grace:"10%",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:"mm",color:"#9fb3c1"}}},plugins:{legend:{display:false}}}};
+  const config={type:"bar",data:{labels:rows.map(x=>new Date(x.day+"T12:00:00Z").toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"})),datasets:[{data:rows.map(x=>usable(x.rain_mm)?Number(x.rain_mm):null),backgroundColor:"#7ca9ff",borderRadius:5}]},options:{maintainAspectRatio:false,scales:{x:{grid:{color:"transparent"},ticks:{color:"#9fb3c1",maxTicksLimit:12}},y:{beginAtZero:true,grace:"10%",grid:{color:"rgba(174,210,232,.09)"},ticks:{color:"#9fb3c1"},title:{display:true,text:"mm",color:"#9fb3c1"}}},plugins:{legend:{display:false}}}};
   if(chart){chart.data=config.data;chart.update();}else if(window.Chart)chart=new Chart($("rainDailyChart"),config);
  }
  async function load(){
