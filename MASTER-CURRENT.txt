@@ -1,4 +1,8 @@
-Parknacross Weather MASTER CURRENT
-Version: v38.4.128
-Date: 2026-09-30
-Worker: v38.4.75 — live gateway freshness, resilient reads and corrected sensor CSV exports
+Parknacross Weather — release reference
+Date: 2026-10-29
+Site release: v38.4.234 (package.json)
+GitHub Pages source: main branch
+Cloudflare Worker source for new deployments: _worker/worker.mjs
+Root worker.mjs: HISTORICAL; DO NOT DEPLOY
+Actual deployed Cloudflare Worker version: verify in the Cloudflare account and /health.
+NOTE: GitHub Pages changes do not automatically deploy the Cloudflare Worker.
