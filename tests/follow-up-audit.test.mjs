@@ -43,7 +43,7 @@ async function install(missing,optional=false){const handlers={},cache=new Map()
  const context={self:{registration:{scope:'https://example.test/'},addEventListener:(n,f)=>handlers[n]=f,skipWaiting:async()=>skipped++},caches:{open:async()=>({put:async(req,res)=>cache.set(req.url,res),match:async key=>cache.get(key)})},fetch:async req=>({ok:!req.url.endsWith(missing)}),Request,URL,AbortController,setTimeout,clearTimeout};
  vm.runInNewContext(source('service-worker.js'),context);let promise;handlers.install({waitUntil:p=>promise=p});if(optional){await promise;assert.equal(skipped,1);}else{await assert.rejects(promise,/Incomplete offline update/);assert.equal(skipped,0);}
 }
-await install('chart.umd.min.js');await install('admin-tools.js',true);
+await install('app.js');await install('chart.umd.min.js',true);await install('admin-tools.js',true);
 
 // HTTP errors and cache-write failures preserve the working asset.
 const handlers={},cached=new Response('working chart',{status:200});let writes=0;
