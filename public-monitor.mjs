@@ -34,8 +34,46 @@ export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https:
   }));
   return results;
 }
+
+/* Read-only consistency check: distinguish completed Irish dates from today's
+   partial observations and compare recorded daily maxima with all-time stats.
+   This reports discrepancies; it never edits archived readings. */
+export function archiveDiscrepancies(stats, daily, now = Date.now()) {
+  const today = new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now));
+  const rows = (Array.isArray(daily?.days) ? daily.days : []).filter(row => /^\d{4}-\d{2}-\d{2}$/.test(row?.day || '') && row.day < today);
+  const max = key => rows.reduce((best,row) => {
+    const v = row[key];
+    return v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v)) && (!best || Number(v) > Number(best[key])) ? row : best;
+  },null);
+  const issues = [];
+  const check = (label, row, field, record, recordField='value', tolerance=0.15) => {
+    if (!row || !record || !Number.isFinite(Number(record[recordField]))) return;
+    if (Number(row[field]) > Number(record[recordField]) + tolerance) {
+      issues.push(`${label}: daily archive shows ${row[field]} on ${row.day} but /stats reports ${record[recordField]}`);
+    }
+  };
+  check('Wettest day',max('rain_mm'),'rain_mm',stats?.wettest_day,'rain_mm',0.15);
+  check('Highest temperature',max('high_c'),'high_c',stats?.records?.high_temperature,'value',0.15);
+  check('Peak gust',max('peak_gust_kmh'),'peak_gust_kmh',stats?.records?.peak_gust,'value',0.3);
+  return issues;
+}
+
+export async function checkArchiveConsistency({fetcher=fetch,api='https://parknacross-weather.dave-s-carter.workers.dev',now=Date.now()}={}) {
+  try {
+    const [statsRes,dailyRes] = await Promise.all(['/stats','/daily?days=3660'].map(path=>fetcher(api+path,{cache:'no-store',signal:AbortSignal.timeout(25000)})));
+    if (!statsRes.ok || !dailyRes.ok) throw Error(`HTTP ${statsRes.status}/${dailyRes.status}`);
+    const [stats,daily] = await Promise.all([statsRes.json(),dailyRes.json()]);
+    if (!Array.isArray(daily.days) || !stats.records) throw Error('Archive comparison data unavailable');
+    const issues = archiveDiscrepancies(stats,daily,now);
+    return {name:'Historical records reconciliation',ok:true,warning:issues.length?issues.join(' | '):null};
+  } catch(e) {
+    return {name:'Historical records reconciliation',ok:true,warning:'Unable to verify archive consistency: '+e.message};
+  }
+}
+
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
   const results=await checkPublicSite();
-  for(const result of results)console.log(`${result.ok?'PASS':'FAIL'}: ${result.name}${result.error?' — '+result.error:''}`);
+  results.push(await checkArchiveConsistency());
+  for(const result of results)console.log(`${result.warning?'WARN':result.ok?'PASS':'FAIL'}: ${result.name}${result.error?' — '+result.error:''}${result.warning?' — '+result.warning:''}`);
   if(results.some(result=>!result.ok))process.exitCode=1;
 }
