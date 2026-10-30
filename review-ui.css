@@ -36,7 +36,12 @@ body.dashboard-page .hero-stat>small{margin-top:auto}
 .review-timeline li{padding:6px 0}
 .review-photo-controls{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0}
 .review-photo-controls button{min-height:44px}
+.public-photo-date-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;padding:10px 12px;border:1px solid #29414e;border-radius:12px;background:#102330}
+.public-photo-date-controls button{min-height:44px;white-space:nowrap}
+.public-photo-date-controls span{color:#b8c8d3;text-align:center;font-size:.92rem}
+.public-photo-date-controls[hidden]{display:none!important}
 .public-photo-viewer{max-height:90dvh;overflow:auto}
+@media(max-width:600px){.public-photo-date-controls{display:grid;grid-template-columns:1fr 1fr}.public-photo-date-controls span{grid-column:1 / -1;grid-row:1}.public-photo-date-controls button{padding:8px 6px;font-size:.9rem}}
 [data-source-state=stale],[data-source-state=unavailable]{color:#f3cf86}
 .review-panel input[type=range]{width:100%;accent-color:#7bd7ef}
 .review-panel details{margin-top:14px}

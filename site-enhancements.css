@@ -35,9 +35,9 @@
  .admin-card { padding:16px; }
 }
 
-.public-photo-calendar button,#publicPhotoMonthPrev,#publicPhotoMonthNext,#publicPhotoClose,#publicPhotoRetry,#publicPhotoImageRetry {font:inherit;padding:10px 14px;border:1px solid #375265;border-radius:10px;color:#eef8ff;background:#112936;cursor:pointer;}
+.public-photo-calendar button,#publicPhotoMonthPrev,#publicPhotoMonthNext,#publicPhotoClose,#publicPhotoRetry,#publicPhotoImageRetry,#publicPhotoDatePrev,#publicPhotoDateNext {font:inherit;padding:10px 14px;border:1px solid #375265;border-radius:10px;color:#eef8ff;background:#112936;cursor:pointer;}
 #publicPhotoCalendar button {font:inherit;border:1px solid #375265;border-radius:10px;padding:10px;color:#eef8ff;background:#112936;cursor:pointer;min-height:44px;}
-#publicPhotoCalendar button:disabled,#publicPhotoMonthNext:disabled {opacity:.45;cursor:default;}
+#publicPhotoCalendar button:disabled,#publicPhotoMonthNext:disabled,#publicPhotoDatePrev:disabled,#publicPhotoDateNext:disabled {opacity:.45;cursor:default;}
 #publicPhotoCalendar button[aria-pressed="true"] {border-color:#74ddff;background:#184057;}
 .chart-advanced {width:100%;border-top:1px solid rgba(190,220,238,.14);padding-top:10px;}
 .chart-advanced summary {cursor:pointer;color:#b7dbe8;padding:8px 0;}
