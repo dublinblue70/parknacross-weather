@@ -151,11 +151,11 @@ const requiredChecks = [
   ["navigation.js", "data-nav-more-popup"],
   ["navigation.js", "Site & app"],
   ["downloads.html", "archiveCoverage"],
-  ["downloads.js", "&fresh=1"],
+  ["downloads.js", "query.set(\"fresh\",\"1\")"],
   ["downloads.js", "soil_moisture_pct"],
   ["downloads.js", "lightning_distance_km"],
   ["downloads.js", "lightning_last_strike_time_ireland"],
-  ["downloads.js", "?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&fresh=1"],
+  ["downloads.js", "?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}"],
   ["downloads.html", "Choose a date range"],
   ["downloads.html", "id=\"exportFrom\""],
   ["downloads.html", "id=\"exportTo\""],
@@ -302,7 +302,7 @@ if (!/id="soilMoistureCard"(?![^>]*\shidden)/.test(graphHtml) || !/id="soilDetai
 if (!historyScript.includes("Daily high °C") || !historyScript.includes("Daily low °C") || !historyScript.includes("spanGaps:false") || !historyScript.includes("no archived summary") || !historyHtml.includes('id="historyChartStatus"')) failures.push("history charts must leave missing calendar days visible as gaps");
 const downloadsHtml = await readFile(join(root, "downloads.html"), "utf8");
 const downloadsScript = await readFile(join(root, "downloads.js"), "utf8");
-if (!downloadsHtml.includes('id="exportFrom"') || !downloadsHtml.includes('id="exportTo"') || !downloadsScript.includes("Date.parse(`${to}T12:00:00Z`)") || !downloadsScript.includes("&to=${encodeURIComponent(to)}&fresh=1")) failures.push("downloads must provide validated custom Irish-local date ranges");
+if (!downloadsHtml.includes('id="exportFrom"') || !downloadsHtml.includes('id="exportTo"') || !downloadsScript.includes("Date.parse(`${to}T12:00:00Z`)") || !downloadsScript.includes("?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}")) failures.push("downloads must provide validated custom Irish-local date ranges without forcing no-store on long exports");
 const rainScript = await readFile(join(root, "rain.js"), "utf8");
 if (!rainScript.includes("0.0 mm calendar days · includes today so far")) failures.push("rain.js: dry spell must identify the current partial day");
 if ((dashboardApp.match(/updateDashboard\(current\);/g)||[]).length < 3) failures.push("app.js: dashboard progressive rendering is missing");

@@ -38,7 +38,7 @@ async function downloadUrl(url,label,button,description){
   }catch(error){console.warn("Weather archive download:",error);status(error.message==="Date range exceeds 365 days"?"Choose a range of 365 days or fewer.":error.message==="Date range is outside available archive coverage"?"Choose dates within the available archive coverage.":"Download failed. Please check the dates and try again.","bad");}
   finally{if(button){button.disabled=false;button.textContent=original;}}
 }
-function download(days,label,button){const n=Math.max(1,Math.min(365,Math.floor(Number(days)||1)));return downloadUrl(`${API}?days=${encodeURIComponent(n)}&fresh=1`,label,button,`${n}-day download`);}
+function download(days,label,button){const n=Math.max(1,Math.min(365,Math.floor(Number(days)||1))),query=new URLSearchParams({days:String(n)});if(n<=30)query.set("fresh","1");return downloadUrl(`${API}?${query}`,label,button,`${n}-day download`);}
 function downloadCustom(button){
   const from=$("exportFrom")?.value,to=$("exportTo")?.value,today=safeDate();
   if(!validDateKey(from)||!validDateKey(to)){status("Choose a valid start and end date.","bad");return;}
@@ -48,7 +48,7 @@ function downloadCustom(button){
   if(days>365){status("Choose a range of 365 days or fewer.","bad");return;}
   const archiveStart=$("exportFrom")?.min;
   if(archiveStart&&from<archiveStart){status("Choose dates within the available archive coverage.","bad");return;}
-  return downloadUrl(`${API}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&fresh=1`,`${from}-to-${to}`,button,`${from} to ${to}`);
+  return downloadUrl(`${API}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,`${from}-to-${to}`,button,`${from} to ${to}`);
 }
 let rangeEdited=false;
 function setRangeDefaults(firstKey){
