@@ -100,14 +100,18 @@
   function create(canvas) {
     if (!canvas || typeof Chart === "undefined") return null;
     const wrap=canvas.closest('.wind-rose-wrap');
-    if(wrap && !wrap.nextElementSibling?.classList.contains('wind-rose-legend')){
+    if(wrap && !wrap.nextElementSibling?.classList.contains('wind-rose-info')){
+      const info=document.createElement('div');info.className='wind-rose-info';
       const legend=document.createElement('div');legend.className='wind-rose-legend';legend.setAttribute('aria-label','Sustained wind speed bands in kilometres per hour');
       SPEED_BANDS.forEach(band=>{
         const item=document.createElement('span'),swatch=document.createElement('i');swatch.style.backgroundColor=band.color;swatch.setAttribute('aria-hidden','true');item.append(swatch,document.createTextNode(band.label));legend.append(item);
       });
-      const units=document.createElement('span');units.className='wind-rose-unit';units.textContent='km/h';legend.append(units);wrap.after(legend);
-      const calmNote=document.createElement('p');calmNote.className='wind-rose-calm-note';calmNote.textContent='The centre shows the percentage of valid five-minute readings below 1 km/h (calm).';legend.after(calmNote);
-      const explanation=document.createElement('p');explanation.className='wind-rose-explanation';explanation.textContent='Longer spokes show where the wind blew from more often. Coloured segments show how often sustained wind fell in each speed band; gusts are listed separately.';calmNote.after(explanation);
+      const units=document.createElement('span');units.className='wind-rose-unit';units.textContent='km/h';legend.append(units);info.append(legend);
+      const calmNote=document.createElement('p');calmNote.className='wind-rose-calm-note';calmNote.textContent='The centre shows the percentage of valid five-minute readings below 1 km/h (calm).';info.append(calmNote);
+      const explanation=document.createElement('p');explanation.className='wind-rose-explanation';explanation.textContent='Longer spokes show where the wind blew from more often. Coloured segments show how often sustained wind fell in each speed band; gusts are listed separately.';info.append(explanation);
+      const summary=wrap.parentElement.querySelector(':scope > .wind-rose-meta');
+      if(summary)info.append(summary);
+      wrap.after(info);
     }
     return new Chart(canvas, {
       type:"polarArea",

@@ -7,3 +7,13 @@
 
 .wind-rose-calm-note{max-width:430px;margin:0 auto 8px;color:#e3edf5;font-size:.83rem;line-height:1.6;text-align:center}
 @media(max-width:480px){.wind-rose-calm-note{font-size:.78rem}}
+
+/* Keep the plot centred, but give its supporting information a clear reading edge on desktop. */
+.wind-rose-info{display:grid;gap:9px;max-width:760px;margin:12px auto 0}
+@media(min-width:761px){
+  .wind-rose-info{padding:15px 17px;border:1px solid rgba(154,188,208,.2);border-radius:14px;background:rgba(255,255,255,.018)}
+  .wind-rose-info .wind-rose-legend{justify-content:flex-start;max-width:none;margin:0;padding:0 0 11px;border-bottom:1px solid rgba(154,188,208,.15)}
+  .wind-rose-info .wind-rose-calm-note{box-sizing:border-box;max-width:none;margin:0;padding:10px 12px;border-left:3px solid #f5cf56;border-radius:0 8px 8px 0;background:rgba(245,207,86,.065);text-align:left}
+  .wind-rose-info .wind-rose-explanation{max-width:none;margin:0;text-align:left}
+  .wind-rose-info .wind-rose-meta{max-width:none;margin:0;padding-top:9px;border-top:1px solid rgba(154,188,208,.15);text-align:left}
+}

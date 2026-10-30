@@ -15,6 +15,8 @@ for(const [file,id,width] of [['graphs.html','gWindRose',390],['index.html','win
  expect(result.calm).toBe(69);expect(result.total).toBe(100);expect(result.means[2]).toBe(8);expect(result.means[10]).toBe(30);expect(result.colours[1]).toBe('#3f8cff');expect(result.colours[3]).toBe('#ffd052');expect(result.bandCounts[1][2]).toBe(15);expect(result.bandCounts[3][10]).toBe(16);
  expect((result.angles[2][0]+result.angles[2][1])/2).toBeCloseTo(-Math.PI/4);expect(result.angles[2][3]).toBeGreaterThan(result.angles[2][2]);
  await expect(page.locator('#'+id)).toHaveAttribute('aria-label',/69.0% calm/);await expect(page.locator('.wind-rose-legend')).toContainText('km/h');await expect(page.locator('.wind-rose-explanation')).toContainText('Coloured segments');
+ await expect(page.locator('.wind-rose-info')).toBeVisible();
+ if(width>760){expect(await page.locator('.wind-rose-calm-note').evaluate(el=>getComputedStyle(el).textAlign)).toBe('left');expect(await page.locator('.wind-rose-explanation').evaluate(el=>getComputedStyle(el).textAlign)).toBe('left');expect(await page.locator('.wind-rose-meta').evaluate(el=>getComputedStyle(el).textAlign)).toBe('left');}
  const card=page.locator('#'+id).locator('xpath=ancestor::article[1]');await card.screenshot({path:testInfo.outputPath('wind-rose.png')});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);expect(errors).toEqual([]);
 });
