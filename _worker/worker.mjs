@@ -1,4 +1,4 @@
-// v38.4.235 — resilient daily social retries and authenticated same-day recovery.
+// v38.4.237 — stream large CSV exports in bounded D1 pages to avoid Worker resource exhaustion.
 // v38.4.232 — photo galleries, selected-field CSV streaming, annual coverage and confirmed station exposure history.
 // v38.4.96 — marine warnings remain available independently of forecast failures.
 // v38.4.95 — bounded calendar work, encrypted background alerts and outdoor outlook.
@@ -85,7 +85,7 @@ const TEMP_OUTLIER_DELTA_C = 2.5;
 const TEMP_OUTLIER_BASELINE_C = 1.0;
 const TEMP_OUTLIER_WINDOW_SECONDS = 30 * 60;
 const TEMP_OUTLIER_MIN_NEIGHBORS = 3;
-const EDGE_CACHE_VERSION = "v38-4-232-full-review";
+const EDGE_CACHE_VERSION = "v38-4-237-streamed-csv";
 const SKY_PHOTO_KEY = "today/current";
 const SKY_PHOTO_MAX_BYTES = 10 * 1024 * 1024;
 const SKY_PHOTO_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -2254,7 +2254,7 @@ async function pushEncrypt(subscription,payload){
 async function sendWeatherPush(subscription,message,vapid,timeoutMs=5000){const endpoint=new URL(subscription.endpoint),header=pushBase64(pushText(JSON.stringify({typ:'JWT',alg:'ES256'}))),claims=pushBase64(pushText(JSON.stringify({aud:endpoint.origin,exp:Math.floor(Date.now()/1000)+3600,sub:'mailto:info@parknacrossweather.ie'}))),input=header+'.'+claims,key=await crypto.subtle.importKey('jwk',vapid.privateJwk,{name:'ECDSA',namedCurve:'P-256'},false,['sign']),signature=pushBase64(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},key,pushText(input)));return fetch(endpoint.href,{method:'POST',headers:{Authorization:`vapid t=${input}.${signature}, k=${vapid.publicKey}`,'Content-Encoding':'aes128gcm','Content-Type':'application/octet-stream',TTL:'300',Urgency:'normal'},body:await pushEncrypt(subscription,message),redirect:'error',signal:AbortSignal.timeout(timeoutMs)});}
 async function handlePushRequest(request,env,url){
  const noStore={'Cache-Control':'no-store'};
- if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.235'},200,noStore);}
+ if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.237'},200,noStore);}
  if(request.method!=='POST')return json({error:'Method not allowed'},405,noStore);
  if(request.headers.get('Origin')!=='https://parknacrossweather.ie'&&request.headers.get('Origin')!=='https://www.parknacrossweather.ie')return json({error:'Origin not allowed'},403,noStore);
  if(requestRateLimited(request,'push-settings',10))return rateLimitedResponse();
@@ -2306,7 +2306,7 @@ export default {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.235",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.237",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2401,7 +2401,7 @@ export default {
           status: connected ? (healthyArchive ? "ok" : "warning") : "error",
           database: connected ? "connected" : "error",
           service: "Parknacross Weather",
-          release: "v38.4.97-SOCIAL-RECOVERY",
+          release: "v38.4.98-STREAMED-CSV-EXPORTS",
           station_time_zone: STATION_TIME_ZONE,
           station_local_day: stationDayKey(new Date()),
           archive_ingest: ingest
@@ -2413,7 +2413,7 @@ export default {
           status: "error",
           database: "error",
           service: "Parknacross Weather",
-          release: "v38.4.97-SOCIAL-RECOVERY",
+          release: "v38.4.98-STREAMED-CSV-EXPORTS",
           error: error?.message || "D1 health check failed"
         }, 503, {
           "Cache-Control": "no-store"
@@ -2569,7 +2569,7 @@ export default {
       }
     }
 
-    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.235",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true}},200,{"Cache-Control":"public, max-age=300"});}
+    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.237",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true}},200,{"Cache-Control":"public, max-age=300"});}
 
     if(url.pathname==="/met/warnings"){
       if(request.method!=="GET")return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
@@ -3353,6 +3353,8 @@ export default {
         const requestedFields=url.searchParams.get("fields"),fields=requestedFields?requestedFields.split(","):null;
         const allFields=rowsToCsv([]).split(",");
         if(fields&&(!fields.length||fields.length>allFields.length||fields.some(field=>!allFields.includes(field))||new Set(fields).size!==fields.length))return json({error:"Invalid export fields"},400);
+        const forceFresh = url.searchParams.get("fresh") === "1";
+        const cacheable = !forceFresh && !range && days <= 30;
         const cacheUrl = new URL(request.url);
         cacheUrl.search = "";
         if (range) { cacheUrl.searchParams.set("from", range.from); cacheUrl.searchParams.set("to", range.to); }
@@ -3360,17 +3362,16 @@ export default {
         if(fields)cacheUrl.searchParams.set("fields",fields.join(","));
         cacheUrl.searchParams.set("__cache_version", EDGE_CACHE_VERSION);
         const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
-        const forceFresh = url.searchParams.get("fresh") === "1";
         let cache = null;
-        if (!forceFresh) try {
+        if (cacheable) try {
           cache = caches.default;
           const cached = await cache.match(cacheKey);
           if (cached) return cached;
         } catch (error) {
           console.warn("CSV edge-cache read unavailable:", error);
         }
-        const response = exportCsv(await exportRows(env, days, range), days, forceFresh, range,fields);
-        if (cache && !forceFresh) {
+        const response = await exportCsv(env, days, forceFresh, range, fields);
+        if (cache && cacheable) {
           try {
             const put = cache.put(cacheKey, response.clone());
             if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(put); else await put;
@@ -6169,83 +6170,73 @@ async function runDailyBackup(env) {
   }
 }
 
-async function exportRows(env, days, range = null) {
+async function exportCsv(env, days = 365, forceFresh = false, range = null, fields = null) {
   const safeDays = Math.max(1, Math.min(365, Math.floor(Number(days) || 365)));
-  const cutoff = range?.startEpoch ?? (Math.floor(Date.now()/1000) - safeDays*86400);
-  const pageSize = 1000;
-  const maximumRows = 110000;
-  const rows = [];
-
-  /* Resolve the real archive bounds once. For a 90/365-day request against a
-     younger archive, starting every page at the much older requested cutoff
-     caused avoidable D1 work and could exhaust the Worker before it returned
-     a response. All subsequent pages are restricted to existing epochs. */
-  /* Resolve the physical archive bounds without applying a months-old cutoff
-     to the bound queries. On a young archive, those wide predicates caused
-     avoidable D1 work and Worker CPU exhaustion for the 90/365-day buttons. */
-  const first = range
-    ? await env.DB.prepare(`SELECT epoch FROM ${TABLE} WHERE epoch >= ? AND epoch < ? ORDER BY epoch ASC LIMIT 1`).bind(range.startEpoch, range.endExclusiveEpoch).first()
-    : await env.DB.prepare(`SELECT epoch FROM ${TABLE} ORDER BY epoch ASC LIMIT 1`).first();
-  const latest = range
-    ? await env.DB.prepare(`SELECT epoch FROM ${TABLE} WHERE epoch >= ? AND epoch < ? ORDER BY epoch DESC LIMIT 1`).bind(range.startEpoch, range.endExclusiveEpoch).first()
-    : await env.DB.prepare(`SELECT epoch FROM ${TABLE} ORDER BY epoch DESC LIMIT 1`).first();
-  const firstEpoch = nullableNumber(first?.epoch);
+  const lowerBound = range?.startEpoch ?? Math.floor(Date.now() / 1000) - safeDays * 86400;
+  const upperBound = range?.endExclusiveEpoch ?? Math.floor(Date.now() / 1000) + 1;
+  const latest = await env.DB.prepare(
+    `SELECT epoch FROM ${TABLE} WHERE epoch >= ? AND epoch < ? ORDER BY epoch DESC LIMIT 1`
+  ).bind(lowerBound, upperBound).first();
   const latestEpoch = nullableNumber(latest?.epoch);
-  if (firstEpoch === null || latestEpoch === null || latestEpoch < cutoff) return [];
-  let cursor = Math.max(cutoff - 1, firstEpoch - 1);
+  const pageSize = 512, chunkRows = 128, maximumRows = 110000;
+  const encoder = new TextEncoder();
+  let cursor = latestEpoch === null ? null : latestEpoch + 1;
+  let page = [], pageOffset = 0, exportedRows = 0, headerSent = false, firstPage = true;
 
-  /* Explicit keyset pagination is essential here. A single large D1 result
-     can stop before the newest records under platform execution/serialization
-     limits. That made long exports contain only pre-WH52/WH57 observations. */
-  while (rows.length < maximumRows) {
-    const result = await env.DB.prepare(
-      `SELECT epoch,received_at,temperature_c,feels_like_c,humidity,dew_point_c,
-              wind_speed_kmh,wind_gust_kmh,wind_direction_deg,pressure_hpa,
-              rain_rate_mm_h,rain_daily_mm,solar_w_m2,uv_index,battery_v,
-              lightning_distance_km,lightning_strikes,lightning_time_epoch,
-              soil_channel,soil_moisture_pct,soil_temperature_c,soil_ec_us_cm
-       FROM ${TABLE}
-       WHERE epoch > ? AND epoch <= ?
-       ORDER BY epoch ASC
-       LIMIT ?`
-    ).bind(cursor, latestEpoch, pageSize).all();
-    const page = result.results || [];
-    if (!page.length) break;
-    rows.push(...page);
-    const nextCursor = Number(page.at(-1)?.epoch);
-    if (!Number.isFinite(nextCursor) || nextCursor <= cursor) {
-      throw new Error("CSV pagination did not advance");
+  /* Keep only one bounded D1 page in memory. Long exports bypass edge-cache
+     cloning because a tee can retain the complete streamed body in memory. */
+  const text = new ReadableStream({
+    async pull(controller) {
+      try {
+        if (!headerSent) {
+          headerSent = true;
+          controller.enqueue(encoder.encode(rowsToCsv([], fields) + "\n"));
+          if (latestEpoch === null) controller.close();
+          return;
+        }
+        if (pageOffset >= page.length) {
+          const result = await env.DB.prepare(
+            `SELECT epoch,received_at,temperature_c,feels_like_c,humidity,dew_point_c,
+                    wind_speed_kmh,wind_gust_kmh,wind_direction_deg,pressure_hpa,
+                    rain_rate_mm_h,rain_daily_mm,solar_w_m2,uv_index,battery_v,
+                    lightning_distance_km,lightning_strikes,lightning_time_epoch,
+                    soil_channel,soil_moisture_pct,soil_temperature_c,soil_ec_us_cm
+             FROM ${TABLE}
+             WHERE epoch < ? AND epoch >= ? AND epoch < ?
+             ORDER BY epoch DESC
+             LIMIT ?`
+          ).bind(cursor, lowerBound, upperBound, pageSize).all();
+          page = result.results || [];
+          pageOffset = 0;
+          if (!page.length) {
+            if (exportedRows === 0 && latestEpoch !== null) throw new Error("CSV export incomplete: latest archive row was not returned");
+            controller.close();
+            return;
+          }
+          const lastPageEpoch = nullableNumber(page.at(-1)?.epoch);
+          if (firstPage && nullableNumber(page[0]?.epoch) !== latestEpoch) {
+            throw new Error(`CSV export incomplete: newest archive epoch ${latestEpoch} was not reached`);
+          }
+          firstPage = false;
+          if (lastPageEpoch === null || lastPageEpoch >= cursor) throw new Error("CSV pagination did not advance");
+          cursor = lastPageEpoch;
+        }
+
+        const chunk = page.slice(pageOffset, pageOffset + chunkRows).map(row => ({
+          ...row,
+          rain_daily_mm: correctedRainForDay(stationDayKey(new Date(Number(row.epoch) * 1000)), row.rain_daily_mm)
+        }));
+        pageOffset += chunk.length;
+        exportedRows += chunk.length;
+        if (exportedRows > maximumRows) throw new Error("CSV export exceeded the supported observation limit");
+        const csv = rowsToCsv(chunk, fields).split("\n").slice(1).join("\n");
+        controller.enqueue(encoder.encode(csv + "\n"));
+      } catch (error) {
+        controller.error(error);
+      }
     }
-    cursor = nextCursor;
-    /* Never infer end-of-data from page length. D1 may return fewer rows than
-       requested under platform serialization limits. The empty page on the
-       next cursor is the only reliable completion signal. */
-  }
+  });
 
-  if (rows.length >= maximumRows) {
-    throw new Error("CSV export exceeded the supported observation limit");
-  }
-
-  /* Final completeness guard: the last exported epoch must be the latest
-     archived epoch inside the requested window. Fail loudly instead of
-     silently offering a CSV that omits recent sensor readings. */
-  const exportedEpoch = nullableNumber(rows.at(-1)?.epoch);
-  if (latestEpoch !== null && exportedEpoch !== latestEpoch) {
-    throw new Error(`CSV export incomplete: newest archive epoch ${latestEpoch} was not reached`);
-  }
-
-  return rows.map(row => ({
-    ...row,
-    rain_daily_mm: correctedRainForDay(stationDayKey(new Date(Number(row.epoch) * 1000)), row.rain_daily_mm)
-  }));
-}
-
-function exportCsv(rows, days = 365, forceFresh = false, range = null, fields = null) {
-  /* Put recent WH52/lightning-capable observations at the top of a public
-     download. Daily backup files remain chronological because they call
-     rowsToCsv directly. */
-  const ordered=[...rows].reverse(),encoder=new TextEncoder();let offset=0,headerSent=false;
-  const text=new ReadableStream({pull(controller){if(!headerSent){controller.enqueue(encoder.encode(rowsToCsv([],fields)+"\n"));headerSent=true;return;}if(offset>=ordered.length){controller.close();return;}const chunk=rowsToCsv(ordered.slice(offset,offset+256),fields).split("\n").slice(1).join("\n");offset+=256;controller.enqueue(encoder.encode(chunk+(offset<ordered.length?"\n":"")));}});
   const filenameRange = range ? `${range.from}-to-${range.to}` : `${days}-days`;
   return new Response(text, {
     status: 200,

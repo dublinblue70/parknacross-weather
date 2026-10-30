@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-236-wind-rose-info";
+const CACHE_NAME = "parknacross-v38-4-237-streamed-csv";
 const STATIC_ASSETS = [
   "./notification-storage.js",
   "./radar-analysis-worker.js",

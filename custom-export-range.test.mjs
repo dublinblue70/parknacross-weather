@@ -33,7 +33,7 @@ const DB = {
       async first() {
         if (sql.includes("WHERE epoch >= ? AND epoch < ?")) {
           const matches = observations.filter(row => row.epoch >= args[0] && row.epoch < args[1]);
-          const row = sql.includes("ORDER BY epoch ASC") ? matches[0] : matches.at(-1);
+          const row = sql.includes("ORDER BY epoch DESC") ? matches.at(-1) : matches[0];
           return row ? { epoch: row.epoch } : null;
         }
         if (sql.includes("SELECT epoch FROM")) {
@@ -44,7 +44,9 @@ const DB = {
       },
       async all() {
         if (sql.includes("PRAGMA")) return { results: [] };
-        return { results: observations.filter(row => row.epoch > args[0] && row.epoch <= args[1]).slice(0, args[2]) };
+        const [cursor, start, end, limit] = args;
+        return { results: observations.filter(row => row.epoch < cursor && row.epoch >= start && row.epoch < end)
+          .sort((a, b) => b.epoch - a.epoch).slice(0, limit) };
       }
     };
   }
