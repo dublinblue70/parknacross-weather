@@ -1,3 +1,4 @@
+// v38.4.235 — resilient daily social retries and authenticated same-day recovery.
 // v38.4.232 — photo galleries, selected-field CSV streaming, annual coverage and confirmed station exposure history.
 // v38.4.96 — marine warnings remain available independently of forecast failures.
 // v38.4.95 — bounded calendar work, encrypted background alerts and outdoor outlook.
@@ -628,8 +629,10 @@ const SOCIAL_X_LAST_DAY_KEY = "social_x_last_day";
 const SOCIAL_X_VERIFIED_DAY_KEY = "social_x_verified_day_v2";
 const SOCIAL_X_PENDING_POST_KEY = "social_x_pending_post_v2";
 const SOCIAL_X_LAST_ERROR_KEY = "social_x_last_error";
+const SOCIAL_LAST_ATTEMPT_KEY = "social_last_attempt_v1";
 const SOCIAL_RUN_START_MINUTE = 7 * 60 + 30;
 const SOCIAL_RUN_END_MINUTE = 12 * 60;
+const SOCIAL_AFTERNOON_RETRY_INTERVAL_MS = 30 * 60 * 1000;
 const SOCIAL_LOCK_STALE_MS = 90 * 1000;
 const FACEBOOK_GRAPH_DEFAULT_VERSION = "v26.0";
 
@@ -1014,6 +1017,46 @@ async function getSocialObservationAt0730(env, day) {
   };
 }
 
+async function getFreshSocialObservation(env, day) {
+  const row = await getLatest(env);
+  if (!row) throw new Error("No current Parknacross observation is available for a recovery post");
+  const epoch = Number(row.epoch);
+  const age = Date.now() / 1000 - epoch;
+  if (!Number.isFinite(epoch) || stationDayKey(new Date(epoch * 1000)) !== day || age > 45 * 60 || age < -60) {
+    throw new Error("No fresh same-day observation is available for a recovery post");
+  }
+
+  let temperature = nullableNumber(row.temperature_c);
+  let gust = nullableNumber(row.wind_gust_kmh);
+  try {
+    if (temperature !== null && await temperatureRecordIsOutlier(env, row)) temperature = null;
+  } catch (_) {}
+  try {
+    if (gust !== null && await gustRecordIsOutlier(env, row)) gust = null;
+  } catch (_) {}
+
+  return {
+    day,
+    target_epoch: epoch,
+    epoch,
+    received_at: row.received_at || null,
+    observed_time: socialObservationTimeLabel(epoch),
+    minutes_from_target: 0,
+    temperature_c: temperature,
+    feels_like_c: nullableNumber(row.feels_like_c),
+    humidity: nullableNumber(row.humidity),
+    dew_point_c: nullableNumber(row.dew_point_c),
+    wind_speed_kmh: nullableNumber(row.wind_speed_kmh),
+    wind_gust_kmh: gust,
+    wind_direction_deg: nullableNumber(row.wind_direction_deg),
+    pressure_hpa: nullableNumber(row.pressure_hpa),
+    rain_rate_mm_h: nullableNumber(row.rain_rate_mm_h),
+    rain_daily_mm: correctedRainForDay(day, row.rain_daily_mm),
+    solar_w_m2: nullableNumber(row.solar_w_m2),
+    uv_index: nullableNumber(row.uv_index)
+  };
+}
+
 async function validatedDailySummaryForSocial(env, day) {
   const row = await env.DB.prepare(
     `SELECT day, sample_count, high_c, low_c, peak_gust_kmh, rain_mm
@@ -1191,11 +1234,12 @@ function sanitizeSocialObservation(observation) {
   return o;
 }
 
-function socialHeadline(o) {
-  if (o.wind_gust_kmh !== null && o.wind_gust_kmh >= 40) return "A gusty start in Ardamine";
+function socialHeadline(o, currentUpdate = false) {
+  if (o.wind_gust_kmh !== null && o.wind_gust_kmh >= 40) return currentUpdate ? "Gusty conditions in Ardamine" : "A gusty start in Ardamine";
   if (o.rain_daily_mm !== null && o.rain_daily_mm >= 5) return "Rain has been adding up in Parknacross";
-  if (o.temperature_c !== null && o.temperature_c <= 3) return "A chilly start in Ardamine";
-  if (o.wind_speed_kmh !== null && o.wind_speed_kmh >= 20) return "A breezy start on the North Wexford coast";
+  if (o.temperature_c !== null && o.temperature_c <= 3) return currentUpdate ? "A chilly update from Ardamine" : "A chilly start in Ardamine";
+  if (o.wind_speed_kmh !== null && o.wind_speed_kmh >= 20) return currentUpdate ? "Breezy across the North Wexford coast" : "A breezy start on the North Wexford coast";
+  if (currentUpdate) return "Current weather from Parknacross";
   // Rotate quiet-day wording without inventing cloud cover or comparisons.
   const choices = ["This morning in Ardamine", "A morning check from Parknacross", "North Wexford weather this morning"];
   return choices[Math.floor(o.target_epoch / 86400) % choices.length];
@@ -1233,15 +1277,15 @@ function socialXLength(text) {
     .reduce((total, char) => total + (char.codePointAt(0) > 0x10ff ? 2 : 1), 0);
 }
 
-function buildX0730Text(observation, pointForecast, regionalForecast, test = false) {
+function buildX0730Text(observation, pointForecast, regionalForecast, test = false, currentUpdate = false) {
   const o = sanitizeSocialObservation(observation);
-  const header = `${test ? "TEST · " : ""}${socialHeadline(o)}`;
+  const header = `${test ? "TEST · " : ""}${socialHeadline(o, currentUpdate)}`;
   const measured = `Observed ${o.observed_time}: ${socialObservationDetails(o, true).join(" · ")}`;
   const forecast = socialForecastSummary(pointForecast, regionalForecast, true);
   const link = socialTrackedLink("x");
   let lines = [header, measured, forecast, link].filter(Boolean);
   if (socialXLength(lines.join("\n")) > 280) lines = [header, measured, link];
-  if (socialXLength(lines.join("\n")) > 280) lines = ["Ardamine morning weather", measured, link];
+  if (socialXLength(lines.join("\n")) > 280) lines = [currentUpdate ? "Parknacross weather update" : "Ardamine morning weather", measured, link];
   return lines.join("\n");
 }
 
@@ -1282,8 +1326,14 @@ async function getDailySocialSkyPhoto(env, day) {
   return available ? { url: url.toString(), uploaded_at: uploadedAt, day } : null;
 }
 
-async function buildDailySocialPost(env, observationDay, { test = false, preview = false } = {}) {
+async function buildDailySocialPost(env, observationDay, { test = false, preview = false, recovery = false } = {}) {
   let raw = await getSocialObservationAt0730(env, observationDay);
+  let currentUpdate = false;
+  const morningAge = raw ? Date.now() / 1000 - Number(raw.epoch) : Infinity;
+  if (recovery && (observationDay !== stationDayKey(new Date()) || !raw || morningAge > 45 * 60 || morningAge < -60)) {
+    raw = await getFreshSocialObservation(env, observationDay);
+    currentUpdate = true;
+  }
   if (!raw && preview) {
     const row = await getLatest(env);
     if (row) raw = { ...formatRow(row), day:observationDay, target_epoch:stationWallClockEpoch(observationDay,7,30), observed_time:socialObservationTimeLabel(row.epoch) };
@@ -1302,7 +1352,7 @@ async function buildDailySocialPost(env, observationDay, { test = false, preview
     getSocialWeeklyRecap(env, observationDay).catch(() => "")
   ]);
   const lines = [
-    `${test ? "TEST · " : ""}${socialHeadline(observation)}`, "",
+    `${test ? "TEST · " : ""}${socialHeadline(observation, currentUpdate)}`, "",
     `${friendlyDayLabel(observationDay)} · recorded in Parknacross at ${observation.observed_time}`,
     socialObservationDetails(observation).join(" · ")
   ];
@@ -1313,8 +1363,8 @@ async function buildDailySocialPost(env, observationDay, { test = false, preview
   if (Number(observationDay.slice(-2)) % 5 === 0) lines.push("", "What’s the sky looking like where you are in North Wexford?");
   lines.push("", `Live readings, radar and today’s sky: ${socialTrackedLink("facebook")}`);
   const facebookText = lines.join("\n");
-  const xText = buildX0730Text(observation, pointForecast, regionalForecast, test);
-  return { text: facebookText, facebookText, xText, observation, forecast: pointForecast, regional_forecast_available: Boolean(regionalForecast), photo, preview, observation_age_minutes: Math.max(0,Math.round(age / 60)) };
+  const xText = buildX0730Text(observation, pointForecast, regionalForecast, test, currentUpdate);
+  return { text: facebookText, facebookText, xText, observation, forecast: pointForecast, regional_forecast_available: Boolean(regionalForecast), photo, preview, current_update: currentUpdate, observation_age_minutes: Math.max(0,Math.round(age / 60)) };
 }
 
 async function publishViaFacebookGraph(env, text, photo = null) {
@@ -1701,11 +1751,13 @@ async function getBufferConnectionDiagnostic(env) {
 
 async function getSocialStatus(env) {
   await ensureLegacyXVerifiedMarker(env);
-  const meta = await readMetaMap(env, [SOCIAL_LAST_DAY_KEY,SOCIAL_LAST_SUCCESS_KEY,SOCIAL_LAST_ERROR_KEY,SOCIAL_LAST_PROVIDER_KEY,SOCIAL_LAST_POST_ID_KEY,SOCIAL_TEST_LAST_SUCCESS_KEY,SOCIAL_FB_LAST_DAY_KEY,SOCIAL_FB_VERIFIED_DAY_KEY,SOCIAL_FB_PENDING_POST_KEY,SOCIAL_FB_LAST_ERROR_KEY,SOCIAL_X_LAST_DAY_KEY,SOCIAL_X_VERIFIED_DAY_KEY,SOCIAL_X_PENDING_POST_KEY,SOCIAL_X_LAST_ERROR_KEY]);
+  const meta = await readMetaMap(env, [SOCIAL_LAST_DAY_KEY,SOCIAL_LAST_SUCCESS_KEY,SOCIAL_LAST_ERROR_KEY,SOCIAL_LAST_PROVIDER_KEY,SOCIAL_LAST_POST_ID_KEY,SOCIAL_TEST_LAST_SUCCESS_KEY,SOCIAL_FB_LAST_DAY_KEY,SOCIAL_FB_VERIFIED_DAY_KEY,SOCIAL_FB_PENDING_POST_KEY,SOCIAL_FB_LAST_ERROR_KEY,SOCIAL_X_LAST_DAY_KEY,SOCIAL_X_VERIFIED_DAY_KEY,SOCIAL_X_PENDING_POST_KEY,SOCIAL_X_LAST_ERROR_KEY,SOCIAL_LAST_ATTEMPT_KEY]);
   const buffer = await getBufferConnectionDiagnostic(env);
+  let lastAttempt = null;
+  try { lastAttempt = JSON.parse(meta[SOCIAL_LAST_ATTEMPT_KEY] || "null"); } catch (_) {}
   return {
     status: "ok",
-    schedule: "07:30 Europe/Dublin · retries/catch-up until 12:00",
+    schedule: "07:30 Europe/Dublin · retries through 12:00, then every 30 minutes while incomplete",
     facebook_graph_configured: Boolean(await readSecret(env.FACEBOOK_PAGE_ID) && await readSecret(env.FACEBOOK_PAGE_ACCESS_TOKEN)),
     buffer_api_configured: Boolean(await readSecret(env.BUFFER_API_KEY)),
     buffer_connection: buffer,
@@ -1722,11 +1774,12 @@ async function getSocialStatus(env) {
     x_last_error: meta[SOCIAL_X_LAST_ERROR_KEY] || null,
     last_success: meta[SOCIAL_LAST_SUCCESS_KEY] || null,
     last_error: meta[SOCIAL_LAST_ERROR_KEY] || null,
+    last_attempt: lastAttempt,
     last_test_success: meta[SOCIAL_TEST_LAST_SUCCESS_KEY] || null
   };
 }
 
-function socialDashboardState({day, nowEpoch, targetEpoch, verifiedDay, details, delivery, pendingId, error, enabled}) {
+function socialDashboardState({day, nowEpoch, targetEpoch, verifiedDay, details, delivery, pendingId, error, enabled, lastAttempt}) {
   if (!enabled) return {state:"disabled",label:"Not configured",alert:false};
   const record = details?.day === day ? details : null;
   const errorDate = new Date(String(error || "").split(" · ")[0]);
@@ -1739,7 +1792,13 @@ function socialDashboardState({day, nowEpoch, targetEpoch, verifiedDay, details,
     return {state:"pending",label:overdue ? "Pending longer than expected" : "Awaiting publisher confirmation",alert:overdue};
   }
   if (currentError) return {state:"failed",label:"Publishing needs attention",alert:true,error:currentError};
-  if (nowEpoch > targetEpoch + 45 * 60) return {state:"missed",label:"Today’s post is not confirmed",alert:true,error:"Check the morning observation and publisher connection."};
+  if (nowEpoch > targetEpoch + 45 * 60) {
+    const attempt = lastAttempt?.day === day ? lastAttempt.attempted_at : null;
+    const explanation = currentError || (attempt
+      ? `No confirmed delivery. Latest automatic attempt: ${new Date(attempt).toLocaleTimeString("en-IE", { timeZone: STATION_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} Irish time.`
+      : "No automatic publishing attempt was recorded today.");
+    return {state:"missed",label:"Today’s post is not confirmed",alert:true,error:explanation};
+  }
   return {state:"scheduled",label:nowEpoch < targetEpoch ? "Scheduled for 07:30" : "Waiting for the scheduled post",alert:false};
 }
 
@@ -1747,7 +1806,9 @@ async function getSocialDashboardStatus(env) {
   const day = stationDayKey(new Date()), nowEpoch = Math.floor(Date.now()/1000);
   const meta = await readMetaMap(env,[SOCIAL_FB_VERIFIED_DAY_KEY,SOCIAL_FB_PENDING_POST_KEY,SOCIAL_FB_LAST_ERROR_KEY,
     SOCIAL_X_VERIFIED_DAY_KEY,SOCIAL_X_PENDING_POST_KEY,SOCIAL_X_LAST_ERROR_KEY,
-    "social_facebook_delivery_details_v1","social_x_delivery_details_v1"]);
+    "social_facebook_delivery_details_v1","social_x_delivery_details_v1",SOCIAL_LAST_ATTEMPT_KEY]);
+  let lastAttempt = null;
+  try { lastAttempt = JSON.parse(meta[SOCIAL_LAST_ATTEMPT_KEY] || "null"); } catch (_) {}
   const configured = Boolean(await readSecret(env.BUFFER_API_KEY));
   const networks = {};
   for (const [name,verifiedKey,pendingKey,errorKey] of [
@@ -1761,13 +1822,13 @@ async function getSocialDashboardStatus(env) {
     }
     const enabled = name === "x" ? configured : configured || Boolean(await readSecret(env.FACEBOOK_PAGE_ID) && await readSecret(env.FACEBOOK_PAGE_ACCESS_TOKEN));
     networks[name] = socialDashboardState({day,nowEpoch,targetEpoch:stationWallClockEpoch(day,7,30),
-      verifiedDay:meta[verifiedKey],details,delivery,pendingId:meta[pendingKey],error:meta[errorKey],enabled});
+      verifiedDay:meta[verifiedKey],details,delivery,pendingId:meta[pendingKey],error:meta[errorKey],enabled,lastAttempt});
     if (details?.day === day) await safelySaveSocialHistory(env,name,{...details,
       status:networks[name].state,public_url:networks[name].public_url||details.public_url||null,
       error:networks[name].error||null});
   }
   const attention = Object.entries(networks).filter(([,value])=>value.alert).map(([name])=>name === "x" ? "X" : "Facebook");
-  return {day,schedule:"07:30 Europe/Dublin",checked_at:new Date().toISOString(),networks,
+  return {day,schedule:"07:30 Europe/Dublin · morning retries through 12:00, then every 30 minutes while incomplete",checked_at:new Date().toISOString(),last_attempt:lastAttempt,networks,
     notice:attention.length ? {key:`${day}:${attention.join(",")}`,message:`${attention.join(" and ")} ${attention.length === 1 ? "needs" : "need"} attention. Today’s daily post has not been confirmed.`} : null};
 }
 
@@ -1776,16 +1837,19 @@ async function getPublicSocialStatus(env) {
   const meta = await readMetaMap(env, [
     SOCIAL_LAST_SUCCESS_KEY, SOCIAL_LAST_ERROR_KEY,
     SOCIAL_FB_VERIFIED_DAY_KEY, SOCIAL_FB_LAST_ERROR_KEY,
-    SOCIAL_X_VERIFIED_DAY_KEY, SOCIAL_X_LAST_ERROR_KEY
+    SOCIAL_X_VERIFIED_DAY_KEY, SOCIAL_X_LAST_ERROR_KEY, SOCIAL_LAST_ATTEMPT_KEY
   ]);
+  let lastAttempt = null;
+  try { lastAttempt = JSON.parse(meta[SOCIAL_LAST_ATTEMPT_KEY] || "null"); } catch (_) {}
   return {
     status: "ok",
-    schedule: "07:30 Europe/Dublin · retries/catch-up until 12:00",
+    schedule: "07:30 Europe/Dublin · retries through 12:00, then every 30 minutes while incomplete",
     facebook_verified_day: meta[SOCIAL_FB_VERIFIED_DAY_KEY] || null,
     x_verified_day: meta[SOCIAL_X_VERIFIED_DAY_KEY] || null,
     facebook_status: meta[SOCIAL_FB_LAST_ERROR_KEY] ? "attention" : "ok",
     x_status: meta[SOCIAL_X_LAST_ERROR_KEY] ? "attention" : "ok",
     last_success: meta[SOCIAL_LAST_SUCCESS_KEY] || null,
+    last_attempt: lastAttempt,
     note: "Live channel discovery, detailed errors and manual recovery are restricted to authenticated diagnostics."
   };
 }
@@ -1872,10 +1936,21 @@ async function recordSocialDelivery(env, name, day, result, text, photo) {
   await safelySaveSocialHistory(env,name,details);
 }
 
-async function runDailySocialPost(env, { forceDay = null, test = false, force = false, recovery = false } = {}) {
+async function runDailySocialPost(env, { forceDay = null, test = false, force = false, recovery = false, manualRecovery = false } = {}) {
   const now = new Date(), localDay = stationDayKey(now), observationDay = forceDay || localDay;
-  if (!force && !recovery && !inDailySocialWindow(now)) {
+  const local = stationClockParts(now), localMinute = local.hour * 60 + local.minute;
+  if (!force && !inDailySocialWindow(now) && (!recovery || localMinute < SOCIAL_RUN_START_MINUTE)) {
     return { skipped: true, reason: "outside_0730_recovery_window", local_day: localDay };
+  }
+
+  if (!force && !manualRecovery && recovery && localMinute >= SOCIAL_RUN_END_MINUTE) {
+    const attemptMeta = await readMetaMap(env, [SOCIAL_LAST_ATTEMPT_KEY]);
+    let priorAttempt = null;
+    try { priorAttempt = JSON.parse(attemptMeta[SOCIAL_LAST_ATTEMPT_KEY] || "null"); } catch (_) {}
+    const priorEpoch = Date.parse(priorAttempt?.attempted_at || "");
+    if (priorAttempt?.day === localDay && Number.isFinite(priorEpoch) && now.getTime() - priorEpoch < SOCIAL_AFTERNOON_RETRY_INTERVAL_MS) {
+      return { skipped: true, reason: "afternoon_retry_throttled", local_day: localDay, next_retry_at: new Date(priorEpoch + SOCIAL_AFTERNOON_RETRY_INTERVAL_MS).toISOString() };
+    }
   }
 
   const xEnabled = await socialXEnabled(env);
@@ -1896,9 +1971,10 @@ async function runDailySocialPost(env, { forceDay = null, test = false, force = 
   }
 
   try {
+    await writeMeta(env, { [SOCIAL_LAST_ATTEMPT_KEY]: JSON.stringify({ day: localDay, attempted_at: now.toISOString(), recovery: Boolean(recovery) }) });
     let built;
     try {
-      built = await buildDailySocialPost(env, observationDay, { test });
+      built = await buildDailySocialPost(env, observationDay, { test, recovery });
     } catch (error) {
       const message = error?.message || String(error);
       await writeMeta(env, { [SOCIAL_LAST_ERROR_KEY]: `${new Date().toISOString()} · ${message}` });
@@ -2024,12 +2100,12 @@ async function recoverTodaySocialPost(env) {
   // Current-day recovery bypasses only the clock window. It still honours
   // per-network success markers, so an already-successful platform is never
   // posted twice. The v2 mutex avoids stale locks left by older Worker builds.
-  let result = await runDailySocialPost(env, { forceDay: today, recovery: true });
+  let result = await runDailySocialPost(env, { forceDay: today, recovery: true, manualRecovery: true });
   if (result?.skipped && result?.reason === "run_already_claimed") {
     // A scheduled/background run may genuinely be in flight. Give it a short
     // chance to finish and release the mutex, then retry once.
     await new Promise(resolve => setTimeout(resolve, 3000));
-    result = await runDailySocialPost(env, { forceDay: today, recovery: true });
+    result = await runDailySocialPost(env, { forceDay: today, recovery: true, manualRecovery: true });
   }
   return result;
 }
@@ -2178,7 +2254,7 @@ async function pushEncrypt(subscription,payload){
 async function sendWeatherPush(subscription,message,vapid,timeoutMs=5000){const endpoint=new URL(subscription.endpoint),header=pushBase64(pushText(JSON.stringify({typ:'JWT',alg:'ES256'}))),claims=pushBase64(pushText(JSON.stringify({aud:endpoint.origin,exp:Math.floor(Date.now()/1000)+3600,sub:'mailto:info@parknacrossweather.ie'}))),input=header+'.'+claims,key=await crypto.subtle.importKey('jwk',vapid.privateJwk,{name:'ECDSA',namedCurve:'P-256'},false,['sign']),signature=pushBase64(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},key,pushText(input)));return fetch(endpoint.href,{method:'POST',headers:{Authorization:`vapid t=${input}.${signature}, k=${vapid.publicKey}`,'Content-Encoding':'aes128gcm','Content-Type':'application/octet-stream',TTL:'300',Urgency:'normal'},body:await pushEncrypt(subscription,message),redirect:'error',signal:AbortSignal.timeout(timeoutMs)});}
 async function handlePushRequest(request,env,url){
  const noStore={'Cache-Control':'no-store'};
- if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.232'},200,noStore);}
+ if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.235'},200,noStore);}
  if(request.method!=='POST')return json({error:'Method not allowed'},405,noStore);
  if(request.headers.get('Origin')!=='https://parknacrossweather.ie'&&request.headers.get('Origin')!=='https://www.parknacrossweather.ie')return json({error:'Origin not allowed'},403,noStore);
  if(requestRateLimited(request,'push-settings',10))return rateLimitedResponse();
@@ -2230,7 +2306,7 @@ export default {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.232",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.235",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2293,9 +2369,10 @@ export default {
         // /current request may also trigger the same lock-protected job in
         // the background. This repairs a missed cron/upstream failure without
         // ever duplicating a platform that already succeeded.
-        if (inDailySocialWindow(new Date()) && ctx && typeof ctx.waitUntil === "function") {
+        const local = stationClockParts(new Date());
+        if (local.hour * 60 + local.minute >= SOCIAL_RUN_START_MINUTE && ctx && typeof ctx.waitUntil === "function") {
           ctx.waitUntil(
-            runDailySocialPost(env).catch(error =>
+            runDailySocialPost(env, { recovery: true }).catch(error =>
               console.warn("Dashboard social catch-up failed:", error)
             )
           );
@@ -2324,7 +2401,7 @@ export default {
           status: connected ? (healthyArchive ? "ok" : "warning") : "error",
           database: connected ? "connected" : "error",
           service: "Parknacross Weather",
-          release: "v38.4.94-WHOLE-SITE-RELIABILITY",
+          release: "v38.4.97-SOCIAL-RECOVERY",
           station_time_zone: STATION_TIME_ZONE,
           station_local_day: stationDayKey(new Date()),
           archive_ingest: ingest
@@ -2336,7 +2413,7 @@ export default {
           status: "error",
           database: "error",
           service: "Parknacross Weather",
-          release: "v38.4.94-WHOLE-SITE-RELIABILITY",
+          release: "v38.4.97-SOCIAL-RECOVERY",
           error: error?.message || "D1 health check failed"
         }, 503, {
           "Cache-Control": "no-store"
@@ -2492,7 +2569,7 @@ export default {
       }
     }
 
-    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.232",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true}},200,{"Cache-Control":"public, max-age=300"});}
+    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.235",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true}},200,{"Cache-Control":"public, max-age=300"});}
 
     if(url.pathname==="/met/warnings"){
       if(request.method!=="GET")return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
@@ -3366,7 +3443,10 @@ export default {
       // 07:30 update must not be skipped because an unrelated ingest, QC,
       // forecast or backup task fails on the same cron tick.
       try {
-        await runDailySocialPost(env);
+        const local = stationClockParts(new Date());
+        if (local.hour * 60 + local.minute >= SOCIAL_RUN_START_MINUTE) {
+          await runDailySocialPost(env, { recovery: true });
+        }
       } catch (error) {
         console.warn("Automatic social weather post failed:", error);
       }

@@ -8,17 +8,20 @@
   const $ = id => document.getElementById(id);
   const previewDetails = $('socialAdminPreview');
   const base = (window.PARKNACROSS_CONFIG?.apiBase || 'https://parknacross-weather.dave-s-carter.workers.dev').replace(/\/$/, '');
-  let statusBusy = false, previewBusy = false, lastStatus = null, noticeSent = '';
+  let statusBusy = false, previewBusy = false, recoveryBusy = false, lastStatus = null, noticeSent = '';
   const stored = key => { try { return sessionStorage.getItem(key) || ''; } catch (_) { return ''; } };
   function credential(ask = false) {
     let key = window.ParknacrossAdminSession?.get() || stored('parknacrossAdminKey');
     if (!key && ask) key = window.prompt('Enter the Parknacross admin key') || '';
     return key;
   }
-  async function request(path, key) {
+  async function request(path, key, options = {}) {
     const ticket=authEpoch;
-    const response = await fetch(`${base}${path}`, {headers:{'X-Parknacross-Admin-Key':key},cache:'no-store',signal:AbortSignal.timeout(12000)});
-    if (!response.ok) throw new Error(response.status === 401 ? 'Admin key was not accepted.' : 'Posting details are unavailable. Check that the updated Worker has been deployed.');
+    const response = await fetch(`${base}${path}`, {...options,headers:{...options.headers,'X-Parknacross-Admin-Key':key},cache:'no-store',signal:AbortSignal.timeout(30000)});
+    if (!response.ok) {
+      const body=await response.json().catch(()=>({}));
+      throw new Error(response.status === 401 ? 'Admin key was not accepted.' : body.error || body.message || 'Posting details are unavailable. Check that the updated Worker has been deployed.');
+    }
     const data = await response.json();
     if(ticket!==authEpoch)throw new Error('Signed out.');
     try { sessionStorage.setItem('parknacrossAdminKey',key); } catch (_) {}
@@ -42,6 +45,8 @@
       container.append(card);
     }
     const notice = $('socialAdminNotice');notice.hidden = !data.notice;notice.textContent = data.notice?.message || '';
+    const recover = $('socialAdminRecover');
+    if (recover) recover.disabled = recoveryBusy || !Object.values(data.networks || {}).some(state => state.alert || ['missed','failed','pending'].includes(state.state));
     $('socialAdminResult').textContent = `Checked ${new Date(data.checked_at).toLocaleTimeString('en-IE',{timeZone:'Europe/Dublin',hour:'2-digit',minute:'2-digit'})} · ${data.day}`;
     if (data.notice && data.notice.key !== noticeSent && 'Notification' in window && Notification.permission === 'granted') {
       try {
@@ -86,6 +91,22 @@
     try { sessionStorage.setItem('parknacrossAdminKey',key); } catch (_) {}
     const done=window.ParknacrossAction?.begin($('socialAdminRefresh'),'Refreshing…');if(done===null)return;if (previewDetails) previewDetails.open = true;try{await refreshStatus(); await refreshPreview();}finally{done?.();}
   });
+  $('socialAdminRecover')?.addEventListener('click',async()=>{
+    if(recoveryBusy)return;
+    const key=credential(true);if(!key)return;
+    recoveryBusy=true;$('socialAdminRecover').disabled=true;
+    const done=window.ParknacrossAction?.begin($('socialAdminRecover'),'Retrying…');
+    if(done===null){recoveryBusy=false;return;}
+    $('socialAdminResult').textContent='Retrying only the missing posts with a fresh Parknacross reading where needed…';
+    try{
+      const result=await request('/social-recover-today',key,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+      const summary=result.status==='already_complete'?'Both daily posts are already confirmed.':result.status==='error'?`Retry failed: ${result.error||'unknown error'}`:`Retry finished: ${result.status||'status unavailable'}.`;
+      await refreshStatus();
+      await refreshPreview();
+      $('socialAdminResult').textContent=summary;
+    }catch(error){$('socialAdminResult').textContent=`Retry failed: ${error.message}`;}
+    finally{recoveryBusy=false;$('socialAdminRecover').disabled=!Object.values(lastStatus?.networks||{}).some(state=>state.alert||['missed','failed','pending'].includes(state.state));done?.();}
+  });
   previewDetails?.addEventListener('toggle',()=>{
     if (previewDetails.open) refreshPreview();
   });
@@ -108,6 +129,7 @@
   window.addEventListener('parknacross:admin-signin',()=>refreshAll());
   window.addEventListener('parknacross:admin-signout',()=>{
     authEpoch++;lastStatus=null;
+    $('socialAdminRecover').disabled=true;
     $('socialAdminNetworks').replaceChildren();
     $('socialAdminFacebookText').textContent='';$('socialAdminXText').textContent='';
     $('socialAdminPhoto').hidden=true;$('socialAdminPhoto').removeAttribute('src');
