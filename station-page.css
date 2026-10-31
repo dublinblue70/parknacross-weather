@@ -21,3 +21,14 @@
 @media(max-width:750px){.station-sensor-layout{grid-template-columns:1fr}.station-sensor-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.station-maintenance-preview{grid-template-columns:1fr}.station-health-bar{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.station-context-grid,.station-reliability-grid{grid-template-columns:1fr}.station-sensor-buttons button{padding:12px}.station-sensor-buttons button small{font-size:.73rem}.station-sensor-detail{padding:16px}}
 @media(prefers-reduced-motion:reduce){.station-schematic [class^=station-drawing-]{transition:none}}
+
+/* Descriptive labels remain readable at mobile sizes. */
+.station-schematic figcaption,.station-sensor-buttons button small {
+  font-size: .83rem;
+  color: #b9ccda;
+  line-height: 1.5;
+}
+.station-entry-type { font-size: .78rem; }
+@media (max-width: 480px) {
+  .station-sensor-buttons button small { font-size: .8rem; }
+}
