@@ -8,3 +8,14 @@
 .health-group .card-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:10px}
 .health-group .card-head h2{margin:0;min-width:0}
 .health-group .card-head>.badge{justify-self:end;align-self:start;box-sizing:border-box}
+
+
+/* Health details should be readable without overpowering the summary cards. */
+.health-group .sub,.health-impact,.health-attention-item p {
+  color: #b9cbd7;
+  font-size: .85rem;
+  line-height: 1.6;
+}
+.health-technical summary { font-size: .88rem; }
+.health-check-time { font-size: .8rem; color: #b9cbd7; }
+.health-group-heading p,.health-session p,.health-session li { font-size: .9rem; }
