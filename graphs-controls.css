@@ -18,3 +18,14 @@
     overflow-wrap: normal;
   }
 }
+
+/* Improve touch-target readability without widening the six-column grid. */
+@media (max-width: 760px) {
+  .graph-range-controls > a[href="#dateComparison"],
+  .graph-range-controls > #graphRetry,
+  .graph-range-controls > #copyGraphLink {
+    min-height: 44px;
+    font-size: .82rem;
+    line-height: 1.35;
+  }
+}
