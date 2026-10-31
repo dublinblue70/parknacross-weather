@@ -402,9 +402,9 @@ body.dashboard-page #livePill .live-dot {
   top: auto;
   width: 9px;
   height: 9px;
-  margin: 5px 0 0;
+  margin: 0;
   transform: none;
-  align-self: start;
+  align-self: center;
 }
 body.dashboard-page #livePill #liveText {
   display: block;
