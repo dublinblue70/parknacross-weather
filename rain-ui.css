@@ -66,3 +66,14 @@
  .rain-page .rain-event-row span:nth-child(3){grid-column:1;grid-row:2;text-align:left}
  .rain-page .rain-event-row span:nth-child(4){grid-column:2;grid-row:2}
 }
+
+
+/* The daily ledger's dates and captions were too small on narrow phones. */
+.rain-page .rain-table-scroll caption { font-size: .83rem; line-height: 1.55; }
+.rain-page .rain-table-scroll thead th { font-size: .8rem; }
+.rain-page .rain-day-date { font-size: .8rem; color: #b6cad8; }
+.rain-page .rain-day-primary { font-size: .9rem; }
+@media (max-width: 640px) {
+  .rain-page .rain-table-scroll { padding-inline: 12px; }
+  .rain-page .rain-table-scroll td { padding-left: 10px; }
+}
