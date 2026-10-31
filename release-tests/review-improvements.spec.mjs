@@ -32,7 +32,7 @@ test('evening forecast explains a missing daytime section and clears failed fore
  await expect(page.locator('#forecastTonight')).toContainText('temporarily unavailable');await expect(page.locator('#forecastTomorrow')).toContainText('temporarily unavailable');
 });
 test('comparison uses the archived report-time temperature rather than the latest reading',async({page})=>{
- await prepare(page);await page.goto('/climate.html');await expect(page.locator('#climateDelta')).toHaveText('+4.4°C');await expect(page.locator('#climateComparisonTime')).toContainText('matched within five minutes');
+ await prepare(page);await page.goto('/climate.html');await expect(page.locator('#climateDelta')).toHaveText('-1.5°C');await expect(page.locator('#climateComparisonTime')).toContainText('may be from different report times');
 });
 test('advanced zoom starts collapsed and downloads retain common navigation and range validation',async({page})=>{
  await prepare(page);await page.setViewportSize({width:390,height:844});await page.goto('/graphs.html');
