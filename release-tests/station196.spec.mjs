@@ -23,7 +23,7 @@ test('sensor explanations work with hover, keyboard and tap; dated log previews 
  await page.locator('[data-sensor=soil]').focus();await expect(page.locator('#stationSensorCopy')).toContainText('rather than every pot');await expect(page.locator('[data-sensor=soil]')).toHaveAttribute('aria-pressed','true');
  await page.locator('[data-sensor=gateway]').click();await expect(page.locator('#stationSensorCopy')).toContainText('barometric-pressure');await expect(page.locator('#stationSensorLink')).toHaveAttribute('href','status.html');
  await expect(page.locator('#stationMaintenancePreview article')).toHaveCount(3);await expect(page.locator('#stationMaintenancePreview time').first()).toHaveAttribute('datetime','2026-10-26');await expect(page.locator('#understandingReadings')).toContainText('not a direct measure of plant nutrition');
- await expect(page.locator('#stationTechnical')).not.toHaveAttribute('open','');await page.locator('#stationTechnical > summary').click();await expect(page.locator('#d1StoragePercent')).toHaveText('Storage status unavailable');
+ await expect(page.locator('#stationArchive')).not.toHaveAttribute('open','');await page.locator('#stationArchive > summary').click();await expect(page.locator('#d1StoragePercent')).toHaveText('Storage status unavailable');
 });
 test.describe('mobile station page',()=>{test.use({viewport:{width:390,height:844},hasTouch:true,isMobile:true});test('sensor controls are usable without horizontal overflow and notification links still work',async({page})=>{
  await page.goto('/station.html');await page.locator('[data-sensor=soil]').tap();await expect(page.locator('#stationSensorTitle')).toHaveText('Garden soil sensor');
