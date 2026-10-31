@@ -7,7 +7,7 @@ test.beforeEach(async({page})=>{
  await page.route('**/static.cloudflareinsights.com/**',r=>r.fulfill({body:'',contentType:'application/javascript'}));
 });
 test('live condition, update time and accessible daily totals are clear',async({page})=>{
- await page.goto('/rain.html');await expect(page.locator('#rainCondition')).toHaveText('No rain detected');await expect(page.locator('#rainEventText')).toContainText('Rain paused');await expect(page.locator('#rainUpdated')).toContainText('Irish time');await expect(page.locator('#rainToday')).toHaveText('1.2 mm');await expect(page.locator('.rain-details').first()).not.toHaveAttribute('open','');
+ await page.goto('/rain.html');await expect(page.locator('#rainCondition')).toHaveText('No rain detected by the station');await expect(page.locator('#rainEventText')).toContainText('Rain paused');await expect(page.locator('#rainUpdated')).toContainText('Irish time');await expect(page.locator('#rainToday')).toHaveText('1.2 mm');await expect(page.locator('.rain-details').first()).not.toHaveAttribute('open','');
  await page.getByText('View daily totals as a table',{exact:true}).click();await expect(page.locator('#rainDailyTable')).toContainText('1.2 mm');await expect(page.locator('#rainDailyTable')).toContainText('so far');
  current={...current,rain_rate_mm_h:2};await page.getByRole('button',{name:'Refresh rain data'}).click();await expect(page.locator('#rainCondition')).toHaveText('Rain detected');await expect(page.locator('#rainNow')).toHaveText('2.0 mm/h');
 });
@@ -15,7 +15,7 @@ test('failed refresh clears previous results and retry recovers',async({page})=>
  await page.goto('/rain.html');await expect(page.locator('#rainToday')).toHaveText('1.2 mm');fail=true;await page.getByRole('button',{name:'Refresh rain data'}).click();await expect(page.locator('#rainCondition')).toHaveText('Live rain unavailable');await expect(page.locator('#rainToday')).toHaveText('--');await expect(page.locator('#rainChartNote')).toContainText('temporarily unavailable');await expect(page.locator('#rainLoadStatus')).toContainText('unavailable');await expect(page.getByRole('button',{name:'Refresh rain data'})).toBeEnabled();fail=false;await page.getByRole('button',{name:'Refresh rain data'}).click();await expect(page.locator('#rainToday')).toHaveText('1.2 mm');
 });
 test('mobile overview stays compact without horizontal overflow',async({page})=>{
- await page.setViewportSize({width:390,height:844});await page.goto('/rain.html');await expect(page.locator('#rainCondition')).toHaveText('No rain detected');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);const button=await page.locator('#rainRefresh').boundingBox();expect(button.height).toBeGreaterThanOrEqual(44);await page.getByText('Rainfall statistics & dry spells',{exact:true}).click();await expect(page.locator('#rainMonth')).toBeVisible();
+ await page.setViewportSize({width:390,height:844});await page.goto('/rain.html');await expect(page.locator('#rainCondition')).toHaveText('No rain detected by the station');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);const button=await page.locator('#rainRefresh').boundingBox();expect(button.height).toBeGreaterThanOrEqual(44);await page.getByText('Rainfall statistics & dry spells',{exact:true}).click();await expect(page.locator('#rainMonth')).toBeVisible();
 });
 
 test('daily rainfall list shows seven days, honest missing values and expandable bars',async({page})=>{
