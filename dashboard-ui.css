@@ -349,3 +349,100 @@ body.dashboard-page #dashboard > .dashboard-shortcuts { order: 4; margin: 12px 0
 body.dashboard-page #dashboard > .station-bar { order: 5; margin-top: 10px; }
 body.dashboard-page #dashboardOptionalSections > .today-section { order: 6; margin-top: 16px; }
 body.dashboard-page #dashboard > .local-planning { order: 7; margin-top: 20px; }
+
+
+/* 2026-10-31 visual consistency: one final status-card layout at every
+   breakpoint. Earlier mobile/desktop overrides disagree about dot placement. */
+body.dashboard-page .station-bar > .station-status {
+  box-sizing: border-box;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-width: 0;
+  padding: 12px 14px;
+  gap: 5px;
+}
+body.dashboard-page .station-status > .status-label {
+  display: block;
+  min-height: 2.8em;
+  margin: 0;
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.4;
+}
+body.dashboard-page .station-status > strong {
+  display: block;
+  margin: 0;
+  font-size: .89rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+body.dashboard-page .station-status > small {
+  display: block;
+  margin: 0;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+body.dashboard-page #livePill {
+  display: grid;
+  position: relative;
+  grid-template-columns: 9px minmax(0, 1fr);
+  grid-template-rows: auto;
+  align-content: start;
+  align-items: start;
+  justify-content: start;
+  column-gap: 12px;
+  padding: 12px 14px;
+  text-align: left;
+}
+body.dashboard-page #livePill .live-dot {
+  position: static;
+  grid-column: 1;
+  grid-row: 1;
+  left: auto;
+  top: auto;
+  width: 9px;
+  height: 9px;
+  margin: 5px 0 0;
+  transform: none;
+  align-self: start;
+}
+body.dashboard-page #livePill #liveText {
+  display: block;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  margin: 0;
+  align-self: start;
+  justify-self: start;
+  text-align: left;
+  font-size: .89rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 641px) and (max-width: 900px) {
+  body.dashboard-page .station-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  body.dashboard-page .station-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+  body.dashboard-page .station-bar > .station-status,
+  body.dashboard-page #livePill {
+    padding: 12px;
+  }
+  body.dashboard-page .dashboard-shortcuts a {
+    min-height: 44px;
+    font-size: .875rem;
+  }
+  body.dashboard-page .hero-stat > span,
+  body.dashboard-page .today-item > span {
+    font-size: .76rem;
+  }
+  body.dashboard-page .hero-stat > small,
+  body.dashboard-page .today-item > small {
+    font-size: .78rem;
+  }
+}
