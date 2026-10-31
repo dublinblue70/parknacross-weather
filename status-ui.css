@@ -19,3 +19,32 @@
 .health-technical summary { font-size: .88rem; }
 .health-check-time { font-size: .8rem; color: #b9cbd7; }
 .health-group-heading p,.health-session p,.health-session li { font-size: .9rem; }
+
+/* Keep the real Health footer links and readable text on small screens. */
+@media (max-width: 560px) {
+  .shell footer {
+    padding: 15px 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    overflow: visible;
+    white-space: normal;
+    font-size: .82rem;
+    line-height: 1.5;
+  }
+  .shell footer > span,
+  .shell footer > span:nth-child(2) {
+    white-space: normal;
+    font-size: .82rem;
+  }
+  .shell footer > span:nth-child(2)::before,
+  .shell footer > span:nth-child(2)::after { content: none; display: none; }
+  .shell footer .footer-links {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    white-space: normal;
+    gap: 6px 9px;
+  }
+  .shell footer .footer-links a { font-size: .82rem; }
+}
