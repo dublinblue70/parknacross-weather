@@ -17,3 +17,32 @@
   .wind-rose-info .wind-rose-explanation{max-width:none;margin:0;text-align:left}
   .wind-rose-info .wind-rose-meta{max-width:none;margin:0;padding-top:9px;border-top:1px solid rgba(154,188,208,.15);text-align:left}
 }
+
+
+/* Keep the diagram centred but supporting text left-aligned and legible. */
+@media (max-width: 760px) {
+  .wind-rose-info { max-width: 100%; padding: 10px 12px; gap: 10px; }
+  .wind-rose-info .wind-rose-legend {
+    justify-content: flex-start;
+    max-width: none;
+    margin: 0;
+    font-size: .82rem;
+    gap: 8px 12px;
+  }
+  .wind-rose-info .wind-rose-explanation,
+  .wind-rose-info .wind-rose-calm-note {
+    max-width: none;
+    margin: 0;
+    text-align: left;
+    font-size: .86rem;
+    line-height: 1.6;
+  }
+  .wind-rose-info .wind-rose-meta {
+    max-width: none;
+    margin: 0;
+    text-align: left;
+    font-size: .8rem;
+    line-height: 1.6;
+    color: #b9ccda;
+  }
+}
