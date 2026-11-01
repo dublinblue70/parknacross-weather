@@ -338,6 +338,37 @@ if (/mask-image\s*:/.test(styles)) {
   failures.push("styles.css: mask-image can clip the mobile More popup");
 }
 
+
+/* Station network links: keep layout compact, URLs grounded and external-tab behaviour safe. */
+const stationNetworksHtml = await readFile(join(root, "station.html"), "utf8");
+const stationNetworksCss = await readFile(join(root, "station-page.css"), "utf8");
+const stationNetworkIds = ["stationWeatherUndergroundLink", "stationWeathercloudLink", "stationWindyLink"];
+const stationNetworkPositions = stationNetworkIds.map(id => stationNetworksHtml.indexOf('id="' + id + '"'));
+if (stationNetworkPositions.some(pos => pos < 0) || !(stationNetworkPositions[0] < stationNetworkPositions[1] && stationNetworkPositions[1] < stationNetworkPositions[2])) {
+  failures.push("station.html: Station external network links must remain grouped in Weather Underground, Weathercloud, Windy order");
+}
+if (!stationNetworksHtml.includes('aria-labelledby="stationExternalNetworksHeading"') ||
+    !stationNetworksHtml.includes('id="stationExternalNetworksHeading"') ||
+    !stationNetworksCss.includes(".station-external-network-list") ||
+    !stationNetworksCss.includes("@media (max-width: 760px)")) {
+  failures.push("station.html: weather network section needs a labelled heading and responsive compact layout");
+}
+const expectedStationNetworks = [
+  ["stationWeatherUndergroundLink", "https://www.wunderground.com/dashboard/pws/IARDAM6"],
+  ["stationWeathercloudLink", "https://app.weathercloud.net/map?lat=52.62&amp;lon=-6.24&amp;zoom=11&amp;layer=device"],
+  ["stationWindyLink", "https://www.windy.com/station/pws-hdC7VHGr"],
+];
+for (const [id, url] of expectedStationNetworks) {
+  const anchor = stationNetworksHtml.match(new RegExp('<a\\b[^>]*\\bid="' + id + '"[^>]*>', "i"))?.[0] || "";
+  if (!anchor.includes('href="' + url + '"') || !anchor.includes('target="_blank"') ||
+      !anchor.includes('rel="noopener noreferrer"') || !anchor.includes('aria-label=')) {
+    failures.push("station.html: invalid or inaccessible external network link " + id);
+  }
+}
+if (!stationNetworksHtml.includes("Linked weather networks may use their own terrain estimates")) {
+  failures.push("station.html: explain the difference between approximate site elevation and network estimates");
+}
+
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exitCode = 1;
