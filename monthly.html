@@ -28,7 +28,7 @@
       <div class="report-controls"><label for="monthPicker">Report period</label><select id="monthPicker" aria-label="Choose monthly weather report"></select><button class="secondary-button" id="shareMonthCard" type="button" disabled>Share report card</button><button class="secondary-button" id="printMonthReport" type="button">Print report</button><a class="secondary-button" href="annual.html">Annual report</a></div><p id="reportActionStatus" class="action-status" role="status" aria-live="polite"></p>
     </section>
 
-    <section class="page-section"><article class="info-card"><div class="section-heading compact-heading"><div><span class="section-eyebrow" id="monthBriefLabel">Month so far</span><h2>In brief</h2></div></div><p class="info-note" id="monthStory">Loading monthly weather data…</p></article></section>
+    <section class="page-section"><article class="info-card"><div class="section-heading compact-heading"><div><span class="section-eyebrow" id="monthBriefLabel">Month so far</span><h2>In brief</h2></div></div><p class="info-note" id="monthStory">Loading monthly weather data…</p><p id="reportCoverageNote" class="monthly-note report-coverage-emphasis" role="status">Checking archive completeness…</p></article></section>
 
     <section class="page-section"><div class="section-heading"><div><span class="section-eyebrow">Temperature & rainfall</span><h2>Month at a glance</h2></div></div><div class="monthly-grid">
       <article class="climate-card"><span>Mean temperature</span><strong id="meanTemp">--</strong><small>Average of saved readings</small></article>
@@ -46,7 +46,7 @@
       <article class="climate-card"><span>Average daily pressure</span><strong id="monthPressure">--</strong><small>Average of each day’s pressure</small></article>
       <article class="climate-card"><span>Peak solar radiation</span><strong id="monthSolar">--</strong><small id="monthSolarDate">--</small></article>
       <article class="climate-card"><span>Average daily high</span><strong id="avgHigh">--</strong><small>Across days with saved data</small></article>
-    </div><p id="reportCoverageNote" class="monthly-note" role="status">Checking archive completeness…</p><p class="monthly-note" id="partialNote">This is a month-to-date report and may cover only part of the month if the station archive began recently.</p></section>
+    </div><p class="monthly-note" id="partialNote">This is a month-to-date report and may cover only part of the month if the station archive began recently.</p></section>
 
     <section class="page-section"><article class="info-card"><div class="section-heading compact-heading"><div><span class="section-eyebrow">Explore more</span><h2>Reports & history</h2></div></div><div class="back-links"><a href="summary.html">Today’s summary →</a><a href="records.html">Weather records →</a><a href="history.html">Weather history →</a><a href="rain.html">Rain Centre →</a></div></article></section>
   </main>
