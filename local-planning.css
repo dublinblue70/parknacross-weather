@@ -14,3 +14,25 @@
 @media(min-width:1150px){.local-planning{grid-template-columns:repeat(3,minmax(0,1fr))}.local-planning>[data-laundry-window]{grid-column:auto}}
 .laundry-window-list{grid-template-columns:minmax(0,1fr)}
 @media(min-width:1150px){.rain-hour-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+
+/* 2026-11-01 legibility: forecast sources, labels and quality badges
+   should remain readable on narrow phones and the coast/rain pages. */
+.local-planning-card .lp-label,
+body.dashboard-page .local-planning-card .lp-label {
+  font-size: .78rem;
+  line-height: 1.45;
+  letter-spacing: .04em;
+}
+.local-planning-card .lp-source,
+body.dashboard-page .local-planning-card .lp-source {
+  font-size: .81rem;
+  line-height: 1.6;
+  color: #b8cbd8;
+}
+.local-planning-card .lp-arrow-note,
+.local-planning-card .rain-hour-list span {
+  font-size: .78rem;
+  line-height: 1.5;
+}
+.local-planning-card .laundry-quality { font-size: .76rem; }
