@@ -58,3 +58,21 @@ test('Station page Weather Underground link opens the Parknacross station dashbo
  expect(box.height).toBeGreaterThanOrEqual(44);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2)).toBe(true);
 });
+
+
+test('public pages fit both compact phones and tablets',async({page})=>{
+ test.setTimeout(240000);
+ for(const width of [320,768]){
+  await page.setViewportSize({width,height:900});
+  for(const path of publicPages){
+   await page.goto('/'+path,{waitUntil:'domcontentloaded'});
+   const layout=await page.evaluate(()=>({
+    contentWidth:document.documentElement.scrollWidth,
+    viewportWidth:innerWidth,
+    bodyFont:parseFloat(getComputedStyle(document.body).fontSize)
+   }));
+   expect(layout.contentWidth,path+' horizontal overflow at '+width+'px').toBeLessThanOrEqual(layout.viewportWidth+2);
+   expect(layout.bodyFont,path+' body type at '+width+'px').toBeGreaterThanOrEqual(15);
+  }
+ }
+});
