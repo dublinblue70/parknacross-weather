@@ -1,9 +1,10 @@
-const CACHE_NAME = "parknacross-v38-4-238-visitor-review-20261101";
+const CACHE_NAME = "parknacross-v38-4-239-site-wide-polish-20261101";
 const STATIC_ASSETS = [
+  "./site-polish.css",
+  "./site-polish.js",
   "./notification-storage.js",
   "./notification-test.js",
   "./radar-analysis-worker.js",
-  "./exposure-history.js",
   "./feature-health.js",
   "./review-ui.css",
   "./review-tools.js",
@@ -135,19 +136,30 @@ const STATIC_ASSETS = [
 ];
 
 // Every advertised offline page must retain its local dependencies before activation.
-const ESSENTIAL_ASSETS = ["./", "./index.html", "./offline.html", "./styles.css", "./app.js", "./site-config.js", "./api-routing.js", "./pwa-update.js", "./manifest.webmanifest", "./favicon.svg"];
+const ESSENTIAL_ASSETS = ["./", "./index.html", "./offline.html", "./styles.css", "./site-polish.css", "./site-polish.js", "./app.js", "./site-config.js", "./api-routing.js", "./pwa-update.js", "./manifest.webmanifest", "./favicon.svg"];
 const OPTIONAL_ASSETS = new Set(STATIC_ASSETS.filter(asset => !ESSENTIAL_ASSETS.includes(asset)));
 async function verifyEssentialCache(){const cache=await caches.open(CACHE_NAME);for(const asset of ESSENTIAL_ASSETS){const response=await cache.match(new URL(asset,self.registration.scope).toString());if(!response?.ok)throw new Error(`Incomplete offline update: ${asset}`);}}
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await Promise.all(STATIC_ASSETS.map(async asset => {
-      try {
-        const absolute = new URL(asset, self.registration.scope).toString();
-        const request = new Request(absolute, { cache: "reload" });
-        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);let response;try{response=await fetch(request,{signal:controller.signal});}finally{clearTimeout(timer);}
-        if (response.ok) await cache.put(request, response);
-      } catch (_) {}
+    // Fetch essential resources first and limit optional work to 12 requests.
+    // A large simultaneous burst could delay installation on mobile networks.
+    const orderedAssets = [...new Set([...ESSENTIAL_ASSETS, ...STATIC_ASSETS])];
+    let nextAsset = 0;
+    await Promise.all(Array.from({length:Math.min(12,orderedAssets.length)}, async () => {
+      while (nextAsset < orderedAssets.length) {
+        const asset = orderedAssets[nextAsset++];
+        try {
+          const absolute = new URL(asset, self.registration.scope).toString();
+          const request = new Request(absolute, {cache:"reload"});
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 15000);
+          let response;
+          try { response = await fetch(request, {signal:controller.signal}); }
+          finally { clearTimeout(timer); }
+          if (response.ok) await cache.put(request, response);
+        } catch (_) { /* Optional network failures must not break a live page. */ }
+      }
     }));
     /* Activate a fully cached release immediately. This prevents installed
        PWAs—especially iOS installations reopened after several days—from

@@ -1,0 +1,88 @@
+/* Parknacross Weather: shared, accessible presentation layer.
+   Deliberately uses native system fonts: no external font request on mobile. */
+:root{
+  --ui-font:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ui-ink:#f3f8fb;--ui-secondary:#afc2ce;--ui-accent:#7bd7ef;
+  --ui-surface:#0d202d;--ui-line:rgba(174,210,232,.22);
+  --ui-good:#65d19a;--ui-caution:#f2bf67;--ui-error:#f17f7f;
+}
+body{font-family:var(--ui-font)}
+button,input,select,textarea{font-family:inherit}
+main :where(p,li){line-height:1.55}
+main :where(h1,h2,h3){text-wrap:balance}
+main :where(h2,h3){letter-spacing:-.015em}
+main :where(button,input[type="button"],input[type="submit"],select){min-height:40px}
+main :where(button,a,input,select,textarea):focus-visible{
+  outline:3px solid var(--ui-accent);outline-offset:3px;
+}
+main :where(.source-note,.info-note,.status-note,.archive-search-status){
+  line-height:1.55;overflow-wrap:anywhere;
+}
+main :where(.chart-card,.info-card,.metric-panel,.local-planning-card,.records-panel){
+  min-width:0;
+}
+main :where(.chart-title,.section-heading){min-width:0}
+main :where(.chart-title h2,.chart-title h3,.section-heading h2){
+  line-height:1.25;
+}
+main :where(.source-badge,.source-note,.hero-stat span,.station-status small){
+  letter-spacing:normal;
+}
+/* New navigation and status hints use the same restrained coastal treatment. */
+.site-jump-nav{display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  margin:16px 0 20px;padding:12px;border:1px solid var(--ui-line);
+  border-radius:14px;background:rgba(13,32,45,.72)}
+.site-jump-nav strong{font-size:.88rem;color:var(--ui-secondary);margin-right:5px}
+.site-jump-nav a{display:inline-flex;align-items:center;justify-content:center;
+  padding:9px 13px;min-height:44px;border:1px solid var(--ui-line);
+  border-radius:10px;background:#122c3a;text-decoration:none;
+  color:var(--ui-ink);font-size:.9rem;font-weight:600}
+.site-jump-nav a:hover{border-color:var(--ui-accent);background:#193b4c}
+.site-jump-target{scroll-margin-top:24px}
+.site-source-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
+  margin:16px 0 22px}
+.site-source-legend article{min-width:0;padding:13px 15px;border:1px solid var(--ui-line);
+  border-radius:13px;background:var(--ui-surface)}
+.site-source-legend strong{display:block;font-size:.92rem;margin-bottom:5px}
+.site-source-legend p{margin:0;color:var(--ui-secondary);font-size:.83rem;line-height:1.5}
+.site-source-legend .observed strong{color:var(--ui-good)}
+.site-source-legend .radar strong{color:var(--ui-accent)}
+.site-source-legend .forecast strong{color:var(--ui-caution)}
+.site-context-note{padding:12px 15px;margin:12px 0 18px;border-left:3px solid var(--ui-accent);
+  border-radius:0 10px 10px 0;background:rgba(123,215,239,.06);
+  color:var(--ui-secondary);font-size:.9rem;line-height:1.55}
+.site-detail-toggle{display:none;width:100%;min-height:48px;padding:12px 15px;
+  border:1px solid var(--ui-line);border-radius:12px;text-align:left;
+  font-weight:700;color:var(--ui-ink);background:#123044;cursor:pointer}
+.site-detail-toggle:hover{background:#193b4c}
+.site-detail-toggle::after{content:"▾";float:right}
+.site-detail-toggle[aria-expanded="true"]::after{content:"▴"}
+.site-detail-copy{display:none;margin:5px 1px 18px;color:var(--ui-secondary);font-size:.84rem}
+.site-download-note{font-variant-numeric:tabular-nums}
+.site-jump-nav a:focus-visible,.site-detail-toggle:focus-visible{
+  outline:3px solid var(--ui-accent);outline-offset:3px
+}
+@media(max-width:700px){
+  main{overflow-wrap:break-word}
+  main :where(button,input[type="button"],input[type="submit"],select){min-height:44px}
+  .site-source-legend{grid-template-columns:1fr;gap:8px}
+  .site-jump-nav{padding:10px;gap:7px}
+  .site-jump-nav strong{width:100%}
+  .site-jump-nav a{font-size:.85rem}
+  .site-detail-toggle,.site-detail-copy{display:block}
+  body[data-weather-details="collapsed"] .climate-section,
+  body[data-weather-details="collapsed"] .signature-section,
+  body[data-weather-details="collapsed"] .records-section{display:none!important}
+  /* Existing compact-dashboard rules reduce some labels below 11px.
+     Keep them readable even at mobile widths. */
+  body.dashboard-page :where(.hero-stat span,.station-status small,.status-label,
+    .local-planning-card .lp-label,.local-planning-card .lp-source,
+    .today-item small,.hero-kicker,.location-label){font-size:max(.78rem,12px)}
+  body.dashboard-page :where(.today-section h2,.section-heading h2){line-height:1.25}
+  main :where(.chart-title h3,.chart-title h2){font-size:clamp(1.1rem,4.5vw,1.45rem)}
+  :where(.archive-day-navigation,.custom,.visitor-tools){row-gap:10px}
+  :where(.archive-day-navigation,.custom,.visitor-tools) button{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+  .site-jump-nav a,.site-detail-toggle{transition:none!important}
+}
