@@ -14,3 +14,5 @@ Scope and caveats
 - No Cloudflare Worker or D1 data mutation; frontend only.
 - Live source availability, notifications, CSV exports, physical Android/iOS rendering and external endpoints require real-device/live tests.
 - GitHub Pages publishes on merging the validated release; do not deploy root worker.mjs.
+
+Release follow-up: restored the Station Weather Underground link's accessible name, corrected the Admin release label and enforced four readable moon-phase columns on 320px phones. PWA cache hotfix1 ensures the revised CSS reaches installed users.
