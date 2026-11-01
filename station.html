@@ -89,7 +89,7 @@
       .storage-meter-copy { flex-direction: column; gap: 3px; }
     }
   </style>
-<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261027-persistence" defer></script><link rel="stylesheet" href="station-page.css?v=20261101-compact-networks"><link rel="stylesheet" href="review-ui.css?v=20261031-visual-consistency"></head>
+<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261027-persistence" defer></script><link rel="stylesheet" href="station-page.css?v=20261101-alerts-review"><link rel="stylesheet" href="review-ui.css?v=20261031-visual-consistency"></head>
 <body>
 <div class="shell">
   <header class="topbar">
@@ -299,6 +299,10 @@
           <div class="alert-setup-item"><strong>Device permission</strong><p class="info-note" id="alertsPermission" aria-live="polite">Permission not requested</p></div>
           <div class="alert-setup-item"><strong>Preferences saved</strong><p class="source-note" id="alertsSaveStatus" role="status" aria-live="polite">Checking local storage…</p></div>
           <div class="alert-setup-item"><strong>Background delivery</strong><p class="source-note" id="backgroundAlertStatus" role="status" aria-live="polite">Checking background delivery…</p></div>
+        </div>
+        <div class="alert-test-row">
+          <button id="alertsTestButton" class="secondary-button" type="button">Send test notification</button>
+          <p id="alertsTestStatus" class="source-note" role="status" aria-live="polite">A test checks display on this device; it does not confirm background push delivery.</p>
         </div>
         <div class="alert-options">
           <label><input id="alertRainStart" type="checkbox"> <span><strong>Rain starting</strong><small>Notify when rainfall is confirmed: at least 0.2 mm in 20 minutes while rain remains active, or a rate of 2.5 mm/h or higher.</small></span></label>
@@ -656,7 +660,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<script src="offline.js?v=20261010-v38-4-190"></script><script src="notification-storage.js?v=20261027-persistence"></script><script src="alert-settings.js?v=20261029-v38-4-234-audit"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="maintenance-log.js?v=20261026-v38-4-232"></script><script src="station-page.js?v=20261027-v38-4-232"></script><script src="station-v2.js?v=20261010-v38-4-196"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="offline.js?v=20261010-v38-4-190"></script><script src="notification-storage.js?v=20261027-persistence"></script><script src="alert-settings.js?v=20261029-v38-4-234-audit"></script><script src="notification-test.js?v=20261101"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="maintenance-log.js?v=20261026-v38-4-232"></script><script src="station-page.js?v=20261027-v38-4-232"></script><script src="station-v2.js?v=20261010-v38-4-196"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20261008-v38-4-170"></script>
 <script src="pwa-diagnostics.js?v=20261006-v38-4-144"></script>
 <script src="accessibility.js?v=20260924-v38-4-97"></script>
