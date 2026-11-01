@@ -369,6 +369,59 @@ if (!stationNetworksHtml.includes("Linked weather networks may use their own ter
   failures.push("station.html: explain the difference between approximate site elevation and network estimates");
 }
 
+
+/* November 2026 visitor experience regression checks. */
+const visitorDashboard = await readFile(join(root, "index.html"), "utf8");
+const visitorOrder = [
+  'class="hero-main-card"',
+  'class="station-bar"',
+  'class="today-section"',
+  'class="local-planning"',
+  'class="metrics-section"',
+  'class="forecast-section"',
+  'class="today-sky-panel"'
+].map(marker => visitorDashboard.indexOf(marker));
+if (visitorOrder.some(pos => pos < 0) || visitorOrder.some((pos, i) => i > 0 && pos <= visitorOrder[i-1])) {
+  failures.push("index.html: core live weather must appear before optional Dashboard features");
+}
+const visitorStyles = await readFile(join(root, "review-ui.css"), "utf8");
+if (!visitorStyles.includes("--ui-small-text: .8125rem") || !visitorStyles.includes("body.dashboard-page .hero-stat span")) {
+  failures.push("review-ui.css: shared readable type scale missing");
+}
+const visitorStation = await readFile(join(root, "station.html"), "utf8");
+for (const id of ["alertsPermission", "alertsSaveStatus", "backgroundAlertStatus", "alertsTestButton", "alertsTestStatus"]) {
+  if (!visitorStation.includes('id="' + id + '"')) failures.push("station.html: missing notification diagnostic " + id);
+}
+if (!visitorStation.includes("notification-test.js?v=20261101")) {
+  failures.push("station.html: notification test script must be included");
+}
+const visitorNotificationTest = await readFile(join(root, "notification-test.js"), "utf8");
+if (!visitorNotificationTest.includes('Notification.permission !== "granted"') ||
+    !visitorNotificationTest.includes("Background delivery is not verified.")) {
+  failures.push("notification-test.js: a local display test must not claim push delivery works");
+}
+const visitorGraphs = await readFile(join(root, "graphs.html"), "utf8");
+const visitorGraphScript = await readFile(join(root, "graphs.js"), "utf8");
+if (!visitorGraphs.includes('class="graph-data-note"') || !visitorGraphScript.includes("Chart.defaults.font.size=13")) {
+  failures.push("graphs: readable labels and missing-data note required");
+}
+const visitorMonthly = await readFile(join(root, "monthly.html"), "utf8");
+const visitorAnnual = await readFile(join(root, "annual.html"), "utf8");
+if (visitorMonthly.indexOf('id="reportCoverageNote"') < 0 ||
+    visitorMonthly.indexOf('id="reportCoverageNote"') > visitorMonthly.indexOf('id="meanTemp"') ||
+    !visitorAnnual.includes('class="monthly-note report-coverage-emphasis"')) {
+  failures.push("monthly/annual reports: archive coverage must be visible near the overview");
+}
+const visitorDownloads = await readFile(join(root, "downloads.js"), "utf8");
+if (!visitorDownloads.includes("The export check timed out") ||
+    !visitorDownloads.includes("There are no saved observations")) {
+  failures.push("downloads.js: actionable large-export error handling missing");
+}
+const visitorServiceWorker = await readFile(join(root, "service-worker.js"), "utf8");
+if (!visitorServiceWorker.includes('"./notification-test.js"')) {
+  failures.push("service-worker.js: include notification-test.js in the offline app release");
+}
+
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exitCode = 1;
