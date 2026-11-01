@@ -88,3 +88,16 @@ test('moon phase labels stay readable on compact phones',async({page})=>{
  expect(result.font).toBeGreaterThanOrEqual(12);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2)).toBe(true);
 });
+
+test('compact mobile dashboard keeps live status and daily summary before optional planning',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/index.html',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>document.body.classList.contains('compact-dashboard')&&!!document.querySelector('#dashboardOptionalSections>.today-section'));
+ const positions=await page.evaluate(()=>{
+  const y=selector=>document.querySelector(selector)?.getBoundingClientRect().top;
+  return {nav:y('#dashboard>.dashboard-shortcuts'),status:y('#dashboard>.station-bar'),today:y('#dashboardOptionalSections>.today-section'),planning:y('#dashboard>.local-planning')};
+ });
+ for(const [a,b] of [['nav','status'],['status','today'],['today','planning']]){
+  expect(positions[a],a+' must be above '+b).toBeLessThan(positions[b]);
+ }
+});

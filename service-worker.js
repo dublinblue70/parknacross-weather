@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-237-moon-mobile-legibility-20261101";
+const CACHE_NAME = "parknacross-v38-4-237-mobile-layout-sequence-20261101";
 const STATIC_ASSETS = [
   "./notification-storage.js",
   "./radar-analysis-worker.js",
