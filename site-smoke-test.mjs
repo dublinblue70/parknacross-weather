@@ -355,7 +355,7 @@ if (!stationNetworksHtml.includes('aria-labelledby="stationExternalNetworksHeadi
 }
 const expectedStationNetworks = [
   ["stationWeatherUndergroundLink", "https://www.wunderground.com/dashboard/pws/IARDAM6"],
-  ["stationWeathercloudLink", "https://app.weathercloud.net/map?lat=52.62&amp;lon=-6.24&amp;zoom=11&amp;layer=device"],
+  ["stationWeathercloudLink", "https://app.weathercloud.net/d3781994059"],
   ["stationWindyLink", "https://www.windy.com/station/pws-hdC7VHGr"],
 ];
 for (const [id, url] of expectedStationNetworks) {
