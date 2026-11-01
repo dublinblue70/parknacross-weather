@@ -116,3 +116,77 @@ body.dashboard-page .hero-stat>small{margin-top:auto}
   .review-panel .review-table { font-size: .85rem; }
   .page-hero { min-width: 0; }
 }
+
+
+/* 1 Nov 2026 — accessible mobile type scale and consistent interactive controls.
+   Keep the existing navy/cyan weather palette; improve the smallest supporting text. */
+:root {
+  --ui-small-text: .8125rem;   /* 13px with a 16px root */
+  --ui-label-text: .875rem;    /* 14px */
+  --ui-body-text: 1rem;       /* 16px */
+}
+body .source-note, body .section-eyebrow, body .status-label,
+body .station-health-item small, body .station-spec > span,
+body .station-external-network p {
+  font-size: max(var(--ui-small-text), 13px);
+  line-height: 1.5;
+}
+body.dashboard-page .hero-stat span,
+body.dashboard-page .hero-stat small,
+body.dashboard-page .today-item > span,
+body.dashboard-page .today-item small,
+body.dashboard-page .station-status .status-label,
+body.dashboard-page .station-status small,
+body.dashboard-page .local-planning-card .lp-label,
+body.dashboard-page .local-planning-card .lp-source,
+body.dashboard-page .section-eyebrow,
+body.dashboard-page .source-note {
+  font-size: max(var(--ui-small-text), 13px);
+  line-height: 1.45;
+  letter-spacing: normal;
+}
+body.dashboard-page .sun-phase-track li,
+body.dashboard-page .moon-phase-track li,
+body.dashboard-page .season-markers span,
+body.dashboard-page .season-markers strong,
+body.dashboard-page .astronomy-note {
+  font-size: max(.75rem, 12px);
+  line-height: 1.35;
+}
+body.rain-page .rain-day-badge,
+body.rain-page .rain-day-date,
+body.rain-page .rain-day-value small,
+body.rain-page .rain-day-missing .rain-day-value,
+body.rain-page .rain-table-scroll thead th,
+body.rain-page .rain-table-scroll caption {
+  font-size: max(var(--ui-small-text), 13px);
+  line-height: 1.4;
+}
+:where(.dashboard-shortcuts,.station-jumps,.station-external-networks,.rain-page,.graph-range-controls)
+  :is(a,button,summary) { -webkit-tap-highlight-color: transparent; }
+@media (max-width: 760px) {
+  body.dashboard-page .dashboard-shortcuts a,
+  body.dashboard-page .local-planning-card button,
+  body.dashboard-page .local-planning-card a,
+  body.rain-page .rain-daily-more,
+  .station-jumps a,
+  .station-external-network-link {
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  body.dashboard-page .dashboard-shortcuts a { font-size: .875rem; }
+  body.dashboard-page .summary-line,
+  body.dashboard-page .condition-line,
+  body.dashboard-page .local-planning-card .lp-context,
+  body.dashboard-page .local-planning-card .lp-summary {
+    font-size: .875rem;
+    line-height: 1.5;
+  }
+  body.dashboard-page .today-item,
+  body.dashboard-page .hero-stat,
+  body.dashboard-page .station-status { min-width: 0; }
+  :where(.page-section,.review-panel,.station-page-hero)
+    :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea) {
+      font-size: 1rem;
+    }
+}
