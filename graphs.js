@@ -66,6 +66,7 @@
  }
  Chart.defaults.color="#bfd0e3";
  Chart.defaults.font.family="Inter,system-ui,sans-serif";
+ Chart.defaults.font.size=13; // readable axes and legends on touch screens
  const common={maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{tooltip:{callbacks:{title:tooltipTime}}}};
  charts.t=new Chart($("gTemp"),{type:"line",data:{datasets:[line("Temperature","#ff8d8d"),line("Dew point","#6ef1cb")]},options:{...common,scales:scales("°C"),plugins:{...common.plugins,legend:{position:"bottom"}}}});
  charts.w=new Chart($("gWind"),{
