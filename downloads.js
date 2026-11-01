@@ -35,7 +35,17 @@ async function downloadUrl(url,label,button,description){
     const anchor=document.createElement("a");anchor.href=objectUrl;anchor.download=`parknacross-weather-${label}-${safeDate()}.csv`;document.body.appendChild(anchor);anchor.click();anchor.remove();
     setTimeout(()=>URL.revokeObjectURL(objectUrl),1500);
     status(`CSV ready: ${description} · ${soilRows.toLocaleString("en-IE")} soil rows · ${lightningRows.toLocaleString("en-IE")} lightning rows.`,"good");
-  }catch(error){console.warn("Weather archive download:",error);status(error.message==="Date range exceeds 365 days"?"Choose a range of 365 days or fewer.":error.message==="Date range is outside available archive coverage"?"Choose dates within the available archive coverage.":"Download failed. Please check the dates and try again.","bad");}
+  }catch(error){
+    console.warn("Weather archive download:",error);
+    const message=error?.message||"";
+    const guidance=message==="Date range exceeds 365 days"?"Choose a range of 365 days or fewer."
+      :message==="Date range is outside available archive coverage"?"Choose dates within the available archive coverage."
+      :message==="No saved readings in this period"?"There are no saved observations in this date range. Choose another period."
+      :message==="Export preview failed"?"The export preview could not be confirmed. Retry, or select a shorter period in the custom date range."
+      :error?.name==="TimeoutError"||error?.name==="AbortError"?"The export check timed out. Please retry or use a shorter date range."
+      :"Download failed. Please check the dates and try again.";
+    status(guidance,"bad");
+  }
   finally{if(button){button.disabled=false;button.textContent=original;}}
 }
 function download(days,label,button){const n=Math.max(1,Math.min(365,Math.floor(Number(days)||1))),query=new URLSearchParams({days:String(n)});if(n<=30)query.set("fresh","1");return downloadUrl(`${API}?${query}`,label,button,`${n}-day download`);}
