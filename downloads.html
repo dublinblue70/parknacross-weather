@@ -95,7 +95,7 @@
     <h2 id="customRangeHeading">Choose a date range</h2>
     <p>Export any period of up to 365 days from the archive.</p>
     <div class="custom"><label for="exportFrom">From</label><input type="date" id="exportFrom" required><label for="exportTo">To</label><input type="date" id="exportTo" required><button type="button" class="button" id="customExportButton">Download date range CSV</button><button type="button" class="button" id="previewCustomExport">Preview date range</button></div>
-    <p class="range-hint" id="customRangeLimit">Irish local dates are used. The range can include up to 365 days.</p>
+    <p class="range-hint" id="customRangeLimit">Irish local dates are used. The range can include up to 365 days. For very large exports, check your browser’s downloads list after the request; if it fails, try smaller consecutive date ranges. Missing observations are not filled in.</p>
   </section>
   <div id="downloadStatus" class="status" aria-live="polite"></div>
   <div class="note">CSV downloads list the newest observations first and include readable Irish-local times, weather, WS90 battery, garden-soil and genuine lightning-event fields. The observation epoch is retained for technical analysis; the confusing raw lightning epoch is not exported. Soil columns are blank before the soil sensor was installed, and lightning columns are blank when no strike was detected—missing values are never changed to zero. Choose 7, 30, 90 or 365 days; every file includes all observations actually available within that period.</div>
