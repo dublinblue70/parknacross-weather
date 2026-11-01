@@ -76,3 +76,15 @@ test('public pages fit both compact phones and tablets',async({page})=>{
   }
  }
 });
+
+test('moon phase labels stay readable on compact phones',async({page})=>{
+ await page.setViewportSize({width:320,height:900});
+ await page.goto('/index.html',{waitUntil:'domcontentloaded'});
+ const result=await page.locator('.moon-phase-track').evaluate(el=>({
+  columns:getComputedStyle(el).gridTemplateColumns.split(' ').length,
+  font:parseFloat(getComputedStyle(el.querySelector('li')).fontSize)
+ }));
+ expect(result.columns).toBe(4);
+ expect(result.font).toBeGreaterThanOrEqual(12);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2)).toBe(true);
+});

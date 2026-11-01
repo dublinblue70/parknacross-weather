@@ -446,3 +446,19 @@ body.dashboard-page #livePill #liveText {
     font-size: .78rem;
   }
 }
+
+/* 1 Nov 2026: moon phase mobile legibility.
+   Eight 8.5px labels in one row were hard to read on narrow phones. */
+@media(max-width:640px){
+  body.dashboard-page .moon-phase-track {
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:6px;
+  }
+  body.dashboard-page .moon-phase-track li,
+  body.dashboard-page .sun-phase-track li {
+    font-size:.75rem;
+    line-height:1.35;
+    overflow-wrap:anywhere;
+  }
+  body.dashboard-page .moon-phase-track li { padding:8px 4px; }
+}
