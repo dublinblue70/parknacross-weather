@@ -44,3 +44,17 @@ test('major pages stay within the viewport on desktop',async({page})=>{
   expect(state.scrollWidth,path+' must not overflow at laptop widths').toBeLessThanOrEqual(state.viewport+2);
  }
 });
+
+
+test('Station page Weather Underground link is readable and opens the local PWS map',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/station.html');
+ const link=page.getByRole('link',{name:/View on Weather Underground/});
+ await expect(link).toBeVisible();
+ await expect(link).toHaveAttribute('target','_blank');
+ await expect(link).toHaveAttribute('rel',/noopener/);
+ await expect(link).toHaveAttribute('href',/www\.wunderground\.com\/wundermap\/\?lat=52\.6/);
+ const box=await link.boundingBox();
+ expect(box.height).toBeGreaterThanOrEqual(44);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2)).toBe(true);
+});
