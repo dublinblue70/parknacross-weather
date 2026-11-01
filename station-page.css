@@ -143,3 +143,18 @@
 @media (max-width: 850px) {
   .alert-setup-grid { grid-template-columns: 1fr; gap: 8px; }
 }
+
+
+/* Test notification control: local display does not imply background delivery. */
+.alert-test-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: -6px 0 18px;
+}
+.alert-test-row button { min-height: 44px; flex-shrink: 0; }
+.alert-test-row p { margin: 0; flex: 1 1 250px; font-size: .875rem; line-height: 1.5; }
+@media(max-width:600px) {
+  .alert-test-row button { width: 100%; }
+}
