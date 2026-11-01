@@ -190,3 +190,23 @@ body.rain-page .rain-table-scroll caption {
       font-size: 1rem;
     }
 }
+
+
+/* Report coverage and chart confidence: distinguish observed data from gaps. */
+.report-coverage-emphasis {
+  display: block;
+  margin: 14px 0 5px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  font-size: .9rem;
+  line-height: 1.55;
+  font-weight: 600;
+}
+.graph-data-note {
+  margin: 8px 0 0;
+  color: var(--ui-supporting-text, #b7cbd8);
+  font-size: .875rem;
+  line-height: 1.5;
+}
