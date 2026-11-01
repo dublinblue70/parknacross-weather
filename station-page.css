@@ -18,7 +18,30 @@
 .station-fold>summary{cursor:pointer;font-weight:650;min-height:44px;padding:12px 0;line-height:1.5}.station-fold[open]>summary{margin-bottom:16px;border-bottom:1px solid var(--line)}
 .station-maintenance-preview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}.station-maintenance-preview article{padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}.station-maintenance-preview time{display:block;font-size:.83rem;color:var(--muted)}.station-entry-type{display:block;margin-top:10px;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:#93c9cf}.station-maintenance-preview h3{font-size:.97rem;line-height:1.5;margin:6px 0 10px}.station-maintenance-preview a{display:inline-flex;min-height:44px;align-items:center;font-size:.85rem}
 #meetSensors,#understandingReadings,#stationReliability,#stationMaintenance,#stationTechnical{scroll-margin-top:100px}
-@media(max-width:750px){.station-sensor-layout{grid-template-columns:1fr}.station-sensor-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.station-maintenance-preview{grid-template-columns:1fr}.station-health-bar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Align the four sensor cards to the illustration itself, not to its caption.
+   Subgrid lets the illustration define the first row's exact height. */
+@media (min-width: 1001px) {
+  .station-sensor-layout {
+    grid-template-rows: minmax(0,auto) auto;
+    row-gap: 0;
+    align-items: stretch;
+  }
+  .station-schematic {
+    display: grid;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    grid-template-rows: subgrid;
+  }
+  .station-schematic svg { grid-row: 1; }
+  .station-schematic figcaption { grid-row: 2; }
+  .station-sensor-buttons {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: stretch;
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+  }
+}
+@media(max-width:1000px){.station-sensor-layout{grid-template-columns:1fr}.station-sensor-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.station-maintenance-preview{grid-template-columns:1fr}.station-health-bar{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.station-context-grid,.station-reliability-grid{grid-template-columns:1fr}.station-sensor-buttons button{padding:12px}.station-sensor-buttons button small{font-size:.73rem}.station-sensor-detail{padding:16px}}
 @media(prefers-reduced-motion:reduce){.station-schematic [class^=station-drawing-]{transition:none}}
 
