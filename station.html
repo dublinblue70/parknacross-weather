@@ -89,7 +89,7 @@
       .storage-meter-copy { flex-direction: column; gap: 3px; }
     }
   </style>
-<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261027-persistence" defer></script><link rel="stylesheet" href="station-page.css?v=20261101-wunderground-station-link"><link rel="stylesheet" href="review-ui.css?v=20261031-visual-consistency"></head>
+<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261027-persistence" defer></script><link rel="stylesheet" href="station-page.css?v=20261101-compact-networks"><link rel="stylesheet" href="review-ui.css?v=20261031-visual-consistency"></head>
 <body>
 <div class="shell">
   <header class="topbar">
@@ -134,29 +134,36 @@
       <div class="station-health-item"><span>Approximate elevation</span><strong>25 m above sea level</strong><small>Irish local dates and times</small></div>
     </section>
 
-    <aside class="station-external-network" aria-label="Weather Underground station map">
-      <div>
-        <strong>Weather Underground</strong>
-        <p>View the Parknacross Weather station’s observations and history on Weather Underground.</p>
+    <section class="station-external-networks" aria-labelledby="stationExternalNetworksHeading">
+      <div class="station-external-networks-intro">
+        <span class="section-eyebrow">On other weather networks</span>
+        <h2 id="stationExternalNetworksHeading">Explore Parknacross elsewhere</h2>
+        <p>See our observations on other weather platforms. Update times may differ between services.</p>
       </div>
-      <a class="station-external-network-link" id="stationWeatherUndergroundLink" href="https://www.wunderground.com/dashboard/pws/IARDAM6" target="_blank" rel="noopener noreferrer">View on Weather Underground <span aria-hidden="true">↗</span></a>
-    </aside>
-
-    <aside class="station-external-network" aria-label="Weathercloud station map">
-      <div>
-        <strong>Weathercloud</strong>
-        <p>Explore weather stations and observations around Parknacross on Weathercloud.</p>
+      <div class="station-external-network-list">
+        <article class="station-external-network" aria-labelledby="stationWeatherUndergroundTitle">
+          <div>
+            <h3 id="stationWeatherUndergroundTitle">Weather Underground</h3>
+            <p>Parknacross station observations, charts and history.</p>
+          </div>
+          <a class="station-external-network-link" id="stationWeatherUndergroundLink" href="https://www.wunderground.com/dashboard/pws/IARDAM6" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Weather Underground (opens in a new tab)">View on Weather Underground <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="station-external-network" aria-labelledby="stationWeathercloudTitle">
+          <div>
+            <h3 id="stationWeathercloudTitle">Weathercloud</h3>
+            <p>Explore weather stations and observations around Parknacross.</p>
+          </div>
+          <a class="station-external-network-link" id="stationWeathercloudLink" href="https://app.weathercloud.net/map?lat=52.62&amp;lon=-6.24&amp;zoom=11&amp;layer=device" target="_blank" rel="noopener noreferrer" aria-label="Explore the Parknacross area on Weathercloud's map (opens in a new tab)">Explore Weathercloud map <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="station-external-network" aria-labelledby="stationWindyTitle">
+          <div>
+            <h3 id="stationWindyTitle">Windy.com</h3>
+            <p>Parknacross observations on Windy’s interactive weather map.</p>
+          </div>
+          <a class="station-external-network-link" id="stationWindyLink" href="https://www.windy.com/station/pws-hdC7VHGr" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Windy.com (opens in a new tab)">View on Windy.com <span aria-hidden="true">↗</span></a>
+        </article>
       </div>
-      <a class="station-external-network-link" id="stationWeathercloudLink" href="https://app.weathercloud.net/map?lat=52.6&amp;lon=-6.3&amp;zoom=11&amp;layer=device" target="_blank" rel="noopener noreferrer">View on Weathercloud <span aria-hidden="true">↗</span></a>
-    </aside>
-
-    <aside class="station-external-network" aria-label="Windy.com station observations">
-      <div>
-        <strong>Windy.com</strong>
-        <p>View Parknacross Weather observations on Windy’s interactive weather map.</p>
-      </div>
-      <a class="station-external-network-link" id="stationWindyLink" href="https://www.windy.com/station/pws-hdC7VHGr" target="_blank" rel="noopener noreferrer">View on Windy.com <span aria-hidden="true">↗</span></a>
-    </aside>
+    </section>
 
     <section class="page-section info-card" id="meetSensors" aria-labelledby="meetSensorsHeading">
       <div class="section-heading"><div><span class="section-eyebrow">Local observations</span><h2 id="meetSensorsHeading">Meet the sensors</h2><p>Hover, focus or tap a sensor to see what it contributes to the website.</p></div></div>
