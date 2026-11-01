@@ -1,0 +1,16 @@
+Parknacross Weather v38.4.239 — site-wide accessibility and usability refresh
+1 November 2026
+
+Changes
+- Common typography, readable mobile labels, unified colours, focus states and touch targets across 23 pages.
+- Mobile Dashboard progressively reveals climate context and records without hiding live measurements, forecast, soil or graphs.
+- Graph category quick navigation, measured/radar/forecast rain glossary, History day-navigation guidance, download row-capacity hint and context on sources and archive records.
+- Remove broken exposure-history.js references from Station, Records, Maintenance and Admin; remove missing asset from PWA precache.
+- Bound initial PWA static caching to 12 concurrent requests; cache essential presentation resources first.
+- Extend release smoke tests to catch missing local assets, shared CSS and semantic hooks.
+- Improve shared observation, rain and model-data definitions.
+
+Scope and caveats
+- No Cloudflare Worker or D1 data mutation; frontend only.
+- Live source availability, notifications, CSV exports, physical Android/iOS rendering and external endpoints require real-device/live tests.
+- GitHub Pages publishes on merging the validated release; do not deploy root worker.mjs.

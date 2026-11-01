@@ -1,6 +1,6 @@
 # Parknacross Weather — shared data definitions
 
-Updated 29 October 2026. Apply these definitions consistently in the
+Updated 1 November 2026. Apply these definitions consistently in the
 Dashboard, Summary, Rain Centre, History, Records, reports and downloads.
 
 | Term | Meaning |
@@ -36,3 +36,14 @@ silently rewrite source records to match other pages.
 
 This file documents visitor-facing definitions; it does not prove that the
 current live Cloudflare deployment implements every rule identically.
+
+## Source labels used in the interface
+
+- **Station detected / Observed locally:** physical WS90/GW3001 or garden sensor measurements; give the actual observation time and flag stale data. Zero measured rain is not proof of no drizzle.
+- **Radar echoes:** remote radar evidence of precipitation aloft or near the location, not a guaranteed observation at ground level.
+- **Forecast:** model output for a future period, never presented as a station reading.
+- **Estimated:** modelled local sea temperature and any derived planning index; do not call a model estimate a measured local value.
+- **Rain count:** the Dashboard's "days with rain >0 mm" is an *any recorded rain* count; Monthly/Annual Reports using "wet days" refer to **≥0.2 mm**. Keep those labels distinct.
+- **Exports:** every data row represents a saved observation; never invent missing slots. A full 365-day year at five-minute intervals has approximately 105,120 slots (DST and leap-year details can alter coverage); CSV preview reports the authoritative saved count.
+
+A viewer should be able to tell whether a figure is observed, forecast, estimated, or temporarily unavailable without needing to read developer documentation.

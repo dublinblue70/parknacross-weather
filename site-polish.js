@@ -49,8 +49,7 @@
         const desc = element("p", "site-detail-copy",
           "Live conditions and weather graphs remain visible. Open these additional panels when you need more detail.");
         climate.before(toggle, desc);
-        const expandedForLink = lower.some(section => location.hash === "#" + section.id ||
-          (location.hash && section.querySelector(location.hash)));
+        const expandedForLink = lower.some(section => location.hash === "#" + section.id || (location.hash && section.contains(document.getElementById(decodeURIComponent(location.hash.slice(1))))));
         const setExpanded = expanded => {
           document.body.dataset.weatherDetails = expanded ? "expanded" : "collapsed";
           toggle.setAttribute("aria-expanded", String(expanded));
@@ -61,8 +60,7 @@
         setExpanded(expandedForLink);
         toggle.addEventListener("click", () => setExpanded(toggle.getAttribute("aria-expanded") !== "true"));
         window.addEventListener("hashchange", () => {
-          if (lower.some(section => location.hash && (location.hash === "#" + section.id ||
-            section.querySelector(location.hash)))) setExpanded(true);
+          if (lower.some(section => location.hash && (location.hash === "#" + section.id || section.contains(document.getElementById(decodeURIComponent(location.hash.slice(1))))))) setExpanded(true);
         });
       }
     }
