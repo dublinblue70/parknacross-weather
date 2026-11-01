@@ -1,6 +1,7 @@
-const CACHE_NAME = "parknacross-v38-4-237-ux-evidence-20261101";
+const CACHE_NAME = "parknacross-v38-4-238-visitor-review-20261101";
 const STATIC_ASSETS = [
   "./notification-storage.js",
+  "./notification-test.js",
   "./radar-analysis-worker.js",
   "./exposure-history.js",
   "./feature-health.js",
