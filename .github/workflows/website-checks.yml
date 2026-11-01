@@ -22,4 +22,13 @@ jobs:
       - run: npm run test:release
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:release-browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: responsive-visual-evidence
+          path: |
+            test-results/**/*.png
+            test-results/**/*.jpg
+          if-no-files-found: ignore
+          retention-days: 14
       - run: npm run test:pwa-browser

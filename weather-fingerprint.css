@@ -22,3 +22,20 @@
 @media print{.fingerprint-scroll{overflow:visible}.fingerprint-grid{min-width:0}.fingerprint-controls,.fingerprint-scroll-hint{display:none}}
 
 .fingerprint-day,.fingerprint-blank{width:min(100%,28px);height:auto;justify-self:center}
+
+/* Mobile readability without enlarging the entire page or breaking the grid.
+   The mosaic scrolls within its own container; focus/selected states remain visible. */
+@media(max-width:850px){
+ .fingerprint-grid{min-width:1090px}
+ .fingerprint-day,.fingerprint-blank{width:min(100%,32px)}
+ .fingerprint-scroll{scroll-padding-inline:12px;-webkit-overflow-scrolling:touch}
+ .fingerprint-numbers span{font-size:.75rem}
+ .fingerprint-month,.fingerprint-key,.fingerprint-guide,.fingerprint-scroll-hint{font-size:.83rem;line-height:1.55}
+ .fingerprint-detail{min-width:0}
+ .fingerprint-selected p,.fingerprint-selected a{font-size:.84rem;line-height:1.5}
+ .fingerprint-values dt{font-size:.79rem}
+}
+@media(max-width:450px){
+ .fingerprint-detail{flex-wrap:wrap;align-items:start}
+ .fingerprint-selected{flex:1 1 220px}
+}
