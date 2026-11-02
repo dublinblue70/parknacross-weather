@@ -17,7 +17,7 @@
     <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20261010-v38-4-195" />
+    <link rel="stylesheet" href="styles.css?v=20261102-history-inspector-1" />
     <title>
       Ardamine Weather History | Rainfall &amp; Records, North Wexford
     </title>
@@ -127,6 +127,9 @@
               <div class="chart-wrap">
                 <canvas id="dailyTempChart"></canvas>
               </div>
+              <div id="temperatureChartInspector" class="history-chart-inspector" role="status" aria-live="polite" hidden>
+                Tap a date on the chart to inspect the daily high, low and archive coverage.
+              </div>
             </article>
             <article class="chart-card">
               <div class="chart-title">
@@ -138,6 +141,9 @@
               </div>
               <div class="chart-wrap">
                 <canvas id="dailyRainChart"></canvas>
+              </div>
+              <div id="rainfallChartInspector" class="history-chart-inspector" role="status" aria-live="polite" hidden>
+                Tap a date on the chart to inspect rainfall and archive coverage.
               </div>
             </article>
           </div>
@@ -356,7 +362,7 @@
 
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="archive-quality.js?v=20261008-v38-4-170"></script>
-<script src="maintenance-log.js?v=20261026-v38-4-232"></script><script src="maintenance-markers.js?v=20261009-v38-4-173"></script><script src="history-links.js?v=20261008-v38-4-170"></script><script src="history.js?v=20261029-v38-4-234-audit"></script>
+<script src="maintenance-log.js?v=20261026-v38-4-232"></script><script src="maintenance-markers.js?v=20261009-v38-4-173"></script><script src="history-links.js?v=20261008-v38-4-170"></script><script src="history.js?v=20261102-history-inspector-1"></script>
     <script src="site-config.js?v=20261010-v38-4-188"></script>
     <script src="date-comparison.js?v=20261010-v38-4-188"></script>
     <!-- Cloudflare Web Analytics -->
