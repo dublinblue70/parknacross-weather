@@ -2612,3 +2612,22 @@ footer > .footer-links a:focus-visible {
   background: #91a9b6;
   box-shadow: 0 0 0 5px rgba(145,169,182,.09);
 }
+
+/* History archive: tap-friendly chart readings without covering mobile graphs. */
+.history-chart-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(116,221,255,.055);
+  color: var(--text);
+  font-size: .86rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.history-chart-inspector[hidden] { display: none; }
+.history-chart-inspector strong { font-size: .9rem; }
+.history-chart-inspector small { color: var(--muted); font-size: .78rem; }
