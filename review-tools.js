@@ -15,7 +15,31 @@
   async function load(){retry.disabled=true;grid.replaceChildren();try{const c=await get('/current'),at=c.received_at||(Number(c.epoch)*1000);if(!fresh(at))throw Error('No fresh reading');status.textContent='Observed '+stamp(at)+' Irish time';for(const [label,key,unit] of [['Temperature','temperature_c','°C'],['Wind','wind_speed_kmh','km/h'],['Rain today','rain_daily_mm','mm'],['Pressure','pressure_hpa','hPa']]){const cell=node('div'),v=c[key];cell.append(node('span',label),node('strong',v===null||v===undefined||v===''?'Unavailable':Number(v).toFixed(1)+' '+unit));grid.append(cell);}}catch{status.textContent='No verified recent station reading. Open the dashboard for dated saved observations.';}finally{retry.disabled=false;}}retry.addEventListener('click',load);load();
  }
  function offlineAge(){if(page!=='offline.html')return;const p=panel('Last saved observation','offlineObservation');try{const saved=JSON.parse(localStorage.getItem('parknacross.dashboard.current.v1')||'null'),v=saved?.value,at=v?.received_at||(v?.epoch?Number(v.epoch)*1000:null);p.append(node('p',at?'Observed '+stamp(at)+' Irish time · '+Math.max(0,Math.floor((Date.now()-new Date(at).getTime())/60000))+' minutes old. These are saved readings, not live weather.':'No observation is saved on this browser.'),node('p',saved?.saved_at?'Last local save: '+stamp(saved.saved_at)+' Irish time.':'Last sync time is unavailable.','review-note'));}catch{p.append(node('p','Saved observation could not be read.'));}document.querySelector('main').append(p);}
- function chartTables(){if(!window.Chart)return;const mounted=new WeakMap();let scheduled=false;const render=chart=>{if(!chart.canvas?.isConnected)return;let d=mounted.get(chart);if(!d){d=node('details',undefined,'review-table-tools');d.append(node('summary','View chart values as a table'));chart.canvas.closest('.wind-rose-wrap,.chart-wrap,.chart-container')?.after(d);if(!d.isConnected)chart.canvas.parentElement.after(d);mounted.set(chart,d);d.addEventListener('toggle',()=>{if(d.open)fill(chart,d);});}if(d.open)fill(chart,d);};
+ function chartTables(){if(!window.Chart)return;
+  // The canvas is stable when Chart.js instances are destroyed and recreated.
+  // Key table controls by canvas, not chart instance, to avoid duplicate links.
+  const mounted=new WeakMap();let scheduled=false;
+  const render=chart=>{
+   const canvas=chart.canvas;if(!canvas?.isConnected)return;
+   const host=canvas.closest('.wind-rose-wrap,.chart-wrap,.chart-container')||canvas.parentElement;
+   if(!host)return;
+   let d=mounted.get(canvas);
+   if(!d?.isConnected){
+    const sibling=host.nextElementSibling;
+    d=sibling?.classList.contains('review-table-tools')?sibling:null;
+    if(!d){d=node('details',undefined,'review-table-tools');d.append(node('summary','View chart values as a table'));host.after(d);}
+    mounted.set(canvas,d);
+    if(d.dataset.reviewTableBound!=='true'){
+     d.dataset.reviewTableBound='true';
+     d.addEventListener('toggle',()=>{
+      // Always read the active chart; the previous instance may be destroyed.
+      const current=Chart.getChart(canvas)||(canvas.id?Chart.getChart(canvas.id):null);
+      if(d.open&&current)fill(current,d);
+     });
+    }
+   }
+   if(d.open)fill(chart,d);
+  };
   function fill(chart,d){d.querySelector('.review-table-wrap')?.remove();const wrap=node('div',undefined,'review-table-wrap'),table=node('table',undefined,'review-table'),caption=node('caption','Values in the chart. Missing readings are shown as —. Units follow the chart labels.'),head=node('thead'),hr=node('tr'),body=node('tbody'),sets=chart.data.datasets||[];hr.append(node('th','Date / interval'));for(const s of sets)hr.append(node('th',s.label||'Value'));head.append(hr);table.append(caption,head,body);
    const length=Math.max(0,...sets.map(s=>s.data?.length||0));for(let i=0;i<length;i++){const first=sets[0]?.data?.[i],x=typeof first==='object'?first?.x:null,label=x!==null&&x!==undefined?(Number(x)>1e10?stamp(Number(x)):String(x)):String(chart.data.labels?.[i]??i+1),tr=node('tr');tr.append(node('td',label));for(const s of sets){const raw=s.data?.[i],v=raw&&typeof raw==='object'?raw.y:raw;tr.append(node('td',v===null||v===undefined?'—':typeof v==='number'?v.toLocaleString('en-IE',{maximumFractionDigits:3}):String(v)));}body.append(tr);}wrap.append(table);d.append(wrap);
   }
