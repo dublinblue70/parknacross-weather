@@ -61,13 +61,47 @@ function coverageTooltip(items,rows){
   }
   ctx.restore();return lines;
 }
+// On touch devices or narrow charts, keep the canvas clear and put selected
+// readings in an accessible panel directly below each graph instead.
+function historyMobileInspectionEnabled(chart){
+  return chart.width<480||(typeof window.matchMedia==="function"&&window.matchMedia("(hover: none) and (pointer: coarse)").matches);
+}
+function inspectHistoryChart(chart,elements,rows,kind){
+  if(!historyMobileInspectionEnabled(chart)||!elements?.length)return;
+  const selected=rows[elements[0].index],day=selected?.day;
+  const host=$(kind==="temp"?"temperatureChartInspector":"rainfallChartInspector");
+  if(!day||!host)return;
+  const date=document.createElement("strong");
+  date.textContent=longDay(day);
+  const readings=document.createElement("span");
+  const row=selected.row;
+  if(kind==="temp"){
+    const high=usable(row?.high_c)?n(row.high_c)+" °C":"unavailable";
+    const low=usable(row?.low_c)?n(row.low_c)+" °C":"unavailable";
+    readings.textContent="High "+high+" · Low "+low;
+  }else{
+    readings.textContent="Rainfall "+(usable(row?.rain_mm)?n(row.rain_mm)+" mm":"unavailable");
+  }
+  const coverage=coverageRows.get(day),note=document.createElement("small");
+  if(coverage&&usable(coverage.coverage_percent)){
+    const pct=Number(coverage.coverage_percent).toFixed(1);
+    const slots=usable(coverage.actual_slots)&&usable(coverage.expected_slots)?" · "+coverage.actual_slots+"/"+coverage.expected_slots+" saved five-minute slots":"";
+    const scope=coverage.coverage_scope==="since_first_observation"?" since collection began":coverage.day_in_progress?" so far today":"";
+    note.textContent="Archive coverage "+pct+"%"+scope+slots+". Saved readings, not sensor accuracy.";
+  }else note.textContent="Archive coverage unavailable for this date.";
+  host.replaceChildren(date,readings,note);
+}
 function historyChartLayout(chart){
   const mobile=chart.width<480;
   chart.options.scales.x.ticks.maxTicksLimit=mobile?5:10;
   chart.options.scales.x.ticks.maxRotation=0;
   chart.options.scales.x.ticks.minRotation=0;
+  const inspectorMode=historyMobileInspectionEnabled(chart);
+  if(chart.options.plugins?.tooltip)chart.options.plugins.tooltip.enabled=!inspectorMode;
+  const inspector=$(chart.canvas?.id==="dailyTempChart"?"temperatureChartInspector":chart.canvas?.id==="dailyRainChart"?"rainfallChartInspector":null);
+  if(inspector)inspector.hidden=!inspectorMode;
 }
-function renderCharts(){if(!charts.temp||!charts.rain){set("historyChartStatus","The chart library could not load. Archived figures, dates and photographs remain available; reload to restore graphs.");return;}const end=todayKey(),first=dailyRows[0]?.day||end,requestedStart=shiftDayKey(end,1-selectedDays),start=requestedStart<first?first:requestedStart,rows=[];for(let day=start;day<=end;day=shiftDayKey(day,1))rows.push({day,row:dailyMap.get(day)||null});const labels=rows.map(item=>shortDate(item.day)),highs=rows.map(item=>usable(item.row?.high_c)?Number(item.row.high_c):null),lows=rows.map(item=>usable(item.row?.low_c)?Number(item.row.low_c):null),rain=rows.map(item=>usable(item.row?.rain_mm)?Number(item.row.rain_mm):null),missingArchive=rows.filter(item=>!item.row).length,missingTemp=rows.filter(item=>item.row&&!usable(item.row.high_c)&&!usable(item.row.low_c)).length,missingRain=rows.filter(item=>item.row&&!usable(item.row.rain_mm)).length;charts.temp.data.labels=labels;charts.temp.data.datasets[0].data=highs;charts.temp.data.datasets[1].data=lows;charts.temp.options.plugins.tooltip??={};charts.temp.options.plugins.tooltip.callbacks={afterBody:items=>coverageTooltip(items,rows)};historyChartLayout(charts.temp);charts.temp.update();charts.rain.data.labels=labels;charts.rain.data.datasets[0].data=rain;charts.rain.options.plugins.tooltip??={};charts.rain.options.plugins.tooltip.callbacks={afterBody:items=>coverageTooltip(items,rows)};historyChartLayout(charts.rain);charts.rain.update();const gaps=[];if(missingArchive)gaps.push(`${missingArchive} day${missingArchive===1?"":"s"} with no archived summary`);if(missingTemp)gaps.push(`${missingTemp} day${missingTemp===1?"":"s"} without temperature extrema`);if(missingRain)gaps.push(`${missingRain} day${missingRain===1?"":"s"} without rainfall data`);set("historyChartStatus",gaps.length?`${gaps.join(" · ")}. Blank sections are gaps, not zero values.`:"Missing archive values remain blank; rainfall is never substituted with zero.");}
+function renderCharts(){if(!charts.temp||!charts.rain){set("historyChartStatus","The chart library could not load. Archived figures, dates and photographs remain available; reload to restore graphs.");return;}const end=todayKey(),first=dailyRows[0]?.day||end,requestedStart=shiftDayKey(end,1-selectedDays),start=requestedStart<first?first:requestedStart,rows=[];for(let day=start;day<=end;day=shiftDayKey(day,1))rows.push({day,row:dailyMap.get(day)||null});const labels=rows.map(item=>shortDate(item.day)),highs=rows.map(item=>usable(item.row?.high_c)?Number(item.row.high_c):null),lows=rows.map(item=>usable(item.row?.low_c)?Number(item.row.low_c):null),rain=rows.map(item=>usable(item.row?.rain_mm)?Number(item.row.rain_mm):null),missingArchive=rows.filter(item=>!item.row).length,missingTemp=rows.filter(item=>item.row&&!usable(item.row.high_c)&&!usable(item.row.low_c)).length,missingRain=rows.filter(item=>item.row&&!usable(item.row.rain_mm)).length;charts.temp.data.labels=labels;charts.temp.data.datasets[0].data=highs;charts.temp.data.datasets[1].data=lows;charts.temp.options.plugins.tooltip??={};charts.temp.options.plugins.tooltip.callbacks={afterBody:items=>coverageTooltip(items,rows)};charts.temp.options.onClick=(_event,elements,chart)=>inspectHistoryChart(chart,elements,rows,"temp");historyChartLayout(charts.temp);charts.temp.update();charts.rain.data.labels=labels;charts.rain.data.datasets[0].data=rain;charts.rain.options.plugins.tooltip??={};charts.rain.options.plugins.tooltip.callbacks={afterBody:items=>coverageTooltip(items,rows)};charts.rain.options.onClick=(_event,elements,chart)=>inspectHistoryChart(chart,elements,rows,"rain");historyChartLayout(charts.rain);charts.rain.update();const gaps=[];if(missingArchive)gaps.push(`${missingArchive} day${missingArchive===1?"":"s"} with no archived summary`);if(missingTemp)gaps.push(`${missingTemp} day${missingTemp===1?"":"s"} without temperature extrema`);if(missingRain)gaps.push(`${missingRain} day${missingRain===1?"":"s"} without rainfall data`);set("historyChartStatus",gaps.length?`${gaps.join(" · ")}. Blank sections are gaps, not zero values.`:"Missing archive values remain blank; rainfall is never substituted with zero.");}
 function reconcileDailySummary(day,summary){const existing=dailyMap.get(day);if(!existing||!summary)return;const fields=["high_c","low_c","rain_mm","peak_gust_kmh","lightning_strikes","lightning_nearest_km"];let changed=false;const merged={...existing};for(const field of fields)if(usable(summary[field])&&Number(merged[field])!==Number(summary[field])){merged[field]=summary[field];changed=true;}if(!changed)return;dailyMap.set(day,merged);dailyRows=dailyRows.map(row=>row.day===day?merged:row);renderCalendar();renderCharts();renderHeatmap();}
 function recordCoverageNote(value){const day=typeof value==="number"?new Intl.DateTimeFormat("en-CA",{timeZone:TZ}).format(new Date(value*1000)):String(value).slice(0,10),quality=coverageRows.get(day);return quality&&(Number(quality.coverage_percent)<98||quality.coverage_scope==="since_first_observation")?" · partial archive; value is from saved readings":"";}
 function renderStats(stats){set("historyMonthRain",`${n(stats.month_rain_mm)} mm`);const rainDays=usable(stats.month_rain_days)?Number(stats.month_rain_days):null;set("historyMonthRainDays",rainDays===null?"Rain-day count unavailable":`${rainDays} day${rainDays===1?"":"s"} with any recorded rain (more than 0 mm)`);set("historyYearRain",`${n(stats.year_rain_mm)} mm`);set("historySince",dateLabel(stats.first_epoch));set("histSamples",stats.total_samples??"--");if(stats.wettest_day){set("historyWettest",`${n(stats.wettest_day.rain_mm)} mm`);set("historyWettestDate",dateLabel(`${stats.wettest_day.day}T12:00:00Z`)+recordCoverageNote(stats.wettest_day.day));}const r=stats.records||{};if(r.high_temperature){set("histAllHigh",`${n(r.high_temperature.value)} °C`);set("histAllHighDate",dateLabel(r.high_temperature.epoch)+recordCoverageNote(r.high_temperature.epoch));}if(r.low_temperature){set("histAllLow",`${n(r.low_temperature.value)} °C`);set("histAllLowDate",dateLabel(r.low_temperature.epoch)+recordCoverageNote(r.low_temperature.epoch));}if(r.peak_gust){set("histAllGust",`${n(r.peak_gust.value)} km/h`);set("histAllGustDate",dateLabel(r.peak_gust.epoch)+recordCoverageNote(r.peak_gust.epoch));}if(r.high_pressure){set("histAllPressureHigh",`${n(r.high_pressure.value)} hPa`);set("histAllPressureHighDate",`Verified record · ${dateLabel(r.high_pressure.epoch)}`);}else{set("histAllPressureHigh","Building…");set("histAllPressureHighDate","Awaiting verified sea-level reading");}if(r.low_pressure){set("histAllPressureLow",`${n(r.low_pressure.value)} hPa`);set("histAllPressureLowDate",`Verified record · ${dateLabel(r.low_pressure.epoch)}`);}else{set("histAllPressureLow","Building…");set("histAllPressureLowDate","Awaiting verified sea-level reading");}}
