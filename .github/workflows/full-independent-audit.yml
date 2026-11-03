@@ -1,0 +1,51 @@
+name: Full site independent audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/full-independent-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Static page and link checks
+        if: always()
+        continue-on-error: true
+        run: node site-smoke-test.mjs
+      - name: Release and feature tests
+        if: always()
+        continue-on-error: true
+        run: npm run test:release
+      - name: Independent usability and navigation tests
+        if: always()
+        continue-on-error: true
+        run: npm run test:usability
+      - name: Install headless browsers
+        if: always()
+        run: npx playwright install --with-deps chromium webkit
+      - name: Desktop and mobile browser audit
+        if: always()
+        continue-on-error: true
+        run: npm run test:release-browser
+      - name: PWA and offline browser audit
+        if: always()
+        continue-on-error: true
+        run: npm run test:pwa-browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: site-audit-screenshots
+          path: |
+            test-results/**/*.png
+            test-results/**/*.jpg
+          if-no-files-found: ignore
