@@ -2307,7 +2307,7 @@ export default {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.240",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.240",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2570,7 +2570,7 @@ export default {
       }
     }
 
-    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.240",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true}},200,{"Cache-Control":"public, max-age=300"});}
+    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.240",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"public, max-age=300"});}
 
     if(url.pathname==="/met/warnings"){
       if(request.method!=="GET")return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
