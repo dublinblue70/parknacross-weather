@@ -544,7 +544,7 @@ function rainActivity(current) {
   const currentTotal = correctedDailyRain(current);
 
   // Track live cumulative-rain changes between /current refreshes. This catches
-  // light/intermittent WS90 piezo rain even when the instantaneous rate is 0.0.
+  // light/intermittent gauge increments even when the instantaneous rate is 0.0.
   if (usable(currentTotal)) {
     if (lastObservedRainDay !== currentDay) {
       lastObservedRainDay = currentDay;
@@ -589,9 +589,9 @@ function rainActivity(current) {
 
   if (rainRate > 0) lastRainIncreaseTime = currentTime;
 
-  // A single 0.1 mm piezo detection can leave a low calculated rain rate
-  // showing for several minutes. Use a second increment within 20 minutes
-  // before describing light rain as a confirmed local condition.
+  // A single 0.1 mm tipping-bucket increment does not always prove sustained
+  // rain. Check the recent accumulation before describing ongoing light rain
+  // as a confirmed local condition.
   const recentBaseline = rows.find(row => readingTime(row) >= currentTime - 20 * 60 * 1000);
   const recentIncreaseMm = recentBaseline && usable(currentTotal)
     ? Math.max(0, Number(currentTotal) - Number(correctedDailyRain(recentBaseline)))
