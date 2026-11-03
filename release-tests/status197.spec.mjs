@@ -23,7 +23,7 @@ test.beforeEach(async({page})=>{
 });
 const complete=async page=>{await expect(page.locator('#healthProgress')).toContainText('19 of 19');await expect(page.locator('#refreshButton')).toBeEnabled();};
 test('supporting failures have actionable guidance without marking the core weather service down',async({page})=>{
- await page.goto('/status.html');await complete(page);await expect(page.locator('#wh40hBadge')).toHaveText('Healthy');await expect(page.locator('#wh40hValue')).toHaveText('0.0 mm today');await expect(page.locator('#overallTitle')).toHaveText('Core weather services are healthy');await expect(page.locator('#healthAttentionList')).toContainText('Arklow tide feed');await expect(page.locator('#healthAttentionList')).toContainText('Local weather readings are independent');
+ await page.goto('/status.html');await complete(page);await expect(page.locator('#wh40hBadge')).toHaveText('Healthy');await expect(page.locator('#wh40hValue')).toHaveText('0 mm today');await expect(page.locator('#overallTitle')).toHaveText('Core weather services are healthy');await expect(page.locator('#healthAttentionList')).toContainText('Arklow tide feed');await expect(page.locator('#healthAttentionList')).toContainText('Local weather readings are independent');
  await expect(page.locator('#healthCounts')).toContainText('1 need attention');await expect(page.locator('#monitoringHealth')).toContainText('does not verify the latest independent monitoring run');await expect(page.locator('#monitoringHealth .badge')).toHaveText('CONFIGURED');
  await page.locator('#healthIssuesOnly').check();await expect(page.locator('#health-tide')).toBeVisible();await expect(page.locator('#health-feed')).toBeHidden();await expect(page.locator('#coreHealth')).toBeHidden();
 });
