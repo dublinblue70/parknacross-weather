@@ -1,0 +1,49 @@
+name: Focused UX regression checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dashboard-ui.css'
+      - 'dashboard-enhancements.js'
+      - 'site-polish.css'
+      - 'monthly.js'
+      - 'monthly.html'
+      - 'index.html'
+      - 'release-tests/mobile-device-audit.spec.mjs'
+      - 'release-tests/site-visual-consistency.spec.mjs'
+      - 'release-tests/status197.spec.mjs'
+      - 'release-tests/station196.spec.mjs'
+      - 'release-tests/usability.spec.mjs'
+      - '.github/workflows/focused-ux-regressions.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  focused-ux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node tests/site-release-integrity.test.mjs
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Retest reported mobile, station, status and monthly defects
+        run: >
+          npx playwright test
+          --config release-playwright.config.mjs
+          release-tests/mobile-device-audit.spec.mjs
+          release-tests/site-visual-consistency.spec.mjs
+          release-tests/status197.spec.mjs
+          release-tests/station196.spec.mjs
+          release-tests/usability.spec.mjs
+          --grep 'sun, moon|moon phase labels|sensor explanations|supporting failures|individual retry|low archive|observation ages|mobile health checks|status badges|empty monthly|slow external marine|collapsed mobile forecast'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: focused-ux-failure-screenshots
+          path: test-results/
+          if-no-files-found: ignore
