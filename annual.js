@@ -49,6 +49,7 @@ function dublinYear() {
 }
 
 function render(year) {
+  set("annualRainSourceNote",String(year)==="2026"?"Rain-gauge changeover · 3 Nov 2026: the WH40H became the primary gauge. The 3 November daily total is provisional and contributes to year-to-date and monthly rainfall totals; original observations are preserved.":Number(year)<2026?"Rainfall in this year predates WH40H installation and came from the earlier sensing setup.":"Rainfall in this year is measured by the dedicated WH40H tipping-bucket gauge.");
   const rows = allRows.filter((r) =>
     String(r.day || "").startsWith(`${year}-`),
   );
@@ -150,7 +151,7 @@ function render(year) {
           timeZone: "UTC",
         }),
       ),
-      datasets: [{ label: `Rainfall ${year} (mm)`, data: totals }],
+      datasets: [{ label: `Rainfall ${year} (mm)`, data: totals, backgroundColor:months.map(m=>m==="2026-11"?"#f2bf67":"#7ca9ff") }],
     },
     options: {
       maintainAspectRatio: false,
