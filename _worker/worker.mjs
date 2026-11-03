@@ -1,3 +1,4 @@
+// v38.4.240 — WH40H primary traditional rain gauge: select traditional rain fields, never silently substitute WS90 piezo data.
 // v38.4.237 — stream large CSV exports in bounded D1 pages to avoid Worker resource exhaustion.
 // v38.4.232 — photo galleries, selected-field CSV streaming, annual coverage and confirmed station exposure history.
 // v38.4.96 — marine warnings remain available independently of forecast failures.
@@ -85,7 +86,7 @@ const TEMP_OUTLIER_DELTA_C = 2.5;
 const TEMP_OUTLIER_BASELINE_C = 1.0;
 const TEMP_OUTLIER_WINDOW_SECONDS = 30 * 60;
 const TEMP_OUTLIER_MIN_NEIGHBORS = 3;
-const EDGE_CACHE_VERSION = "v38-4-237-streamed-csv";
+const EDGE_CACHE_VERSION = "v38-4-240-wh40h-primary-rain";
 const SKY_PHOTO_KEY = "today/current";
 const SKY_PHOTO_MAX_BYTES = 10 * 1024 * 1024;
 const SKY_PHOTO_ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -2254,7 +2255,7 @@ async function pushEncrypt(subscription,payload){
 async function sendWeatherPush(subscription,message,vapid,timeoutMs=5000){const endpoint=new URL(subscription.endpoint),header=pushBase64(pushText(JSON.stringify({typ:'JWT',alg:'ES256'}))),claims=pushBase64(pushText(JSON.stringify({aud:endpoint.origin,exp:Math.floor(Date.now()/1000)+3600,sub:'mailto:info@parknacrossweather.ie'}))),input=header+'.'+claims,key=await crypto.subtle.importKey('jwk',vapid.privateJwk,{name:'ECDSA',namedCurve:'P-256'},false,['sign']),signature=pushBase64(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},key,pushText(input)));return fetch(endpoint.href,{method:'POST',headers:{Authorization:`vapid t=${input}.${signature}, k=${vapid.publicKey}`,'Content-Encoding':'aes128gcm','Content-Type':'application/octet-stream',TTL:'300',Urgency:'normal'},body:await pushEncrypt(subscription,message),redirect:'error',signal:AbortSignal.timeout(timeoutMs)});}
 async function handlePushRequest(request,env,url){
  const noStore={'Cache-Control':'no-store'};
- if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.237'},200,noStore);}
+ if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.240'},200,noStore);}
  if(request.method!=='POST')return json({error:'Method not allowed'},405,noStore);
  if(request.headers.get('Origin')!=='https://parknacrossweather.ie'&&request.headers.get('Origin')!=='https://www.parknacrossweather.ie')return json({error:'Origin not allowed'},403,noStore);
  if(requestRateLimited(request,'push-settings',10))return rateLimitedResponse();
@@ -2306,7 +2307,7 @@ export default {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.237",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.240",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2569,7 +2570,7 @@ export default {
       }
     }
 
-    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.237",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true}},200,{"Cache-Control":"public, max-age=300"});}
+    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.240",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true}},200,{"Cache-Control":"public, max-age=300"});}
 
     if(url.pathname==="/met/warnings"){
       if(request.method!=="GET")return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
@@ -3756,7 +3757,7 @@ async function updateDailySummary(env, epoch, reading) {
   const pressure = nullableNumber(reading?.pressure_hpa);
   const solar = nullableNumber(reading?.solar_w_m2);
 
-  // The WS90 can increment its cumulative daily rain counter while the
+  // A primary rain gauge can increment its cumulative daily rain counter while the
   // instantaneous rain rate is already back at zero. Treat either signal as
   // measurable rain so the Rain Centre and Dashboard agree.
   let measurableRainEpoch = Number(reading?.rain_rate_mm_h || 0) > 0 ? Number(epoch) : null;
@@ -4097,12 +4098,11 @@ function gatewayWeatherReading(payload, soil) {
     wind_gust_kmh: gust,
     wind_direction_deg: gatewayNumber(payload, "winddir"),
     pressure_hpa: pressure,
-    rain_rate_mm_h: inchesToMm(gatewayNumber(payload,
-      "rrain_piezo", "rainratein_piezo", "rainrate_piezo", "piezo_rainratein", "piezo_rainrate",
-      "rainratein", "rainrate")),
-    rain_daily_mm: inchesToMm(gatewayNumber(payload,
-      "drain_piezo", "dailyrainin_piezo", "dailyrain_piezo", "piezo_dailyrainin", "piezo_dailyrain",
-      "dailyrainin", "dailyrain")),
+    // The WH40H is selected as the GW3001's traditional rainfall priority.
+    // The generic gateway fields reflect that choice. Do not use WS90
+    // *_piezo fields as a hidden fallback if the WH40H is unavailable.
+    rain_rate_mm_h: inchesToMm(gatewayNumber(payload, "rainratein", "rainrate")),
+    rain_daily_mm: inchesToMm(gatewayNumber(payload, "dailyrainin", "dailyrain")),
     solar_w_m2: gatewayNumber(payload, "solarradiation", "solarradiationwpm2"),
     uv_index: gatewayNumber(payload, "uv"),
     battery_v: null,
@@ -4344,17 +4344,14 @@ async function syncEcowitt(env) {
       "pressure.relative.value",
       "pressure.relative"
     ]),
+    // The WH40H traditional tipping-bucket gauge reports through "rainfall".
+    // "rainfall_piezo" belongs to the WS90 and is NOT an alternate source
+    // for primary totals. Missing WH40H data stays unavailable.
     rain_rate_mm_h: valueAt(data, [
-      /* WS90 uses Ecowitt's piezo rainfall group. Prefer it when present. */
-      "rainfall_piezo.rain_rate.value",
-      "rainfall_piezo.rain_rate",
       "rainfall.rain_rate.value",
       "rainfall.rain_rate"
     ]),
     rain_daily_mm: valueAt(data, [
-      /* WS90 daily rainfall is normally reported under rainfall_piezo. */
-      "rainfall_piezo.daily.value",
-      "rainfall_piezo.daily",
       "rainfall.daily.value",
       "rainfall.daily"
     ]),
@@ -5312,7 +5309,7 @@ async function buildRainSummary(env) {
 
   /*
    * updateDailySummary() records last_rain_epoch whenever either the
-   * instantaneous rain rate is positive or the WS90 cumulative daily counter
+   * instantaneous rain rate is positive or the active gauge's cumulative daily counter
    * increases.
    */
   const effectiveLastRainEpoch = days.reduce((latestEpoch, row) => {
