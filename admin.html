@@ -165,7 +165,7 @@
      if(!data.features||typeof data.features!=='object')throw Error('Feature list missing from the deployed Worker response.');
      supported=data.features;
      const checked=new Date().toLocaleTimeString('en-IE',{timeZone:'Europe/Dublin',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-     status.textContent=`Checked at ${checked} · Deployed Worker ${data.worker_version||'version unknown'} · `+[['rain_override','rain / storm settings'],['photo_calendar','photo calendar'],['social_history','social history'],['history_photos','historical sky photos'],['export_preview','download previews'],['history_range','event graph windows'],['public_photo_calendar','visitor photo calendar']].map(([key,label])=>`${label}: ${supported[key]?'supported':'unavailable'}`).join(' · ');
+     status.textContent=`Checked at ${checked} · Deployed Worker ${data.worker_version||'version unknown'} · `+[['wh40h_primary_rain','WH40H primary rain source'],['rain_override','rain / storm settings'],['photo_calendar','photo calendar'],['social_history','social history'],['history_photos','historical sky photos'],['export_preview','download previews'],['history_range','event graph windows'],['public_photo_calendar','visitor photo calendar']].map(([key,label])=>`${label}: ${supported[key]?'supported':'unavailable'}`).join(' · ');
    }catch(error){
      if(!active||ticket!==generation||sequence!==compatibilitySequence)return;
      supported={};status.textContent='Compatibility check failed. '+error.message+' Try Check compatibility again.';

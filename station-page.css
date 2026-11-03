@@ -41,7 +41,7 @@
     grid-template-rows: repeat(5, minmax(0, 1fr));
   }
 }
-@media(max-width:1000px){.station-sensor-layout{grid-template-columns:1fr}.station-sensor-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.station-maintenance-preview{grid-template-columns:1fr}.station-health-bar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1000px){.station-sensor-layout{grid-template-columns:1fr}.station-sensor-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.station-sensor-buttons button:last-child{grid-column:1/-1}.station-maintenance-preview{grid-template-columns:1fr}.station-health-bar{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.station-context-grid,.station-reliability-grid{grid-template-columns:1fr}.station-sensor-buttons button{padding:12px}.station-sensor-buttons button small{font-size:.73rem}.station-sensor-detail{padding:16px}}
 @media(prefers-reduced-motion:reduce){.station-schematic [class^=station-drawing-]{transition:none}}
 
