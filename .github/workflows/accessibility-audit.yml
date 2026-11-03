@@ -1,0 +1,30 @@
+name: Complete accessibility audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'audit/axe-browser-audit.mjs'
+      - '.github/workflows/accessibility-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  accessibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save --package-lock=false axe-core@4.10.3
+      - run: npx playwright install --with-deps chromium
+      - run: node audit/axe-browser-audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-audit-report
+          path: audit-results/axe-browser-audit.json
+          if-no-files-found: warn
