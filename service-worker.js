@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-242-site-audit-ux-20261103";
+const CACHE_NAME = "parknacross-v38-4-242-moon-forecast-release-20261103";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",

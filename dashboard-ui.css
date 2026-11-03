@@ -426,3 +426,13 @@ body.dashboard-page #livePill #liveText {
   }
   body.dashboard-page .moon-phase-track li { padding:8px 4px; }
 }
+
+/* Short mobile forecast before the full, optional hourly explanation. */
+.forecast-mobile-preview{display:none}
+@media(max-width:640px){
+  body.dashboard-page #forecast .forecast-mobile-preview{display:grid;gap:8px;padding:12px 14px;margin-top:10px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface,#0d202d)}
+  body.dashboard-page #forecast .mobile-detail-toggle[aria-expanded='true']+.forecast-mobile-preview{display:none}
+  body.dashboard-page .forecast-mobile-preview p{display:grid;grid-template-columns:minmax(0,4.7rem) minmax(0,1fr);gap:10px;margin:0;padding:5px 0;line-height:1.45;min-width:0}
+  body.dashboard-page .forecast-mobile-preview strong{font-size:.875rem;color:var(--accent);font-weight:700}
+  body.dashboard-page .forecast-mobile-preview span{font-size:.875rem;color:var(--text);min-width:0;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+}

@@ -9,7 +9,19 @@
    while(section.firstChild)body.append(section.firstChild);
    const preferenceKey='parknacross:section:'+body.id;let expanded=false;try{expanded=localStorage.getItem(preferenceKey)==='open';}catch(_){}
    const remember=open=>{try{localStorage.setItem(preferenceKey,open?'open':'closed');}catch(_){}};
-   const button=document.createElement('button');button.type='button';button.className='mobile-detail-toggle';button.setAttribute('aria-controls',body.id);button.setAttribute('aria-expanded','false');button.textContent=`${label} ▾`;body.dataset.collapsed='true';section.append(button,body);if(expanded){button.setAttribute('aria-expanded','true');body.dataset.collapsed='false';button.textContent=`${label} ▴`;}
+   const button=document.createElement('button');button.type='button';button.className='mobile-detail-toggle';button.setAttribute('aria-controls',body.id);button.setAttribute('aria-expanded','false');button.textContent=`${label} ▾`;body.dataset.collapsed='true';section.append(button,body);
+   if(selector==='#forecast'){
+     // The detailed forecast remains optional on mobile, but three short,
+     // live-updating period summaries stay visible when it is collapsed.
+     const preview=document.createElement('div');preview.className='forecast-mobile-preview';preview.setAttribute('role','note');preview.setAttribute('aria-label','Brief forecast for today, tonight and tomorrow');
+     for(const [id,period] of [['forecastTodaySummary','Today'],['forecastTonightSummary','Tonight'],['forecastTomorrowSummary','Tomorrow']]){
+       const row=document.createElement('p'),heading=document.createElement('strong'),copy=document.createElement('span');heading.textContent=period;copy.textContent='Checking forecast…';row.append(heading,copy);preview.append(row);
+       const source=body.querySelector('#'+id);
+       if(source){const update=()=>{const value=source.textContent.trim();copy.textContent=value&&value!=='--'?value:'Forecast unavailable for this period';};new MutationObserver(update).observe(source,{childList:true,characterData:true,subtree:true});update();}
+     }
+     section.insertBefore(preview,body);
+   }
+   if(expanded){button.setAttribute('aria-expanded','true');body.dataset.collapsed='false';button.textContent=`${label} ▴`;}
    button.addEventListener('click',()=>{const open=button.getAttribute('aria-expanded')!=='true';button.setAttribute('aria-expanded',String(open));body.dataset.collapsed=String(!open);button.textContent=`${label} ${open?'▴':'▾'}`;remember(open);if(open){window.dispatchEvent(new Event('resize'));
      // Wait for chart layout and browser scroll anchoring before positioning
      // the newly opened mobile section. Otherwise the following section can

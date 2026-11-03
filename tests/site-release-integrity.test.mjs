@@ -10,7 +10,7 @@ const cssToken='site-polish.css?v=20261103-v38-4-242-ux';
 for(const page of pages){
   if(['offline.html','intelligence.html'].includes(page))continue;
   const html=read(page);
-  assert.ok(html.includes(cssToken),page+' must request the current shared mobile UX stylesheet');
+  assert.ok(html.includes(page==='index.html'?'site-polish.css?v=20261103-v38-4-242-astronomy-fix':cssToken),page+' must request the current shared mobile UX stylesheet');
 }
 const names=['status.js','status-ui.js','app.js','rain.js','history.js',
  'graphs.js','station-page.js','site-polish.js','review-tools.js',
@@ -22,6 +22,9 @@ for(const name of names){
 assert.match(read('radar.html'),/WH40H tipping-bucket gauge/);
 assert.doesNotMatch(read('radar.html'),/measured locally by the WS90/);
 assert.match(read('monthly.js'),/rainSourceNote/);
+assert.match(read('monthly.js'),/hasChangeoverRain\?/);
+assert.match(read('site-polish.css'),/font-size:max\(14px,\.875rem\)!important/);
+assert.match(read('dashboard-enhancements.js'),/forecast-mobile-preview/);
 assert.match(read('annual.js'),/annualRainSourceNote/);
 assert.match(read('rain.html'),/3 November changeover-day rainfall total is provisional/);
 assert.match(read('history.html'),/3 Nov changeover-day rainfall total is provisional/);

@@ -22,26 +22,21 @@ jobs:
         run: node tests/site-release-integrity.test.mjs
       - name: Static page and link checks
         if: always()
-        continue-on-error: true
         run: node site-smoke-test.mjs
       - name: Release and feature tests
         if: always()
-        continue-on-error: true
         run: npm run test:release
       - name: Independent usability and navigation tests
         if: always()
-        continue-on-error: true
         run: npm run test:usability
       - name: Install headless browsers
         if: always()
         run: npx playwright install --with-deps chromium webkit
       - name: Desktop and mobile browser audit
         if: always()
-        continue-on-error: true
         run: npm run test:release-browser
       - name: PWA and offline browser audit
         if: always()
-        continue-on-error: true
         run: npm run test:pwa-browser
       - uses: actions/upload-artifact@v4
         if: always()
