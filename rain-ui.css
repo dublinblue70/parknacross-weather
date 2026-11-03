@@ -77,3 +77,6 @@
   .rain-page .rain-table-scroll { padding-inline: 12px; }
   .rain-page .rain-table-scroll td { padding-left: 10px; }
 }
+
+/* Gauge-change provenance: amber identifies provisional 3 Nov 2026 rain totals. */
+.rain-page tr[data-rain-day="2026-11-03"] .rain-day-date{color:var(--amber);font-weight:650}
