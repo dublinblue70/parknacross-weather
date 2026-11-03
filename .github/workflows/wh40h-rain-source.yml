@@ -27,5 +27,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: node --check status.js
+      - run: node --check status-ui.js
       - run: node tests/wh40h-rain-source.test.mjs
       - run: node tests/wh40h-health.test.mjs
