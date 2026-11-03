@@ -215,14 +215,11 @@ async function runChecks(only=null) {
   try { await Promise.all([
     read("health",async()=>{const started=performance.now();const data=await fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e}));return {...data,__elapsed_ms:Math.round(performance.now()-started)};}),
     read("current",()=>fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e}))),
-    read("rainSource",async()=>{
+    read("rainSource",()=>Promise.all([
       // Verify source selection and fresh rainfall values; do not require rain > 0.
-      const [capabilities,reading]=await Promise.all([
-        fetchJSON(`${API_BASE}/site-capabilities?healthcheck=${Date.now()}`,10000),
-        fetchJSON(`${API_BASE}/current?healthcheck=${Date.now()}`,10000)
-      ]);
-      return {capabilities,reading};
-    }).catch(e=>({__error:e}))),
+      fetchJSON(`${API_BASE}/site-capabilities?healthcheck=${Date.now()}`,10000),
+      fetchJSON(`${API_BASE}/current?healthcheck=${Date.now()}`,10000)
+    ]).then(([capabilities,reading])=>({capabilities,reading})).catch(e=>({__error:e}))),
     read("quality",()=>fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e}))),
     read("history",()=>fetchJSON(`${API_BASE}/history?hours=24`).catch(e=>({__error:e}))),
     read("reliability",()=>fetchJSON(`${API_BASE}/reliability`).catch(e=>({__error:e}))),
