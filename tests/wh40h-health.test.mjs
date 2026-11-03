@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const source=read('status.js'),html=read('status.html'),ui=read('status-ui.js');
-const start=source.indexOf('function describeWh40hStatus('),end=source.indexOf('\nlet checkResults',start);
+const start=source.indexOf('function describeWh40hStatus('),end=source.indexOf('\nasync function runChecks',start);
 assert.ok(start>=0&&end>start,'WH40H function present');
 const context={
  usableNumber:v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v)),
