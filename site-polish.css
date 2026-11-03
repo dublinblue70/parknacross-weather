@@ -142,3 +142,22 @@ main :where(.source-badge,.source-note,.hero-stat span,.station-status small){
   }
   html body .review-table-tools > summary {min-height: var(--ui-touch-min);display:flex;align-items:center}
 }
+
+/* Consistent touch sizes for mobile navigation and report actions. */
+@media(max-width:700px){
+  html body .nav a,
+  html body .nav-more-button,
+  html body .back-links a,
+  html body .report-controls a,
+  html body .report-controls button{
+    min-height:44px;
+    align-items:center;
+  }
+  html body .nav a,
+  html body .back-links a,
+  html body .report-controls a{display:inline-flex}
+}
+main :where(.source-note,.info-note,.site-context-note) a{
+  text-decoration-thickness:1px;
+  text-underline-offset:3px;
+}
