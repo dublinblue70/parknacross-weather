@@ -6,9 +6,10 @@ test.beforeEach(async({page})=>{
  await page.route('**/static.cloudflareinsights.com/**',r=>r.fulfill({body:'',contentType:'application/javascript'}));
  await page.route('**/*.workers.dev/**',r=>{
  const url=new URL(r.request().url()),path=url.pathname,now=Math.floor(Date.now()/1000);requests.push(url.href);
- const current={epoch:now-age,received_at:new Date((now-age)*1000).toISOString(),temperature_c:12,soil_moisture_pct:40};
+ const current={epoch:now-age,received_at:new Date((now-age)*1000).toISOString(),temperature_c:12,soil_moisture_pct:40,rain_rate_mm_h:0,rain_daily_mm:0};
  const data={
  '/health':{status:'ok',database:'connected',archive_ingest:{latest_age_seconds:30}},'/current':current,
+ '/site-capabilities':{worker_version:'38.4.240',features:{wh40h_primary_rain:true}},
  '/quality':{samples_last_24h:samples,median_interval_minutes:5,largest_recent_gap_minutes:5,gust_spikes_excluded_24h:0,gust_spikes_excluded_total:0,battery_voltage_v:3.28,battery_first_seen_at:new Date().toISOString(),battery_last_reported_at:new Date().toISOString()},
  '/history':{readings:[current]},'/reliability':{archive_reliability_percent:100,actual_samples:288,expected_samples:288},
  '/backup-status':{configured:true,last_success:new Date().toISOString(),last_backup_day:day()},'/social-status':{facebook_verified_day:day(),x_verified_day:day()},
@@ -20,9 +21,9 @@ test.beforeEach(async({page})=>{
  return r.fulfill({contentType:'application/json',body:JSON.stringify(data)});
  });
 });
-const complete=async page=>{await expect(page.locator('#healthProgress')).toContainText('18 of 18');await expect(page.locator('#refreshButton')).toBeEnabled();};
+const complete=async page=>{await expect(page.locator('#healthProgress')).toContainText('19 of 19');await expect(page.locator('#refreshButton')).toBeEnabled();};
 test('supporting failures have actionable guidance without marking the core weather service down',async({page})=>{
- await page.goto('/status.html');await complete(page);await expect(page.locator('#overallTitle')).toHaveText('Core weather services are healthy');await expect(page.locator('#healthAttentionList')).toContainText('Arklow tide feed');await expect(page.locator('#healthAttentionList')).toContainText('Local weather readings are independent');
+ await page.goto('/status.html');await complete(page);await expect(page.locator('#wh40hBadge')).toHaveText('CURRENT');await expect(page.locator('#wh40hValue')).toHaveText('0.0 mm today');await expect(page.locator('#overallTitle')).toHaveText('Core weather services are healthy');await expect(page.locator('#healthAttentionList')).toContainText('Arklow tide feed');await expect(page.locator('#healthAttentionList')).toContainText('Local weather readings are independent');
  await expect(page.locator('#healthCounts')).toContainText('1 need attention');await expect(page.locator('#monitoringHealth')).toContainText('does not verify the latest independent monitoring run');await expect(page.locator('#monitoringHealth .badge')).toHaveText('CONFIGURED');
  await page.locator('#healthIssuesOnly').check();await expect(page.locator('#health-tide')).toBeVisible();await expect(page.locator('#health-feed')).toBeHidden();await expect(page.locator('#coreHealth')).toBeHidden();
 });
