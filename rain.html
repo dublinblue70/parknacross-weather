@@ -23,7 +23,7 @@
     </title>
     <link rel="canonical" href="https://parknacrossweather.ie/rain.html" />
   <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="rain-ui.css?v=20261031-visual-consistency"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261101-v38-4-239">
-<script src="site-polish.js?v=20261101-v38-4-239" defer></script>
+<script src="site-polish.js?v=20261103-wh40h" defer></script>
 </head>
   <body class="rain-page">
     <div class="shell">
@@ -49,11 +49,12 @@
           </div>
           <h1>Rainfall at Parknacross, Ardamine</h1>
           <p>
-            See whether rain is being detected now, how much has fallen, and recent rainfall at the station.
+            See whether the WH40H is recording rain, how much has accumulated, and recent rainfall at the station. Earlier readings in the archive predate the gauge change.
           </p>
         </section>
         <div class="rain-toolbar"><p id="rainUpdated" role="status">Waiting for a station reading…</p><button id="rainRefresh" type="button">Refresh rain data</button></div>
-        <p id="rainLoadStatus" class="info-note" role="status" aria-live="polite">Checking rainfall sources…</p><p class="source-note">A zero rain-rate reading means the WS90 has not detected measurable rain; very light drizzle may be missed. The hourly forecast is not a live rain measurement.</p>
+        <p id="rainLoadStatus" class="info-note" role="status" aria-live="polite">Checking rainfall sources…</p><p class="source-note">Rainfall is sourced from the dedicated Ecowitt WH40H tipping-bucket gauge, selected as the primary sensor on 3 November 2026. A reading of 0 mm/h means no measurable bucket tip during that interval; traces below the 0.1 mm resolution may not register. The hourly forecast is not a live rain measurement.</p>
+        <p class="source-note"><strong>Rain gauge change · 3 Nov 2026:</strong> Recent charts and multi-day totals span two rainfall instruments. The changeover day may contain readings from both; retained historical observations have not been rewritten.</p>
         <section class="page-section rain-hero-grid" aria-label="Current rain and recent totals">
           <article class="rain-primary">
             <span class="section-eyebrow">Right now</span><h2 id="rainCondition">Checking rain…</h2><strong id="rainNow">-- mm/h</strong><small>Rain rate · millimetres per hour</small>

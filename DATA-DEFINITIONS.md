@@ -1,13 +1,13 @@
 # Parknacross Weather — shared data definitions
 
-Updated 1 November 2026. Apply these definitions consistently in the
+Updated 3 November 2026. Apply these definitions consistently in the
 Dashboard, Summary, Rain Centre, History, Records, reports and downloads.
 
 | Term | Meaning |
 | --- | --- |
 | Current reading | The most recent fresh gateway observation, with its source timestamp. A fetch completing now does **not** make old data live. |
 | Last saved observation | The latest observation persisted in the archive; distinguish it from the gateway's last receipt time. |
-| No rain detected | The WS90 rain sensor registered no measurable rain in the stated interval. Light drizzle can be missed; this is not a categorical claim of dry weather. |
+| No rain detected | The primary WH40H tipping-bucket rain gauge registered no measurable rain in the stated interval. Traces below its 0.1 mm resolution can be missed; this is not proof of dry weather. |
 | Forecast rain | Met Éireann's forecast; separate from station-detected rain and radar reflections. |
 | Any recorded rain | A daily recorded accumulation **greater than 0 mm**. |
 | Wet day | A daily recorded total of **at least 0.2 mm** in report wet/dry classifications. |
@@ -18,6 +18,13 @@ Dashboard, Summary, Rain Centre, History, Records, reports and downloads.
 | Coastal water temperature | A **modelled estimate**, not a Poulshone sea thermometer. The M2 buoy is a distinct offshore observation, not a local one. |
 | Official weather warning | Met Éireann information. A failed warning feed means `unavailable`, not `no warning`. |
 | Archive completeness | Ratio of saved observations to expected 5-minute slots for that Irish calendar date, including 23- and 25-hour DST dates. |
+
+## Rain sensor changeover
+
+- **From 3 November 2026:** the installed Ecowitt WH40H is the selected primary *traditional tipping-bucket* rain gauge (0.1 mm resolution); the WS90 continues to provide wind, outdoor temperature/humidity, solar and UV measurements.
+- **Before the change:** rainfall in the saved archive was collected from the previous rain sensing setup. Keep the original historical observations, without retrospectively attributing them to the WH40H.
+- **Changeover day:** daily and cumulative figures may include readings taken across the switch, so annotate comparisons involving 3 November 2026. The new sensor does not create a new historical dataset or automatically recalibrate old rainfall readings.
+- The Ecowitt API `rainfall` group is the WH40H/traditional source; `rainfall_piezo` belongs to the old WS90 rain source and must not silently replace missing WH40H data.
 
 ## Data sources and reconciliation
 
@@ -39,7 +46,7 @@ current live Cloudflare deployment implements every rule identically.
 
 ## Source labels used in the interface
 
-- **Station detected / Observed locally:** physical WS90/GW3001 or garden sensor measurements; give the actual observation time and flag stale data. Zero measured rain is not proof of no drizzle.
+- **Station detected / Observed locally:** physical WH40H rain-gauge measurements (from 3 Nov 2026), WS90 wind/temperature/solar measurements, GW3001 pressure, or separate garden sensors; give the actual observation time and flag stale data. Zero measured rain is not proof of no drizzle.
 - **Radar echoes:** remote radar evidence of precipitation aloft or near the location, not a guaranteed observation at ground level.
 - **Forecast:** model output for a future period, never presented as a station reading.
 - **Estimated:** modelled local sea temperature and any derived planning index; do not call a model estimate a measured local value.
