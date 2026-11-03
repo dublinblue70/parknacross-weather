@@ -5,7 +5,7 @@ Site release: see `package.json` and the active `service-worker.js` cache name.
 
 ## Cloudflare Worker — authoritative source
 
-**Use `_worker/worker.mjs` as the current Worker source for new deployments.**
+**Use `_worker/worker.mjs` as the current Worker source for new deployments.** The root-level `worker.mjs` begins with a DO NOT DEPLOY warning; it exists solely for historical comparison. Do not use the archived version in Cloudflare.
 The root-level `worker.mjs` is an older historical snapshot (v38.4.96);
 **do not deploy it over the live service.** Older examples under `_worker/history/`
 are not deployable sources either.

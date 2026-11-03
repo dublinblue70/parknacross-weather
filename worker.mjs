@@ -1,3 +1,5 @@
+// ARCHIVED SNAPSHOT — DO NOT DEPLOY. The sole current Cloudflare Worker is _worker/worker.mjs (v38.4.240 or later).
+// This root-level source is retained for historical code comparison only.
 // v38.4.96 — marine warnings remain available independently of forecast failures.
 // v38.4.95 — bounded calendar work, encrypted background alerts and outdoor outlook.
 // Parknacross v38.4.94 — fast admin authentication and live readings before schema work; background cloud recovery.

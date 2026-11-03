@@ -95,3 +95,50 @@ main :where(.source-badge,.source-note,.hero-stat span,.station-status small){
   }
   html body.dashboard-page .moon-phase-track li{font-size:12px!important;line-height:1.3;min-width:0;padding:7px 2px}
 }
+
+
+/* 3 Nov 2026: one readable visitor type and touch scale, preserving the coastal palette.
+   Specific selectors deliberately supersede earlier compact per-page rules. */
+:root {
+  --ui-label-min: .8125rem;
+  --ui-touch-min: 44px;
+  --muted-2: #9bb6c6;
+}
+@media (max-width: 700px) {
+  html body.dashboard-page .hero-kicker,
+  html body.dashboard-page .location-label,
+  html body.dashboard-page .hero-stat span,
+  html body.dashboard-page .hero-stat small,
+  html body.dashboard-page .status-label,
+  html body.dashboard-page .station-status small,
+  html body.dashboard-page .today-item > span,
+  html body.dashboard-page .today-item small,
+  html body.dashboard-page .today-section .source-note,
+  html body.dashboard-page .local-planning-card .lp-label,
+  html body.dashboard-page .local-planning-card .lp-source,
+  html body.dashboard-page .summary-line,
+  html body.dashboard-page .local-search-intro {
+    font-size: max(var(--ui-label-min), 13px);
+    line-height: 1.5;
+    letter-spacing: normal;
+  }
+  html body.dashboard-page .dashboard-shortcuts a,
+  html body.dashboard-page .local-planning-card button,
+  html body.dashboard-page .local-planning-card a,
+  html body.dashboard-page .site-jump-nav a,
+  html body.dashboard-page .chart-explorer-controls button,
+  html body.dashboard-page .review-table-tools > summary {
+    min-height: var(--ui-touch-min);
+    font-size: max(.8125rem, 13px);
+  }
+  html body .rain-page .rain-table-scroll thead th,
+  html body .rain-page .rain-day-date,
+  html body .rain-page .rain-day-value small,
+  html body .rain-page .rain-day-badge,
+  html body .station-sensor-buttons button small,
+  html body .review-table-tools > summary {
+    font-size: max(var(--ui-label-min), 13px);
+    line-height: 1.5;
+  }
+  html body .review-table-tools > summary {min-height: var(--ui-touch-min);display:flex;align-items:center}
+}
