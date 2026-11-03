@@ -35,7 +35,7 @@ test('collapsed mobile forecast shows three compact periods before expanded deta
  for(const label of ['Today','Tonight','Tomorrow'])await expect(preview).toContainText(label);
  await toggle.click();
  await expect(preview).toBeHidden();
- await expect(forecast.locator('#forecastTodaySummary')).toBeVisible();
+ await expect(forecast.locator('.forecast-grid article').first()).toBeVisible();
  await noOverflow(page,'mobile forecast');
 });
 
