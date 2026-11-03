@@ -175,6 +175,30 @@ function recentSampleCoverage(samples, firstEpoch, now=Date.now()/1000) {
 function observationAge(epoch, now=Date.now()/1000) {
   return usableNumber(epoch)&&Number(epoch)>0 ? now-Number(epoch) : null;
 }
+
+// A source-mapping and live rain-data check, not a physical WH40H radio or battery test.
+// A zero rain rate and a zero daily total are perfectly valid in dry weather.
+function describeWh40hStatus(result, now=Date.now()/1000) {
+  const caps=result?.capabilities, reading=result?.reading;
+  if(result?.__error || !caps || !reading) {
+    return {state:"warn",label:"UNAVAILABLE",value:"Cannot verify",detail:"The WH40H check could not retrieve both the Worker capability and current rainfall observation."};
+  }
+  if(caps.features?.wh40h_primary_rain!==true) {
+    return {state:"warn",label:"VERIFY",value:"Source unconfirmed",detail:`Deployed Worker ${caps.worker_version||"unknown"} does not confirm WH40H traditional rainfall mapping. Check that the latest Worker was deployed.`};
+  }
+  const age=observationAge(reading.epoch,now);
+  if(age===null || age < -120 || age >= 1800) {
+    return {state:"warn",label:"STALE",value:"Reading not current",detail:`Worker ${caps.worker_version||"unknown"} selects WH40H rainfall, but the latest station observation is ${age===null?"undated":fmtAge(Math.max(0,age))+" old"}. WH40H-specific radio and battery telemetry is not available.`};
+  }
+  const rateAvailable=usableNumber(reading.rain_rate_mm_h);
+  const totalAvailable=usableNumber(reading.rain_daily_mm);
+  if(!rateAvailable||!totalAvailable) {
+    const missing=!rateAvailable&&!totalAvailable?"rain rate and daily total":!rateAvailable?"rain rate":"daily total";
+    return {state:"warn",label:"MISSING",value:"Rain data unavailable",detail:`Worker ${caps.worker_version||"unknown"} selects WH40H rainfall, but the latest reading lacks a valid ${missing}. The previous WS90 rain sensor is not used as a fallback.`};
+  }
+  const state=age<600?"good":"warn";
+  return {state,label:state==="good"?"CURRENT":"DELAYED",value:`${fmtNum(reading.rain_daily_mm,1)} mm today`,detail:`Rain rate ${fmtNum(reading.rain_rate_mm_h,1)} mm/h · station reading ${fmtAge(age)} old · Worker ${caps.worker_version||"unknown"} selects WH40H traditional rainfall. Zero rain is valid. This verifies available rain fields, not independent sensor battery or radio health.`};
+}
 async function runChecks(only=null) {
   if(checksRunning)return;checksRunning=true;
   if(only){delete checkResults[only];delete checkMeta[only];}else{checkResults={};checkMeta={};}
@@ -191,6 +215,14 @@ async function runChecks(only=null) {
   try { await Promise.all([
     read("health",async()=>{const started=performance.now();const data=await fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e}));return {...data,__elapsed_ms:Math.round(performance.now()-started)};}),
     read("current",()=>fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e}))),
+    read("rainSource",async()=>{
+      // Verify source selection and fresh rainfall values; do not require rain > 0.
+      const [capabilities,reading]=await Promise.all([
+        fetchJSON(`${API_BASE}/site-capabilities?healthcheck=${Date.now()}`,10000),
+        fetchJSON(`${API_BASE}/current?healthcheck=${Date.now()}`,10000)
+      ]);
+      return {capabilities,reading};
+    }).catch(e=>({__error:e}))),
     read("quality",()=>fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e}))),
     read("history",()=>fetchJSON(`${API_BASE}/history?hours=24`).catch(e=>({__error:e}))),
     read("reliability",()=>fetchJSON(`${API_BASE}/reliability`).catch(e=>({__error:e}))),
@@ -214,7 +246,7 @@ async function runChecks(only=null) {
 }
 
 function renderChecks(only=null) {
-  const {health={},current={},quality={},history={},reliability={},backup={},social={},tides={},m2={},landWarnings={},marineWarnings={},site={},daily={},stats={},summaryHistory={},exportPreview={},rainEvents={},coverage={}}=checkResults;
+  const {health={},current={},rainSource={},quality={},history={},reliability={},backup={},social={},tides={},m2={},landWarnings={},marineWarnings={},site={},daily={},stats={},summaryHistory={},exportPreview={},rainEvents={},coverage={}}=checkResults;
   const apiElapsed=health.__elapsed_ms||0;
   let states=site.state?[site.state]:[];
   const latestEpoch=rows=>Math.max(0,...(Array.isArray(rows)?rows:[]).map(row=>usableNumber(row.epoch)?Number(row.epoch):Date.parse(row.received_at||"")/1000).filter(Number.isFinite));
@@ -328,6 +360,14 @@ function renderChecks(only=null) {
       }
     }
 
+  }
+
+  if (checkResults.rainSource) {
+    const wh40h=describeWh40hStatus(rainSource);
+    setBadge("wh40hBadge",wh40h.state,wh40h.label);
+    setText("wh40hValue",wh40h.value);
+    setText("wh40hDetail",wh40h.detail);
+    states.push(wh40h.state);
   }
 
   if (checkResults.quality) {
@@ -472,7 +512,7 @@ function renderChecks(only=null) {
   setText("overallTitle",overall==="good"?"All monitored systems look healthy":overall==="warn"?"Site is running, but something is worth checking":coreFailure?"A monitored service needs attention":"Historical archive is incomplete");
   setText("overallText",overall==="good"?"Website, weather data service, live readings and recent data checks passed.":overall==="warn"?"One or more checks produced a warning. Review the cards below.":coreFailure?"At least one core service failed or the latest weather reading is stale.":"The website, weather data service and latest observation are operating normally. Some earlier five-minute archive intervals are missing; this does not indicate a current station outage.");
   setText("lastRun",`${only?"Selected source rechecked; other cards retain their previous results · ":"Last checked "}${new Date(Math.max(0,...Object.values(checkMeta).map(item=>item.done)) || Date.now()).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Dublin"})} Irish time`);
-  const totalChecks=18,pending=totalChecks-Object.keys(checkResults).length;
+  const totalChecks=19,pending=totalChecks-Object.keys(checkResults).length;
   if(pending>0){
     setText("overallTitle",states.includes("bad")?"A monitored service needs attention":"Checking remaining sources…");
     setText("overallText",`${Object.keys(checkResults).length} of ${totalChecks} checks complete. Finished results are shown below; ${pending} source${pending===1?" is":"s are"} still being checked.`);

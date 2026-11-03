@@ -5,6 +5,10 @@ on:
     paths:
       - '_worker/worker.mjs'
       - 'station.html'
+      - 'status.html'
+      - 'status.js'
+      - 'status-ui.js'
+      - 'tests/wh40h-health.test.mjs'
       - 'station-page.js'
       - 'rain.html'
       - 'history.html'
@@ -24,3 +28,4 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/wh40h-rain-source.test.mjs
+      - run: node tests/wh40h-health.test.mjs
