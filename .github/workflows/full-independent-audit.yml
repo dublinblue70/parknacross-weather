@@ -18,6 +18,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Site release integrity and JavaScript syntax
+        run: node tests/site-release-integrity.test.mjs
       - name: Static page and link checks
         if: always()
         continue-on-error: true
