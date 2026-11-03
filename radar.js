@@ -111,7 +111,7 @@
    if(!earlier){setArrival("Waiting for more radar history","At least 20 minutes of recent radar movement is needed to estimate a direction and arrival.");return;}
    const [oldPatch,newPatch]=await Promise.all([loadRadarPatch(earlier),loadRadarPatch(latest)]);
    const elapsed=(latest.time-earlier.time)/60,result=await analyseRadar(oldPatch,newPatch,elapsed);
-   if(result.kind==="now"){setArrival("A radar echo is over the Parknacross area","The latest image shows precipitation close to the station marker; it is "+Math.round(age)+" minutes old. Check the WS90 reading for the local observation.");return;}
+   if(result.kind==="now"){setArrival("A radar echo is over the Parknacross area","The latest image shows precipitation close to the station marker; it is "+Math.round(age)+" minutes old. Check the WH40H rain-gauge reading for the local observation.");return;}
    if(result.kind==="dry"){setArrival("No rain echo detected nearby","No precipitation echo is visible within roughly 90 km of the station in the latest frame.");return;}
    if(result.kind==="uncertain"){setArrival("Not enough consistent movement to estimate","Rain echoes are present, but their recent motion is too weak or scattered to give a useful arrival time.");return;}
    if(result.kind==="none"){setArrival("No approaching echo detected","Recent radar echoes are not on a clear track toward the Parknacross area within the next hour.");return;}
