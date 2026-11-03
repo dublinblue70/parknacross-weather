@@ -23,6 +23,22 @@ const mockWeather=async page=>{
   return route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
  });
 };
+test('collapsed mobile forecast shows three compact periods before expanded details',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await mockWeather(page);
+ await page.goto('/index.html');
+ const forecast=page.locator('#forecast'),toggle=forecast.locator('.mobile-detail-toggle');
+ await expect(toggle).toBeVisible();
+ if(await toggle.getAttribute('aria-expanded')==='true')await toggle.click();
+ const preview=forecast.locator('.forecast-mobile-preview');
+ await expect(preview).toBeVisible();
+ await expect(preview.locator('p')).toHaveCount(3);
+ for(const label of ['Today','Tonight','Tomorrow'])await expect(preview).toContainText(label);
+ await toggle.click();
+ await expect(preview).toBeHidden();
+ await expect(forecast.locator('#forecastTodaySummary')).toBeVisible();
+ await noOverflow(page,'mobile forecast');
+});
+
 const setScaledFont=async page=>page.addStyleTag({content:'html{font-size:20px!important}'}); // representative 125% rem scaling
 const noOverflow=async(page,label)=>expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),label).toBe(true);
 
