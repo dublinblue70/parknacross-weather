@@ -14,9 +14,9 @@
    const month=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Dublin",month:"numeric"}).format(new Date(nowEpoch*1000)));
    const coolSeason=month>=11||month<=3;
    const seasonal=coolSeason
-     ?"In the cooler months, potted hydrangeas usually need less water; check compost before watering."
-     :"In warmer months, potted hydrangeas can dry quickly, especially in windy conditions; check compost regularly.";
-   const disclaimer="These WH52 bands are trial guidance for this one pot, not universal watering thresholds. Check compost 4–5 cm below the surface and ensure drainage. The probe does not measure the acer, bays or other pots.";
+     ?"In cooler months, this potted hydrangea usually needs less water; check its compost before watering."
+     :"In warmer months, this hydrangea pot can dry quickly, especially in windy conditions; check its compost regularly.";
+   const disclaimer="These WH52 bands are trial guidance for this hydrangea pot, not calibrated watering thresholds. Check compost 4–5 cm below the surface and ensure drainage.";
    if(!isPct(moisture))return{status:"Check compost manually",advice:"A usable soil moisture reading is unavailable. Feel the compost before deciding whether to water.",context:seasonal+" "+disclaimer,trend:"Moisture trend unavailable"};
    const age=isNum(epoch)?Number(nowEpoch)-Number(epoch):null;
    if(age===null||age>900||age< -120)return{status:"Reading needs checking",advice:"This moisture reading is missing a valid time or is delayed. Refresh the station and feel the compost before deciding whether to water.",context:seasonal+" "+disclaimer,trend:"Current trend not verified"};
