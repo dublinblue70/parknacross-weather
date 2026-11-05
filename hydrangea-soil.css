@@ -1,0 +1,8 @@
+/* Shared watering advice for the WH52 in one potted hydrangea. */
+.hydrangea-watering{display:grid;gap:9px;min-width:0;margin:16px 0;padding:16px 18px;border:1px solid var(--line-strong,#355363);border-radius:14px;background:rgba(91,150,122,.075);text-align:left}
+.hydrangea-watering h3{margin:0;font-size:1.03rem;line-height:1.35}
+.hydrangea-watering strong{display:block;font-size:1.03rem;line-height:1.4}
+.hydrangea-watering p{margin:0;line-height:1.55;overflow-wrap:anywhere}
+.hydrangea-watering .hydrangea-watering-context{color:var(--muted,#b8c8d0);font-size:.87rem}
+.hydrangea-watering .hydrangea-watering-trend{font-size:.9rem;color:var(--muted,#b8c8d0)}
+@media(max-width:640px){.hydrangea-watering{padding:14px 15px}}
