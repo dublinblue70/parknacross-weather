@@ -582,7 +582,7 @@
         }
       }
     </style>
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261027-compact-zoom"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261103-mobile-forecast-preview"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="wind-rose.css?v=20261031-visual-consistency"><link rel="stylesheet" href="local-forecast.css?v=20261021-descriptions"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261103-v38-4-242-astronomy-fix">
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261027-compact-zoom"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261105-semantic-dashboard-order"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="wind-rose.css?v=20261031-visual-consistency"><link rel="stylesheet" href="local-forecast.css?v=20261021-descriptions"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261103-v38-4-242-astronomy-fix">
 <script src="site-polish.js?v=20261101-v38-4-239" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
 </head>
@@ -743,7 +743,7 @@
           </div>
         </section>
 
-<nav class="dashboard-shortcuts" aria-label="Dashboard sections"><a href="#todayHeading">Today</a><a href="#forecast">Forecast</a><a href="#observationsHeading">Readings</a><a href="#graphs">Charts</a><a href="summary.html">Daily summary →</a></nav>
+<nav class="dashboard-shortcuts" aria-label="Dashboard sections"><a href="#todayHeading">Today</a><a href="#observationsHeading">Readings</a><a href="#forecast">Forecast</a><a href="#planning">Planning</a><a href="#graphs">Charts</a><a href="summary.html">Daily summary →</a></nav>
         <section class="station-bar" aria-label="Station status">
           <div id="livePill" class="station-status live-pill checking">
             <span class="live-dot"></span>
@@ -800,41 +800,6 @@
             </article>
           </div>
         </section>
-
-        <!-- Visitor-first weather dashboard order: overview, local outlook, readings, forecast, then extras. -->
-        <section class="local-planning" aria-label="Local weather planning"><article class="local-planning-card" data-rain-outlook aria-labelledby="rainOutlookHeading">
-<header><h2 id="rainOutlookHeading">Rain on the way?</h2><button type="button" aria-label="Refresh hourly rain outlook">Refresh</button></header>
-<p class="lp-label">Hourly forecast · Ardamine</p>
-<p class="lp-summary" data-rain-summary role="status">Checking the next six hourly periods…</p>
-<p class="lp-context" data-rain-observed>Checking the current station rain reading…</p>
-<p class="lp-context" data-rain-context>Next six hours of forecast rain; this is separate from rain detected at the station.</p>
-<ol class="rain-hour-list" data-rain-slots aria-label="Forecast rainfall per hour in millimetres, not current station observations"></ol>
-<p class="lp-source" data-rain-source>Checking Met Éireann forecast availability…</p>
-<a href="radar.html">Check the rain radar →</a>
-</article><article class="local-planning-card" data-coastal-compass aria-labelledby="coastalCompassHeading">
-<header><h2 id="coastalCompassHeading">Coastal wind compass</h2></header>
-<p class="lp-label">Observed locally · approximate shoreline</p>
-<div class="coastal-compass-body">
-<svg viewBox="0 0 180 180" role="img" aria-label="Coastal compass: north at the top, land to the west and Irish Sea to the east. The arrow shows where the wind is blowing.">
-<defs><clipPath id="coastCompassClip"><circle cx="90" cy="90" r="65"/></clipPath></defs>
-<g clip-path="url(#coastCompassClip)"><circle cx="90" cy="90" r="65" fill="#13313f"/><path d="M0 0H113L67 180H0Z" fill="#263d35"/><path d="M113 0L67 180" stroke="#a9c9b9" stroke-width="2"/></g>
-<circle cx="90" cy="90" r="65" fill="none" stroke="#56727f"/><g fill="#b8cad4" font-size="11" text-anchor="middle"><text x="90" y="15">N</text><text x="169" y="94">E</text><text x="90" y="173">S</text><text x="11" y="94">W</text></g>
-<g fill="#bdcfce" font-size="9" text-anchor="middle"><text x="54" y="116">LAND</text><text x="121" y="70">IRISH SEA</text></g>
-<g data-wind-arrow style="display:none"><path d="M90 128V52M79 64L90 52L101 64" fill="none" stroke="#8ee1f4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="90" cy="90" r="4" fill="#e0f7fc"/></g>
-</svg>
-<div><p class="lp-summary" data-wind-summary role="status">Checking local wind…</p><p class="lp-context" data-wind-detail>Waiting for a fresh station observation.</p><p class="lp-arrow-note">Arrow = where the wind is going.</p></div>
-</div>
-<p class="lp-source" data-wind-source>Checking the observation time…</p>
-<details><summary>How to read the compass</summary><p>Wind direction names where the wind comes from. Onshore blows from the sea towards land; offshore blows from land towards the sea; alongshore blows roughly parallel to the coast. Local headlands and shelter can change conditions at a beach. Below 1 km/h the arrow is hidden.</p></details>
-<a href="coast.html">Sea &amp; coastal conditions →</a>
-</article><article class="local-planning-card" data-laundry-window aria-labelledby="laundryDryingHeading">
-<header><h2 id="laundryDryingHeading">Laundry drying windows</h2><button type="button" aria-label="Refresh laundry drying forecast">Refresh</button></header>
-<p class="lp-label">Next 24 hours · Ardamine</p>
-<p class="lp-summary" data-laundry-summary role="status">Checking the next day’s forecast…</p>
-<ul class="laundry-window-list" data-laundry-windows aria-label="Forecast outdoor laundry drying windows"></ul>
-<p class="lp-source" data-laundry-source>Checking Met Éireann hourly weather data…</p>
-</article></section>
-        <p id="wearForecast" class="info-note wear-forecast-note" role="status" aria-live="polite" hidden></p>
 
         <section class="metrics-section" aria-labelledby="observationsHeading">
           <div class="section-heading">
@@ -1001,6 +966,42 @@
                   <p class="forecast-local-note">Descriptions and figures are calculated from Met Éireann hourly model data for Ardamine. Cloud cover and wind direction are not provided in this feed. The hours shown are the available forecast window; tomorrow may cover only the morning. Wind is sustained speed, not gust speed. Station observations are shown separately.</p>
         </section>
 
+
+        <!-- Observations and forecast first; optional planning tools follow. -->
+        <div class="section-heading"><div><span class="section-eyebrow">Useful local guidance</span><h2 id="planningHeading">Plan around the weather</h2><p class="source-note">Forecast suggestions and coastal context are separate from measured station readings.</p></div></div>
+        <section class="local-planning" id="planning" aria-labelledby="planningHeading"><article class="local-planning-card" data-rain-outlook aria-labelledby="rainOutlookHeading">
+<header><h2 id="rainOutlookHeading">Rain on the way?</h2><button type="button" aria-label="Refresh hourly rain outlook">Refresh</button></header>
+<p class="lp-label">Hourly forecast · Ardamine</p>
+<p class="lp-summary" data-rain-summary role="status">Checking the next six hourly periods…</p>
+<p class="lp-context" data-rain-observed>Checking the current station rain reading…</p>
+<p class="lp-context" data-rain-context>Next six hours of forecast rain; this is separate from rain detected at the station.</p>
+<ol class="rain-hour-list" data-rain-slots aria-label="Forecast rainfall per hour in millimetres, not current station observations"></ol>
+<p class="lp-source" data-rain-source>Checking Met Éireann forecast availability…</p>
+<a href="radar.html">Check the rain radar →</a>
+</article><article class="local-planning-card" data-coastal-compass aria-labelledby="coastalCompassHeading">
+<header><h2 id="coastalCompassHeading">Coastal wind compass</h2></header>
+<p class="lp-label">Observed locally · approximate shoreline</p>
+<div class="coastal-compass-body">
+<svg viewBox="0 0 180 180" role="img" aria-label="Coastal compass: north at the top, land to the west and Irish Sea to the east. The arrow shows where the wind is blowing.">
+<defs><clipPath id="coastCompassClip"><circle cx="90" cy="90" r="65"/></clipPath></defs>
+<g clip-path="url(#coastCompassClip)"><circle cx="90" cy="90" r="65" fill="#13313f"/><path d="M0 0H113L67 180H0Z" fill="#263d35"/><path d="M113 0L67 180" stroke="#a9c9b9" stroke-width="2"/></g>
+<circle cx="90" cy="90" r="65" fill="none" stroke="#56727f"/><g fill="#b8cad4" font-size="11" text-anchor="middle"><text x="90" y="15">N</text><text x="169" y="94">E</text><text x="90" y="173">S</text><text x="11" y="94">W</text></g>
+<g fill="#bdcfce" font-size="9" text-anchor="middle"><text x="54" y="116">LAND</text><text x="121" y="70">IRISH SEA</text></g>
+<g data-wind-arrow style="display:none"><path d="M90 128V52M79 64L90 52L101 64" fill="none" stroke="#8ee1f4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="90" cy="90" r="4" fill="#e0f7fc"/></g>
+</svg>
+<div><p class="lp-summary" data-wind-summary role="status">Checking local wind…</p><p class="lp-context" data-wind-detail>Waiting for a fresh station observation.</p><p class="lp-arrow-note">Arrow = where the wind is going.</p></div>
+</div>
+<p class="lp-source" data-wind-source>Checking the observation time…</p>
+<details><summary>How to read the compass</summary><p>Wind direction names where the wind comes from. Onshore blows from the sea towards land; offshore blows from land towards the sea; alongshore blows roughly parallel to the coast. Local headlands and shelter can change conditions at a beach. Below 1 km/h the arrow is hidden.</p></details>
+<a href="coast.html">Sea &amp; coastal conditions →</a>
+</article><article class="local-planning-card" data-laundry-window aria-labelledby="laundryDryingHeading">
+<header><h2 id="laundryDryingHeading">Laundry drying windows</h2><button type="button" aria-label="Refresh laundry drying forecast">Refresh</button></header>
+<p class="lp-label">Next 24 hours · Ardamine</p>
+<p class="lp-summary" data-laundry-summary role="status">Checking the next day’s forecast…</p>
+<ul class="laundry-window-list" data-laundry-windows aria-label="Forecast outdoor laundry drying windows"></ul>
+<p class="lp-source" data-laundry-source>Checking Met Éireann hourly weather data…</p>
+</article></section>
+        <p id="wearForecast" class="info-note wear-forecast-note" role="status" aria-live="polite" hidden></p>
 
         <section id="sinceVisitPanel" class="since-visit-panel" hidden aria-labelledby="sinceVisitHeading">
           <div><span class="section-eyebrow">Since your last visit</span><h2 id="sinceVisitHeading">What changed</h2></div>

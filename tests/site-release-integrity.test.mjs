@@ -13,7 +13,7 @@ for(const page of pages){
   assert.ok(html.includes(page==='index.html'?'site-polish.css?v=20261103-v38-4-242-astronomy-fix':cssToken),page+' must request the current shared mobile UX stylesheet');
 }
 const names=['status.js','status-ui.js','app.js','rain.js','history.js',
- 'graphs.js','station-page.js','site-polish.js','review-tools.js',
+ 'graphs.js','station-page.js','site-polish.js','review-tools.js','rain-gauge-audit.js',
  'monthly.js','annual.js','sky.js','radar.js','coast.js',
  'dashboard-ui.js','dashboard-enhancements.js','service-worker.js'];
 for(const name of names){
@@ -31,4 +31,8 @@ assert.match(read('history.html'),/3 Nov changeover-day rainfall total is provis
 assert.match(read('_worker/worker.mjs'),/wh40h_primary_rain:true/);
 assert.match(read('worker.mjs'),/ARCHIVED SNAPSHOT — DO NOT DEPLOY/);
 assert.match(read('_worker/README.md'),/single designated source/);
+assert.ok(read('index.html').indexOf('id="observationsHeading"')<read('index.html').indexOf('id="planningHeading"'),'Live weather observations must precede planning tools');
+assert.ok(read('index.html').indexOf('id="forecast"')<read('index.html').indexOf('id="planning"'),'Local forecast must precede planning tools');
+assert.match(read('rain.html'),/id="rainGaugeAudit"/);
+assert.match(read('service-worker.js'),/\.\/rain-gauge-audit\.js/);
 console.log('PASS: '+(pages.length-2)+' public pages use current mobile UX CSS; JavaScript syntax and WH40H provenance checks passed.');

@@ -74,6 +74,22 @@
             ><small id="rain7Note">Combined total</small>
           </article>
         </section>
+        <details class="page-section rain-details" id="rainGaugeAudit">
+          <summary>WH40H verification and 3 November changeover analysis</summary>
+          <div class="rain-detail-content">
+            <p class="source-note">This read-only check examines archived rainfall counters. It does not confirm gauge calibration, battery condition, radio reception or tipping-bucket operation. Archived totals are never modified.</p>
+            <div class="rain-toolbar"><p id="rainGaugeAuditUpdated" role="status">Open this section to examine archived readings.</p><button id="rainGaugeAuditRefresh" type="button">Recheck archived rain readings</button></div>
+            <div class="rain-stat-grid" aria-label="Rain gauge verification results">
+              <article class="climate-card"><span>WH40H data feed</span><strong id="rainGaugeFeedState">Not checked</strong><small id="rainGaugeFeedDetail">Current rain data is checked separately on System Status.</small></article>
+              <article class="climate-card"><span>Recent counter movement</span><strong id="rainGaugeTipState">Not checked</strong><small id="rainGaugeTipDetail">An unchanged counter is normal in dry weather.</small></article>
+              <article class="climate-card"><span>3 Nov before changeover</span><strong id="rainGaugeBefore">Not checked</strong><small>Counter increases within the previous sensor's readings</small></article>
+              <article class="climate-card"><span>3 Nov after changeover</span><strong id="rainGaugeAfter">Not checked</strong><small>Counter increases within the WH40H-era readings</small></article>
+            </div>
+            <p class="source-note" id="rainGaugeReconciliation" role="status">The 3 November daily rainfall total remains provisional. Differences between two gauges' counters are not rainfall.</p>
+            <p class="source-note" id="rainGaugeQuality">A dry spell can produce no bucket tips on a perfectly functioning sensor. Independently check battery and signal on the Ecowitt gateway, and compare accumulation during genuine rainfall.</p>
+            <p><a class="text-link" href="status.html#stationSensors">See rainfall data-feed checks</a></p>
+          </div>
+        </details>
 
 <section class="local-planning single" aria-label="Hourly rain outlook"><article class="local-planning-card" data-rain-outlook aria-labelledby="rainOutlookHeading">
 <header><h2 id="rainOutlookHeading">Rain on the way?</h2><button type="button" aria-label="Refresh hourly rain outlook">Refresh</button></header>
@@ -178,6 +194,7 @@
     <script src="site-config.js?v=20261010-v38-4-188"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
     <script src="rain.js?v=20261029-v38-4-234-audit"></script>
+    <script src="rain-gauge-audit.js?v=20261105-v38-4-244"></script>
     <!-- Cloudflare Web Analytics -->
     <script
       type="module"
