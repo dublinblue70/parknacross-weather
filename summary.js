@@ -332,7 +332,7 @@ function renderSoil(current,historyRows=[]){
     set("summarySoilWateringTrend",result.trend);
     set("summarySoilWateringContext",result.context);
   }
-  set("summarySoilUpdated","WH52 observation from compost in one potted hydrangea. These values do not represent other flowerpots.");
+  set("summarySoilUpdated","WH52 observation from the compost in this potted hydrangea. Compare readings with this pot’s own history.");
 }
 async function shareCurrentWeather(){
   const text=shareText(); if(!text)return;
