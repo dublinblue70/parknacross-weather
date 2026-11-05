@@ -1,9 +1,19 @@
 name: Complete accessibility audit
 on:
+  pull_request:
+    paths:
+      - '*.html'
+      - '*.css'
+      - '*.js'
+      - 'audit/**'
+      - '.github/workflows/accessibility-audit.yml'
   push:
     branches: [main]
     paths:
-      - 'audit/axe-browser-audit.mjs'
+      - '*.html'
+      - '*.css'
+      - '*.js'
+      - 'audit/**'
       - '.github/workflows/accessibility-audit.yml'
   workflow_dispatch:
 permissions:

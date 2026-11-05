@@ -14,7 +14,7 @@
    catch(error){throw Error(controller.signal.aborted?'The admin service took too long to respond. Please try signing in again.':'Could not connect to the admin service. Check your connection and try again.');}
    finally{clearTimeout(timer);}
    if(response.status===401){signOut();throw Error('Admin key was not accepted. Please sign in again.');}
-   if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.error==='Invalid sky setting'?'The Worker does not support this sky choice yet. Deploy Worker v38.4.87, or choose Overcast for now.':data.error||(response.status===404?'This feature needs Worker v38.4.86.':`Request failed (${response.status}).`));}
+   if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.error==='Invalid sky setting'?'The Worker does not support this sky choice yet. Check that the latest Cloudflare Worker is deployed, or choose Overcast for now.':data.error||(response.status===404?'This feature needs a newer Cloudflare Worker deployment.':`Request failed (${response.status}).`));}
    return response;
  }
  function signOut(){
@@ -64,8 +64,8 @@
  $('adminCompatibilityRefresh')?.addEventListener('click',checkCompatibility);
  async function loadSky(){try{const payload=await (await request('/weather-window/sky')).json(),d=payload.override||{};if(!active)return;$('adminSky').value=d.sky||'auto';$('adminRain').value=d.rain||'auto';window.dispatchEvent(new Event('parknacross:window-preview-update'));$('adminSkyStatus').textContent=(d.sky&&d.sky!=='auto')||(d.rain&&d.rain!=='auto')?`Visual settings: sky ${d.sky||'auto'} · rain / storm ${d.rain||'auto'}${d.expires_at?' · expires '+new Date(d.expires_at).toLocaleString('en-IE',{timeZone:'Europe/Dublin'}):''}`:'Automatic forecast sky and station rain are active.';}catch(error){$('adminSkyStatus').textContent=error.message;}}
  $('adminSkyForm').addEventListener('submit',async event=>{
-   event.preventDefault();if(!supported?.rain_override){$('adminSkyStatus').textContent='Check compatibility and deploy Worker v38.4.89 before saving illustration settings.';return;}const done=action('adminSkySave','Saving…');if(done===null)return;$('adminSkySave').disabled=true;
-   try{const response=await request('/weather-window/sky',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sky:$('adminSky').value,rain:$('adminRain').value||'auto',duration:$('adminSkyDuration').value})});const saved=await response.json();if($('adminRain').value&&$('adminRain').value!=='auto'&&saved.override?.rain!==$('adminRain').value)throw Error('Deploy Worker v38.4.88 to save rain and storm settings.');await loadSky();}catch(error){$('adminSkyStatus').textContent=error.message;}finally{done?.();$('adminSkySave').disabled=!supported?.rain_override;}
+   event.preventDefault();if(!supported?.rain_override){$('adminSkyStatus').textContent='Check Worker compatibility before saving illustration settings.';return;}const done=action('adminSkySave','Saving…');if(done===null)return;$('adminSkySave').disabled=true;
+   try{const response=await request('/weather-window/sky',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sky:$('adminSky').value,rain:$('adminRain').value||'auto',duration:$('adminSkyDuration').value})});const saved=await response.json();if($('adminRain').value&&$('adminRain').value!=='auto'&&saved.override?.rain!==$('adminRain').value)throw Error('Update the Cloudflare Worker to save rain and storm settings.');await loadSky();}catch(error){$('adminSkyStatus').textContent=error.message;}finally{done?.();$('adminSkySave').disabled=!supported?.rain_override;}
  });
  async function preparePhoto(file){
    if(!/^image\/(jpeg|png|webp)$/.test(file.type))throw Error('Choose a JPEG, PNG or WebP photo.');
@@ -86,7 +86,7 @@
  }
  async function loadArchive(nextOffset=0,nextPosition=0){
    const ticket=generation,sequence=++archiveSequence;const restore=['archiveAll','archivePrevious','archiveNext'].map(id=>action(id,'Loading…'));$('archiveCaption').textContent='Loading photo archive…';
-   try{const day=$('archiveDay').value,d=await (await request(`/sky-photo/archive/admin?limit=50&offset=${nextOffset}${day?'&day='+encodeURIComponent(day):''}`)).json();if(!active||ticket!==generation||sequence!==archiveSequence)return;if(day&&d.day!==day)throw Error('Calendar filtering needs Worker v38.4.86. Choose All dates until it is deployed.');items=d.items||[];total=d.total||0;offset=nextOffset;position=nextPosition<0?Math.max(0,items.length-1):nextPosition;await showPhoto();}catch(error){if(sequence===archiveSequence)$('archiveCaption').textContent=error.message;}finally{restore.forEach(done=>done?.());archiveControls();}
+   try{const day=$('archiveDay').value,d=await (await request(`/sky-photo/archive/admin?limit=50&offset=${nextOffset}${day?'&day='+encodeURIComponent(day):''}`)).json();if(!active||ticket!==generation||sequence!==archiveSequence)return;if(day&&d.day!==day)throw Error('Calendar filtering is not supported by the deployed Worker. Choose All dates until the Worker is updated.');items=d.items||[];total=d.total||0;offset=nextOffset;position=nextPosition<0?Math.max(0,items.length-1):nextPosition;await showPhoto();}catch(error){if(sequence===archiveSequence)$('archiveCaption').textContent=error.message;}finally{restore.forEach(done=>done?.());archiveControls();}
  }
  $('archiveDay').addEventListener('change',()=>loadArchive());
  $('archiveAll').addEventListener('click',()=>{$('archiveDay').value='';loadArchive();});

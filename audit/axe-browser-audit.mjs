@@ -55,3 +55,8 @@ fs.mkdirSync('audit-results',{recursive:true});
 fs.writeFileSync('audit-results/axe-browser-audit.json',JSON.stringify(report,null,2));
 const groups={};for(const v of report.violations){const g=groups[v.id]??={impact:v.impact,pages:[],nodes:0,examples:[]};g.pages.push(v.p+'@'+v.width);g.nodes+=v.nodes;if(g.examples.length<5)g.examples.push({p:v.p,width:v.width,selectors:v.selectors});}
 console.log('WHOLE_SITE_AXE_AUDIT '+JSON.stringify({scanned:report.checked.length,staticIssues:report.staticIssues.slice(0,40),overflows:report.overflows,violations:Object.entries(groups).map(([id,g])=>({id,...g})),pageErrors:report.pageErrors.slice(0,30)}));
+// Fail the workflow on serious WCAG regressions, missing assets or runtime errors.
+// Minor notices are still reported for review, but are not blocking.
+const blockers=report.staticIssues.length+report.overflows.length+report.pageErrors.length+
+  report.violations.filter(issue=>['critical','serious'].includes(issue.impact)).length;
+if(blockers){console.error(`ACCESSIBILITY_AUDIT_FAILED: ${blockers} blocking issue(s).`);process.exitCode=1;}
