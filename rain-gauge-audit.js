@@ -63,10 +63,12 @@ async function check(){
  const button=document.getElementById("rainGaugeAuditRefresh");if(button)button.disabled=true;
  set("rainGaugeAuditUpdated","Checking saved rainfall observations…");
  try {
-   const responses=await Promise.allSettled([read("/day?date=2026-11-03"),read("/history?hours=72"),read("/current")]);
+   const responses=await Promise.allSettled([read("/day?date=2026-11-03"),read("/history?hours=72"),read("/current"),read("/site-capabilities")]);
    const day=responses[0].status==="fulfilled"?responses[0].value:null;
    const history=responses[1].status==="fulfilled"?responses[1].value:null;
    const current=responses[2].status==="fulfilled"?responses[2].value:null;
+   const capabilities=responses[3].status==="fulfilled"?responses[3].value:null;
+   const traditionalMapped=capabilities?.features?.wh40h_primary_rain===true;
    const archived=day&&day.available!==false?analyseChangeover(day):null;
    if(archived){
      set("rainGaugeBefore",mm(archived.before.observedIncreaseMm)+" observed");
@@ -82,8 +84,8 @@ async function check(){
    const epoch=num(current?.epoch)?Number(current.epoch):null;
    const fresh=epoch!==null&&Date.now()/1000-epoch<=600&&epoch<=Date.now()/1000+120;
    const hasRainFields=num(current?.rain_daily_mm)&&num(current?.rain_rate_mm_h);
-   set("rainGaugeFeedState",fresh&&hasRainFields?"Data fields current":"Not verified");
-   set("rainGaugeFeedDetail",fresh&&hasRainFields?"Latest station observation "+when(epoch)+". This tests software data availability only.":"Live observation missing, stale or missing rainfall fields.");
+   set("rainGaugeFeedState",fresh&&hasRainFields&&traditionalMapped?"Mapped feed current":"Not verified");
+   set("rainGaugeFeedDetail",fresh&&hasRainFields&&traditionalMapped?"Worker confirms traditional WH40H mapping; latest observation "+when(epoch)+". This tests software data availability, not sensor hardware.":"Cannot confirm a fresh rain reading AND a deployed Worker with WH40H traditional source mapping.");
    if(history&&Array.isArray(history.readings)){
      const activity=analyseRecentTips(history.readings);
      set("rainGaugeTipState",activity.lastRise?"Counter increased":activity.samples>1?"No recent tips observed":"Not verified");
