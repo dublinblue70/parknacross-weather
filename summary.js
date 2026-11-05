@@ -315,7 +315,7 @@ function shareText(){
   const todayRain=rainTotal(currentTodayRows); if(usable(todayRain))parts.push(`${num(todayRain)} mm rain today`);
   return parts.join(" · ");
 }
-function renderSoil(current){
+function renderSoil(current,historyRows=[]){
   const panel=$("summarySoilPanel");
   const hasSoil=usable(current?.soil_moisture_pct)||usable(current?.soil_temperature_c)||usable(current?.soil_ec_us_cm);
   if(panel) panel.hidden=!hasSoil;
@@ -323,7 +323,16 @@ function renderSoil(current){
   set("summarySoilMoisture",usable(current.soil_moisture_pct)?`${num(current.soil_moisture_pct)}%`:"--");
   set("summarySoilTemperature",usable(current.soil_temperature_c)?`${num(current.soil_temperature_c)}°C`:"--");
   set("summarySoilEc",usable(current.soil_ec_us_cm)?`${Math.round(Number(current.soil_ec_us_cm)).toLocaleString("en-IE")} µS/cm`:"--");
-  set("summarySoilUpdated","Latest soil-sensor observation. This represents only the probe's immediate soil or container; use trends against its own baseline.");
+  const guide=window.ParknacrossHydrangeaSoil;
+  if(guide){
+    const trend=guide.trendFromReadings(historyRows,current);
+    const result=guide.assess({moisture:current.soil_moisture_pct,temperature:current.soil_temperature_c,trendChange:trend,epoch:current.epoch});
+    set("summarySoilWateringStatus",result.status);
+    set("summarySoilWateringAdvice",result.advice);
+    set("summarySoilWateringTrend",result.trend);
+    set("summarySoilWateringContext",result.context);
+  }
+  set("summarySoilUpdated","WH52 observation from compost in one potted hydrangea. These values do not represent other flowerpots.");
 }
 async function shareCurrentWeather(){
   const text=shareText(); if(!text)return;
@@ -358,7 +367,7 @@ async function loadSummary(){
     const fresh=recentObservation(todayRows.at(-1)),status=$("summaryDataStatus");if(status){status.textContent=!todayRows.length?"Unavailable":failed.length?"Some data unavailable":fresh?"Up to date":"Latest reading delayed";if(status.dataset)status.dataset.state=failed.length||!fresh?"review":"good";}
     set("summaryUpdated",todayMetrics.latest?`Latest observation: ${exactDateTime(todayMetrics.latest)} · Irish time`:"No station observations available");set("summarySubtitle",todayRows.length?`${failed.length||!fresh?"Available":"Live day-so-far"} summary from ${todayRows.length.toLocaleString("en-IE")} station readings${failed.length?"":fresh?", including the latest live update":", using the latest available observations"} · latest observation ${shortTime(todayMetrics.latest)}.${failed.length?` Some sources could not refresh: ${failed.join(", ")}. Figures use available observations and may be incomplete.`:""}`:"Today's observations are temporarily unavailable.");
     const recentCompletedDays=(Array.isArray(daily?.days)?daily.days:[]).filter(row=>row.day!==todayKey).slice(-7);
-    renderToday(todayMetrics,yesterdayMetrics,recentCompletedDays);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);renderSignificantWeather(rows);renderSoil(current);
+    renderToday(todayMetrics,yesterdayMetrics,recentCompletedDays);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);renderSignificantWeather(rows);renderSoil(current,rows);
     if(results[0].status==="rejected"){set("significantWeatherBadge","Unavailable");set("significantWeatherNarrative","The latest 24-hour review could not refresh. Available observations elsewhere remain visible.");}
     $("downloadCsvButton").disabled=!todayRows.length;$("shareWeatherButton").disabled=!latestShareRow;
     set("actionStatus",todayRows.length?`${todayRows.length.toLocaleString("en-IE")} observations ready. Download or share using the buttons above.`:"No observations are available yet.");if(todayRows.length&&!latestShareRow)set("actionStatus","Available daily observations can be downloaded. Sharing current weather needs a recent reading.");

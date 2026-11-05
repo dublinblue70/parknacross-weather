@@ -1,5 +1,5 @@
 # Parknacross source release — 5 November 2026
-- Website source: **38.4.245**, GitHub Pages (automatic deployment on main).
+- Website source: **38.4.246**, GitHub Pages (automatic deployment on main).
 - Cloudflare Worker source: **38.4.240** at `_worker/worker.mjs`, deployed separately by the station owner.
 - The two version numbers refer to different components and do not have to match.
 - **Do not infer live Worker deployment from this file.** Check the actual `/site-capabilities` and `/current` endpoints, and use the admin compatibility tool.
@@ -19,3 +19,9 @@
 - Default layout: Today at a glance → Station readings → Ardamine forecast, ahead of optional planning widgets. Existing visitor-defined section arrangements remain respected.
 - Validate the six Dashboard shortcut links in three balanced mobile rows rather than an obsolete five-link layout.
 - Bump static-asset query versions and the service-worker cache release to ensure the repaired CSS/JS reaches installed devices.
+
+## 38.4.246 — Potted hydrangea soil guide
+- The WH52 is identified as being installed in a hydrangea flowerpot on the Dashboard, Summary and Station pages.
+- Dashboard and Summary provide provisional watering advice combining the current moisture value, available trend and season. Stale or missing observations must not imply that watering is unnecessary.
+- Tentative moisture categories are not calibrated plant-care targets: check compost 4–5 cm below the surface and ensure drainage.
+- Cloudflare Worker code, sensor settings and historical weather observations remain unchanged.
