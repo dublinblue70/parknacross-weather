@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-243-accessibility-monitoring-20261105";
+const CACHE_NAME = "parknacross-v38-4-244-gauge-audit-20261105";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
@@ -99,6 +99,7 @@ const STATIC_ASSETS = [
   "./graphs.js",
   "./lightning-charts.js",
   "./rain.js",
+  "./rain-gauge-audit.js",
   "./climate.js",
   "./monthly.js",
   "./annual.js",
