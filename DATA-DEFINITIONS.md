@@ -21,9 +21,9 @@ Dashboard, Summary, Rain Centre, History, Records, reports and downloads.
 
 ## Rain sensor changeover
 
-- **From 3 November 2026:** the installed Ecowitt WH40H is the selected primary *traditional tipping-bucket* rain gauge (0.1 mm resolution); the WS90 continues to provide wind, outdoor temperature/humidity, solar and UV measurements.
+- **From approximately 13:00 GMT (Irish time) on 3 November 2026, during dry conditions:** the installed Ecowitt WH40H is the selected primary *traditional tipping-bucket* rain gauge (0.1 mm resolution); the WS90 continues to provide wind, outdoor temperature/humidity, solar and UV measurements.
 - **Before the change:** rainfall in the saved archive was collected from the previous rain sensing setup. Keep the original historical observations, without retrospectively attributing them to the WH40H.
-- **Changeover day:** daily and cumulative figures may include readings taken across the switch, so annotate comparisons involving 3 November 2026. The new sensor does not create a new historical dataset or automatically recalibrate old rainfall readings.
+- **Changeover day:** daily and cumulative figures may include readings taken across the approximately 13:00 GMT switch, so annotate comparisons involving 3 November 2026. Do not assign any portion of that day's rainfall to the WH40H without a timestamped, gauge-specific counter comparison. The new sensor does not create a new historical dataset or automatically recalibrate old rainfall readings.
 - The Ecowitt API `rainfall` group is the WH40H/traditional source; `rainfall_piezo` belongs to the old WS90 rain source and must not silently replace missing WH40H data.
 
 ## Data sources and reconciliation

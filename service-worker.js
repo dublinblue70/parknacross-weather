@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-242-wh40h-dry-changeover-20261103";
+const CACHE_NAME = "parknacross-v38-4-243-accessibility-monitoring-20261105";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",

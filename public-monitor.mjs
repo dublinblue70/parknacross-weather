@@ -11,7 +11,8 @@ export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https:
   const fresh=epoch=>epoch!==null&&epoch!==undefined&&Number.isFinite(Number(epoch))&&now/1000-Number(epoch)>=-120&&now/1000-Number(epoch)<=900;
   const tasks=[
     ['Website',site+'/',async r=>{assert.match(await r.text(),/PARKNACROSS WEATHER/);} ],
-    ['Current readings',api+'/current',async r=>{const d=await r.json();assert.ok(!d.error&&fresh(d.epoch),'Latest observation is missing or delayed');}],
+    ['Current readings',api+'/current',async r=>{const d=await r.json();assert.ok(!d.error&&fresh(d.epoch),'Latest observation is missing or delayed');assert.ok(d.rain_rate_mm_h!==null&&d.rain_rate_mm_h!==undefined&&d.rain_daily_mm!==null&&d.rain_daily_mm!==undefined&&Number.isFinite(Number(d.rain_rate_mm_h))&&Number.isFinite(Number(d.rain_daily_mm)),'WH40H rainfall fields are missing or invalid; a valid zero is fine');}],
+    ['WH40H primary-source mapping',api+'/site-capabilities',async r=>{const d=await r.json();assert.equal(d?.features?.wh40h_primary_rain,true,'Deployed Worker does not confirm WH40H primary rain source');}],
     ['Summary observations',api+`/history?hours=48&_window=${Math.floor(now/300000)}`,async r=>{const d=await r.json();assert.ok(Array.isArray(d.readings)&&d.readings.some(row=>fresh(row.epoch)),'Summary archive has no fresh observations');}],
     ['Daily summaries',api+'/daily?days=8',async r=>{const d=await r.json();assert.ok(Array.isArray(d.days)&&d.days.some(row=>/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(row.day)&&Math.abs(now-Date.parse(row.day+'T12:00:00Z'))<2*86400000),'Recent daily archive is missing');}],
     ['Rain events',api+'/rain-events?days=30',async r=>{const d=await r.json();assert.ok(Array.isArray(d.events)&&Number.isFinite(d.event_count)&&!d.error,'Rain-event history unavailable');}],
@@ -65,15 +66,15 @@ export async function checkArchiveConsistency({fetcher=fetch,api='https://parkna
     const [stats,daily] = await Promise.all([statsRes.json(),dailyRes.json()]);
     if (!Array.isArray(daily.days) || !stats.records) throw Error('Archive comparison data unavailable');
     const issues = archiveDiscrepancies(stats,daily,now);
-    return {name:'Historical records reconciliation',ok:true,warning:issues.length?issues.join(' | '):null};
+    return {name:'Historical records reconciliation',ok:issues.length===0,warning:issues.length?issues.join(' | '):null};
   } catch(e) {
-    return {name:'Historical records reconciliation',ok:true,warning:'Unable to verify archive consistency: '+e.message};
+    return {name:'Historical records reconciliation',ok:false,warning:'Unable to verify archive consistency: '+e.message};
   }
 }
 
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
   const results=await checkPublicSite();
   results.push(await checkArchiveConsistency());
-  for(const result of results)console.log(`${result.warning?'WARN':result.ok?'PASS':'FAIL'}: ${result.name}${result.error?' — '+result.error:''}${result.warning?' — '+result.warning:''}`);
+  for(const result of results)console.log(`${result.ok?'PASS':'FAIL'}: ${result.name}${result.error?' — '+result.error:''}${result.warning?' — '+result.warning:''}`);
   if(results.some(result=>!result.ok))process.exitCode=1;
 }
