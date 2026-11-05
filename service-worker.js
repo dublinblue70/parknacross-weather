@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-245-dashboard-order-fix-20261105";
+const CACHE_NAME = "parknacross-v38-4-246-hydrangea-guide-20261105";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
@@ -95,6 +95,8 @@ const STATIC_ASSETS = [
   "./site-config.js",
   "./platform.js",
   "./summary.js",
+  "./hydrangea-soil.js",
+  "./hydrangea-soil.css",
   "./radar.js",
   "./graphs.js",
   "./lightning-charts.js",

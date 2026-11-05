@@ -19,6 +19,13 @@ Dashboard, Summary, Rain Centre, History, Records, reports and downloads.
 | Official weather warning | Met Éireann information. A failed warning feed means `unavailable`, not `no warning`. |
 | Archive completeness | Ratio of saved observations to expected 5-minute slots for that Irish calendar date, including 23- and 25-hour DST dates. |
 
+## WH52 potted hydrangea context
+
+- The Ecowitt WH52 probe is installed in compost in one outdoor **potted hydrangea**. It does not measure the acer, bays or other pots.
+- Moisture bands (below 20%, 20–29%, 30–55%, above 55%) are **trial prompts only**, not validated hydrangea watering limits. Check compost 4–5 cm below the surface.
+- Advice may incorporate the trend and Irish season. Missing or stale readings must not be presented as confirmation that watering is unnecessary.
+- Soil conductivity is not a direct nutrient or plant-health measurement. Do not alter archived measurements to reflect planting context.
+
 ## Rain sensor changeover
 
 - **From approximately 13:00 GMT (Irish time) on 3 November 2026, during dry conditions:** the installed Ecowitt WH40H is the selected primary *traditional tipping-bucket* rain gauge (0.1 mm resolution); the WS90 continues to provide wind, outdoor temperature/humidity, solar and UV measurements.

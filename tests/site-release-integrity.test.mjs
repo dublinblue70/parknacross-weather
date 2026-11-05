@@ -13,7 +13,7 @@ for(const page of pages){
   assert.ok(html.includes(page==='index.html'?'site-polish.css?v=20261103-v38-4-242-astronomy-fix':cssToken),page+' must request the current shared mobile UX stylesheet');
 }
 const names=['status.js','status-ui.js','app.js','rain.js','history.js',
- 'graphs.js','station-page.js','site-polish.js','review-tools.js','rain-gauge-audit.js',
+ 'graphs.js','station-page.js','site-polish.js','review-tools.js','rain-gauge-audit.js','hydrangea-soil.js',
  'monthly.js','annual.js','sky.js','radar.js','coast.js',
  'dashboard-ui.js','dashboard-enhancements.js','service-worker.js'];
 for(const name of names){
@@ -35,4 +35,8 @@ assert.ok(read('index.html').indexOf('id="observationsHeading"')<read('index.htm
 assert.ok(read('index.html').indexOf('id="forecast"')<read('index.html').indexOf('id="planning"'),'Local forecast must precede planning tools');
 assert.match(read('rain.html'),/id="rainGaugeAudit"/);
 assert.match(read('service-worker.js'),/\.\/rain-gauge-audit\.js/);
+assert.match(read('summary.html'),/Potted hydrangea · soil readings/);
+assert.match(read('index.html'),/id="soilWateringStatus"/);
+assert.match(read('summary.html'),/id="summarySoilWateringStatus"/);
+assert.match(read('service-worker.js'),/\.\/hydrangea-soil\.js/);
 console.log('PASS: '+(pages.length-2)+' public pages use current mobile UX CSS; JavaScript syntax and WH40H provenance checks passed.');

@@ -1240,7 +1240,17 @@ function updateSoilPanel(current) {
   }
   if(candidates.length<3 && moistureChange === null)eventText="More saved readings are needed to describe the soil moisture trend.";
   set("soilEvent",eventText);
-  set("soilSummary", "Live garden soil reading. Open Graphs to see how moisture, temperature and conductivity change over time.");
+  set("soilSummary", "Ecowitt WH52 measuring compost in one potted hydrangea. Open Graphs to compare moisture, temperature and conductivity with its own history.");
+  const soilGuide=window.ParknacrossHydrangeaSoil;
+  if(soilGuide){
+    const guidance=soilGuide.assess({
+      moisture,temperature,trendChange:moistureChange,
+      epoch:usable(current?.epoch)?Number(current.epoch):null
+    });
+    set("soilWateringStatus",guidance.status);
+    set("soilWateringAdvice",guidance.advice);
+    set("soilWateringContext",guidance.context);
+  }
 }
 
 function stationDayKey(epoch){return new Date(Number(epoch)*1000).toLocaleDateString("en-CA",{timeZone:STATION_TIME_ZONE});}

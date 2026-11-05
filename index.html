@@ -582,7 +582,7 @@
         }
       }
     </style>
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261027-compact-zoom"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261105-dashboard-flex-order-fix"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="wind-rose.css?v=20261031-visual-consistency"><link rel="stylesheet" href="local-forecast.css?v=20261021-descriptions"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261103-v38-4-242-astronomy-fix">
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261027-compact-zoom"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261105-dashboard-flex-order-fix"><link rel="stylesheet" href="hydrangea-soil.css?v=20261105-v38-4-246"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="wind-rose.css?v=20261031-visual-consistency"><link rel="stylesheet" href="local-forecast.css?v=20261021-descriptions"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261103-v38-4-242-astronomy-fix">
 <script src="site-polish.js?v=20261101-v38-4-239" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
 </head>
@@ -1435,18 +1435,24 @@
         <section id="soilPanel" class="soil-panel" hidden aria-labelledby="soilHeading">
           <div class="soil-panel-copy">
             <span class="section-eyebrow">Garden sensor</span>
-            <div class="soil-heading-row"><h2 id="soilHeading">Garden soil</h2><span id="soilBaselineBadge" class="coverage-badge">Early data</span></div>
-            <p id="soilSummary">Waiting for the first garden soil reading…</p>
+            <div class="soil-heading-row"><h2 id="soilHeading">Potted hydrangea</h2><span id="soilBaselineBadge" class="coverage-badge">Early data</span></div>
+            <p id="soilSummary">WH52 probe in a hydrangea flowerpot. Waiting for its first reading…</p>
             <p id="soilBaselineNote" class="soil-baseline-note">The sensor is building its 14-day local baseline.</p>
             <p id="soilEvent" class="soil-event">Building a soil trend from saved readings…</p>
             <small id="soilFreshness">Waiting for sensor freshness…</small>
           </div>
           <div class="soil-stats">
-            <div><span>Moisture</span><strong id="soilMoisture">--</strong><small id="soilMoistureTrend">Trend building</small></div>
+            <div><span>Hydrangea soil moisture</span><strong id="soilMoisture">--</strong><small id="soilMoistureTrend">Trend building</small></div>
             <div><span>Root-zone temperature</span><strong id="soilTemperature">--</strong><small>Measured in the soil</small></div>
             <div><span>Conductivity</span><strong id="soilEc">--</strong><small>Dissolved-salt trend</small></div>
           </div>
-          <p class="soil-note">One Ecowitt soil sensor represents its immediate soil or container only. Moisture and conductivity are best compared with this sensor’s own baseline—not treated as universal plant-health targets.</p>
+          <div class="hydrangea-watering" aria-labelledby="soilWateringHeading">
+            <h3 id="soilWateringHeading">Should the hydrangea be watered?</h3>
+            <strong id="soilWateringStatus">Checking compost moisture…</strong>
+            <p id="soilWateringAdvice">Feel the compost before watering.</p>
+            <p id="soilWateringContext" class="hydrangea-watering-context">Trial guidance for this pot, not an automatic watering instruction.</p>
+          </div>
+          <p class="soil-note">This WH52 probe measures compost in one potted hydrangea, not the acer, bays or other flowerpots. Compare moisture and conductivity with this pot’s own baseline.</p>
         </section>
 
         
@@ -1793,7 +1799,7 @@
     <script src="source-freshness.js?v=20261026-v38-4-232"></script>
     <script src="dashboard-enhancements.js?v=20261103-mobile-forecast-preview"></script>
     <script src="archive-quality.js?v=20261008-v38-4-170"></script>
-<script src="chart-explorer.js?v=20261027-compact-zoom"></script><script src="dashboard-preferences.js?v=20261105-default-section-order"></script><script src="local-forecast.js?v=20261026-v38-4-232"></script><script src="app.js?v=20261029-v38-4-234-audit"></script>
+<script src="chart-explorer.js?v=20261027-compact-zoom"></script><script src="dashboard-preferences.js?v=20261105-default-section-order"></script><script src="local-forecast.js?v=20261026-v38-4-232"></script><script src="hydrangea-soil.js?v=20261105-v38-4-246"></script><script src="app.js?v=20261105-v38-4-246-hydrangea"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
