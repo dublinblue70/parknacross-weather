@@ -376,13 +376,13 @@ const visitorOrder = [
   'class="hero-main-card"',
   'class="station-bar"',
   'class="today-section"',
-  'class="local-planning"',
   'class="metrics-section"',
   'class="forecast-section"',
+  'class="local-planning"',
   'class="today-sky-panel"'
 ].map(marker => visitorDashboard.indexOf(marker));
 if (visitorOrder.some(pos => pos < 0) || visitorOrder.some((pos, i) => i > 0 && pos <= visitorOrder[i-1])) {
-  failures.push("index.html: core live weather must appear before optional Dashboard features");
+  failures.push("index.html: live readings and forecast must precede optional planning tools");
 }
 const visitorStyles = await readFile(join(root, "review-ui.css"), "utf8");
 if (!visitorStyles.includes("--ui-small-text: .8125rem") || !visitorStyles.includes("body.dashboard-page .hero-stat span")) {
