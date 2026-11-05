@@ -437,9 +437,11 @@ body.dashboard-page #livePill #liveText {
   body.dashboard-page .forecast-mobile-preview span{font-size:.875rem;color:var(--text);min-width:0;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 }
 
-/* 5 Nov 2026: follow the semantic DOM order rather than legacy visual
-   reordering rules. Readings and forecast precede optional planning tools. */
-body.dashboard-page #dashboard > * { order: initial !important; }
+/* 5 Nov 2026: respect DOM/default-preference order, including sections
+   moved into the display:contents customisation host. Legacy flex-order rules
+   previously pushed Today/Readings below the planning widgets. */
+body.dashboard-page #dashboard > *,
+body.dashboard-page #dashboardOptionalSections > * { order: 0 !important; }
 @media(max-width:640px) {
   body.dashboard-page .dashboard-shortcuts a:last-child { grid-column: auto; }
 }
