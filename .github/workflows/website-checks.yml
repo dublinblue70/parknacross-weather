@@ -37,6 +37,7 @@ jobs:
           path: |
             test-results/**/*.png
             test-results/**/*.jpg
+            test-results/**/*.json
           if-no-files-found: ignore
           retention-days: 14
       - run: npm run test:pwa-browser
