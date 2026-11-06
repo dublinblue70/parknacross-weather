@@ -8,7 +8,7 @@ const status=read("status.js"),index=read("index.html"),downloads=read("download
 assert.equal(packageVersion,"38.4.250");
 assert.match(admin,new RegExp("Admin interface "+packageVersion.replaceAll(".","\\.")));
 assert.match(sw,/parknacross-v38-4-250-soil-baseline/);
-assert.match(app,/2026-09-28T00:00:00\+01:00/);
+assert.match(app,/firstValidSoilEpoch/);
 assert.match(app,/A normal gateway packet without soil fields is not evidence/);
 assert.match(status,/A recent successful WH52 receipt remains valid/);
 assert.match(index,/Jump to weather information/);
