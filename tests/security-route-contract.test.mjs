@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const worker=fs.readFileSync(new URL('../_worker/worker.mjs',import.meta.url),'utf8');
+const route=(start,end)=>{const a=worker.indexOf(start);const b=worker.indexOf(end,a+start.length);assert.ok(a>=0&&b>a,start+' exists');return worker.slice(a,b);};
+const photo=route('if (url.pathname === "/sky-photo" && request.method === "POST")','if (url.pathname === "/sky-photo" && request.method === "GET")');
+assert.match(photo,/adminDiagnosticAuthorized\(request, env\)/);
+assert.match(photo,/unauthorizedResponse\(request\)/);
+const ingest=route('const shortWh52Path = url.pathname.startsWith("/w/")','if (url.pathname === "/soil-baseline"');
+assert.match(ingest,/readSecret\(env.ECOWITT_UPLOAD_TOKEN\)/);
+assert.match(ingest,/suppliedToken !== configuredToken/);
+assert.match(ingest,/status: 401/);
+const admin=route('if (url.pathname === "/admin/capabilities")','if (url.pathname === "/');
+assert.match(admin,/adminDiagnosticAuthorized\(request, env\)/);
+assert.match(admin,/unauthorizedResponse\(request\)/);
+assert.match(worker,/requestRateLimited\(request,"photo-writes",30\)/);
+console.log('PASS: source-level auth guards on admin, sky photo and Ecowitt ingestion remain in place; this is not a penetration test.');
