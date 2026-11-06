@@ -172,8 +172,8 @@ function buildStory(m, yesterday, recentDays=[]) {
     if(Math.abs(d)>=1) comparisons.push(`rainfall is ${d>0?"above":"below"} the recent daily average`);
   }
 
-  const comparisonSentence=comparisons.length?`Compared with recent conditions, ${comparisons.slice(0,2).join(" and ")}.`:"";
-  const uv=usable(m.uv?.uv_index)?`Peak UV so far is ${Number(m.uv.uv_index).toFixed(1)}.`:"";
+  const comparisonSentence=comparisons.length?`For context, ${comparisons.slice(0,2).join("; ")}.`:"";
+  const uv=usable(m.uv?.uv_index)&&Number(m.uv.uv_index)>=1?`Peak UV so far is ${Number(m.uv.uv_index).toFixed(1)}.`:"";
   return [first,temp,windSentence,comparisonSentence,uv,"This summary uses available observations; gaps may affect its totals and extremes."].filter(Boolean).join(" ");
 }
 
