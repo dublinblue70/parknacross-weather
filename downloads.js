@@ -90,6 +90,16 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   fetch((globalThis.PARKNACROSS_API_BASE||"https://parknacross-weather.dave-s-carter.workers.dev")+"/site-capabilities",{cache:"no-store",signal:AbortSignal.timeout(10000)}).then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>{selectionAvailable=data.features?.selected_export_fields===true;boxes.forEach(box=>box.disabled=!selectionAvailable);all.disabled=!selectionAvailable;note.textContent=selectionAvailable?"Time fields are always included. Choose measurements below; complete exports remain available. Large files download directly through your browser.":"Column selection will be available after the data-service update. Complete CSV downloads remain available.";}).catch(()=>{note.textContent="Column selection could not be verified. Complete CSV downloads remain available.";});
   for(const id of ["exportFrom","exportTo"]){for(const event of ["input","change"])$(id)?.addEventListener(event,()=>{rangeEdited=true;});}
+  // Estimate the maximum five-minute observation rows before downloading.
+  // Real counts are returned by Preview and may be lower if the archive has gaps.
+  document.querySelectorAll(".export[data-days]").forEach(button=>{
+    const days=Number(button.dataset.days);
+    if(!Number.isFinite(days)||days<=0)return;
+    const note=document.createElement("p");
+    note.className="export-estimate";
+    note.textContent=`Up to ~${Math.round(days*288).toLocaleString("en-IE")} five-minute readings (estimate; use Preview for actual coverage).`;
+    button.closest(".card")?.appendChild(note);
+  });
   document.querySelectorAll(".export").forEach(button=>button.addEventListener("click",()=>download(button.dataset.days,button.dataset.name,button)));
   $("customExportButton")?.addEventListener("click",event=>downloadCustom(event.currentTarget));
   setRangeDefaults(null);loadArchiveCoverage();loadBackupStatus();
