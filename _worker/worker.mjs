@@ -2803,20 +2803,23 @@ export default {
       // First valid WH52 observation in the D1 archive, independent of
       // installation paperwork and without reading the full history into memory.
       if (url.pathname === "/soil-baseline" && request.method === "GET") {
-        const first = await env.DB.prepare(
-          `SELECT epoch FROM ${TABLE}
-           WHERE soil_moisture_pct >= 0 AND soil_moisture_pct <= 100
-             AND soil_temperature_c >= -40 AND soil_temperature_c <= 60
-           ORDER BY epoch ASC LIMIT 1`
-        ).first();
-        const epoch = Number(first?.epoch);
-        return json({
-          available: Number.isFinite(epoch) && epoch > 0,
-          first_valid_soil_epoch: Number.isFinite(epoch) && epoch > 0 ? epoch : null,
-          basis: "earliest valid archived WH52 moisture and temperature observation",
-          sensor: "WH52",
-          source: "D1 archive"
-        }, 200, { "Cache-Control": "no-store" });
+        // The first archived WH52 observation changes only after backfill.
+        // Reuse the shared Worker cache to avoid rescanning D1 for every visitor.
+        return await cachedJson(request, ctx, 3600, async () => {
+          const first = await env.DB.prepare(
+            `SELECT epoch FROM ${TABLE}
+             WHERE soil_moisture_pct >= 0 AND soil_moisture_pct <= 100
+               AND soil_temperature_c >= -40 AND soil_temperature_c <= 60
+             ORDER BY epoch ASC LIMIT 1`
+          ).first();
+          const epoch = Number(first?.epoch);
+          return {
+            available: Number.isFinite(epoch) && epoch > 0,
+            first_valid_soil_epoch: Number.isFinite(epoch) && epoch > 0 ? epoch : null,
+            basis: "earliest valid archived WH52 moisture and temperature observation",
+            sensor: "WH52", source: "D1 archive"
+          };
+        });
       }
 
       if (url.pathname === "/soil-status" && request.method === "GET") {
