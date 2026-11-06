@@ -1,6 +1,6 @@
 # Cloudflare Worker deployment
 
-`worker.mjs` is the single current deployment source (38.4.240). Replace the complete Cloudflare Worker code with this file and deploy. Preserve the existing bindings, secrets and scheduled triggers. No credential values belong in this repository.
+`_worker/worker.mjs` is the designated Cloudflare Worker deployment source. Its source contains changes newer than the original 38.4.240 rain-gauge release; the public website currently declares release 38.4.249. **Website and Worker versions are independent**, and source changes do not prove that either has been deployed. Deploy the complete Worker only when its changes are required, preserving all existing bindings, secrets and scheduled triggers. No credential values belong in this repository.
 
 The repository-root `worker.mjs` is an **archived snapshot**, not the live deployment source. Never paste that root-level file into Cloudflare. The single designated source is `_worker/worker.mjs`; historical copies under `history/` are reference-only and excluded from GitHub Pages.
 
@@ -29,3 +29,20 @@ The archive is intentionally not rewritten: older rainfall readings retain their
 The Worker now posts each new scheduled Ecowitt observation to PWSWeather's HTTPS `/api/v1/submitwx` endpoint. It converts Celsius, km/h, hPa and millimetres to the imperial fields PWSWeather expects. Only a PWSWeather `success` response records that observation as sent; failures are logged and retried on the next scheduled sync.
 
 Before deploying, add the new station API key to the Cloudflare Worker as the secret binding `PWSWEATHER_API_KEY`. The PWSWeather station ID is `PARKNACROSSWX` in the source. Keep the secret out of the repository. Then deploy the complete `_worker/worker.mjs` script, preserving existing D1 bindings, secrets and scheduled triggers. Check the Worker logs for `PWSWeather accepted observation`, then check the PWSWeather Observations and Logs tabs.
+
+
+## Release verification — 6 November 2026
+
+The public homepage, System Status and Admin pages include a `parknacross-site-version` meta tag. `public-monitor.mjs` compares each served tag with `package.json` during scheduled checks and successful Pages-deployment follow-ups. Version mismatch is a publishing or cache problem, **not** evidence the weather gateway has stopped uploading.
+
+Release procedure:
+1. Confirm GitHub Actions **Website release checks** passed, including Node regressions and Playwright browsers.
+2. Confirm GitHub Pages completed its publish; then inspect homepage, System Status and Admin HTML for the release marker matching `package.json`.
+3. Confirm the PWA reports the new cache version. Use normal refresh first; avoid clearing visitor notification preferences.
+4. Check the live Worker `/health`, `/current`, `/soil-status`, `/marine/sea-temperature`, `/site-capabilities`, and `/rain-summary` as independent services.
+5. Compare WH40H daily rainfall at the same Irish timestamp in current and archived observations; the scheduled monitor verifies that a later live total does not fall below a same-day archived total.
+6. Check real external deliveries independently: PWSWeather's rendered observations and CWOP FindU reception are **not** guaranteed by a successful Worker transmit.
+7. Verify degraded/offline and recovered states on a mobile PWA, including preserved notifications and cached-observation timestamps.
+8. Record the GitHub website commit SHA, Worker deployment SHA, actual deployment times and GitHub Actions run URL in the release notes. Never infer live Worker deployment from GitHub Pages success.
+
+Do not claim production sign-off until both the website and Worker telemetry (if changed) have been checked.
