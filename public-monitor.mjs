@@ -49,6 +49,14 @@ export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https:
     ['Admin interface release',site+'/admin.html',async r=>assertPublishedRelease(await r.text())],
     ['Current readings',api+'/current',async r=>{const d=await r.json();assert.ok(!d.error&&fresh(d.epoch),'Latest observation is missing or delayed');assert.ok(d.rain_rate_mm_h!==null&&d.rain_rate_mm_h!==undefined&&d.rain_daily_mm!==null&&d.rain_daily_mm!==undefined&&Number.isFinite(Number(d.rain_rate_mm_h))&&Number.isFinite(Number(d.rain_daily_mm)),'WH40H rainfall fields are missing or invalid; a valid zero is fine');}],
     ['WH40H primary-source mapping',api+'/site-capabilities',async r=>{const d=await r.json();assert.equal(d?.features?.wh40h_primary_rain,true,'Deployed Worker does not confirm WH40H primary rain source');}],
+    ['WH52 archive baseline',api+'/soil-baseline',async r=>{
+      const d=await r.json();
+      assert.equal(d?.available,true,'No verified WH52 archive-baseline observation returned');
+      assert.ok(Number.isSafeInteger(d.first_valid_soil_epoch)&&d.first_valid_soil_epoch>0,
+        'WH52 baseline timestamp is missing or invalid');
+      assert.ok(d.first_valid_soil_epoch*1000<=now+120000,
+        'WH52 baseline timestamp is in the future');
+    }],
     ['Rainfall pipeline reconciliation',api+'/current',async r=>{
       const current=await r.json();
       const historyResponse=await fetcher(api+'/history?hours=2',{cache:'no-store',signal:AbortSignal.timeout(25000)});
