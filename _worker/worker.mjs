@@ -50,8 +50,6 @@
  * Direct Facebook Graph publishing remains a Facebook-only fallback.
  * Adds a safe current-day recovery endpoint that respects per-network day markers.
  */
-import { connect } from "cloudflare:sockets";
-
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -3646,6 +3644,7 @@ async function publishCwop(env, syncResult) {
   const packet = cwopPacket(reading,epoch,latitude,longitude,rainfall);
   let socket;
   try {
+    const {connect} = await import("cloudflare:sockets");
     socket = connect({hostname:"cwop.aprs.net",port:14580});
     await socket.opened;
     const reader = socket.readable.getReader();
