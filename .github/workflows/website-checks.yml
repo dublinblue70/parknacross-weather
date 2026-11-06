@@ -18,6 +18,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node tests/site-release-integrity.test.mjs
+      - run: node tests/wh52-upload-monitor.test.mjs
       - run: npm run test:smoke
       - run: npm run test:worker-export-range
       - run: npm run test:release
