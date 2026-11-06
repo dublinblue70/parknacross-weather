@@ -1,0 +1,30 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import vm from "node:vm";
+const read=path=>fs.readFileSync(new URL("../"+path,import.meta.url),"utf8");
+const worker=read("_worker/worker.mjs"),dashboard=read("app.js");
+const routeStart=worker.indexOf('if (url.pathname === "/soil-baseline"');
+const routeEnd=worker.indexOf('if (url.pathname === "/soil-status"',routeStart);
+assert.ok(routeStart>=0&&routeEnd>routeStart,"WH52 archive-baseline endpoint exists");
+const route=worker.slice(routeStart,routeEnd);
+assert.match(route,/ORDER BY epoch ASC LIMIT 1/);
+assert.match(route,/soil_moisture_pct >= 0 AND soil_moisture_pct <= 100/);
+assert.match(route,/soil_temperature_c >= -40 AND soil_temperature_c <= 60/);
+const run=vm.runInNewContext('(async function(env,url,request,json,TABLE){'+route+'})');
+const request={method:"GET"},url={pathname:"/soil-baseline"};
+const json=(value,status)=>({value,status});
+for(const [row,available] of [[{epoch:1790578800},true],[null,false]]){
+ let sql="";
+ const env={DB:{prepare(query){sql=query;return{first:async()=>row}}}};
+ const result=await run(env,url,request,json,"weather_readings_v2");
+ assert.equal(result.status,200);
+ assert.equal(result.value.available,available);
+ assert.equal(result.value.first_valid_soil_epoch,available?1790578800:null);
+ assert.match(sql,/ORDER BY epoch ASC LIMIT 1/);
+}
+assert.doesNotMatch(dashboard,/SOIL_SENSOR_BASELINE_START_EPOCH/);
+assert.match(dashboard,/firstValidSoilEpoch/);
+assert.match(dashboard,/Baseline not verified/);
+assert.match(dashboard,/refreshSoilBaseline\(\)/);
+assert.match(dashboard,/SOIL_BASELINE_URL/);
+console.log("PASS: WH52 baseline uses earliest valid archived soil reading, not a guessed date.");
