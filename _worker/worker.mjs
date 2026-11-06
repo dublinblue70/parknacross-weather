@@ -3545,6 +3545,16 @@ async function publishPwsWeather(env, syncResult) {
     return { skipped: true, reason: "observation_already_sent", epoch };
   }
 
+  // Use the same corrected daily rainfall total that the website stores in
+  // its daily summary. The gateway's instantaneous daily counter can reset or
+  // briefly lag the archived maximum, leaving PWSWeather stuck at zero.
+  const day = stationDayKey(new Date(epoch * 1000));
+  const dailyRainRow = day ? await env.DB.prepare(
+    `SELECT rain_mm FROM ${DAILY_TABLE} WHERE day = ? LIMIT 1`
+  ).bind(day).first() : null;
+  const websiteRainMm = day ? correctedRainForDay(day, dailyRainRow?.rain_mm) : null;
+  const pwsRainMm = usableNumber(websiteRainMm) ? websiteRainMm : nullableNumber(reading.rain_daily_mm);
+
   const params = new URLSearchParams();
   params.set("ID", PWSWEATHER_STATION_ID);
   params.set("PASSWORD", apiKey);
@@ -3568,8 +3578,8 @@ async function publishPwsWeather(env, syncResult) {
   if (usableNumber(reading.wind_gust_kmh)) putNumber("windgustmph", Number(reading.wind_gust_kmh) / 1.609344);
   if (usableNumber(reading.pressure_hpa)) putNumber("baromin", Number(reading.pressure_hpa) * 0.0295299830714);
   // Four decimal places in inches preserve the WH40H's 0.1 mm bucket resolution.
-  if (usableNumber(reading.rain_daily_mm)) {
-    putNumber("dailyrainin", Number(reading.rain_daily_mm) / 25.4, 4);
+  if (usableNumber(pwsRainMm)) {
+    putNumber("dailyrainin", Number(pwsRainMm) / 25.4, 4);
   }
   if (usableNumber(reading.solar_w_m2)) putNumber("solarradiation", reading.solar_w_m2);
   if (usableNumber(reading.uv_index)) putNumber("UV", reading.uv_index);
