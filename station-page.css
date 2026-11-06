@@ -103,6 +103,14 @@
   line-height: 1.5;
   color: #b8cbd8;
 }
+.station-cwop-registration {
+  margin-top: 8px !important;
+  color: var(--muted);
+}
+.station-cwop-registration strong {
+  color: var(--text, #f2f7fa);
+  font-weight: 650;
+}
 .station-external-network-link {
   display: inline-flex;
   align-items: center;
