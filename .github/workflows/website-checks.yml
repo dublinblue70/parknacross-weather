@@ -20,6 +20,7 @@ jobs:
       - run: node tests/site-release-integrity.test.mjs
       - run: node tests/whole-site-structure.test.mjs
       - run: node tests/published-release.test.mjs
+      - run: node tests/rain-pipeline-monitor.test.mjs
       - run: node tests/wh52-upload-monitor.test.mjs
       - run: node tests/audit-20261106.test.mjs
       - run: node tests/m2-observation-context.test.mjs
