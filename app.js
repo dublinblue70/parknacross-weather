@@ -16,7 +16,8 @@ const ARDAMINE_LON = -6.25;
 const STATION_TIME_ZONE = "Europe/Dublin";
 const STALE_AFTER_MS = 10 * 60 * 1000;
 const OFFLINE_AFTER_MS = 30 * 60 * 1000;
-const SOIL_SENSOR_BASELINE_START_EPOCH = Date.parse("2026-09-28T00:00:00+01:00") / 1000;
+const SOIL_BASELINE_URL = `${API_BASE}/soil-baseline`;
+let firstValidSoilEpoch = null;
 const SOIL_SENSOR_BASELINE_DAYS = 14;
 
 const $ = id => document.getElementById(id);
@@ -1231,10 +1232,23 @@ function updateSoilPanel(current) {
     return;
   }
   const nowEpoch = usable(current?.epoch) ? Number(current.epoch) : Date.now() / 1000;
-  const baselineDay=Math.max(1,Math.floor((nowEpoch-SOIL_SENSOR_BASELINE_START_EPOCH)/86400)+1),baselineBuilding=baselineDay<=SOIL_SENSOR_BASELINE_DAYS;
+  const validBaseline = usable(firstValidSoilEpoch) && Number(firstValidSoilEpoch) > 0
+    && Number(firstValidSoilEpoch) <= nowEpoch;
+  const baselineDay=validBaseline
+    ? Math.max(1,Math.floor((nowEpoch-Number(firstValidSoilEpoch))/86400)+1) : null;
+  const baselineBuilding=validBaseline && baselineDay<=SOIL_SENSOR_BASELINE_DAYS;
   const baselineBadge=$("soilBaselineBadge"),baselineNote=$("soilBaselineNote");
-  if(baselineBadge){baselineBadge.hidden=!baselineBuilding;baselineBadge.textContent=baselineBuilding?`Early data · day ${baselineDay} of ${SOIL_SENSOR_BASELINE_DAYS}`:"";}
-  if(baselineNote){baselineNote.hidden=!baselineBuilding;baselineNote.textContent=baselineBuilding?"The Ecowitt soil sensor is still building its local baseline. Trend descriptions and event detection are provisional during this period.":"";}
+  if(baselineBadge){
+    baselineBadge.hidden=validBaseline&&!baselineBuilding;
+    baselineBadge.textContent=!validBaseline?"Baseline not verified":baselineBuilding
+      ? `Early data · day ${baselineDay} of ${SOIL_SENSOR_BASELINE_DAYS}`:"";
+  }
+  if(baselineNote){
+    baselineNote.hidden=validBaseline&&!baselineBuilding;
+    baselineNote.textContent=!validBaseline
+      ?"The first valid archived WH52 reading has not been confirmed; watering guidance is provisional."
+      :"The WH52 is building a 14-day archive-based baseline. Guidance is provisional during this period.";
+  }
   set("soilMoisture", moisture === null ? "Unavailable" : `${moisture.toFixed(0)}%`);
   set("soilTemperature", temperature === null ? "Unavailable" : `${temperature.toFixed(1)}°C`);
   set("soilEc", ec === null ? "Unavailable" : `${Math.round(ec).toLocaleString("en-IE")} µS/cm`);
@@ -1300,6 +1314,19 @@ function renderSinceLastVisit(current){
   delta("temperature_c",.3,1,"°C","temperature");delta("pressure_hpa",.5,1," hPa","pressure");
   if(stationDayKey(snapshot.epoch)===stationDayKey(previous.epoch)){const rain=Math.max(0,Number(snapshot.rain_daily_mm||0)-Number(previous.rain_daily_mm||0));changes.push(rain>=.1?`${rain.toFixed(1)} mm of rain was recorded`:"no additional rain was recorded");if(usable(snapshot.soil_moisture_pct)&&usable(previous.soil_moisture_pct)){const change=Number(snapshot.soil_moisture_pct)-Number(previous.soil_moisture_pct);if(Math.abs(change)<1)changes.push("soil moisture stayed steady");else changes.push(`soil moisture ${change>0?"rose":"fell"} ${Math.abs(change).toFixed(0)} percentage point${Math.abs(change)===1?"":"s"}`);}}
   if(!changes.length)return;const panel=$("sinceVisitPanel");if(panel)panel.hidden=false;set("sinceVisitText",`${changes.slice(0,4).join("; ")}. Compared with your visit ${lightningRelative(previous.epoch)}.`);
+}
+
+async function refreshSoilBaseline() {
+  try {
+    const data=await getJSON(SOIL_BASELINE_URL, "no-store");
+    const epoch=Number(data?.first_valid_soil_epoch);
+    firstValidSoilEpoch=data?.available===true&&Number.isFinite(epoch)&&epoch>0
+      &&epoch<=Date.now()/1000+120?epoch:null;
+  } catch (_) {
+    // Do not silently substitute a guessed installation date.
+    firstValidSoilEpoch=null;
+  }
+  if(latestCurrent)updateSoilPanel(latestCurrent);
 }
 
 async function refreshSoilFreshness(){
@@ -2633,6 +2660,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadWarnings();
   refreshLightning();
   refreshSoilFreshness();
+  refreshSoilBaseline();
   $("shareTodayButton")?.addEventListener("click",createWeatherCard);
   setupPWA();
 
@@ -2658,6 +2686,6 @@ window.addEventListener('parknacross:network-restored',()=>refreshCurrent());
 let dashboardRefreshRunning=false;
 window.ParknacrossDashboardRefresh=async()=>{
   if(dashboardRefreshRunning)return {busy:true};dashboardRefreshRunning=true;
-  try{const results=await Promise.allSettled([loadEverything(),loadForecast(),loadWarnings(),refreshLightning(),refreshSoilFreshness()]);return results[0].status==="fulfilled"?results[0].value||{live:false,incomplete:true}:{live:false,incomplete:true};}
+  try{const results=await Promise.allSettled([loadEverything(),loadForecast(),loadWarnings(),refreshLightning(),refreshSoilFreshness(),refreshSoilBaseline()]);return results[0].status==="fulfilled"?results[0].value||{live:false,incomplete:true}:{live:false,incomplete:true};}
   finally{dashboardRefreshRunning=false;}
 };
