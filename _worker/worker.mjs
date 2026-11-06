@@ -2800,6 +2800,25 @@ export default {
         return new Response("success", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
       }
 
+      // First valid WH52 observation in the D1 archive, independent of
+      // installation paperwork and without reading the full history into memory.
+      if (url.pathname === "/soil-baseline" && request.method === "GET") {
+        const first = await env.DB.prepare(
+          `SELECT epoch FROM ${TABLE}
+           WHERE soil_moisture_pct >= 0 AND soil_moisture_pct <= 100
+             AND soil_temperature_c >= -40 AND soil_temperature_c <= 60
+           ORDER BY epoch ASC LIMIT 1`
+        ).first();
+        const epoch = Number(first?.epoch);
+        return json({
+          available: Number.isFinite(epoch) && epoch > 0,
+          first_valid_soil_epoch: Number.isFinite(epoch) && epoch > 0 ? epoch : null,
+          basis: "earliest valid archived WH52 moisture and temperature observation",
+          sensor: "WH52",
+          source: "D1 archive"
+        }, 200, { "Cache-Control": "no-store" });
+      }
+
       if (url.pathname === "/soil-status" && request.method === "GET") {
         const row = await env.DB.prepare(
           `SELECT value FROM ${META_TABLE} WHERE key = ? LIMIT 1`
@@ -2842,7 +2861,7 @@ export default {
             "/sky-photo/archive/admin (admin)", "/sky-photo/archive/image (admin)", "/sky-photo/archive/import (admin POST)",
             "/sync (admin)",
             "/w/{token} (secured GW3001 POST)",
-            "/soil-status",
+            "/soil-status", "/soil-baseline",
             "/current",
             "/history?hours=24",
             "/daily?days=365",
