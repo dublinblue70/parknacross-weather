@@ -2808,11 +2808,24 @@ export default {
         try {
           const status = JSON.parse(row.value);
           const now = Math.floor(Date.now() / 1000);
+          // The most recent successful WH52 receipt is retained independently of
+          // any later gateway packet which happens to omit soil fields.
+          const lastSuccessRow = await env.DB.prepare(
+            `SELECT value FROM ${META_TABLE} WHERE key = ? LIMIT 1`
+          ).bind(WH52_UPLOAD_META_KEY).first();
+          let lastSuccessfulEpoch = null;
+          try {
+            const saved = JSON.parse(lastSuccessRow?.value || "null");
+            const epoch = Number(saved?.received_epoch);
+            if (Number.isFinite(epoch) && epoch > 0 && epoch <= now + 120) lastSuccessfulEpoch = epoch;
+          } catch (_) {}
           const { live_reading: _privateLiveReading, ...publicStatus } = status;
           return json({
             gateway_upload_received: true,
             ...publicStatus,
-            age_seconds: Math.max(0, now - Number(status.received_epoch || now))
+            age_seconds: Math.max(0, now - Number(status.received_epoch || now)),
+            last_successful_upload_epoch: lastSuccessfulEpoch,
+            last_successful_upload_age_seconds: lastSuccessfulEpoch === null ? null : Math.max(0, now - lastSuccessfulEpoch)
           }, 200, { "Cache-Control": "no-store" });
         } catch (_) {
           return json({ gateway_upload_received: false, status_error: true }, 200, { "Cache-Control": "no-store" });
