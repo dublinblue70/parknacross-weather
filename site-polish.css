@@ -195,3 +195,13 @@ html body :where(.nav a,.nav-more-button,button,summary):focus-visible {
     scroll-margin-top:18px;
   }
 }
+
+/* Download estimates and dashboard wayfinding use compact, readable language. */
+.export-estimate{font-size:.83rem;line-height:1.5;color:var(--ui-secondary,#afc2ce);margin:10px 0 0}
+body.dashboard-page .dashboard-shortcuts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+body.dashboard-page .dashboard-shortcuts a{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+body.dashboard-page :where(#forecast,#planning,#graphs,#soilPanel,#observationsHeading,#todayHeading){scroll-margin-top:24px}
+@media(min-width:1160px){
+  body.dashboard-page .dashboard-shortcuts{gap:10px}
+  body.dashboard-page .dashboard-shortcuts a{padding-inline:14px}
+}
