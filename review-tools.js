@@ -46,10 +46,7 @@
   Chart.register({id:'parknacrossAccessibleTables',afterUpdate(chart){if(!scheduled){scheduled=true;requestAnimationFrame(()=>{scheduled=false;for(const canvas of document.querySelectorAll('canvas')){const c=Chart.getChart(canvas);if(c)render(c);}});}}});for(const canvas of document.querySelectorAll('canvas')){const c=Chart.getChart(canvas);if(c)render(c);}
   document.addEventListener('click',event=>{if(event.target.closest('canvas'))return;for(const canvas of document.querySelectorAll('canvas')){const chart=Chart.getChart(canvas);if(chart?.tooltip){chart.tooltip.setActiveElements([],{x:0,y:0});chart.draw();}}});
  }
- function notificationFeedback(){if(page!=='station.html')return;const host=$('alertsSaveStatus');if(!host)return;const n=node('p','', 'review-note');host.after(n);const update=()=>{const s=window.PWAlerts?.loadSettings();if(!s)return;const count=['rainStart','gust','frost','heavyRain'].filter(k=>s[k]).length+(s.lightningKm>0?1:0);n.textContent=count+' weather event type'+(count===1?'':'s')+' selected. Browser choices save automatically; background save status is shown separately below.';};window.addEventListener('parknacross:alert-settings',update);update();
-  const button=node('button','Test notification on this device');button.type='button';button.className='secondary-button';n.after(button);button.addEventListener('click',async()=>{try{if(!('Notification'in window)||Notification.permission!=='granted')throw Error('Enable notifications first');const registration=await navigator.serviceWorker.ready;await registration.showNotification('Parknacross notification test',{body:'This checks notifications on this device. It does not test delivery from the background server.',tag:'parknacross-device-test',icon:'icon-192.png'});n.textContent='Device test requested. This does not verify background push delivery.';}catch(error){n.textContent=error.message;}});
- }
- function init(){rainDefinitions();localWidget();offlineAge();chartTables();notificationFeedback();}
+ function init(){rainDefinitions();localWidget();offlineAge();chartTables();}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
  window.ParknacrossReviewTools={fresh};
 })();
