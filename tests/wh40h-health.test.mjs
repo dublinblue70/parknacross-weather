@@ -23,8 +23,8 @@ assert.equal(check({capabilities,reading:{epoch:now-1100,rain_rate_mm_h:0,rain_d
 assert.equal(check({__error:new Error('network')},now).state,'warn');
 assert.match(html,/health-wh40h.*data-health-source="rainSource"/s);
 assert.match(source,/read\("rainSource"/);
-assert.match(source,/const totalChecks=19/);
-assert.match(ui,/of 19 sources checked/);
+assert.match(source,/const totalChecks=20/);
+assert.match(ui,/of 20 sources checked/);
 assert.match(ui,/wh40h:\[/);
-assert.match(html,/status\.js\?v=20261103-wh40h-health/);
+assert.match(html,/status\.js\?v=20261106-wh52-offline/);
 console.log('PASS: WH40H source-check card, error states, valid zero rain, freshness and recheck integration.');
