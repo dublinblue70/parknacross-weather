@@ -1,5 +1,5 @@
-// v38.4.241 — publish Ecowitt observations to PWSWeather over HTTPS using a Cloudflare secret.
-// v38.4.241 — WH40H primary traditional rain gauge: select traditional rain fields, never silently substitute WS90 piezo data.
+// v38.4.242 — publish Ecowitt observations to PWSWeather over HTTPS using a Cloudflare secret.
+// v38.4.242 — WH40H primary traditional rain gauge: select traditional rain fields, never silently substitute WS90 piezo data.
 // v38.4.237 — stream large CSV exports in bounded D1 pages to avoid Worker resource exhaustion.
 // v38.4.232 — photo galleries, selected-field CSV streaming, annual coverage and confirmed station exposure history.
 // v38.4.96 — marine warnings remain available independently of forecast failures.
@@ -2258,7 +2258,7 @@ async function pushEncrypt(subscription,payload){
 async function sendWeatherPush(subscription,message,vapid,timeoutMs=5000){const endpoint=new URL(subscription.endpoint),header=pushBase64(pushText(JSON.stringify({typ:'JWT',alg:'ES256'}))),claims=pushBase64(pushText(JSON.stringify({aud:endpoint.origin,exp:Math.floor(Date.now()/1000)+3600,sub:'mailto:info@parknacrossweather.ie'}))),input=header+'.'+claims,key=await crypto.subtle.importKey('jwk',vapid.privateJwk,{name:'ECDSA',namedCurve:'P-256'},false,['sign']),signature=pushBase64(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},key,pushText(input)));return fetch(endpoint.href,{method:'POST',headers:{Authorization:`vapid t=${input}.${signature}, k=${vapid.publicKey}`,'Content-Encoding':'aes128gcm','Content-Type':'application/octet-stream',TTL:'300',Urgency:'normal'},body:await pushEncrypt(subscription,message),redirect:'error',signal:AbortSignal.timeout(timeoutMs)});}
 async function handlePushRequest(request,env,url){
  const noStore={'Cache-Control':'no-store'};
- if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.241'},200,noStore);}
+ if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.242'},200,noStore);}
  if(request.method!=='POST')return json({error:'Method not allowed'},405,noStore);
  if(request.headers.get('Origin')!=='https://parknacrossweather.ie'&&request.headers.get('Origin')!=='https://www.parknacrossweather.ie')return json({error:'Origin not allowed'},403,noStore);
  if(requestRateLimited(request,'push-settings',10))return rateLimitedResponse();
@@ -2310,7 +2310,7 @@ export default {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.241",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.242",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2573,7 +2573,7 @@ export default {
       }
     }
 
-    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.241",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"public, max-age=300"});}
+    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.242",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"public, max-age=300"});}
 
     if(url.pathname==="/met/warnings"){
       if(request.method!=="GET")return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
@@ -3540,7 +3540,7 @@ async function publishPwsWeather(env, syncResult) {
   params.set("ID", PWSWEATHER_STATION_ID);
   params.set("PASSWORD", apiKey);
   params.set("dateutc", new Date(epoch * 1000).toISOString().slice(0, 19).replace("T", " "));
-  params.set("softwaretype", "ParknacrossWeather_38.4.241");
+  params.set("softwaretype", "ParknacrossWeather_38.4.242");
   params.set("action", "updateraw");
 
   const putNumber = (name, value, digits = 2) => {
@@ -3558,7 +3558,10 @@ async function publishPwsWeather(env, syncResult) {
   if (usableNumber(reading.wind_speed_kmh)) putNumber("windspeedmph", Number(reading.wind_speed_kmh) / 1.609344);
   if (usableNumber(reading.wind_gust_kmh)) putNumber("windgustmph", Number(reading.wind_gust_kmh) / 1.609344);
   if (usableNumber(reading.pressure_hpa)) putNumber("baromin", Number(reading.pressure_hpa) * 0.0295299830714);
-  if (usableNumber(reading.rain_daily_mm)) putNumber("dailyrainin", Number(reading.rain_daily_mm) / 25.4);
+  // Four decimal places in inches preserve the WH40H's 0.1 mm bucket resolution.
+  if (usableNumber(reading.rain_daily_mm)) {
+    putNumber("dailyrainin", Number(reading.rain_daily_mm) / 25.4, 4);
+  }
   if (usableNumber(reading.solar_w_m2)) putNumber("solarradiation", reading.solar_w_m2);
   if (usableNumber(reading.uv_index)) putNumber("UV", reading.uv_index);
 
