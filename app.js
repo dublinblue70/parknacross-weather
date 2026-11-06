@@ -16,7 +16,7 @@ const ARDAMINE_LON = -6.25;
 const STATION_TIME_ZONE = "Europe/Dublin";
 const STALE_AFTER_MS = 10 * 60 * 1000;
 const OFFLINE_AFTER_MS = 30 * 60 * 1000;
-const SOIL_SENSOR_BASELINE_START_EPOCH = Date.parse("2026-09-26T00:00:00+01:00") / 1000;
+const SOIL_SENSOR_BASELINE_START_EPOCH = Date.parse("2026-09-28T00:00:00+01:00") / 1000;
 const SOIL_SENSOR_BASELINE_DAYS = 14;
 
 const $ = id => document.getElementById(id);
@@ -1187,21 +1187,23 @@ let latestSoilUploadStatus = null;
 function updateSoilFeedWarning(current) {
   const warning = $("soilFeedWarning");
   if (!warning) return;
-  const hasReading = ["soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"].some(field => usable(current?.[field]));
   const status = latestSoilUploadStatus;
+  const hasReading = ["soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"].some(field => usable(current?.[field]));
   const successEpoch = usable(status?.last_successful_upload_epoch) ? Number(status.last_successful_upload_epoch)
-    : status?.wh52_detected && usable(status.received_epoch) ? Number(status.received_epoch) : null;
-  const age = successEpoch !== null ? Date.now()/1000 - successEpoch : null;
+    : status?.wh52_detected && usable(status?.received_epoch) ? Number(status.received_epoch) : null;
+  const age = successEpoch === null ? null : Date.now() / 1000 - successEpoch;
   let message = "";
-  if (age !== null && age >= 0 && age > 12*60) {
-    message = `WH52 soil upload delayed: no successful reading for ${Math.floor(age/60)} minutes. Check the GW3001 Customized upload destination in Ecowitt. Other weather observations may still work.`;
-  } else if (status?.gateway_upload_received && status.wh52_detected === false) {
-    message = "The latest gateway upload has no WH52 soil fields. Check the WH52 sensor in Ecowitt and the GW3001 Customized service.";
+  if (age !== null && age >= -120 && age > 12 * 60) {
+    message = `WH52 soil upload delayed: no successful reading for ${Math.floor(age / 60)} minutes. Check the sensor and GW3001 custom upload settings.`;
+  } else if (status?.gateway_upload_received === false || status?.status_error) {
+    message = "WH52 gateway status is unavailable. The last displayed soil values may be out of date.";
   } else if (!hasReading) {
-    message = status?.wh52_detected && age !== null && age <= 12*60
-      ? "WH52 reached Cloudflare but the current weather response has no soil values. Check System Status."
+    message = age !== null && age >= -120 && age <= 12 * 60
+      ? "The WH52 has recently uploaded, but soil readings are missing from the current weather response. Check System Status."
       : "WH52 soil readings are unavailable. Check System Status for the last successful upload.";
   }
+  // A normal gateway packet without soil fields is not evidence the WH52 is
+  // offline while a separate, recent, successful WH52 receipt exists.
   warning.hidden = !message;
   warning.textContent = message;
 }
