@@ -1,6 +1,6 @@
 # Cloudflare Worker deployment
 
-`_worker/worker.mjs` is the designated Cloudflare Worker deployment source. Its source contains changes newer than the original 38.4.240 rain-gauge release; the public website currently declares release 38.4.249. **Website and Worker versions are independent**, and source changes do not prove that either has been deployed. Deploy the complete Worker only when its changes are required, preserving all existing bindings, secrets and scheduled triggers. No credential values belong in this repository.
+`_worker/worker.mjs` is the designated Cloudflare Worker deployment source. Its source contains changes newer than the original 38.4.240 rain-gauge release; the public website currently declares release 38.4.250. **Website and Worker versions are independent**, and source changes do not prove that either has been deployed. Deploy the complete Worker only when its changes are required, preserving all existing bindings, secrets and scheduled triggers. No credential values belong in this repository.
 
 The repository-root `worker.mjs` is an **archived snapshot**, not the live deployment source. Never paste that root-level file into Cloudflare. The single designated source is `_worker/worker.mjs`; historical copies under `history/` are reference-only and excluded from GitHub Pages.
 
@@ -46,3 +46,9 @@ Release procedure:
 8. Record the GitHub website commit SHA, Worker deployment SHA, actual deployment times and GitHub Actions run URL in the release notes. Never infer live Worker deployment from GitHub Pages success.
 
 Do not claim production sign-off until both the website and Worker telemetry (if changed) have been checked.
+
+## WH52 first-valid archive baseline — Worker source 38.4.244
+
+The dashboard uses `GET /soil-baseline` to determine the start of the 14-day monitoring baseline from the **earliest valid saved WH52 moisture and root-zone temperature observation**. The endpoint uses a one-hour edge cache so repeated visitors do not rescan D1. If this endpoint is missing, the dashboard explicitly displays **Baseline not verified** rather than silently using the installation date.
+
+**This source change needs a separate Cloudflare Worker deployment.** GitHub Pages automatically publishing the dashboard does not install the new Worker route. Preserve the existing D1 binding, scheduler, secrets, Ecowitt custom upload URL and CWOP/PWSWeather integrations. Validate `/soil-baseline` after deployment and ensure `first_valid_soil_epoch` is a valid archive timestamp. Do not infer the sensor installation date from it, and do not rewrite the older archive.
