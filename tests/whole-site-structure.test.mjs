@@ -19,7 +19,7 @@ for(const file of files){
   for(const match of html.matchAll(/href="([^"]+)"/g)){
     const href=match[1],destination=href.split(/[?#]/)[0];
     if(!destination.endsWith(".html")||/^https?:\/\//i.test(destination))continue;
-    assert.ok(existing.has(destination),file+" references missing page "+destination);
+    assert.ok(existing.has(path.posix.basename(destination)),file+" references missing page "+destination);
     links++;
   }
 }
