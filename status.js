@@ -215,6 +215,7 @@ async function runChecks(only=null) {
   try { await Promise.all([
     read("health",async()=>{const started=performance.now();const data=await fetchJSON(`${API_BASE}/health`).catch(e=>({__error:e}));return {...data,__elapsed_ms:Math.round(performance.now()-started)};}),
     read("current",()=>fetchJSON(`${API_BASE}/current`).catch(e=>({__error:e}))),
+    read("soilUpload",()=>fetchJSON(`${API_BASE}/soil-status`).catch(e=>({__error:e}))),
     read("rainSource",()=>Promise.all([
       // Verify source selection and fresh rainfall values; do not require rain > 0.
       fetchJSON(`${API_BASE}/site-capabilities?healthcheck=${Date.now()}`,10000),
@@ -243,7 +244,7 @@ async function runChecks(only=null) {
 }
 
 function renderChecks(only=null) {
-  const {health={},current={},rainSource={},quality={},history={},reliability={},backup={},social={},tides={},m2={},landWarnings={},marineWarnings={},site={},daily={},stats={},summaryHistory={},exportPreview={},rainEvents={},coverage={}}=checkResults;
+  const {health={},current={},soilUpload={},rainSource={},quality={},history={},reliability={},backup={},social={},tides={},m2={},landWarnings={},marineWarnings={},site={},daily={},stats={},summaryHistory={},exportPreview={},rainEvents={},coverage={}}=checkResults;
   const apiElapsed=health.__elapsed_ms||0;
   let states=site.state?[site.state]:[];
   const latestEpoch=rows=>Math.max(0,...(Array.isArray(rows)?rows:[]).map(row=>usableNumber(row.epoch)?Number(row.epoch):Date.parse(row.received_at||"")/1000).filter(Number.isFinite));
@@ -339,24 +340,43 @@ function renderChecks(only=null) {
   if (checkResults.current) {
     if(current.__error) {
       setBadge("feedBadge","bad","FAIL"); setText("feedValue","No reading"); setText("feedDetail","Current weather reading could not be reached"); states.push("bad");
-      setBadge("soilBadge","warn","CHECK"); setText("soilValue","Unavailable"); setText("soilDetail","The latest soil-sensor reading could not be checked.");
     } else {
       const age=observationAge(current.epoch);
       const validTime=age!==null&&age>=-120;
       const state=!validTime?"warn":age<600?"good":age<1800?"warn":"bad";
       setBadge("feedBadge",state,!validTime?"CHECK":state==="good"?"LIVE":state==="warn"?"DELAY":"STALE"); setText("feedValue",validTime?fmtAge(age):"Check timestamp"); setText("feedDetail",validTime?`Latest reading: ${fmtIrishDateTime(new Date(Number(current.epoch)*1000).toISOString())} Irish time`:"Observation timestamp is missing, invalid or more than two minutes in the future. This reading cannot be verified as live."); states.push(state);
-      const hasSoil=usableNumber(current.soil_moisture_pct)||usableNumber(current.soil_temperature_c)||usableNumber(current.soil_ec_us_cm);
-      if(hasSoil){
-        const soilState=validTime&&age<600?"good":"warn";
-        setBadge("soilBadge",soilState,soilState==="good"?"IN UPLOAD":"LAST KNOWN");
-        setText("soilValue",usableNumber(current.soil_moisture_pct)?`${fmtNum(current.soil_moisture_pct,1)}% moisture`:"Sensor detected");
-        const details=[];if(usableNumber(current.soil_temperature_c))details.push(`${fmtNum(current.soil_temperature_c,1)}°C soil`);if(usableNumber(current.soil_ec_us_cm))details.push(`${Math.round(Number(current.soil_ec_us_cm)).toLocaleString("en-IE")} µS/cm`);if(usableNumber(current.soil_channel))details.push(`channel ${Number(current.soil_channel)}`);
-        setText("soilDetail",`${details.join(" · ")}. Value included in the latest gateway upload; the individual sensor transmission time is not supplied. Reading represents the probe location only.`);states.push(soilState);
-      }else{
-        setBadge("soilBadge","warn","WAITING");setText("soilValue","No current value");setText("soilDetail","No soil-sensor fields were present in the latest gateway observation.");states.push("warn");
-      }
+
     }
 
+  }
+
+  if (checkResults.soilUpload) {
+    // The success timestamp comes from a separately retained WH52 record, not
+    // from the latest general weather observation.
+    const successEpoch=usableNumber(soilUpload.last_successful_upload_epoch)
+      ? Number(soilUpload.last_successful_upload_epoch)
+      : soilUpload.wh52_detected && usableNumber(soilUpload.received_epoch)
+        ? Number(soilUpload.received_epoch) : null;
+    const age=observationAge(successEpoch);
+    const validTime=age!==null && age>=-120;
+    const goodUpload=validTime && age<=12*60
+      && soilUpload.gateway_upload_received===true && soilUpload.wh52_detected===true
+      && soilUpload.fields_received?.moisture===true
+      && soilUpload.fields_received?.temperature===true
+      && soilUpload.fields_received?.conductivity===true;
+    const currentAge=observationAge(current.epoch);
+    const hasCurrentSoil=!current.__error && currentAge!==null && currentAge>=-120 && currentAge<=600
+      && ["soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"].every(k=>usableNumber(current[k]));
+    const good=!soilUpload.__error && goodUpload && hasCurrentSoil;
+    setBadge("soilBadge",good?"good":"warn",good?"LIVE":"CHECK");
+    setText("soilValue",good?`${fmtNum(current.soil_moisture_pct,0)}% moisture`:!validTime?"No soil upload":goodUpload?"Readings missing":"Upload delayed");
+    setText("soilLastUpload",validTime?`Last successful WH52 upload: ${fmtIrishDateTime(new Date(successEpoch*1000).toISOString())} Irish time · ${fmtAge(age)} ago`:"Last successful WH52 upload: not recorded");
+    const explanation=soilUpload.__error?"Unable to check WH52 gateway upload status."
+      : !goodUpload?"WH52 data have not been confirmed in the last 12 minutes. Check the GW3001 Customized upload configuration."
+      : !hasCurrentSoil?"WH52 reached Cloudflare, but its measurements are missing from /current."
+      :"Live WH52 moisture, temperature and conductivity are confirmed.";
+    setText("soilDetail",`${explanation} The timestamp is when the Worker received the packet, not when the WH52 transmitted over radio. Other weather data may continue normally.`);
+    states.push(good?"good":"warn");
   }
 
   if (checkResults.rainSource) {
@@ -509,7 +529,7 @@ function renderChecks(only=null) {
   setText("overallTitle",overall==="good"?"All monitored systems look healthy":overall==="warn"?"Site is running, but something is worth checking":coreFailure?"A monitored service needs attention":"Historical archive is incomplete");
   setText("overallText",overall==="good"?"Website, weather data service, live readings and recent data checks passed.":overall==="warn"?"One or more checks produced a warning. Review the cards below.":coreFailure?"At least one core service failed or the latest weather reading is stale.":"The website, weather data service and latest observation are operating normally. Some earlier five-minute archive intervals are missing; this does not indicate a current station outage.");
   setText("lastRun",`${only?"Selected source rechecked; other cards retain their previous results · ":"Last checked "}${new Date(Math.max(0,...Object.values(checkMeta).map(item=>item.done)) || Date.now()).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Dublin"})} Irish time`);
-  const totalChecks=19,pending=totalChecks-Object.keys(checkResults).length;
+  const totalChecks=20,pending=totalChecks-Object.keys(checkResults).length;
   if(pending>0){
     setText("overallTitle",states.includes("bad")?"A monitored service needs attention":"Checking remaining sources…");
     setText("overallText",`${Object.keys(checkResults).length} of ${totalChecks} checks complete. Finished results are shown below; ${pending} source${pending===1?" is":"s are"} still being checked.`);
