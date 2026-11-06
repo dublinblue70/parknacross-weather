@@ -359,11 +359,15 @@ function renderChecks(only=null) {
         ? Number(soilUpload.received_epoch) : null;
     const age=observationAge(successEpoch);
     const validTime=age!==null && age>=-120;
+    // A recent successful WH52 receipt remains valid when a newer general
+    // gateway packet omits the sensor fields.
     const goodUpload=validTime && age<=12*60
-      && soilUpload.gateway_upload_received===true && soilUpload.wh52_detected===true
-      && soilUpload.fields_received?.moisture===true
-      && soilUpload.fields_received?.temperature===true
-      && soilUpload.fields_received?.conductivity===true;
+      && soilUpload.gateway_upload_received===true
+      && (usableNumber(soilUpload.last_successful_upload_epoch) ||
+          (soilUpload.wh52_detected===true &&
+           soilUpload.fields_received?.moisture===true &&
+           soilUpload.fields_received?.temperature===true &&
+           soilUpload.fields_received?.conductivity===true));
     const currentAge=observationAge(current.epoch);
     const hasCurrentSoil=!current.__error && currentAge!==null && currentAge>=-120 && currentAge<=600
       && ["soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"].every(k=>usableNumber(current[k]));
