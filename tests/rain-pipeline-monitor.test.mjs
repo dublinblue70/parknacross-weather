@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {compareRainPipeline} from '../public-monitor.mjs';
+const now=Date.parse('2026-11-06T18:00:00Z');
+const epoch=now/1000;
+const current={epoch,rain_daily_mm:3.1,rain_rate_mm_h:0};
+const archive=(reading,age=300)=>({readings:[{epoch:epoch-age,rain_daily_mm:reading}]});
+assert.equal(compareRainPipeline(current,archive(3.1),now).ok,true,'Same-day stable rain');
+assert.equal(compareRainPipeline(current,archive(3),now).ok,true,'Small tip-resolution discrepancy');
+assert.equal(compareRainPipeline({...current,rain_daily_mm:0},archive(0),now).ok,true,'Dry weather is valid');
+assert.equal(compareRainPipeline({...current,rain_daily_mm:1},archive(3.1),now).ok,false,'Disappearing rainfall is a defect');
+assert.equal(compareRainPipeline(current,archive(3.1,1500),now).ok,false,'Archive must not silently be stale');
+assert.equal(compareRainPipeline(current,archive(3.1,-600),now).ok,false,'Live weather may not lag archive');
+assert.equal(compareRainPipeline(current,archive(3.1,0),now).ok,true,'Matching timestamps agree');
+assert.equal(compareRainPipeline(current,archive(5,0),now).ok,false,'Matching timestamps with different rainfall fail');
+assert.equal(compareRainPipeline(current,archive(3.1,20*3600),now).ok,false,'Previous-day rain cannot be compared after midnight');
+assert.equal(compareRainPipeline({...current,rain_daily_mm:null},archive(3.1),now).ok,false,'Missing rain cannot be treated as zero');
+console.log('PASS: current/archive WH40H rainfall monitoring, gaps, midnight and missing fields.');
