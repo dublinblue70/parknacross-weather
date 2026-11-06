@@ -1232,11 +1232,11 @@ function updateSoilPanel(current) {
     return;
   }
   const nowEpoch = usable(current?.epoch) ? Number(current.epoch) : Date.now() / 1000;
-  const validBaseline = usable(firstValidSoilEpoch) && Number(firstValidSoilEpoch) > 0
-    && Number(firstValidSoilEpoch) <= nowEpoch;
-  const baselineDay=validBaseline
-    ? Math.max(1,Math.floor((nowEpoch-Number(firstValidSoilEpoch))/86400)+1) : null;
-  const baselineBuilding=validBaseline && baselineDay<=SOIL_SENSOR_BASELINE_DAYS;
+  const phase=window.ParknacrossHydrangeaSoil?.baselinePhase?.(
+    firstValidSoilEpoch,nowEpoch,SOIL_SENSOR_BASELINE_DAYS);
+  const validBaseline=phase?.verified===true;
+  const baselineDay=phase?.day??null;
+  const baselineBuilding=phase?.building===true;
   const baselineBadge=$("soilBaselineBadge"),baselineNote=$("soilBaselineNote");
   if(baselineBadge){
     baselineBadge.hidden=validBaseline&&!baselineBuilding;
