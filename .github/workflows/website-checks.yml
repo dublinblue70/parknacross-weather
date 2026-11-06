@@ -25,6 +25,7 @@ jobs:
       - run: node tests/audit-20261106.test.mjs
       - run: node tests/m2-observation-context.test.mjs
       - run: node tests/soil-archive-baseline.test.mjs
+      - run: node tests/station-notifications-layout.test.mjs
       - run: node tests/security-route-contract.test.mjs
       - run: npm run test:smoke
       - run: npm run test:worker-export-range
