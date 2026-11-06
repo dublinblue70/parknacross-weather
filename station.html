@@ -89,7 +89,7 @@
       .storage-meter-copy { flex-direction: column; gap: 3px; }
     }
   </style>
-<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261027-persistence" defer></script><link rel="stylesheet" href="station-page.css?v=20261106-cwop-network"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
+<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261027-persistence" defer></script><link rel="stylesheet" href="station-page.css?v=20261106-compact-notifications"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
 <script src="site-polish.js?v=20261101-v38-4-239" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
 </head>
@@ -330,7 +330,7 @@
         </div>
         <div class="alert-test-row">
           <button id="alertsTestButton" class="secondary-button" type="button">Send test notification</button>
-          <p id="alertsTestStatus" class="source-note" role="status" aria-live="polite">A test checks display on this device; it does not confirm background push delivery.</p>
+          <p id="alertsTestStatus" class="source-note" role="status" aria-live="polite">Checks notifications on this device only; background push is a separate service.</p>
         </div>
         <div class="alert-options">
           <label><input id="alertRainStart" type="checkbox"> <span><strong>Rain starting</strong><small>Notify when rainfall is confirmed: at least 0.2 mm in 20 minutes while rain remains active, or a rate of 2.5 mm/h or higher.</small></span></label>
@@ -688,11 +688,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<script src="offline.js?v=20261010-v38-4-190"></script><script src="notification-storage.js?v=20261027-persistence"></script><script src="alert-settings.js?v=20261029-v38-4-234-audit"></script><script src="notification-test.js?v=20261101"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="maintenance-log.js?v=20261103-wh40h"></script><script src="station-page.js?v=20261103-wh40h"></script><script src="station-v2.js?v=20261010-v38-4-196"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="offline.js?v=20261010-v38-4-190"></script><script src="notification-storage.js?v=20261027-persistence"></script><script src="alert-settings.js?v=20261106-compact-notifications"></script><script src="notification-test.js?v=20261101"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="maintenance-log.js?v=20261103-wh40h"></script><script src="station-page.js?v=20261103-wh40h"></script><script src="station-v2.js?v=20261010-v38-4-196"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20261008-v38-4-170"></script>
 <script src="pwa-diagnostics.js?v=20261006-v38-4-144"></script>
 <script src="accessibility.js?v=20260924-v38-4-97"></script>
 <script src="navigation.js?v=20260924-v38-4-97"></script>
-<script src="site-help.js?v=20261008-v38-4-170"></script><script src="review-tools.js?v=38.4.232-prefs-removed" defer></script></body>
+<script src="site-help.js?v=20261008-v38-4-170"></script><script src="review-tools.js?v=20261106-notification-duplication-fix" defer></script></body>
 </html>
 
