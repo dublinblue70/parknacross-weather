@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-247-pwsweather-links-20261106";
+const CACHE_NAME = "parknacross-v38-4-247-cwop-gw8205-20261106";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
@@ -52,6 +52,7 @@ const STATIC_ASSETS = [
   "./station.html",
   "./maintenance.html",
   "./status.html",
+  "./cwop-status.js",
   "./history.html",
   "./records.html",
   "./downloads.html",
