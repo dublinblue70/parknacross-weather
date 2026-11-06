@@ -50,6 +50,8 @@
  * Direct Facebook Graph publishing remains a Facebook-only fallback.
  * Adds a safe current-day recovery endpoint that respects per-network day markers.
  */
+import { connect } from "cloudflare:sockets";
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -70,6 +72,9 @@ const WH52_UPLOAD_META_KEY = "wh52_gateway_latest_v1";
 const WH52_UPLOAD_STATUS_META_KEY = "wh52_gateway_status_v1";
 const PWSWEATHER_LAST_EPOCH_META_KEY = "pwsweather_last_upload_epoch_v1";
 const PWSWEATHER_STATION_ID = "PARKNACROSSWX";
+const CWOP_ID = "GW8205";
+const CWOP_LAST_EPOCH_KEY = "cwop_last_sent_epoch_v1";
+const CWOP_STATUS_KEY = "cwop_last_attempt_v1";
 const WH52_UPLOAD_MAX_AGE_SECONDS = 12 * 60;
 const ARCHIVE_EXPECTED_INTERVAL_SECONDS = 5 * 60;
 const ARCHIVE_STALE_AFTER_SECONDS = 10 * 60;
@@ -2394,6 +2399,24 @@ export default {
      * Keep health independent of schema migrations. Even if a future migration
      * fails, the monitor still receives a JSON response showing D1 state.
      */
+    if (url.pathname === "/cwop-status" && request.method === "GET") {
+      try {
+        const enabled = String(env.CWOP_ENABLED ?? "").toLowerCase() === "true";
+        const latitude = Number(env.CWOP_LATITUDE), longitude = Number(env.CWOP_LONGITUDE);
+        const coordinatesConfigured = env.CWOP_LATITUDE !== undefined && env.CWOP_LONGITUDE !== undefined
+          && Number.isFinite(latitude) && Math.abs(latitude) <= 90 && Number.isFinite(longitude) && Math.abs(longitude) <= 180;
+        const data = await readMetaMap(env, [CWOP_LAST_EPOCH_KEY, CWOP_STATUS_KEY]);
+        let attempt = null;
+        try { attempt = JSON.parse(data[CWOP_STATUS_KEY] || "null"); } catch (_) {}
+        return json({
+          station_id: CWOP_ID, enabled, coordinates_configured: coordinatesConfigured,
+          last_sent_observation_epoch: Number(data[CWOP_LAST_EPOCH_KEY]) || null,
+          last_attempt: attempt,
+          delivery_note: "A TCP write is not confirmation that FindU or MADIS received or displayed the report.",
+          verify_url: "http://www.findu.com/cgi-bin/wx.cgi?call=GW8205"
+        }, 200, {"Cache-Control":"no-store"});
+      } catch (_) { return json({error:"CWOP status temporarily unavailable"},503,{"Cache-Control":"no-store"}); }
+    }
     if (url.pathname === "/health") {
       try {
         const probe = await env.DB.prepare(`SELECT 1 AS ok`).first();
@@ -2803,7 +2826,7 @@ export default {
           service: "Parknacross Weather",
           status: "ok",
           endpoints: [
-            "/health",
+            "/health", "/cwop-status",
             "/sky-photo", "/sky-photo/meta", "/sky-photo/likes", "/sky-photo (admin POST)",
             "/sky-photo/archive/admin (admin)", "/sky-photo/archive/image (admin)", "/sky-photo/archive/import (admin POST)",
             "/sync (admin)",
@@ -3463,6 +3486,12 @@ export default {
           [SCHEDULED_SYNC_ERROR_META_KEY]: ""
         });
         try {
+          const cwopResult = await publishCwop(env, syncResult);
+          if (cwopResult?.sent) console.info("CWOP report sent; verify independently on FindU", {epoch:cwopResult.epoch});
+        } catch (error) {
+          console.warn("Scheduled CWOP publish failed:", safeErrorMessage(error));
+        }
+        try {
           const pwsResult = await publishPwsWeather(env, syncResult);
           if (pwsResult?.accepted) {
             console.info("PWSWeather accepted observation", { epoch: pwsResult.epoch });
@@ -3516,6 +3545,141 @@ async function readSecret(binding) {
   return "";
 }
  
+
+/**
+ * CWOP APRS-IS exporter. Disabled until CWOP_ENABLED=true and exact station
+ * coordinates are configured as CWOP_LATITUDE and CWOP_LONGITUDE in Cloudflare.
+ * This never alters Ecowitt ingestion or any other downstream publisher.
+ */
+function cwopPosition(value, latitude) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || Math.abs(n) > (latitude ? 90 : 180)) throw new Error("Invalid CWOP coordinates");
+  const hundredths = Math.round(Math.abs(n) * 6000);
+  const degrees = Math.floor(hundredths / 6000);
+  const minutes = (hundredths % 6000) / 100;
+  return String(degrees).padStart(latitude ? 2 : 3, "0") +
+    minutes.toFixed(2).padStart(5, "0") + (latitude ? (n < 0 ? "S" : "N") : (n < 0 ? "W" : "E"));
+}
+function cwop3(value) {
+  return Number.isFinite(value) && value >= 0 && value <= 999
+    ? String(Math.round(value)).padStart(3, "0") : "...";
+}
+function cwopRain(value) { return value === null || !Number.isFinite(value) || value < 0 ? "..." : cwop3(value / 25.4 * 100); }
+function cwopPacket(reading, epoch, latitude, longitude, rainfall) {
+  const date = new Date(epoch * 1000);
+  const stamp = String(date.getUTCDate()).padStart(2,"0") +
+    String(date.getUTCHours()).padStart(2,"0") + String(date.getUTCMinutes()).padStart(2,"0") + "z";
+  const windDir = nullableNumber(reading.wind_direction_deg);
+  const direction = windDir === null ? NaN : ((Math.round(windDir) % 360) + 360) % 360;
+  const speed = nullableNumber(reading.wind_speed_kmh);
+  const gust = nullableNumber(reading.wind_gust_kmh);
+  const temp = nullableNumber(reading.temperature_c);
+  const humidity = nullableNumber(reading.humidity);
+  const pressure = nullableNumber(reading.pressure_hpa);
+  const fahrenheit = temp === null ? NaN : Math.round(temp * 9 / 5 + 32);
+  const formattedTemp = !Number.isFinite(fahrenheit) || fahrenheit < -99 || fahrenheit > 999
+    ? "..." : fahrenheit < 0 ? "-" + String(-fahrenheit).padStart(2,"0") : cwop3(fahrenheit);
+  const rh = humidity !== null && humidity >= 0 && humidity <= 100
+    ? "h" + String(Math.round(humidity) === 100 ? 0 : Math.round(humidity)).padStart(2,"0") : "";
+  const mslp = pressure !== null && pressure >= 850 && pressure <= 1100
+    ? "b" + String(Math.round(pressure * 10)).padStart(5,"0") : "";
+  return CWOP_ID + ">APRS,TCPIP*:@" + stamp + cwopPosition(latitude,true) + "/" +
+    cwopPosition(longitude,false) + "_" + cwop3(direction) + "/" +
+    cwop3(speed === null ? NaN : speed / 1.609344) + "g" +
+    cwop3(gust === null ? NaN : gust / 1.609344) + "t" + formattedTemp +
+    "r" + cwopRain(rainfall.hour) + "p" + cwopRain(rainfall.day24) +
+    "P" + cwopRain(rainfall.today) + rh + mslp + ".PknW";
+}
+/** Rolling sums require a reasonably close historical cumulative sample.
+ *  Missing or ambiguous WH40H history is marked unknown rather than zero. */
+async function cwopRollingRain(env, epoch, endRainMm, seconds) {
+  if (!Number.isFinite(endRainMm)) return null;
+  const boundary = epoch - seconds;
+  const base = await env.DB.prepare(
+    `SELECT epoch, rain_daily_mm FROM ${TABLE}
+     WHERE epoch <= ? AND epoch >= ? AND rain_daily_mm IS NOT NULL ORDER BY epoch DESC LIMIT 1`
+  ).bind(boundary, boundary - 15*60).first();
+  if (!base || !usableNumber(base.rain_daily_mm)) return null;
+  const startDay = stationDayKey(new Date(Number(base.epoch) * 1000));
+  const endDay = stationDayKey(new Date(epoch * 1000));
+  const beginning = Number(base.rain_daily_mm);
+  if (startDay === endDay) return Math.max(0, endRainMm - beginning);
+  // The rolling window can cross a local midnight; include the previous day's
+  // confirmed total and any whole intermediate local days.
+  const days = [];
+  let day = startDay;
+  for (let i=0;i<4 && day !== endDay;i++) { days.push(day); day=shiftDayKey(day,1); }
+  if (day !== endDay) return null;
+  const entries = await env.DB.prepare(
+    `SELECT day,rain_mm FROM ${DAILY_TABLE} WHERE day >= ? AND day < ? ORDER BY day`
+  ).bind(startDay,endDay).all();
+  const byDay = new Map((entries.results || []).map(row=>[row.day,nullableNumber(row.rain_mm)]));
+  if (days.some(d=>!Number.isFinite(byDay.get(d)))) return null;
+  return Math.max(0, byDay.get(startDay) - beginning + days.slice(1).reduce((sum,d)=>sum+byDay.get(d),0) + endRainMm);
+}
+async function publishCwop(env, syncResult) {
+  if (String(env.CWOP_ENABLED ?? "").toLowerCase() !== "true") return {skipped:true,reason:"disabled"};
+  const latitude = Number(env.CWOP_LATITUDE), longitude = Number(env.CWOP_LONGITUDE);
+  if (env.CWOP_LATITUDE === undefined || env.CWOP_LONGITUDE === undefined ||
+      !Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+      Math.abs(latitude)>90 || Math.abs(longitude)>180)
+    throw new Error("Configure exact CWOP_LATITUDE and CWOP_LONGITUDE before enabling upload");
+  const now = Math.floor(Date.now()/1000);
+  const gateway = await readGatewayLiveReading(env,now).catch(()=>null);
+  const reading = gateway || syncResult?.reading;
+  const epoch = Math.round(Number(gateway?.epoch ?? syncResult?.epoch));
+  if (!reading || !Number.isFinite(epoch) || epoch <= 0 || epoch > now+300 || now-epoch>15*60)
+    throw new Error("No fresh validated Ecowitt observation for CWOP");
+  const state = await readMetaMap(env,[CWOP_LAST_EPOCH_KEY]);
+  if (epoch <= Number(state[CWOP_LAST_EPOCH_KEY] || 0))
+    return {skipped:true,reason:"observation_already_sent",epoch};
+  const day = stationDayKey(new Date(epoch*1000));
+  const row = await env.DB.prepare(`SELECT rain_mm FROM ${DAILY_TABLE} WHERE day=? LIMIT 1`).bind(day).first();
+  const corrected = correctedRainForDay(day,row?.rain_mm);
+  const today = usableNumber(corrected) ? Number(corrected) :
+    (usableNumber(reading.rain_daily_mm) ? Number(reading.rain_daily_mm) : null);
+  const rainfall = {
+    today,
+    hour: await cwopRollingRain(env,epoch,today,3600),
+    day24: await cwopRollingRain(env,epoch,today,86400)
+  };
+  const packet = cwopPacket(reading,epoch,latitude,longitude,rainfall);
+  let socket;
+  try {
+    socket = connect({hostname:"cwop.aprs.net",port:14580});
+    await socket.opened;
+    const reader = socket.readable.getReader();
+    const writer = socket.writable.getWriter();
+    const readLine = () => Promise.race([
+      reader.read(),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error("CWOP server handshake timeout")),8000))
+    ]);
+    const banner = await readLine();
+    if (banner.done) throw new Error("CWOP connection closed before login");
+    await writer.write(new TextEncoder().encode("user " + CWOP_ID + " pass -1 vers ParknacrossWeather 38.4.248\r\n"));
+    const response = await readLine();
+    if (response.done) throw new Error("CWOP connection closed during login");
+    const acknowledgement = new TextDecoder().decode(response.value);
+    if (/invalid|rejected|denied/i.test(acknowledgement))
+      throw new Error("CWOP server rejected login");
+    await writer.write(new TextEncoder().encode(packet+"\r\n"));
+    await writer.close();
+    const at = new Date().toISOString();
+    await writeMeta(env,{
+      [CWOP_LAST_EPOCH_KEY]:epoch,
+      [CWOP_STATUS_KEY]:JSON.stringify({at,state:"sent_unverified",observation_epoch:epoch,server:"cwop.aprs.net:14580",rain_1h_mm:rainfall.hour,rain_24h_mm:rainfall.day24,rain_today_mm:rainfall.today})
+    });
+    return {sent:true,epoch};
+  } catch(error) {
+    try {
+      await writeMeta(env,{[CWOP_STATUS_KEY]:JSON.stringify({at:new Date().toISOString(),state:"error",error:safeErrorMessage(error),observation_epoch:epoch})});
+    } catch (_) {}
+    throw error;
+  } finally {
+    try { socket?.close(); } catch (_) {}
+  }
+}
+
 async function publishPwsWeather(env, syncResult) {
   const apiKey = await readSecret(env.PWSWEATHER_API_KEY);
   if (!apiKey) return { skipped: true, reason: "secret_not_configured" };
