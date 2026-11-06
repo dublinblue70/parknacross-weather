@@ -295,19 +295,28 @@ function renderChecks(only=null) {
     const buoy=m2?.m2_buoy;
     const m2Value=buoy?.sea_surface_temperature_c;
     const m2Time=buoy?.observation_time||buoy?.timestamp;
-    const m2Age=usableNumber(buoy?.observation_age_minutes)?Number(buoy.observation_age_minutes)+(Date.now()-(checkMeta.m2?.done||Date.now()))/60000:
-      m2Time&&Number.isFinite(Date.parse(m2Time))?Math.max(0,(Date.now()-Date.parse(m2Time))/60000):null;
-    if(m2.__error||m2?.m2_observation_available!==true||!usableNumber(m2Value)||m2Age===null||m2Age< -2||m2Age>12*60){
+    const parsedTime=m2Time?Date.parse(m2Time):NaN;
+    const validTimestamp=Number.isFinite(parsedTime);
+    const m2Age=validTimestamp?(Date.now()-parsedTime)/60000:
+      usableNumber(buoy?.observation_age_minutes)?Number(buoy.observation_age_minutes)+(Date.now()-(checkMeta.m2?.done||Date.now()))/60000:null;
+    const hasValue=usableNumber(m2Value);
+    const hasObservation=!m2.__error&&m2?.m2_observation_available===true&&hasValue&&
+      m2Age!==null&&m2Age>=-2&&m2Age<=12*60;
+    const stamp=validTimestamp?fmtIrishDateTime(m2Time):null;
+    const ageText=m2Age!==null&&m2Age>=-2?fmtAge(Math.max(0,m2Age)*60):null;
+    if(!hasObservation){
       setBadge("m2Badge","warn","UNAVAILABLE");
       setText("m2Value","No current reading");
-      const reason=m2.__error?.message||m2?.errors?.m2_buoy||"No fresh M2 observation was returned";
-      setText("m2Detail",`${reason}. The local model may still be available on the coast page.`);
+      setText("m2ObservationInfo",stamp?`Last supplied observation: ${stamp} Irish time · older than the current-data window.`:"Observation time unavailable · no verified current M2 temperature.");
+      const reason=m2.__error?.message||m2?.errors?.m2_buoy||"No sufficiently recent M2 observation was returned";
+      setText("m2Detail",`${reason}. The separate coastal model may still be available on the Sea & Swim page.`);
       states.push("warn");
     }else{
       const m2State=m2Age<=180?"good":"warn";
       setBadge("m2Badge",m2State,m2State==="good"?"LIVE":"AGING");
       setText("m2Value",`${fmtNum(m2Value,1)} °C`);
-      setText("m2Detail",`M2 buoy observation ${fmtAge(m2Age*60)} old${m2Time?` · ${fmtIrishDateTime(m2Time)}`:""} · about 110 km offshore`);
+      setText("m2ObservationInfo",`${m2State==="good"?"Observation":"Last available observation · not live"} · ${stamp?stamp+" Irish time · ":""}${ageText?ageText+" old":"Age not provided"}`);
+      setText("m2Detail",`M2 is approximately 110 km offshore. ${m2State==="good"?"The observation is within the normal 3-hour freshness window.":"The reading is between 3 and 12 hours old and must not be treated as current."}`);
       if(m2State==="warn")states.push("warn");
     }
 
