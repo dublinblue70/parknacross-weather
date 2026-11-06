@@ -38,7 +38,11 @@ sandbox.checkSoil({gateway_upload_received:true,wh52_detected:true,received_epoc
 assert.equal(warning.hidden,false, "Stale WH52 uploads must display a warning even with cached soil values");
 assert.match(warning.textContent,/upload delayed/i);
 sandbox.checkSoil({gateway_upload_received:true,wh52_detected:false,received_epoch:now,last_successful_upload_epoch:now-300}, current);
-assert.match(warning.textContent,/no WH52 soil fields/i);
+assert.equal(warning.hidden,true, "A recent successful WH52 receipt must override a soil-free gateway packet");
+sandbox.checkSoil({gateway_upload_received:true,wh52_detected:false,received_epoch:now,last_successful_upload_epoch:now-2000}, current);
+assert.match(warning.textContent,/upload delayed/i);
+sandbox.checkSoil({gateway_upload_received:false,status_error:true}, current);
+assert.match(warning.textContent,/status is unavailable/i);
 sandbox.checkSoil(null, {soil_moisture_pct:null,soil_temperature_c:null,soil_ec_us_cm:null});
 assert.match(warning.textContent,/unavailable/i);
 console.log("PASS: WH52 offline warning and last successful gateway upload are independently monitored.");
