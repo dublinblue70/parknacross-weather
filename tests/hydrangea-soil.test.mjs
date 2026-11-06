@@ -26,6 +26,14 @@ assert.doesNotMatch(stale.advice,/no watering needed/i);
 assert.equal(guide.assess({...base,moisture:null}).status,'Check compost manually');
 assert.equal(guide.trendFromReadings([{epoch:now-21600,soil_moisture_pct:38},{epoch:now-3600,soil_moisture_pct:33}],{epoch:now,soil_moisture_pct:34}),-4);
 assert.equal(guide.trendFromReadings([],{epoch:now,soil_moisture_pct:34}),null);
+// Baseline starts with the first valid archived reading, not installation day.
+const first=Date.parse('2026-09-28T13:00:00Z')/1000;
+assert.equal(guide.baselinePhase(first,first+60).day,1);
+assert.equal(guide.baselinePhase(first,first+13*86400).building,true);
+assert.equal(guide.baselinePhase(first,first+14*86400).building,false);
+assert.equal(guide.baselinePhase(null,now).verified,false);
+assert.equal(guide.baselinePhase(first,first-300).verified,false);
+
 for(const f of ['summary.html','index.html']){assert.match(read(f),/hydrangea-soil\.js\?v=/);assert.match(read(f),/hydrangea-soil\.css\?v=/);}
 assert.match(read('summary.js'),/renderSoil\(current,rows\)/);
 assert.match(read('app.js'),/ParknacrossHydrangeaSoil/);
