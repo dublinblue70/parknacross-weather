@@ -48,3 +48,14 @@
   }
   .shell footer .footer-links a { font-size: .82rem; }
 }
+
+/* M2 buoy: source time is primary context, not hidden under technical details. */
+#m2ObservationInfo.m2-observation-info{
+  margin:4px 0 14px;
+  color:var(--muted,#afc2ce);
+  font-size:.86rem;
+  line-height:1.55;
+  overflow-wrap:anywhere;
+}
+#health-m2[data-health-state="warn"] #m2ObservationInfo{color:#f4d08a}
+#health-m2 .metric{margin-bottom:4px}
