@@ -8,7 +8,7 @@
  ingest:['Recent five-minute archive collection needs checking. Live readings may still be available.','Check collection details and compare the latest saved observations.','history.html#completenessHeading'],
  battery:['The outdoor array’s battery reading needs checking. An unavailable value does not mean low batteries.','Check the latest battery indication in Ecowitt before taking action.','station.html'],
  wh40h:['The WH40H rainfall feed or primary-source mapping could not be verified. Other weather sensors may still be healthy.','Check the traditional rainfall priority in Ecowitt, then inspect the latest rain fields. Zero rainfall in dry weather is normal.','station.html#meetSensors'],
- soil:['The latest upload does not confirm a current soil reading. Other weather sensors can still work.','Check the soil sensor’s placement and connection in Ecowitt.','graphs.html#soilMoistureCard'],
+ soil:['The WH52 upload is delayed or readings are missing. Other weather observations may still work.','Check the GW3001 Customized upload destination and confirm WH52 readings in Ecowitt.','index.html#soilPanel'],
  gustQuality:['Wind-reading quality checks need review. Original readings remain in the archive.','Review the flagged readings and recent station changes.','maintenance.html'],
  quality:['Recent observation checks found an issue or could not finish.','Expand the observation checks and compare the relevant charts.','graphs.html'],
  samples:['Fewer recent readings were saved than expected, or the count could not be verified.','Compare archive coverage and collection status; this alone does not prove a current outage.','history.html#completenessHeading'],
@@ -73,7 +73,7 @@
    if(technical&&!timing){timing=document.createElement('p');timing.className='health-response-time';technical.append(timing);}
    if(timing)timing.textContent=checked?`Source check completed in ${(meta[card.source].elapsed/1000).toFixed(2)} seconds.`:'Response time will appear after the source check.';
    const info=guidance[card.key];const impact=$(card.key+'Impact');
-   if(impact)impact.textContent=state==='checking'?'Checking this source…':state==='good'?(card.key==='battery'?'Reported battery information is available; its measurement time may be unknown.':card.key==='soil'?'Soil values are included in the gateway upload; the sensor’s own transmission time is not supplied.':card.key==='wh40h'?'WH40H source mapping and live rain fields are available; physical battery and radio-link health are not independently checked.':card.key==='facebook'||card.key==='x'?'Delivery status is reported by the weather data service. Confirm the visible post on the platform.':'This check passed. Expand details for the source result.'):(info?.[0]||'This check needs review.');
+   if(impact)impact.textContent=state==='checking'?'Checking this source…':state==='good'?(card.key==='battery'?'Reported battery information is available; its measurement time may be unknown.':card.key==='soil'?'A recent WH52 gateway upload and current soil values are confirmed; the sensor’s radio transmission time is not supplied.':card.key==='wh40h'?'WH40H source mapping and live rain fields are available; physical battery and radio-link health are not independently checked.':card.key==='facebook'||card.key==='x'?'Delivery status is reported by the weather data service. Confirm the visible post on the platform.':'This check passed. Expand details for the source result.'):(info?.[0]||'This check needs review.');
    if(checked&&state!=='checking'&&!isRunning){
     const before=previous[card.key];
     if(['good','warn','bad'].includes(before)&&before!==state){
@@ -85,7 +85,7 @@
   }
   persist();
   $('healthCounts').textContent=`${issues.length} need attention · ${healthy} healthy${pending?` · ${pending} checking`:''}`;
-  $('healthProgress').textContent=`${Object.keys(results).length} of 19 sources checked${running?' · checks running':' · refreshes about every 5 minutes'}`;
+  $('healthProgress').textContent=`${Object.keys(results).length} of 20 sources checked${running?' · checks running':' · refreshes about every 5 minutes'}`;
   $('healthAttentionIntro').textContent=issues.length?'Each item explains the affected feature and the next step. Core services are assessed separately below.':pending?'No issues in completed checks. Remaining sources are still being checked.':'No issues found in the completed checks.';
   const host=$('healthAttentionList');host.replaceChildren();
   for(const card of issues.sort((a,b)=>(a.element.dataset.healthState==='bad'?-1:1)-(b.element.dataset.healthState==='bad'?-1:1))){
