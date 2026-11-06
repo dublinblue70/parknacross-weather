@@ -5,7 +5,7 @@ const status=read("status.js"),page=read("status.html"),ui=read("status-ui.js");
 assert.match(page,/id="m2ObservationInfo"[^>]*role="status"/);
 assert.match(status,/Last available observation · not live/);
 assert.match(status,/m2Age<=180\?"good":"warn"/);
-assert.match(status,/m2Age>12\*60/);
+assert.match(status,/m2Age<=12\*60/);
 assert.match(status,/Last supplied observation:/);
 assert.match(status,/fmtIrishDateTime\(m2Time\)/);
 assert.match(ui,/a last available reading, not a live measurement/);
