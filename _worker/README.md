@@ -23,3 +23,9 @@ The Ecowitt WH40H is installed and selected as **Traditional rain gauge** in the
 **Deployment required:** GitHub Pages publishing only updates webpages. In Cloudflare Workers, replace the current script with the complete `_worker/worker.mjs`, retain existing secrets, D1 bindings and scheduled triggers, then Deploy. Verify the admin compatibility check reports Worker **38.4.240** and **WH40H primary rain source: supported**. These flags confirm the code is deployed, not physical sensor health; additionally verify a fresh `/current` rainfall reading and Ecowitt traditional rainfall values.
 
 The archive is intentionally not rewritten: older rainfall readings retain their original instrument provenance. Daily values for **3 November 2026**, the changeover day, may span both gauges. Never treat the change as an automatic calibration of historical rainfall.
+
+## PWSWeather HTTPS relay — v38.4.241
+
+The Worker now posts each new scheduled Ecowitt observation to PWSWeather's HTTPS `/api/v1/submitwx` endpoint. It converts Celsius, km/h, hPa and millimetres to the imperial fields PWSWeather expects. Only a PWSWeather `success` response records that observation as sent; failures are logged and retried on the next scheduled sync.
+
+Before deploying, add the new station API key to the Cloudflare Worker as the secret binding `PWSWEATHER_API_KEY`. The PWSWeather station ID is `PARKNACROSSWX` in the source. Keep the secret out of the repository. Then deploy the complete `_worker/worker.mjs` script, preserving existing D1 bindings, secrets and scheduled triggers. Check the Worker logs for `PWSWeather accepted observation`, then check the PWSWeather Observations and Logs tabs.
