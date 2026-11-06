@@ -1183,18 +1183,51 @@ function updateWhatToWear(current, rainDetected = false) {
   }
 }
 
+let latestSoilUploadStatus = null;
+function updateSoilFeedWarning(current) {
+  const warning = $("soilFeedWarning");
+  if (!warning) return;
+  const hasReading = ["soil_moisture_pct","soil_temperature_c","soil_ec_us_cm"].some(field => usable(current?.[field]));
+  const status = latestSoilUploadStatus;
+  const successEpoch = usable(status?.last_successful_upload_epoch) ? Number(status.last_successful_upload_epoch)
+    : status?.wh52_detected && usable(status.received_epoch) ? Number(status.received_epoch) : null;
+  const age = successEpoch !== null ? Date.now()/1000 - successEpoch : null;
+  let message = "";
+  if (age !== null && age >= 0 && age > 12*60) {
+    message = `WH52 soil upload delayed: no successful reading for ${Math.floor(age/60)} minutes. Check the GW3001 Customized upload destination in Ecowitt. Other weather observations may still work.`;
+  } else if (status?.gateway_upload_received && status.wh52_detected === false) {
+    message = "The latest gateway upload has no WH52 soil fields. Check the WH52 sensor in Ecowitt and the GW3001 Customized service.";
+  } else if (!hasReading) {
+    message = status?.wh52_detected && age !== null && age <= 12*60
+      ? "WH52 reached Cloudflare but the current weather response has no soil values. Check System Status."
+      : "WH52 soil readings are unavailable. Check System Status for the last successful upload.";
+  }
+  warning.hidden = !message;
+  warning.textContent = message;
+}
 function updateSoilPanel(current) {
   const panel = $("soilPanel");
   if (!panel) return;
   const moisture = usable(current?.soil_moisture_pct) ? Number(current.soil_moisture_pct) : null;
   const temperature = usable(current?.soil_temperature_c) ? Number(current.soil_temperature_c) : null;
   const ec = usable(current?.soil_ec_us_cm) ? Number(current.soil_ec_us_cm) : null;
+  panel.hidden = false;
+  updateSoilFeedWarning(current);
   if (moisture === null && temperature === null && ec === null) {
-    panel.hidden = true;
+    set("soilSummary", "The WH52 sensor in the potted hydrangea has no current measurements.");
+    set("soilMoisture", "Unavailable");
+    set("soilTemperature", "Unavailable");
+    set("soilEc", "Unavailable");
+    set("soilMoistureTrend", "Trend paused — no current reading");
+    set("soilEvent", "Soil trend analysis resumes when WH52 readings return.");
+    set("soilWateringStatus", "Reading unavailable");
+    set("soilWateringAdvice", "Check the compost manually before deciding whether to water.");
+    set("soilWateringContext", "The last known measurement is not shown as current. See System Status.");
+    const badge = $("soilBaselineBadge"), note = $("soilBaselineNote");
+    if (badge) badge.hidden = true;
+    if (note) note.hidden = true;
     return;
   }
-
-  panel.hidden = false;
   const nowEpoch = usable(current?.epoch) ? Number(current.epoch) : Date.now() / 1000;
   const baselineDay=Math.max(1,Math.floor((nowEpoch-SOIL_SENSOR_BASELINE_START_EPOCH)/86400)+1),baselineBuilding=baselineDay<=SOIL_SENSOR_BASELINE_DAYS;
   const baselineBadge=$("soilBaselineBadge"),baselineNote=$("soilBaselineNote");
@@ -1270,29 +1303,32 @@ function renderSinceLastVisit(current){
 async function refreshSoilFreshness(){
   try {
     const data = await getJSON(SOIL_STATUS_URL, "no-store");
+    latestSoilUploadStatus = data;
     if (usable(data?.received_epoch)) {
-      latestGatewayUploadTime = Number(data.received_epoch) * 1000;
-      set(
-        "gatewayReceived",
-        `Gateway received ${relativeObservationAge(latestGatewayUploadTime)}`
-      );
+      latestGatewayUploadTime = Number(data.received_epoch)*1000;
+      set("gatewayReceived", `Gateway received ${relativeObservationAge(latestGatewayUploadTime)}`);
     } else {
       latestGatewayUploadTime = null;
       set("gatewayReceived", "Gateway receipt time unavailable");
     }
-
-    if (!data?.wh52_detected || !usable(data.received_epoch)) {
-      set("soilFreshness", "Waiting for a recent garden soil reading");
-      return;
+    const epoch = usable(data?.last_successful_upload_epoch) ? Number(data.last_successful_upload_epoch)
+      : data?.wh52_detected && usable(data.received_epoch) ? Number(data.received_epoch) : null;
+    if (epoch === null) {
+      set("soilFreshness", "No successful WH52 gateway upload confirmed");
+    } else {
+      const stamp = new Date(epoch*1000).toLocaleString("en-IE",{
+        timeZone:STATION_TIME_ZONE,day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"
+      });
+      const age = Math.max(0,Date.now()/1000-epoch);
+      set("soilFreshness", `Last WH52 upload: ${stamp} Irish time · ${Math.floor(age/60)} min ago · sensor radio time not supplied`);
     }
-    set(
-      "soilFreshness",
-      `Soil reading received ${lightningRelative(data.received_epoch)} · individual sensor transmission time is not supplied`
-    );
+    updateSoilFeedWarning(latestCurrent);
   } catch (_) {
+    latestSoilUploadStatus = null;
     latestGatewayUploadTime = null;
     set("gatewayReceived", "Gateway status temporarily unavailable");
-    set("soilFreshness", "Garden soil update time is temporarily unavailable");
+    set("soilFreshness", "Garden soil upload status temporarily unavailable");
+    updateSoilFeedWarning(latestCurrent);
   }
 }
 
