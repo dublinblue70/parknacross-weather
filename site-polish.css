@@ -173,3 +173,25 @@ main :where(.source-note,.info-note,.site-context-note) a{
     outline-offset:3px;
   }
 }
+
+/* v38.4.248 audit: readable wide-screen typography and safe fluid cards. */
+@media (min-width: 1160px) {
+  html body .shell { width:min(1460px,calc(100% - 48px)); }
+  html body .shell > main { padding-inline:clamp(28px,3vw,48px); }
+  html body .page-hero p, html body .hero p { max-width:90ch; }
+  html body :where(.section-heading,.page-hero,.chart-card,.info-card,.card,.metric-panel) { min-width:0; }
+}
+html body :where(.source-note,.info-note,.weather-window-note,.health-impact) { overflow-wrap:anywhere; }
+html body :where(.chart-card,.info-card,.metric-panel,.weather-panel) { max-width:100%; }
+html body :where(.chart-card,.info-card,.metric-panel) > :where(table,pre) { max-width:100%; }
+html body :where(.nav a,.nav-more-button,button,summary):focus-visible {
+  outline:3px solid var(--ui-accent,#7bd7ef);outline-offset:3px;
+}
+@media (max-width:700px) {
+  html body :where(.site-jump-nav,.health-jumps,.dashboard-shortcuts) {
+    overflow-wrap:anywhere;
+  }
+  html body :where(.chart-card,.info-card,.metric-panel) {
+    scroll-margin-top:18px;
+  }
+}
