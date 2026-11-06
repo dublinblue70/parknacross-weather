@@ -10,6 +10,13 @@
      .sort((a,b)=>Math.abs(Number(a.epoch)-(epoch-21600))-Math.abs(Number(b.epoch)-(epoch-21600)))[0];
    return baseline?Math.round((moisture-Number(baseline.soil_moisture_pct))*10)/10:null;
  }
+ function baselinePhase(firstValidEpoch,nowEpoch=Date.now()/1000,days=14){
+   const first=Number(firstValidEpoch),now=Number(nowEpoch),length=Math.floor(Number(days));
+   if(!isNum(firstValidEpoch)||first<=0||!Number.isFinite(now)||now<first
+       ||!Number.isInteger(length)||length<1)return{verified:false,day:null,building:false};
+   const day=Math.max(1,Math.floor((now-first)/86400)+1);
+   return{verified:true,day,building:day<=length};
+ }
  function assess({moisture,temperature,trendChange=null,epoch=null,nowEpoch=Date.now()/1000}={}){
    const month=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Dublin",month:"numeric"}).format(new Date(nowEpoch*1000)));
    const coolSeason=month>=11||month<=3;
@@ -36,5 +43,5 @@
    const cold=isNum(temperature)&&Number(temperature)<=12?" The compost reading is cool, which generally reduces water demand.":"";
    return{status,advice,context:seasonal+cold+" "+disclaimer,trend};
  }
- window.ParknacrossHydrangeaSoil={assess,trendFromReadings};
+ window.ParknacrossHydrangeaSoil={assess,trendFromReadings,baselinePhase};
 })();
