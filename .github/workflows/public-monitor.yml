@@ -6,8 +6,6 @@ on:
   workflow_run:
     workflows: [pages build and deployment]
     types: [completed]
-  push:
-    branches: [main]
 permissions:
   contents: read
 concurrency:
