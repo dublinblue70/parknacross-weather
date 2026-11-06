@@ -324,3 +324,75 @@
   .alert-settings-panel .alert-test-row #alertsTestButton{width:100%}
   .alert-settings-panel .alert-test-row{align-items:stretch;gap:10px}
 }
+
+
+/* 6 Nov 2026 — notification disclosure and following section spacing.
+   Keep the collapsed disclosure compact on desktop, while allowing the
+   expanded controls to flow naturally without clipping. */
+.alert-settings-panel > .visitor-detail {
+  display: block;
+  height: auto;
+  min-height: 0;
+  margin: 16px 0 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: visible;
+}
+.alert-settings-panel > .visitor-detail > summary {
+  box-sizing: border-box;
+  display: list-item;
+  min-height: 0;
+  padding: 17px 20px;
+  margin: 0;
+  font-size: clamp(1rem, 1.15vw, 1.1rem);
+  font-weight: 650;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.alert-settings-panel > .visitor-detail:not([open]) > summary {
+  margin: 0;
+}
+.alert-settings-panel > .visitor-detail[open] {
+  padding-bottom: 18px;
+}
+.alert-settings-panel > .visitor-detail[open] > .visitor-tools {
+  margin: 0 20px 12px;
+  align-items: end;
+}
+.alert-settings-panel > .visitor-detail[open] > :is(.visitor-note, h3, #refreshAlertHistory, #recentWeatherAlerts) {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+.alert-settings-panel > .visitor-detail[open] > .visitor-note {
+  margin-top: 12px;
+  margin-bottom: 16px;
+}
+.alert-settings-panel > .visitor-detail > summary:focus-visible {
+  outline: 3px solid #91def4;
+  outline-offset: 3px;
+}
+.alert-settings-panel > .storage-note {
+  display: block;
+  height: auto;
+  min-height: 0;
+  margin: 14px 0 0;
+  padding: 0;
+  max-width: none;
+  line-height: 1.55;
+}
+.alert-settings-panel {
+  padding-bottom: clamp(20px, 2vw, 30px);
+}
+.alert-settings-panel + * { min-height: 0; }
+section.page-section:has(> .alert-settings-panel) {
+  margin-bottom: 24px;
+}
+section.page-section:has(> .alert-settings-panel) + section.page-section {
+  margin-top: 0;
+}
+@media (max-width: 600px) {
+  .alert-settings-panel > .visitor-detail > summary { padding: 14px 16px; }
+  .alert-settings-panel > .visitor-detail[open] > .visitor-tools { margin-inline: 16px; }
+  .alert-settings-panel > .visitor-detail[open] > :is(.visitor-note,h3,#refreshAlertHistory,#recentWeatherAlerts) { margin-inline: 16px; }
+}
