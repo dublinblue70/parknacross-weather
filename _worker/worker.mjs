@@ -1,4 +1,5 @@
-// v38.4.240 — WH40H primary traditional rain gauge: select traditional rain fields, never silently substitute WS90 piezo data.
+// v38.4.241 — publish Ecowitt observations to PWSWeather over HTTPS using a Cloudflare secret.
+// v38.4.241 — WH40H primary traditional rain gauge: select traditional rain fields, never silently substitute WS90 piezo data.
 // v38.4.237 — stream large CSV exports in bounded D1 pages to avoid Worker resource exhaustion.
 // v38.4.232 — photo galleries, selected-field CSV streaming, annual coverage and confirmed station exposure history.
 // v38.4.96 — marine warnings remain available independently of forecast failures.
@@ -67,6 +68,8 @@ const DAILY_TABLE = "weather_daily_v1";
 const META_TABLE = "parknacross_meta_v1";
 const WH52_UPLOAD_META_KEY = "wh52_gateway_latest_v1";
 const WH52_UPLOAD_STATUS_META_KEY = "wh52_gateway_status_v1";
+const PWSWEATHER_LAST_EPOCH_META_KEY = "pwsweather_last_upload_epoch_v1";
+const PWSWEATHER_STATION_ID = "PARKNACROSSWX";
 const WH52_UPLOAD_MAX_AGE_SECONDS = 12 * 60;
 const ARCHIVE_EXPECTED_INTERVAL_SECONDS = 5 * 60;
 const ARCHIVE_STALE_AFTER_SECONDS = 10 * 60;
@@ -2255,7 +2258,7 @@ async function pushEncrypt(subscription,payload){
 async function sendWeatherPush(subscription,message,vapid,timeoutMs=5000){const endpoint=new URL(subscription.endpoint),header=pushBase64(pushText(JSON.stringify({typ:'JWT',alg:'ES256'}))),claims=pushBase64(pushText(JSON.stringify({aud:endpoint.origin,exp:Math.floor(Date.now()/1000)+3600,sub:'mailto:info@parknacrossweather.ie'}))),input=header+'.'+claims,key=await crypto.subtle.importKey('jwk',vapid.privateJwk,{name:'ECDSA',namedCurve:'P-256'},false,['sign']),signature=pushBase64(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},key,pushText(input)));return fetch(endpoint.href,{method:'POST',headers:{Authorization:`vapid t=${input}.${signature}, k=${vapid.publicKey}`,'Content-Encoding':'aes128gcm','Content-Type':'application/octet-stream',TTL:'300',Urgency:'normal'},body:await pushEncrypt(subscription,message),redirect:'error',signal:AbortSignal.timeout(timeoutMs)});}
 async function handlePushRequest(request,env,url){
  const noStore={'Cache-Control':'no-store'};
- if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.240'},200,noStore);}
+ if(url.pathname==='/push/public-key'){if(request.method!=='GET')return json({error:'Method not allowed'},405,noStore);const v=await pushVapid(env);return json({available:true,public_key:v.publicKey,worker_version:'38.4.241'},200,noStore);}
  if(request.method!=='POST')return json({error:'Method not allowed'},405,noStore);
  if(request.headers.get('Origin')!=='https://parknacrossweather.ie'&&request.headers.get('Origin')!=='https://www.parknacrossweather.ie')return json({error:'Origin not allowed'},403,noStore);
  if(requestRateLimited(request,'push-settings',10))return rateLimitedResponse();
@@ -2307,7 +2310,7 @@ export default {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.240",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.241",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2570,7 +2573,7 @@ export default {
       }
     }
 
-    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.240",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"public, max-age=300"});}
+    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.241",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"public, max-age=300"});}
 
     if(url.pathname==="/met/warnings"){
       if(request.method!=="GET")return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
@@ -3454,11 +3457,19 @@ export default {
       }
 
       try {
-        await syncEcowitt(env);
+        const syncResult = await syncEcowitt(env);
         await writeMeta(env, {
           [SCHEDULED_SYNC_SUCCESS_META_KEY]: Math.floor(Date.now() / 1000),
           [SCHEDULED_SYNC_ERROR_META_KEY]: ""
         });
+        try {
+          const pwsResult = await publishPwsWeather(env, syncResult);
+          if (pwsResult?.accepted) {
+            console.info("PWSWeather accepted observation", { epoch: pwsResult.epoch });
+          }
+        } catch (error) {
+          console.warn("Scheduled PWSWeather publish failed:", safeErrorMessage(error));
+        }
       } catch (error) {
         try {
           await writeMeta(env, {
@@ -3504,6 +3515,72 @@ async function readSecret(binding) {
 
   return "";
 }
+ 
+async function publishPwsWeather(env, syncResult) {
+  const apiKey = await readSecret(env.PWSWEATHER_API_KEY);
+  if (!apiKey) return { skipped: true, reason: "secret_not_configured" };
+
+  const reading = syncResult?.reading;
+  const epoch = Math.round(Number(syncResult?.epoch));
+  const nowEpoch = Math.floor(Date.now() / 1000);
+  if (!reading || !Number.isFinite(epoch) || epoch <= 0) {
+    throw new Error("No valid Ecowitt observation available for PWSWeather");
+  }
+  if (epoch > nowEpoch + 300 || nowEpoch - epoch > 15 * 60) {
+    throw new Error("Latest Ecowitt observation is stale for PWSWeather");
+  }
+
+  const meta = await readMetaMap(env, [PWSWEATHER_LAST_EPOCH_META_KEY]);
+  const lastUploadedEpoch = Number(meta[PWSWEATHER_LAST_EPOCH_META_KEY] || 0);
+  if (Number.isFinite(lastUploadedEpoch) && epoch <= lastUploadedEpoch) {
+    return { skipped: true, reason: "observation_already_sent", epoch };
+  }
+
+  const params = new URLSearchParams();
+  params.set("ID", PWSWEATHER_STATION_ID);
+  params.set("PASSWORD", apiKey);
+  params.set("dateutc", new Date(epoch * 1000).toISOString().slice(0, 19).replace("T", " "));
+  params.set("softwaretype", "ParknacrossWeather_38.4.241");
+  params.set("action", "updateraw");
+
+  const putNumber = (name, value, digits = 2) => {
+    if (usableNumber(value)) params.set(name, Number(value).toFixed(digits));
+  };
+  const celsiusToFahrenheit = value => Number(value) * 9 / 5 + 32;
+
+  if (usableNumber(reading.temperature_c)) putNumber("tempf", celsiusToFahrenheit(reading.temperature_c));
+  if (usableNumber(reading.dew_point_c)) putNumber("dewptf", celsiusToFahrenheit(reading.dew_point_c));
+  if (usableNumber(reading.humidity)) putNumber("humidity", Math.round(Number(reading.humidity)), 0);
+  if (usableNumber(reading.wind_direction_deg)) {
+    const direction = ((Math.round(Number(reading.wind_direction_deg)) % 360) + 360) % 360;
+    params.set("winddir", String(direction));
+  }
+  if (usableNumber(reading.wind_speed_kmh)) putNumber("windspeedmph", Number(reading.wind_speed_kmh) / 1.609344);
+  if (usableNumber(reading.wind_gust_kmh)) putNumber("windgustmph", Number(reading.wind_gust_kmh) / 1.609344);
+  if (usableNumber(reading.pressure_hpa)) putNumber("baromin", Number(reading.pressure_hpa) * 0.0295299830714);
+  if (usableNumber(reading.rain_daily_mm)) putNumber("dailyrainin", Number(reading.rain_daily_mm) / 25.4);
+  if (usableNumber(reading.solar_w_m2)) putNumber("solarradiation", reading.solar_w_m2);
+  if (usableNumber(reading.uv_index)) putNumber("UV", reading.uv_index);
+
+  const endpoint = new URL("https://pwsupdate.pwsweather.com/api/v1/submitwx");
+  endpoint.search = params.toString();
+  const response = await fetch(endpoint.toString(), {
+    method: "GET",
+    headers: { "Accept": "text/plain" },
+    signal: AbortSignal.timeout(10000)
+  });
+  const responseText = (await response.text()).trim().toLowerCase();
+  if (!response.ok || responseText !== "success") {
+    const reason = responseText.includes("invalidpasswordid")
+      ? "station ID or API key rejected"
+      : "PWSWeather did not accept the observation";
+    throw new Error(reason + " (HTTP " + response.status + ")");
+  }
+
+  await writeMeta(env, { [PWSWEATHER_LAST_EPOCH_META_KEY]: epoch });
+  return { accepted: true, epoch };
+}
+
 
 async function ensureSchema(env) {
   if (!schemaReadyPromise) {
