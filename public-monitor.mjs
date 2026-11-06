@@ -9,6 +9,30 @@ export function assertPublishedRelease(html,expected=expectedSiteVersion) {
   assert.equal(publishedVersion(html),expected,`Published HTML version differs from GitHub release ${expected}`);
 }
 
+// Compare WH40H daily totals at the latest archived and live observation.
+// Compare only the same Irish calendar day to avoid a false midnight rollover alarm.
+export function compareRainPipeline(current,history,now=Date.now()) {
+  const valid=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v));
+  const day=epoch=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Number(epoch)*1000));
+  const epoch=Number(current?.epoch),rain=Number(current?.rain_daily_mm);
+  if(!valid(current?.epoch)||epoch<=0||!valid(current?.rain_daily_mm)||rain<0)
+    return {ok:false,reason:'Current rainfall reading or timestamp is invalid'};
+  const readings=Array.isArray(history?.readings)?history.readings:[];
+  const candidates=readings.filter(row=>valid(row?.epoch)&&valid(row?.rain_daily_mm)&&Number(row.epoch)>0&&day(row.epoch)===day(epoch))
+    .sort((a,b)=>Number(b.epoch)-Number(a.epoch));
+  const archived=candidates[0];
+  if(!archived)return {ok:false,reason:'No same-day archived rainfall reading was available'};
+  const gapSeconds=epoch-Number(archived.epoch);
+  if(gapSeconds< -120)return {ok:false,reason:'The latest archive is newer than the reported current reading'};
+  if(gapSeconds>20*60)return {ok:false,reason:'Archived rainfall is more than 20 minutes behind the current feed'};
+  const archiveRain=Number(archived.rain_daily_mm);
+  if(archiveRain<0)return {ok:false,reason:'Archived rain total is negative'};
+  if(archiveRain-rain>0.25)return {ok:false,reason:`Same-day rainfall dropped from archived ${archiveRain} mm to live ${rain} mm`};
+  if(Math.abs(gapSeconds)<=60&&Math.abs(archiveRain-rain)>0.25)
+    return {ok:false,reason:`Matching observation rainfall differs (archive ${archiveRain} mm; current ${rain} mm)`};
+  return {ok:true,latestArchivedEpoch:Number(archived.epoch),archiveRainMm:archiveRain,currentRainMm:rain};
+}
+
 export function validMarineForecast(data,now=Date.now()){
   const issued=Date.parse(data?.issued_at||data?.issued||'');
   return Boolean(!data?.error&&data?.forecast_available===true&&Number.isFinite(issued)&&now-issued>=-90000&&now-issued<=24*3600000&&['wind','weather','visibility'].every(field=>typeof data.local_area?.[field]==='string'&&data.local_area[field].trim().length>0));
@@ -25,6 +49,13 @@ export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https:
     ['Admin interface release',site+'/admin.html',async r=>assertPublishedRelease(await r.text())],
     ['Current readings',api+'/current',async r=>{const d=await r.json();assert.ok(!d.error&&fresh(d.epoch),'Latest observation is missing or delayed');assert.ok(d.rain_rate_mm_h!==null&&d.rain_rate_mm_h!==undefined&&d.rain_daily_mm!==null&&d.rain_daily_mm!==undefined&&Number.isFinite(Number(d.rain_rate_mm_h))&&Number.isFinite(Number(d.rain_daily_mm)),'WH40H rainfall fields are missing or invalid; a valid zero is fine');}],
     ['WH40H primary-source mapping',api+'/site-capabilities',async r=>{const d=await r.json();assert.equal(d?.features?.wh40h_primary_rain,true,'Deployed Worker does not confirm WH40H primary rain source');}],
+    ['Rainfall pipeline reconciliation',api+'/current',async r=>{
+      const current=await r.json();
+      const historyResponse=await fetcher(api+'/history?hours=2',{cache:'no-store',signal:AbortSignal.timeout(25000)});
+      assert.ok(historyResponse.ok,'Recent archive cannot be checked for rainfall');
+      const result=compareRainPipeline(current,await historyResponse.json(),now);
+      assert.ok(result.ok,result.reason||'Rainfall feeds disagree');
+    }],
     ['Summary observations',api+`/history?hours=48&_window=${Math.floor(now/300000)}`,async r=>{const d=await r.json();assert.ok(Array.isArray(d.readings)&&d.readings.some(row=>fresh(row.epoch)),'Summary archive has no fresh observations');}],
     ['Daily summaries',api+'/daily?days=8',async r=>{const d=await r.json();assert.ok(Array.isArray(d.days)&&d.days.some(row=>/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(row.day)&&Math.abs(now-Date.parse(row.day+'T12:00:00Z'))<2*86400000),'Recent daily archive is missing');}],
     ['Rain events',api+'/rain-events?days=30',async r=>{const d=await r.json();assert.ok(Array.isArray(d.events)&&Number.isFinite(d.event_count)&&!d.error,'Rain-event history unavailable');}],
