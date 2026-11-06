@@ -181,3 +181,14 @@
 @media(max-width:600px) {
   .alert-test-row button { width: 100%; }
 }
+
+/* Give the station introduction the same desktop presence as the panels below.
+   Retain a comfortable reading width without changing small-screen layouts. */
+@media (min-width: 1001px) {
+  .station-page-hero { max-width: none; }
+  .station-page-hero > p {
+    max-width: min(100%, 1320px);
+    font-size: clamp(1rem, 1.05vw, 1.12rem);
+    line-height: 1.7;
+  }
+}
