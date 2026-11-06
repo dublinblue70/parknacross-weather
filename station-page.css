@@ -185,9 +185,16 @@
 /* Give the station introduction the same desktop presence as the panels below.
    Retain a comfortable reading width without changing small-screen layouts. */
 @media (min-width: 1001px) {
-  .station-page-hero { max-width: none; }
-  .station-page-hero > p {
-    max-width: min(100%, 1320px);
+  /* Override the later review-ui.css .page-hero p 72ch reading limit.
+     Keep the station introduction visually aligned with the full-width
+     health bar and information panels on laptop and desktop screens. */
+  .page-hero.station-page-hero {
+    width: 100%;
+    max-width: none;
+  }
+  .page-hero.station-page-hero > p {
+    width: 100%;
+    max-width: min(100%, 1360px);
     font-size: clamp(1rem, 1.05vw, 1.12rem);
     line-height: 1.7;
   }
