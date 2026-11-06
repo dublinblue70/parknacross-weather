@@ -6,13 +6,11 @@ import assert from 'node:assert/strict';
 const root=new URL('../',import.meta.url);
 const read=name=>fs.readFileSync(new URL(name,root),'utf8');
 const pages=fs.readdirSync(root).filter(file=>file.endsWith('.html'));
-const cssToken='site-polish.css?v=20261103-v38-4-242-ux';
 const auditToken='site-polish.css?v=20261106-v38-4-248-audit';
 for(const page of pages){
   if(['offline.html','intelligence.html'].includes(page))continue;
   const html=read(page);
-  const expected=['index.html','status.html','downloads.html'].includes(page)?auditToken:cssToken;
-  assert.ok(html.includes(expected),page+' must request the selected responsive UX stylesheet');
+  assert.ok(html.includes(auditToken),page+' must request current responsive UX stylesheet');
 }
 const names=['status.js','status-ui.js','app.js','rain.js','history.js',
  'graphs.js','station-page.js','site-polish.js','review-tools.js','rain-gauge-audit.js','hydrangea-soil.js',
