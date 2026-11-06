@@ -1,4 +1,14 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const expectedSiteVersion=JSON.parse(readFileSync(new URL('./package.json',import.meta.url),'utf8')).version;
+export function publishedVersion(html) {
+  const match=String(html).match(/<meta\s+name=["']parknacross-site-version["']\s+content=["']([^"']+)["']/i);
+  return match?.[1] || null;
+}
+export function assertPublishedRelease(html,expected=expectedSiteVersion) {
+  assert.equal(publishedVersion(html),expected,`Published HTML version differs from GitHub release ${expected}`);
+}
+
 export function validMarineForecast(data,now=Date.now()){
   const issued=Date.parse(data?.issued_at||data?.issued||'');
   return Boolean(!data?.error&&data?.forecast_available===true&&Number.isFinite(issued)&&now-issued>=-90000&&now-issued<=24*3600000&&['wind','weather','visibility'].every(field=>typeof data.local_area?.[field]==='string'&&data.local_area[field].trim().length>0));
@@ -10,7 +20,9 @@ export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https:
   const exportFrom=previousDate.toISOString().slice(0,10);
   const fresh=epoch=>epoch!==null&&epoch!==undefined&&Number.isFinite(Number(epoch))&&now/1000-Number(epoch)>=-120&&now/1000-Number(epoch)<=900;
   const tasks=[
-    ['Website',site+'/',async r=>{assert.match(await r.text(),/PARKNACROSS WEATHER/);} ],
+    ['Website',site+'/',async r=>{const html=await r.text();assert.match(html,/PARKNACROSS WEATHER/);assertPublishedRelease(html);} ],
+    ['System status release',site+'/status.html',async r=>assertPublishedRelease(await r.text())],
+    ['Admin interface release',site+'/admin.html',async r=>assertPublishedRelease(await r.text())],
     ['Current readings',api+'/current',async r=>{const d=await r.json();assert.ok(!d.error&&fresh(d.epoch),'Latest observation is missing or delayed');assert.ok(d.rain_rate_mm_h!==null&&d.rain_rate_mm_h!==undefined&&d.rain_daily_mm!==null&&d.rain_daily_mm!==undefined&&Number.isFinite(Number(d.rain_rate_mm_h))&&Number.isFinite(Number(d.rain_daily_mm)),'WH40H rainfall fields are missing or invalid; a valid zero is fine');}],
     ['WH40H primary-source mapping',api+'/site-capabilities',async r=>{const d=await r.json();assert.equal(d?.features?.wh40h_primary_rain,true,'Deployed Worker does not confirm WH40H primary rain source');}],
     ['Summary observations',api+`/history?hours=48&_window=${Math.floor(now/300000)}`,async r=>{const d=await r.json();assert.ok(Array.isArray(d.readings)&&d.readings.some(row=>fresh(row.epoch)),'Summary archive has no fresh observations');}],
