@@ -22,7 +22,7 @@
  exportFeed:['Recent export-preview observations or required fields could not be verified.','Retry the preview before downloading; this check includes yesterday to avoid a midnight gap.','downloads.html'],
  rainEventsFeed:['The rain-event history feature could not be verified.','Retry the source; current rainfall readings may still be available.','rain.html'],
  tide:['Official Arklow tide predictions could not be verified. Local weather readings are independent.','Check the coastal page for available predictions and source information.','coast.html'],
- m2:['The offshore M2 buoy reading is unavailable or aging. This does not indicate a local station failure.','Check the coastal page; a separately labelled local model may still be available.','coast.html'],
+ m2:['The offshore M2 buoy has not supplied a sufficiently recent observation. The temperature shown above is its last available reading, not a current sea temperature. Your local weather station is unaffected.','Check the observation date and age above, or see Sea & Swim for the separate coastal model.','coast.html'],
  landWarning:['The official Wexford warning feed could not be verified.','Check Met Éireann directly for current warnings.','https://www.met.ie/warnings-today.html'],
  marineWarning:['The official local marine-warning feed could not be verified.','Check Met Éireann directly before relying on marine conditions.','https://www.met.ie/warnings-today.html'],
  facebook:['Today’s Facebook delivery has not been confirmed, or its status is unavailable.','Check Buffer and the visible Facebook post.','https://www.facebook.com/1361994206992789'],
