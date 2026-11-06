@@ -6,3 +6,7 @@
 .hydrangea-watering .hydrangea-watering-context{color:var(--muted,#b8c8d0);font-size:.87rem}
 .hydrangea-watering .hydrangea-watering-trend{font-size:.9rem;color:var(--muted,#b8c8d0)}
 @media(max-width:640px){.hydrangea-watering{padding:14px 15px}}
+
+/* WH52 feed warning: keep the potted hydrangea panel visible on outages. */
+.soil-feed-warning{margin:10px 0;padding:10px 13px;border:1px solid rgba(243,201,105,.55);border-left:4px solid #f3c969;border-radius:9px;background:rgba(243,201,105,.09);color:var(--text,#f2f7fa);font-size:.91rem;line-height:1.5}
+.soil-feed-warning[hidden]{display:none}
