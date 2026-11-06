@@ -1403,7 +1403,12 @@ function updateDashboard(current) {
   const pressure = pressureStats(current);
   const calmWind = usable(current.wind_speed_kmh) && Number(current.wind_speed_kmh) < 1;
   const direction = calmWind ? "Calm · direction unavailable" : compass(current.wind_direction_deg);
-  const rainToday = usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : currentIsToday ? correctedDailyRain(current) : null;
+  // Prefer the latest station counter; use the summary only when today's live
+  // counter is unavailable or the current observation is from another day.
+  const liveTodayRain = currentIsToday ? correctedDailyRain(current) : null;
+  const rainToday = usable(liveTodayRain)
+    ? Number(liveTodayRain)
+    : usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : null;
   const isNight = updateSunInfo(current);
   const condition = conditionInfo(current, isNight);
   latestRainDetected=Boolean(condition.rainState?.isRaining);
