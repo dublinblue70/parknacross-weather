@@ -205,3 +205,37 @@ body.dashboard-page :where(#forecast,#planning,#graphs,#soilPanel,#observationsH
   body.dashboard-page .dashboard-shortcuts{gap:10px}
   body.dashboard-page .dashboard-shortcuts a{padding-inline:14px}
 }
+
+
+/* 8 Nov 2026 — Dashboard quick links: restore the intended two-column mobile
+   grid. This stylesheet loads after dashboard-ui.css, so its earlier flex
+   declaration unintentionally overrode the existing mobile grid. */
+@media (max-width: 760px) {
+  body.dashboard-page nav.dashboard-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 9px;
+    margin: 12px 0 0;
+  }
+  body.dashboard-page nav.dashboard-shortcuts > a {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 10px 9px;
+    border-radius: 11px;
+    font-size: clamp(.82rem, 3.5vw, .9rem);
+    line-height: 1.3;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  /* Nine links: keep the final link balanced rather than an empty right cell. */
+  body.dashboard-page nav.dashboard-shortcuts > a:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
