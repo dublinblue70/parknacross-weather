@@ -385,7 +385,7 @@ const networkDirectoryCss = await readFile(join(root, "networks-page.css"), "utf
 if (!stationNetworksHtml.includes('aria-labelledby="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('id="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('class="networks-directory-page"') ||
-    !stationNetworksHtml.includes('networks-page.css?v=20261109-sleek-directory') ||
+    !stationNetworksHtml.includes('networks-page.css?v=20261109-premium-svg-icons') ||
     !networkDirectoryCss.includes("grid-template-columns: repeat(3, minmax(0, 1fr))") ||
     !networkDirectoryCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") ||
     !networkDirectoryCss.includes("grid-template-columns: minmax(0, 1fr)") ||
@@ -404,6 +404,27 @@ const networkCardMarkup = [...stationNetworksHtml.matchAll(/<article class="stat
 if (networkCardMarkup.length !== 9 || networkCardMarkup.some(card => (card.match(/<p(?:\s[^>]*)?>/g) || []).length !== 1)) {
   failures.push("networks.html: exactly nine concise network cards with one description each required");
 }
+const stationBrandSlugs = [
+  "ecowitt", "wunderground", "windguru", "windy", "weathercloud",
+  "awekas", "pwsweather", "cwop", "wowbe"
+];
+if (networkCardMarkup.length !== stationBrandSlugs.length ||
+    networkCardMarkup.some((card,index) =>
+      !card.includes('class="station-network-identity"') ||
+      !card.includes('class="station-network-copy"') ||
+      !card.includes('class="station-network-brand station-network-brand--'+stationBrandSlugs[index]+'" aria-hidden="true"') ||
+      !card.includes('<svg viewBox="0 0 24 24"') ||
+      !card.includes('focusable="false"') ||
+      (card.match(/<svg\b/g) || []).length !== 1 ||
+      (card.match(/<\/svg>/g) || []).length !== 1 ||
+      !card.includes('<path') && !card.includes('<circle')
+    ) ||
+    !stationBrandSlugs.every(slug => networkDirectoryCss.includes(".station-network-brand--"+slug)) ||
+    !networkDirectoryCss.includes("margin-left: 54px") ||
+    !networkDirectoryCss.includes("flex-basis: 38px")) {
+  failures.push("networks.html: all nine premium SVG badges must be distinct, decorative, correctly labelled and responsive");
+}
+
 const expectedStationNetworks = [
   ["stationEcowittLink", "https://www.ecowitt.net/home/share?authorize=RVM47S"],
   ["stationWeatherUndergroundLink", "https://www.wunderground.com/dashboard/pws/IARDAM6"],
