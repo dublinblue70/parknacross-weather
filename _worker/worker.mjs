@@ -77,6 +77,7 @@ const CWOP_STATUS_KEY = "cwop_last_attempt_v1";
 const WINDGURU_STATION_ID = 16733;
 const WINDGURU_UID = "FZ3RESA2VHEG";
 const WINDGURU_LAST_EPOCH_KEY = "windguru_last_sent_epoch_v1";
+const WINDGURU_MIN_UPLOAD_INTERVAL_SECONDS = 55; // Windguru recommends roughly one report per minute.
 const WINDGURU_STATUS_KEY = "windguru_last_attempt_v1";
 const WH52_UPLOAD_MAX_AGE_SECONDS = 12 * 60;
 const ARCHIVE_EXPECTED_INTERVAL_SECONDS = 5 * 60;
@@ -2761,6 +2762,7 @@ export default {
             });
           }
           if(ctx?.waitUntil)ctx.waitUntil(runBackgroundAlerts(env,liveReading).catch(()=>console.warn("Background alert evaluation failed")));
+          scheduleWindguruFromGateway(ctx, env, liveReading);
           const recovery = recoverArchiveFromGateway(env, receivedEpoch);
           if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(recovery);
           else await recovery;
@@ -2815,6 +2817,7 @@ export default {
           });
         }
         if(ctx?.waitUntil)ctx.waitUntil(runBackgroundAlerts(env,liveReading).catch(()=>console.warn("Background alert evaluation failed")));
+        scheduleWindguruFromGateway(ctx, env, liveReading);
         const recovery = recoverArchiveFromGateway(env, receivedEpoch);
         if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(recovery);
         else await recovery;
@@ -3783,6 +3786,18 @@ function windguruMd5(input) {
   return word(h0) + word(h1) + word(h2) + word(h3);
 }
 
+// The dashboard reads the direct GW3001 observation. Relay that same
+// validated sample to Windguru after its archive write, without delaying
+// the gateway's HTTP response or interfering with other network publishers.
+function scheduleWindguruFromGateway(ctx, env, liveReading) {
+  if (!liveReading || String(env.WINDGURU_ENABLED ?? "").toLowerCase() !== "true") return;
+  if (!ctx || typeof ctx.waitUntil !== "function") return;
+  ctx.waitUntil(
+    publishWindguru(env, {reading:liveReading, epoch:liveReading.epoch})
+      .catch(error => console.warn("Windguru direct relay failed:", safeErrorMessage(error)))
+  );
+}
+
 async function publishWindguru(env, syncResult) {
   if (String(env.WINDGURU_ENABLED ?? "").toLowerCase() !== "true")
     return {skipped:true,reason:"disabled"};
@@ -3795,8 +3810,11 @@ async function publishWindguru(env, syncResult) {
   if (!reading || !Number.isFinite(epoch) || epoch <= 0 || epoch > now + 300 || now - epoch > 15 * 60)
     throw new Error("No fresh Ecowitt observation is available for Windguru");
   const state = await readMetaMap(env, [WINDGURU_LAST_EPOCH_KEY]);
-  if (epoch <= Number(state[WINDGURU_LAST_EPOCH_KEY] || 0))
+  const lastSentEpoch = Number(state[WINDGURU_LAST_EPOCH_KEY] || 0);
+  if (epoch <= lastSentEpoch)
     return {skipped:true,reason:"observation_already_uploaded",epoch};
+  if (lastSentEpoch > 0 && epoch - lastSentEpoch < WINDGURU_MIN_UPLOAD_INTERVAL_SECONDS)
+    return {skipped:true,reason:"rate_limited_to_minute",epoch};
 
   const salt = String(Date.now()) + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
   const params = new URLSearchParams({
@@ -3861,7 +3879,16 @@ async function publishWindguru(env, syncResult) {
       [WINDGURU_LAST_EPOCH_KEY]: epoch,
       [WINDGURU_STATUS_KEY]: JSON.stringify({
         at:new Date().toISOString(), state:"accepted_not_display_verified",
-        observation_epoch:epoch, http_status:response.status
+        observation_epoch:epoch, http_status:response.status,
+        source: gateway ? "gw3001_direct_live" : (reading.source || "ecowitt_cloud"),
+        sent_readings: {
+          temperature_c: params.has("temperature") ? Number(params.get("temperature")) : null,
+          humidity_pct: params.has("rh") ? Number(params.get("rh")) : null,
+          wind_avg_knots: params.has("wind_avg") ? Number(params.get("wind_avg")) : null,
+          wind_max_knots: params.has("wind_max") ? Number(params.get("wind_max")) : null,
+          wind_direction_deg: params.has("wind_direction") ? Number(params.get("wind_direction")) : null,
+          pressure_hpa: params.has("mslp") ? Number(params.get("mslp")) : null
+        }
       })
     });
     return {accepted:true,epoch};
