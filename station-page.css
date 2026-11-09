@@ -57,66 +57,53 @@
 }
 
 
-/* Public weather-network links: one compact group, consistent on desktop and mobile. */
+/* Other Networks directory: compact equal-height cards, two desktop columns. */
 .station-external-networks {
-  margin: 24px 0 10px;
-  padding: 20px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: rgba(255,255,255,.018);
+  margin: 16px 0 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
-.station-external-networks-intro { margin-bottom: 14px; }
-.station-external-networks-intro h2 {
-  margin: 4px 0 6px;
-  font-size: clamp(1.12rem, 2vw, 1.3rem);
-  line-height: 1.35;
+.station-external-network-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
 }
-.station-external-networks-intro p {
-  margin: 0;
-  color: var(--muted);
-  font-size: .86rem;
-  line-height: 1.55;
-}
-.station-external-network-list { display: grid; gap: 10px; }
 .station-external-network {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: space-between;
   gap: 16px;
   min-width: 0;
   margin: 0;
-  padding: 14px 18px;
+  padding: 20px 22px;
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(123,215,239,.045);
 }
-.station-external-network > div { min-width: 0; }
+.station-external-network > div { min-width: 0; flex: 1 1 auto; }
 .station-external-network h3 {
   margin: 0;
-  font-size: 1rem;
-  line-height: 1.45;
+  font-size: 1.05rem;
+  line-height: 1.4;
 }
 .station-external-network p {
-  max-width: 68ch;
-  margin: 4px 0 0;
-  font-size: .86rem;
-  line-height: 1.5;
+  margin: 6px 0 0;
+  max-width: none;
   color: #b8cbd8;
-}
-.station-cwop-registration {
-  margin-top: 8px !important;
-  color: var(--muted);
-}
-.station-cwop-registration strong {
-  color: var(--text, #f2f7fa);
-  font-weight: 650;
+  font-size: .88rem;
+  line-height: 1.55;
 }
 .station-external-network-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  align-self: flex-start;
   flex-shrink: 0;
+  max-width: 100%;
   min-height: 44px;
   padding: 10px 14px;
   border: 1px solid rgba(123,215,239,.42);
@@ -138,11 +125,11 @@
   outline-offset: 3px;
 }
 @media (max-width: 760px) {
-  .station-external-networks { padding: 16px; margin-top: 20px; }
-  .station-external-network { flex-direction: column; align-items: stretch; gap: 10px; padding: 14px; }
-  .station-external-network-link { width: 100%; flex-shrink: 1; }
+  .station-external-networks { margin-top: 14px; }
+  .station-external-network-list { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .station-external-network { gap: 12px; padding: 16px; }
+  .station-external-network-link { align-self: stretch; width: 100%; }
 }
-
 
 /* Notification status: three distinct states instead of one ambiguous enable flag. */
 .alert-setup-grid {
