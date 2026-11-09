@@ -144,25 +144,70 @@
         overflow: hidden;
         background: rgba(255, 255, 255, 0.016);
       }
+      /* Keep the narrative at the top and photo details at the bottom
+         of the tall image; avoid an isolated block floating mid-panel. */
       .today-sky-copy {
-        padding: 24px 26px;
+        padding: clamp(26px, 3vw, 48px);
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: space-between;
+        gap: clamp(24px, 3vw, 54px);
         min-width: 0;
       }
+      .today-sky-copy-intro { max-width: 45ch; }
+      .today-sky-copy .section-eyebrow {
+        display: inline-block;
+        margin-bottom: 12px;
+      }
       .today-sky-copy h2 {
-        margin: 4px 0 8px;
-        font-size: clamp(1.2rem, 2vw, 1.55rem);
+        margin: 0 0 16px;
+        font-size: clamp(2rem, 2.7vw, 2.85rem);
+        line-height: 1.12;
+        letter-spacing: -.035em;
       }
       .today-sky-copy p {
         margin: 0;
         color: var(--muted);
         line-height: 1.6;
       }
-      .today-sky-meta {
-        margin-top: 10px !important;
-        font-size: 0.82rem;
+      .today-sky-copy-intro > p {
+        max-width: 38ch;
+        font-size: clamp(.96rem, 1.13vw, 1.09rem);
+      }
+      .today-sky-copy-footer {
+        min-width: 0;
+        padding-top: 20px;
+        border-top: 1px solid rgba(190,220,238,.16);
+      }
+      .today-sky-detail-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #93bdce;
+        font-size: .73rem;
+        font-weight: 750;
+        letter-spacing: .095em;
+        text-transform: uppercase;
+      }
+      .today-sky-copy-footer .today-sky-meta {
+        max-width: 48ch;
+        margin: 0 !important;
+        font-size: .93rem;
+        line-height: 1.5;
+        color: #c7d5e0;
+      }
+      .today-sky-copy-footer .sky-name-controls {
+        margin-top: 14px;
+        gap: 9px;
+      }
+      .today-sky-copy-footer .sky-name-controls > summary {
+        font-size: .82rem;
+        font-weight: 600;
+        color: #a9c6d6;
+        text-underline-offset: 3px;
+      }
+      .today-sky-copy-footer .sky-name-controls > summary:hover,
+      .today-sky-copy-footer .sky-name-controls > summary:focus-visible {
+        color: #a4e4f4;
       }
       .today-sky-figure {
         margin: 0;
@@ -568,8 +613,14 @@
           max-height: 320px;
         }
         .today-sky-copy {
-          padding: 20px;
+          padding: 22px;
+          gap: 24px;
         }
+        .today-sky-copy h2 {
+          font-size: clamp(1.85rem, 7vw, 2.35rem);
+          margin-bottom: 12px;
+        }
+        .today-sky-copy-footer { padding-top: 15px; }
         .sky-admin-controls,
         .sky-historical-import-grid {
           grid-template-columns: 1fr;
@@ -1015,17 +1066,21 @@
           aria-labelledby="todaySkyHeading"
         >
           <div class="today-sky-copy">
-            <span class="section-eyebrow">Visual observation</span>
-            <h2 id="todaySkyHeading">Today’s sky</h2>
-            <p id="todaySkyText">
-              A quick look at the sky over Parknacross today.
-            </p>
-            <p class="today-sky-meta" id="todaySkyMeta">
-              Checking for today’s photo…
-            </p>
+            <div class="today-sky-copy-intro">
+              <span class="section-eyebrow">Visual observation</span>
+              <h2 id="todaySkyHeading">Today’s sky</h2>
+              <p id="todaySkyText">
+                A daily view of the sky above Parknacross and the North Wexford coast.
+              </p>
+            </div>
+            <div class="today-sky-copy-footer">
+              <span class="today-sky-detail-label">Latest photograph</span>
+              <p class="today-sky-meta" id="todaySkyMeta" role="status" aria-live="polite">
+                Checking for today’s photo…
+              </p>
 
             <details id="skyNameControls" class="sky-name-controls" hidden>
-              <summary>Optional display name</summary>
+              <summary>Name for photo likes (optional)</summary>
               <label for="skyDisplayName"
                 >Name shown privately to the photo administrator when you like this photograph</label
               >
@@ -1120,6 +1175,7 @@
                 id="skyAdminStatus"
                 aria-live="polite"
               ></span>
+            </div>
             </div>
           </div>
 
