@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-251-networks-page-20261109";
+const CACHE_NAME = "parknacross-v38-4-251-other-networks-20261109";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
