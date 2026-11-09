@@ -79,6 +79,10 @@ const WINDGURU_UID = "FZ3RESA2VHEG";
 const WINDGURU_LAST_EPOCH_KEY = "windguru_last_sent_epoch_v1";
 const WINDGURU_MIN_UPLOAD_INTERVAL_SECONDS = 55; // Windguru recommends roughly one report per minute.
 const WINDGURU_STATUS_KEY = "windguru_last_attempt_v1";
+const WOWBE_SHORT_ID = "d8bbdb70"; // WOW-BE registration for Parknacross
+const WOWBE_LAST_EPOCH_KEY = "wowbe_last_sent_epoch_v1";
+const WOWBE_STATUS_KEY = "wowbe_last_attempt_v1";
+const WOWBE_MIN_UPLOAD_INTERVAL_SECONDS = 60;
 const WH52_UPLOAD_MAX_AGE_SECONDS = 12 * 60;
 const ARCHIVE_EXPECTED_INTERVAL_SECONDS = 5 * 60;
 const ARCHIVE_STALE_AFTER_SECONDS = 10 * 60;
@@ -2403,6 +2407,25 @@ export default {
      * Keep health independent of schema migrations. Even if a future migration
      * fails, the monitor still receives a JSON response showing D1 state.
      */
+    if (url.pathname === "/wowbe-status" && request.method === "GET") {
+      try {
+        const enabled = String(env.WOWBE_ENABLED ?? "").toLowerCase() === "true";
+        const credentialConfigured = Boolean(await readSecret(env.WOWBE_AUTH_KEY));
+        const meta = await readMetaMap(env, [WOWBE_LAST_EPOCH_KEY, WOWBE_STATUS_KEY]);
+        let attempt = null;
+        try { attempt = JSON.parse(meta[WOWBE_STATUS_KEY] || "null"); } catch (_) {}
+        return json({
+          station_id: WOWBE_SHORT_ID, registered: true,
+          enabled, credential_configured: credentialConfigured,
+          last_sent_observation_epoch: Number(meta[WOWBE_LAST_EPOCH_KEY]) || null,
+          last_attempt: attempt,
+          registration_url: "https://wow.meteo.be/web/login",
+          note: "An accepted upload does not prove that the reading is publicly visible on WOW-BE."
+        }, 200, {"Cache-Control":"no-store"});
+      } catch (_) {
+        return json({error:"WOW-BE status temporarily unavailable"},503,{"Cache-Control":"no-store"});
+      }
+    }
     if (url.pathname === "/windguru-status" && request.method === "GET") {
       try {
         const enabled = String(env.WINDGURU_ENABLED ?? "").toLowerCase() === "true";
@@ -2763,6 +2786,8 @@ export default {
           }
           if(ctx?.waitUntil)ctx.waitUntil(runBackgroundAlerts(env,liveReading).catch(()=>console.warn("Background alert evaluation failed")));
           scheduleWindguruFromGateway(ctx, env, liveReading);
+        scheduleWowBeFromGateway(ctx, env, liveReading);
+          scheduleWowBeFromGateway(ctx, env, liveReading);
           const recovery = recoverArchiveFromGateway(env, receivedEpoch);
           if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(recovery);
           else await recovery;
@@ -2884,7 +2909,7 @@ export default {
           service: "Parknacross Weather",
           status: "ok",
           endpoints: [
-            "/health", "/cwop-status", "/windguru-status",
+            "/health", "/cwop-status", "/windguru-status", "/wowbe-status",
             "/sky-photo", "/sky-photo/meta", "/sky-photo/likes", "/sky-photo (admin POST)",
             "/sky-photo/archive/admin (admin)", "/sky-photo/archive/image (admin)", "/sky-photo/archive/import (admin POST)",
             "/sync (admin)",
@@ -3556,6 +3581,12 @@ export default {
           console.warn("Scheduled Windguru publish failed:", safeErrorMessage(error));
         }
         try {
+          const wowbeResult = await publishWowBe(env, syncResult);
+          if (wowbeResult?.accepted) console.info("WOW-BE upload acknowledged", {epoch:wowbeResult.epoch});
+        } catch (error) {
+          console.warn("Scheduled WOW-BE publish failed:", safeErrorMessage(error));
+        }
+        try {
           const pwsResult = await publishPwsWeather(env, syncResult);
           if (pwsResult?.accepted) {
             console.info("PWSWeather accepted observation", { epoch: pwsResult.epoch });
@@ -3901,6 +3932,122 @@ async function publishWindguru(env, syncResult) {
         })
       });
     } catch (_) {}
+    throw error;
+  }
+}
+
+
+/*
+ * WOW-BE (RMI Belgium) uploader for registered Parknacross site d8bbdb70.
+ * Never overwrite GW3001 Customized Server settings: gateway packets are
+ * already delivered here, and this Worker fans out the validated outdoor data.
+ * Uses WOW-BE's Weather Underground-compatible v2 POST JSON endpoint, so the
+ * authentication key does not appear in URL logs or public station pages.
+ * Disabled until WOWBE_ENABLED=true and WOWBE_AUTH_KEY is a Cloudflare secret.
+ */
+function scheduleWowBeFromGateway(ctx, env, liveReading) {
+  if (!liveReading || String(env.WOWBE_ENABLED ?? "").toLowerCase() !== "true") return;
+  if (!ctx || typeof ctx.waitUntil !== "function") return;
+  ctx.waitUntil(
+    publishWowBe(env, {reading:liveReading, epoch:liveReading.epoch})
+      .catch(error => console.warn("WOW-BE direct relay failed:", safeErrorMessage(error)))
+  );
+}
+
+async function publishWowBe(env, syncResult) {
+  if (String(env.WOWBE_ENABLED ?? "").toLowerCase() !== "true")
+    return {skipped:true,reason:"disabled"};
+  const authKey = await readSecret(env.WOWBE_AUTH_KEY);
+  if (!authKey) return {skipped:true,reason:"auth_key_not_configured"};
+  const now = Math.floor(Date.now()/1000);
+  const direct = await readGatewayLiveReading(env, now).catch(() => null);
+  const reading = direct || syncResult?.reading;
+  const epoch = Math.floor(Number(direct?.epoch ?? syncResult?.epoch));
+  if (!reading || !Number.isFinite(epoch) || epoch <= 0 || epoch > now + 120 || now - epoch > 5*60)
+    throw Error("No fresh GW3001/Ecowitt outdoor observation available for WOW-BE");
+
+  const meta = await readMetaMap(env, [WOWBE_LAST_EPOCH_KEY]);
+  const previousEpoch = Number(meta[WOWBE_LAST_EPOCH_KEY] || 0);
+  if (epoch <= previousEpoch)
+    return {skipped:true,reason:"observation_already_sent",epoch};
+  if (previousEpoch > 0 && epoch - previousEpoch < WOWBE_MIN_UPLOAD_INTERVAL_SECONDS)
+    return {skipped:true,reason:"one_minute_interval",epoch};
+
+  const body = {
+    ID:WOWBE_SHORT_ID,
+    PASSWORD:authKey,
+    dateutc:new Date(epoch*1000).toISOString().slice(0,19).replace("T"," ")
+  };
+  const put=(name,value,precision=2)=>{
+    if (usableNumber(value) && Number.isFinite(Number(value)))
+      body[name]=Number(Number(value).toFixed(precision));
+  };
+  const temp=nullableNumber(reading.temperature_c);
+  if(temp !== null && temp >= -60 && temp <= 65)put("tempf",temp*9/5+32);
+  const humidity=nullableNumber(reading.humidity);
+  if(humidity !== null && humidity >= 0 && humidity <= 100)put("humidity",humidity,0);
+  const dew=nullableNumber(reading.dew_point_c);
+  if(dew !== null && dew >= -70 && dew <= 65)put("dewptf",dew*9/5+32);
+  const speed=nullableNumber(reading.wind_speed_kmh);
+  if(speed !== null && speed >= 0 && speed <= 350)put("windspeedmph",speed/1.609344);
+  const gust=nullableNumber(reading.wind_gust_kmh);
+  if(gust !== null && gust >= 0 && gust <= 450)put("windgustmph",gust/1.609344);
+  const dir=nullableNumber(reading.wind_direction_deg);
+  if(dir !== null && dir >= 0 && dir <= 360)put("winddir",dir%360,0);
+  // WOW-BE 'baromin' is *relative* sea-level-adjusted pressure in inHg.
+  const p=nullableNumber(reading.pressure_hpa);
+  if(p !== null && p>=850 && p<=1100)put("baromin",p*0.0295299830714,3);
+  // WOW-BE differs from ordinary WU: rainin is rain *rate*, not hourly total.
+  const rate=nullableNumber(reading.rain_rate_mm_h);
+  if(rate !== null && rate>=0 && rate<=300)put("rainin",rate/25.4,4);
+  const solar=nullableNumber(reading.solar_w_m2);
+  if(solar !== null && solar>=0 && solar<=1600)put("solarradiation",solar,1);
+  const uv=nullableNumber(reading.uv_index);
+  if(uv !== null && uv>=0 && uv<=20)put("UV",uv,1);
+
+  // Exclude all indoor measurements, soil probes, hardware MAC addresses, and
+  // cloud/worker credentials. WOW-BE needs only an outdoor weather observation.
+  if(!("tempf" in body) || !("humidity" in body))
+    throw Error("WOW-BE observation missing validated temperature or humidity");
+
+  try {
+    const response = await fetch("https://wow.meteo.be/api/v2/send/weatherunderground",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify(body),
+      signal:AbortSignal.timeout(12000)
+    });
+    // Treat only a successful HTTP acknowledgement as an accepted upload;
+    // log only the response status, never an untrusted echoed credential/body.
+    if(!response.ok)
+      throw Error("WOW-BE upload rejected (HTTP "+response.status+")");
+    await writeMeta(env,{
+      [WOWBE_LAST_EPOCH_KEY]:epoch,
+      [WOWBE_STATUS_KEY]:JSON.stringify({
+        at:new Date().toISOString(),state:"accepted_not_display_verified",
+        observation_epoch:epoch,http_status:response.status,
+        source:direct?"gw3001_direct_live":String(reading.source||"ecowitt_sync"),
+        sent_readings:{
+          temperature_f:body.tempf ?? null,
+          humidity_pct:body.humidity ?? null,
+          wind_speed_mph:body.windspeedmph ?? null,
+          wind_gust_mph:body.windgustmph ?? null,
+          wind_direction_deg:body.winddir ?? null,
+          sea_level_pressure_inhg:body.baromin ?? null,
+          rain_rate_in_h:body.rainin ?? null
+        }
+      })
+    });
+    return {accepted:true,epoch};
+  }catch(error){
+    try {
+      await writeMeta(env,{
+        [WOWBE_STATUS_KEY]:JSON.stringify({
+          at:new Date().toISOString(),state:"error",observation_epoch:epoch,
+          error:safeErrorMessage(error)
+        })
+      });
+    }catch(_){}
     throw error;
   }
 }
