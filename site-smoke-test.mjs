@@ -353,13 +353,16 @@ if (/mask-image\s*:/.test(styles)) {
 const stationNetworksHtml = await readFile(join(root, "networks.html"), "utf8");
 const stationPageHtml = await readFile(join(root, "station.html"), "utf8");
 const stationNetworksCss = await readFile(join(root, "station-page.css"), "utf8");
+// Priority order: source network, public/coastal services, secondary platforms,
+// and networks whose activation has not yet been completed.
 const stationNetworkIds = [
-  "stationWeatherUndergroundLink", "stationWeathercloudLink", "stationWindyLink",
-  "stationAwekasLink", "stationPwsweatherLink", "stationWindguruLink", "stationWowBeLink", "stationCwopLink"
+  "stationEcowittLink", "stationWeatherUndergroundLink", "stationWindguruLink",
+  "stationWindyLink", "stationWeathercloudLink", "stationAwekasLink",
+  "stationPwsweatherLink", "stationCwopLink", "stationWowBeLink"
 ];
 const stationNetworkPositions = stationNetworkIds.map(id => stationNetworksHtml.indexOf('id="' + id + '"'));
 if (stationNetworkPositions.some(pos => pos < 0) || stationNetworkPositions.some((pos, i) => i && pos <= stationNetworkPositions[i - 1])) {
-  failures.push("networks.html: all eight weather-network links must appear in the established order");
+  failures.push("networks.html: all nine weather-network links must appear in priority order");
 }
 if (!stationNetworksHtml.includes('aria-labelledby="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('id="otherNetworksHeading"') ||
@@ -369,18 +372,19 @@ if (!stationNetworksHtml.includes('aria-labelledby="otherNetworksHeading"') ||
   failures.push("networks.html: accessible title and 2-column desktop / 1-column mobile layout required");
 }
 const networkCardMarkup = [...stationNetworksHtml.matchAll(/<article class="station-external-network"[^>]*>([\s\S]*?)<\/article>/g)].map(match => match[1]);
-if (networkCardMarkup.length !== 8 || networkCardMarkup.some(card => (card.match(/<p(?:\s[^>]*)?>/g) || []).length !== 1)) {
-  failures.push("networks.html: exactly eight concise network cards with one description each required");
+if (networkCardMarkup.length !== 9 || networkCardMarkup.some(card => (card.match(/<p(?:\s[^>]*)?>/g) || []).length !== 1)) {
+  failures.push("networks.html: exactly nine concise network cards with one description each required");
 }
 const expectedStationNetworks = [
+  ["stationEcowittLink", "https://www.ecowitt.net/"],
   ["stationWeatherUndergroundLink", "https://www.wunderground.com/dashboard/pws/IARDAM6"],
-  ["stationWeathercloudLink", "https://app.weathercloud.net/d3781994059"],
+  ["stationWindguruLink", "https://www.windguru.cz/station/16733"],
   ["stationWindyLink", "https://www.windy.com/station/pws-hdC7VHGr"],
+  ["stationWeathercloudLink", "https://app.weathercloud.net/d3781994059"],
   ["stationAwekasLink", "https://www.awekas.at/en/instrument.php?id=54012"],
   ["stationPwsweatherLink", "https://www.pwsweather.com/station/pws/PARKNACROSSWX"],
-  ["stationWindguruLink", "https://www.windguru.cz/station/16733"],
-  ["stationWowBeLink", "https://wow.meteo.be/en/"],
-  ["stationCwopLink", "http://www.findu.com/cgi-bin/wx.cgi?call=GW8205"]
+  ["stationCwopLink", "http://www.findu.com/cgi-bin/wx.cgi?call=GW8205"],
+  ["stationWowBeLink", "https://wow.meteo.be/en/"]
 ];
 for (const [id, url] of expectedStationNetworks) {
   const pos = stationNetworksHtml.indexOf('id="' + id + '"');
@@ -401,6 +405,10 @@ if ((windguruWorker.match(/scheduleWindguruFromGateway\(ctx, env, liveReading\);
     !windguruWorker.includes('reason:"rate_limited_to_minute"') ||
     !windguruWorker.includes("sent_readings:")) {
   failures.push("Windguru: both GW3001 upload paths must relay fresh samples at minute cadence and record sent values");
+}
+if (!stationNetworksHtml.includes("Station sensor readings and weather history · Sign-in may be required.") ||
+    !stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h3>')) {
+  failures.push("networks.html: native Ecowitt platform must be listed first without suggesting an invented public station link");
 }
 if (!stationNetworksHtml.includes("Citizen weather observations · Connection not yet set up.") ||
     !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h3>')) {
