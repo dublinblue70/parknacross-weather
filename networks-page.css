@@ -1,0 +1,148 @@
+/* Other Networks: compact, editorial directory rather than oversized button cards.
+   Scoped to the dedicated page so Station and its other controls are unaffected. */
+body.networks-directory-page .networks-intro {
+  max-width: none;
+  margin: 8px 0 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+body.networks-directory-page .networks-intro h1 {
+  margin: 0 0 9px;
+  font-size: clamp(2rem, 2.8vw, 2.75rem);
+  font-weight: 750;
+  letter-spacing: -.035em;
+  line-height: 1.15;
+}
+body.networks-directory-page .networks-intro > p {
+  max-width: 65ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(.9rem, 1.1vw, 1rem);
+  line-height: 1.55;
+}
+body.networks-directory-page .station-external-networks {
+  margin: 0 0 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+body.networks-directory-page .station-external-network-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+  align-items: stretch;
+}
+body.networks-directory-page .station-external-network {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  min-width: 0;
+  min-height: 132px;
+  gap: 12px;
+  margin: 0;
+  padding: 17px 19px 13px;
+  border: 1px solid rgba(174,210,232,.17);
+  border-radius: 11px;
+  background: rgba(174,210,232,.018);
+  box-shadow: none;
+  transition: border-color .18s ease, background-color .18s ease;
+}
+body.networks-directory-page .station-external-network:hover {
+  border-color: rgba(123,215,239,.4);
+  background: rgba(123,215,239,.045);
+}
+body.networks-directory-page .station-external-network > div {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+body.networks-directory-page .station-external-network h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -.018em;
+}
+body.networks-directory-page .station-external-network p {
+  margin: 6px 0 0;
+  max-width: none;
+  color: #a7bccb;
+  font-size: .84rem;
+  line-height: 1.45;
+}
+body.networks-directory-page .station-external-network-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  align-self: flex-start;
+  flex-shrink: 0;
+  width: auto;
+  max-width: 100%;
+  min-height: 34px;
+  padding: 3px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #8ddcf0;
+  font-size: .84rem;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: left;
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+body.networks-directory-page .station-external-network-link:hover {
+  color: #c0effa;
+  background: transparent;
+  border-color: transparent;
+  text-decoration: underline;
+}
+body.networks-directory-page .station-external-network-link:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 3px;
+}
+body.networks-directory-page .station-external-network-link span[aria-hidden] {
+  font-size: .95em;
+  transition: transform .18s ease;
+}
+body.networks-directory-page .station-external-network-link:hover span[aria-hidden] {
+  transform: translate(2px, -2px);
+}
+@media (min-width: 1200px) {
+  body.networks-directory-page .station-external-network-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  body.networks-directory-page .networks-intro {
+    margin: 5px 0 16px;
+  }
+  body.networks-directory-page .networks-intro h1 {
+    font-size: clamp(1.8rem, 7vw, 2.15rem);
+  }
+  body.networks-directory-page .station-external-network-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+  body.networks-directory-page .station-external-network {
+    min-height: 0;
+    padding: 16px 17px 12px;
+    gap: 9px;
+  }
+  body.networks-directory-page .station-external-network-link {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.networks-directory-page .station-external-network,
+  body.networks-directory-page .station-external-network-link span[aria-hidden] {
+    transition: none;
+  }
+}
