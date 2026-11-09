@@ -333,6 +333,25 @@ const historyScript = await readFile(join(root, "history.js"), "utf8");
 if (!graphHtml.includes("Units are printed on the axes") || !graphHtml.includes("Blank sections mean readings are missing, not zero") || !graphScript.includes("spanGaps:false")) failures.push("graphs must explain units and show archive gaps without connecting lines");
 if (!/id="soilMoistureCard"(?![^>]*\shidden)/.test(graphHtml) || !/id="soilDetailCard"(?![^>]*\shidden)/.test(graphHtml) || !graphScript.includes('$("soilMoistureCard").hidden=false;$("soilDetailCard").hidden=false;')) failures.push("graphs: soil charts must stay visible when the selected range has no saved soil readings");
 const soilChartCss = await readFile(join(root, "graphs-controls.css"), "utf8");
+
+/* The Chart Guide is one full-width grid item and its four tips split into
+   two columns on laptop, one column at narrower widths. */
+if (!graphHtml.includes('class="info-card chart-guide"') ||
+    !soilChartCss.includes(".v2-chart-grid > .chart-guide {") ||
+    !soilChartCss.includes("grid-column: 1 / -1") ||
+    !soilChartCss.includes("max-width: none") ||
+    !soilChartCss.includes("@media (min-width: 980px)") ||
+    !soilChartCss.includes("@media (max-width: 979px)") ||
+    !soilChartCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") ||
+    !soilChartCss.includes("grid-template-columns: minmax(0, 1fr)")) {
+  failures.push("graphs: Chart Guide must span full width, use two desktop tip columns and one mobile column");
+}
+const chartGuideMarkup = graphHtml.match(/<article class="info-card chart-guide">([\\s\\S]*?)<\\/article>/)?.[1] || "";
+if ((chartGuideMarkup.match(/<li>/g) || []).length !== 4 ||
+    !chartGuideMarkup.includes("How to read these charts")) {
+  failures.push("graphs: Chart Guide must preserve all four explanatory tips and its title");
+}
+
 if (!graphHtml.includes('class="soil-chart-grid"') ||
     !graphHtml.includes('id="soilConductivityCard"') ||
     !graphHtml.includes('id="soilDetailTitle">Soil temperature</h3>') ||
@@ -341,7 +360,7 @@ if (!graphHtml.includes('class="soil-chart-grid"') ||
     !soilChartCss.includes("grid-template-columns: repeat(3, minmax(0, 1fr))") ||
     !soilChartCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") ||
     !soilChartCss.includes("grid-template-columns: minmax(0, 1fr)") ||
-    !graphHtml.includes("graphs-controls.css?v=20261109-soil-three-cards")) {
+    !graphHtml.includes("graphs-controls.css?v=20261109-full-width-chart-guide")) {
   failures.push("graphs: hydrangea soil moisture, temperature and conductivity must form three responsive, separate charts");
 }
 if (!historyScript.includes("Daily high °C") || !historyScript.includes("Daily low °C") || !historyScript.includes("spanGaps:false") || !historyScript.includes("no archived summary") || !historyHtml.includes('id="historyChartStatus"')) failures.push("history charts must leave missing calendar days visible as gaps");
