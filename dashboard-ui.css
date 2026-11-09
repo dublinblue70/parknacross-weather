@@ -445,3 +445,43 @@ body.dashboard-page #dashboardOptionalSections > * { order: 0 !important; }
 @media(max-width:640px) {
   body.dashboard-page .dashboard-shortcuts a:last-child { grid-column: auto; }
 }
+
+
+/* Balanced dashboard trends: short 24-hour plots form an independent column,
+   while the taller solar and wind-rose analyses share the second column.
+   Prevents equal-height CSS grid rows from stretching the rainfall card
+   into a large empty panel. Chart canvases keep their existing IDs/sizing. */
+body.dashboard-page .trends-section .chart-grid.chart-grid--balanced {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
+}
+body.dashboard-page .trends-section .chart-grid--balanced > .chart-column {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-width: 0;
+  gap: 14px;
+}
+body.dashboard-page .trends-section .chart-grid--balanced .chart-card {
+  flex: 0 0 auto;
+  min-width: 0;
+  height: auto;
+  align-self: stretch;
+}
+/* Align the first canvas in each column and retain the prevailing-direction
+   block at its natural height rather than stretching shorter cards. */
+body.dashboard-page .trends-section .chart-grid--balanced .wind-card {
+  min-height: 0;
+}
+@media (max-width: 760px) {
+  body.dashboard-page .trends-section .chart-grid.chart-grid--balanced {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  body.dashboard-page .trends-section .chart-grid--balanced > .chart-column {
+    gap: 12px;
+  }
+}
