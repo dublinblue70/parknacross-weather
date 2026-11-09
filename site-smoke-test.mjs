@@ -500,8 +500,10 @@ if (!stationNetworksHtml.includes("Station GW8205 · Activation pending.") ||
   failures.push("networks.html: retain concise, accurate CWOP pending status");
 }
 if (stationPageHtml.includes('class="station-external-network-list"') ||
-    !stationPageHtml.includes('href="networks.html">Other weather networks</a>')) {
-  failures.push("station.html: links must move to the separate networks page");
+    stationPageHtml.includes('id="otherWeatherNetworks"') ||
+    stationPageHtml.includes('<a href="networks.html">Other Networks</a>') ||
+    !stationPageHtml.includes('class="station-jumps" aria-label="On this page"><a href="#meetSensors">')) {
+  failures.push("station.html: remove redundant Other Networks quick link while preserving on-page section jumps");
 }
 const navScript = await readFile(join(root, "navigation.js"), "utf8");
 if (!navScript.includes('networksLink.href = "networks.html"') ||
