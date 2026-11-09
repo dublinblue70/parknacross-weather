@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#07131f">
-  <meta name="description" content="Find Parknacross Weather station observations on Weather Underground, Weathercloud, Windy.com, AWEKAS, PWSWeather and CWOP FindU.">
+  <meta name="description" content="Explore Parknacross Weather observations on Weather Underground, Weathercloud, Windy.com, AWEKAS, PWSWeather, Windguru and CWOP.">
   <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -107,65 +107,58 @@
   <main id="main-content">
     <section class="page-hero station-page-hero">
       <span class="section-eyebrow">Parknacross Weather elsewhere</span>
-      <h1>Other weather networks</h1>
-      <p>Explore Parknacross Weather observations on the other weather platforms we connect to. Each service processes and displays data independently, so update times and reported values may differ.</p>
+      <h1 id="otherNetworksHeading">Other weather networks</h1>
+      <p>Explore Parknacross Weather on these weather networks.</p>
     </section>
 
-    <section class="station-external-networks" id="connectedNetworks" aria-labelledby="stationExternalNetworksHeading">
-      <div class="station-external-networks-intro">
-        <span class="section-eyebrow">Other weather networks</span>
-        <h2 id="stationExternalNetworksHeading">Explore Parknacross elsewhere</h2>
-        <p>See our observations on other weather platforms. Update times may differ between services.</p>
-      </div>
+    <section class="station-external-networks" id="connectedNetworks" aria-labelledby="otherNetworksHeading">
       <div class="station-external-network-list">
         <article class="station-external-network" aria-labelledby="stationWeatherUndergroundTitle">
           <div>
             <h3 id="stationWeatherUndergroundTitle">Weather Underground</h3>
-            <p>Parknacross station observations, charts and history.</p>
+            <p>Live observations, charts and weather history.</p>
           </div>
           <a class="station-external-network-link" id="stationWeatherUndergroundLink" href="https://www.wunderground.com/dashboard/pws/IARDAM6" target="_blank" rel="noopener noreferrer" aria-label="View on Weather Underground (opens in a new tab)">View on Weather Underground <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationWeathercloudTitle">
           <div>
             <h3 id="stationWeathercloudTitle">Weathercloud</h3>
-            <p>View Parknacross Weather observations and history on Weathercloud.</p>
+            <p>Current weather conditions and history.</p>
           </div>
           <a class="station-external-network-link" id="stationWeathercloudLink" href="https://app.weathercloud.net/d3781994059" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Weathercloud (opens in a new tab)">View on Weathercloud <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationWindyTitle">
           <div>
             <h3 id="stationWindyTitle">Windy.com</h3>
-            <p>Parknacross observations on Windy’s interactive weather map.</p>
+            <p>Station readings on an interactive weather map.</p>
           </div>
           <a class="station-external-network-link" id="stationWindyLink" href="https://www.windy.com/station/pws-hdC7VHGr" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Windy.com (opens in a new tab)">View on Windy.com <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationAwekasTitle">
           <div>
             <h3 id="stationAwekasTitle">AWEKAS</h3>
-            <p>View Parknacross station observations on AWEKAS.</p>
+            <p>Weather observations from our station.</p>
           </div>
           <a class="station-external-network-link" id="stationAwekasLink" href="https://www.awekas.at/en/instrument.php?id=54012" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on AWEKAS (opens in a new tab)">View on AWEKAS <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationPwsweatherTitle">
           <div>
             <h3 id="stationPwsweatherTitle">PWSWeather</h3>
-            <p>View Parknacross observations on PWSWeather. Readings and update times can differ from this site.</p>
+            <p>Current conditions and station history.</p>
           </div>
           <a class="station-external-network-link" id="stationPwsweatherLink" href="https://www.pwsweather.com/station/pws/PARKNACROSSWX" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on PWSWeather (opens in a new tab)">View on PWSWeather <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationWindguruTitle">
           <div>
             <h3 id="stationWindguruTitle">Windguru</h3>
-            <p>Wind and weather observations from ParknacrossWX on Windguru, especially useful for coastal wind conditions.</p>
-            <p><strong>Station ID 16733 · Observations confirmed</strong> — First live measurements were verified on Windguru on 9 November 2026. Windguru displays wind in knots and refreshes independently of the Parknacross dashboard.</p>
+            <p>Coastal wind and weather observations.</p>
           </div>
           <a class="station-external-network-link" id="stationWindguruLink" href="https://www.windguru.cz/station/16733" target="_blank" rel="noopener noreferrer" aria-label="View ParknacrossWX Windguru station 16733 (opens in a new tab)">View on Windguru <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationCwopTitle">
           <div>
-            <h3 id="stationCwopTitle">Citizen Weather Observer Program (CWOP)</h3>
-            <p>Parknacross Weather is registered as station GW8205 with CWOP, a programme sharing weather observations for meteorological monitoring and quality assessment.</p>
-            <p class="station-cwop-registration"><strong>GW8205 · Pending activation</strong> — Registration is in progress. A station listing on FindU does not by itself confirm official CWOP activation.</p>
+            <h3 id="stationCwopTitle">CWOP</h3>
+            <p>Station GW8205 · Activation pending.</p>
           </div>
           <a class="station-external-network-link" id="stationCwopLink" href="http://www.findu.com/cgi-bin/wx.cgi?call=GW8205" target="_blank" rel="noopener noreferrer" aria-label="View CWOP station GW8205 on FindU (opens in a new tab)">View on FindU <span aria-hidden="true">↗</span></a>
         </article>
