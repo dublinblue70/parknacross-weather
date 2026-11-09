@@ -571,6 +571,47 @@ if (!visitorDownloads.includes("The export check timed out") ||
     !visitorDownloads.includes("There are no saved observations")) {
   failures.push("downloads.js: actionable large-export error handling missing");
 }
+/* Site-wide premium SVG artwork is decorative, compact, and source-local.
+ * Every page must load the same library without rewriting existing SVG charts
+ * or changing weather readings / navigation semantics. */
+const iconPages = [
+  "index.html", "station.html", "graphs.html", "rain.html", "coast.html",
+  "status.html", "summary.html", "sky.html", "downloads.html"
+];
+const iconLibrary = await readFile(join(root, "weather-icons.js"), "utf8");
+const iconStyles = await readFile(join(root, "weather-icons.css"), "utf8");
+for (const page of iconPages) {
+  const html = await readFile(join(root, page), "utf8");
+  if (!html.includes('href="weather-icons.css?v=20261109-sitewide-svg1"') ||
+      !html.includes('src="weather-icons.js?v=20261109-sitewide-svg1" defer') ||
+      !iconLibrary.includes('"'+page+'": () =>')) {
+    failures.push(page+": shared SVG icon library and page decoration required");
+  }
+}
+const iconRequiredNames = [
+  "thermometer", "drop", "wind", "cloudRain", "gauge", "zap",
+  "sprout", "waves", "compass", "chart", "archive", "database",
+  "radio", "shield", "download", "camera", "calendar", "bell"
+];
+if (!iconRequiredNames.every(name => iconLibrary.includes("    "+name+": [")) ||
+    !iconLibrary.includes('svg.setAttribute("aria-hidden","true")') ||
+    !iconLibrary.includes('svg.setAttribute("focusable","false")') ||
+    !iconLibrary.includes('document.createElementNS(NS,"svg")') ||
+    !iconLibrary.includes('if (kind==="label" && el.querySelector(":scope > svg")) return;') ||
+    !iconLibrary.includes("DOMContentLoaded") ||
+    !iconLibrary.includes('document.querySelectorAll(selector)') ||
+    !iconStyles.includes("@media (max-width: 760px)") ||
+    !iconStyles.includes(".health-group .card-head h2.wx-icon-small") ||
+    !iconStyles.includes(".station-sensor-buttons .wx-icon-label") ||
+    !iconStyles.includes(".dashboard-shortcuts a.wx-icon-nav")) {
+  failures.push("shared SVG system: premium scalable accessible icons must preserve existing artwork and status colours");
+}
+const iconCache = await readFile(join(root, "service-worker.js"), "utf8");
+if (!iconCache.includes('"./weather-icons.css"') ||
+    !iconCache.includes('"./weather-icons.js"') ||
+    !iconCache.includes("sitewide-weather-icons-20261109")) {
+  failures.push("shared SVG system: both assets and a rotated offline cache required");
+}
 const visitorServiceWorker = await readFile(join(root, "service-worker.js"), "utf8");
 if (!visitorServiceWorker.includes('"./notification-test.js"')) {
   failures.push("service-worker.js: include notification-test.js in the offline app release");
