@@ -346,7 +346,7 @@ if (!graphHtml.includes('class="info-card chart-guide"') ||
     !soilChartCss.includes("grid-template-columns: minmax(0, 1fr)")) {
   failures.push("graphs: Chart Guide must span full width, use two desktop tip columns and one mobile column");
 }
-const chartGuideMarkup = graphHtml.match(/<article class="info-card chart-guide">([\\s\\S]*?)<\\/article>/)?.[1] || "";
+const chartGuideMarkup = graphHtml.split('<article class="info-card chart-guide">')[1]?.split("</article>")[0] || "";
 if ((chartGuideMarkup.match(/<li>/g) || []).length !== 4 ||
     !chartGuideMarkup.includes("How to read these charts")) {
   failures.push("graphs: Chart Guide must preserve all four explanatory tips and its title");
