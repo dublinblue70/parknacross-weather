@@ -239,3 +239,120 @@ body.dashboard-page :where(#forecast,#planning,#graphs,#soilPanel,#observationsH
     grid-column: 1 / -1;
   }
 }
+
+
+/* 9 Nov 2026 — dashboard mobile reading rhythm and layout */
+@media (max-width: 640px) {
+  /* Collapsed station/climate controls should read as separate, calm sections. */
+  body.dashboard-page #dashboard > .site-detail-toggle {
+    margin: 20px 0 0;
+    padding: 15px 17px;
+    font-size: .94rem;
+    line-height: 1.5;
+  }
+  body.dashboard-page #dashboard > .site-detail-copy {
+    margin: 12px 2px 0;
+    font-size: .88rem;
+    line-height: 1.65;
+  }
+  body.dashboard-page #dashboardOptionalSections > #soilPanel {
+    margin-top: 20px;
+  }
+  /* The empty strip above a closed trends disclosure served no purpose. */
+  body.dashboard-page #dashboardOptionalSections > #graphs {
+    margin-top: 20px !important;
+    padding-top: 0;
+  }
+  body.dashboard-page #graphs > .mobile-detail-toggle {
+    margin-top: 0;
+  }
+
+  /* Keep the guidance heading with its cards, including with flex reordering. */
+  body.dashboard-page #dashboard > .planning-heading {
+    order: 7;
+    width: 100%;
+    margin: 24px 0 14px;
+    gap: 10px;
+  }
+  body.dashboard-page .planning-heading .section-eyebrow {
+    display: block;
+    margin-bottom: 10px;
+    font-size: .76rem;
+    line-height: 1.4;
+    letter-spacing: .085em;
+  }
+  body.dashboard-page .planning-heading h2 {
+    margin: 0;
+    font-size: 1.42rem;
+    line-height: 1.3;
+  }
+  body.dashboard-page .planning-heading .source-note {
+    margin: 14px 0 0;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(13, 32, 45, .55);
+    color: #afc2ce;
+    font-size: .88rem;
+    line-height: 1.65;
+  }
+  body.dashboard-page #dashboard > #planning {
+    order: 7;
+    margin: 0 0 4px;
+    gap: 16px;
+  }
+
+  /* Forecast: distinct title, source, takeaway and observed/model caveats. */
+  body.dashboard-page #planning .local-planning-card {
+    padding: 18px 16px;
+  }
+  body.dashboard-page #planning .local-planning-card header {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  body.dashboard-page #planning .local-planning-card header h2 {
+    font-size: 1.08rem;
+    line-height: 1.35;
+  }
+  body.dashboard-page #planning .local-planning-card header button {
+    flex: 0 0 auto;
+  }
+  body.dashboard-page #planning .local-planning-card .lp-label {
+    margin: 0 0 15px;
+    font-size: .8rem;
+    line-height: 1.45;
+  }
+  body.dashboard-page #planning .local-planning-card .lp-summary {
+    margin: 0 0 15px;
+    font-size: 1.01rem;
+    line-height: 1.55;
+  }
+  body.dashboard-page #planning .local-planning-card .lp-context {
+    margin: 0;
+    font-size: .88rem;
+    line-height: 1.7;
+  }
+  body.dashboard-page #planning .local-planning-card .lp-context + .lp-context {
+    margin-top: 12px;
+  }
+  body.dashboard-page #planning .local-planning-card .lp-source {
+    margin-top: 16px;
+    font-size: .81rem;
+    line-height: 1.6;
+  }
+  body.dashboard-page #planning .rain-hour-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 18px;
+  }
+  body.dashboard-page #planning .rain-hour-list li {
+    min-width: 0;
+    padding: 11px 10px;
+  }
+  body.dashboard-page #planning .rain-hour-list span {
+    font-size: .76rem;
+    line-height: 1.4;
+    white-space: normal;
+  }
+}
