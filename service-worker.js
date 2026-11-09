@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-251-windguru-directory-20261109";
+const CACHE_NAME = "parknacross-v38-4-251-windguru-upload-20261109";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
@@ -54,6 +54,7 @@ const STATIC_ASSETS = [
   "./maintenance.html",
   "./status.html",
   "./cwop-status.js",
+  "./windguru-status.js",
   "./history.html",
   "./records.html",
   "./downloads.html",
