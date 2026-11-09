@@ -74,6 +74,10 @@ const PWSWEATHER_STATION_ID = "PARKNACROSSWX";
 const CWOP_ID = "GW8205";
 const CWOP_LAST_EPOCH_KEY = "cwop_last_sent_epoch_v1";
 const CWOP_STATUS_KEY = "cwop_last_attempt_v1";
+const WINDGURU_STATION_ID = 16733;
+const WINDGURU_UID = "FZ3RESA2VHEG";
+const WINDGURU_LAST_EPOCH_KEY = "windguru_last_sent_epoch_v1";
+const WINDGURU_STATUS_KEY = "windguru_last_attempt_v1";
 const WH52_UPLOAD_MAX_AGE_SECONDS = 12 * 60;
 const ARCHIVE_EXPECTED_INTERVAL_SECONDS = 5 * 60;
 const ARCHIVE_STALE_AFTER_SECONDS = 10 * 60;
@@ -2398,6 +2402,23 @@ export default {
      * Keep health independent of schema migrations. Even if a future migration
      * fails, the monitor still receives a JSON response showing D1 state.
      */
+    if (url.pathname === "/windguru-status" && request.method === "GET") {
+      try {
+        const enabled = String(env.WINDGURU_ENABLED ?? "").toLowerCase() === "true";
+        const credentialConfigured = Boolean(await readSecret(env.WINDGURU_UPLOAD_PASSWORD));
+        const state = await readMetaMap(env, [WINDGURU_LAST_EPOCH_KEY, WINDGURU_STATUS_KEY]);
+        let lastAttempt = null;
+        try { lastAttempt = JSON.parse(state[WINDGURU_STATUS_KEY] || "null"); } catch (_) {}
+        return json({
+          station_id: WINDGURU_STATION_ID, uid: WINDGURU_UID, enabled,
+          credential_configured: credentialConfigured,
+          last_sent_observation_epoch: Number(state[WINDGURU_LAST_EPOCH_KEY]) || null,
+          last_attempt: lastAttempt,
+          station_url: "https://www.windguru.cz/station/16733",
+          note: "Windguru HTTP acknowledgement is distinct from public station data visibility."
+        }, 200, { "Cache-Control": "no-store" });
+      } catch (_) { return json({error:"Windguru status temporarily unavailable"},503,{"Cache-Control":"no-store"}); }
+    }
     if (url.pathname === "/cwop-status" && request.method === "GET") {
       try {
         const enabled = String(env.CWOP_ENABLED ?? "").toLowerCase() === "true";
@@ -2860,7 +2881,7 @@ export default {
           service: "Parknacross Weather",
           status: "ok",
           endpoints: [
-            "/health", "/cwop-status",
+            "/health", "/cwop-status", "/windguru-status",
             "/sky-photo", "/sky-photo/meta", "/sky-photo/likes", "/sky-photo (admin POST)",
             "/sky-photo/archive/admin (admin)", "/sky-photo/archive/image (admin)", "/sky-photo/archive/import (admin POST)",
             "/sync (admin)",
@@ -3526,6 +3547,12 @@ export default {
           console.warn("Scheduled CWOP publish failed:", safeErrorMessage(error));
         }
         try {
+          const windguruResult = await publishWindguru(env, syncResult);
+          if (windguruResult?.accepted) console.info("Windguru upload accepted", {epoch:windguruResult.epoch});
+        } catch (error) {
+          console.warn("Scheduled Windguru publish failed:", safeErrorMessage(error));
+        }
+        try {
           const pwsResult = await publishPwsWeather(env, syncResult);
           if (pwsResult?.accepted) {
             console.info("PWSWeather accepted observation", { epoch: pwsResult.epoch });
@@ -3712,6 +3739,142 @@ async function publishCwop(env, syncResult) {
     throw error;
   } finally {
     try { socket?.close(); } catch (_) {}
+  }
+}
+
+
+/*
+ * Windguru station 16733 (UID FZ3RESA2VHEG).
+ * The upload API requires MD5(salt + uid + stationPassword) without spaces.
+ * Opt-in only: WINDGURU_ENABLED=true and the WINDGURU_UPLOAD_PASSWORD
+ * Cloudflare secret must both be present before any request is made.
+ */
+function windguruMd5(input) {
+  const message = new TextEncoder().encode(input);
+  const count = Math.ceil((message.length + 9) / 64) * 64;
+  const padded = new Uint8Array(count);
+  padded.set(message);
+  padded[message.length] = 128;
+  const bits = BigInt(message.length) * 8n;
+  for (let j = 0; j < 8; j++) padded[count - 8 + j] = Number((bits >> BigInt(j * 8)) & 255n);
+  const block = new DataView(padded.buffer);
+  const shifts = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
+    5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
+    4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
+    6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+  const K = Array.from({length:64}, (_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296) >>> 0);
+  let h0 = 0x67452301, h1 = 0xefcdab89, h2 = 0x98badcfe, h3 = 0x10325476;
+  for (let offset = 0; offset < count; offset += 64) {
+    let a = h0, b = h1, c = h2, d = h3;
+    for (let i = 0; i < 64; i++) {
+      let f, g;
+      if (i < 16) { f = (b & c) | (~b & d); g = i; }
+      else if (i < 32) { f = (d & b) | (~d & c); g = (5 * i + 1) % 16; }
+      else if (i < 48) { f = b ^ c ^ d; g = (3 * i + 5) % 16; }
+      else { f = c ^ (b | ~d); g = (7 * i) % 16; }
+      const sum = (a + f + K[i] + block.getUint32(offset + 4 * g, true)) >>> 0;
+      const shifted = ((sum << shifts[i]) | (sum >>> (32 - shifts[i]))) >>> 0;
+      a = d; d = c; c = b; b = (b + shifted) >>> 0;
+    }
+    h0 = (h0 + a) >>> 0; h1 = (h1 + b) >>> 0;
+    h2 = (h2 + c) >>> 0; h3 = (h3 + d) >>> 0;
+  }
+  const word = n => [0,8,16,24].map(bits => ((n >>> bits) & 255).toString(16).padStart(2, "0")).join("");
+  return word(h0) + word(h1) + word(h2) + word(h3);
+}
+
+async function publishWindguru(env, syncResult) {
+  if (String(env.WINDGURU_ENABLED ?? "").toLowerCase() !== "true")
+    return {skipped:true,reason:"disabled"};
+  const password = await readSecret(env.WINDGURU_UPLOAD_PASSWORD);
+  if (!password) return {skipped:true,reason:"upload_password_not_configured"};
+  const now = Math.floor(Date.now() / 1000);
+  const gateway = await readGatewayLiveReading(env, now).catch(() => null);
+  const reading = gateway || syncResult?.reading;
+  const epoch = Math.round(Number(gateway?.epoch ?? syncResult?.epoch));
+  if (!reading || !Number.isFinite(epoch) || epoch <= 0 || epoch > now + 300 || now - epoch > 15 * 60)
+    throw new Error("No fresh Ecowitt observation is available for Windguru");
+  const state = await readMetaMap(env, [WINDGURU_LAST_EPOCH_KEY]);
+  if (epoch <= Number(state[WINDGURU_LAST_EPOCH_KEY] || 0))
+    return {skipped:true,reason:"observation_already_uploaded",epoch};
+
+  const salt = String(Date.now()) + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+  const params = new URLSearchParams({
+    uid: WINDGURU_UID, salt, hash: windguruMd5(salt + WINDGURU_UID + password),
+    unixtime: String(epoch)
+  });
+  const put = (name, value, decimals = 2) => {
+    if (usableNumber(value) && Number.isFinite(Number(value)))
+      params.set(name, Number(value).toFixed(decimals));
+  };
+  // Windguru uses knots (not km/h), Celsius, percent and sea-level hPa.
+  const speed = nullableNumber(reading.wind_speed_kmh);
+  const gust = nullableNumber(reading.wind_gust_kmh);
+  const direction = nullableNumber(reading.wind_direction_deg);
+  if (speed !== null && speed >= 0) put("wind_avg", speed / 1.852);
+  if (gust !== null && gust >= 0) put("wind_max", gust / 1.852);
+  if (direction !== null && direction >= 0 && direction <= 360)
+    put("wind_direction", direction % 360, 0);
+  const temp = nullableNumber(reading.temperature_c);
+  if (temp !== null && temp >= -60 && temp <= 65) put("temperature", temp);
+  const humidity = nullableNumber(reading.humidity);
+  if (humidity !== null && humidity >= 0 && humidity <= 100) put("rh", humidity, 0);
+  const pressure = nullableNumber(reading.pressure_hpa);
+  if (pressure !== null && pressure >= 850 && pressure <= 1100) put("mslp", pressure, 1);
+
+  // WH40H-only rainfall: derive interval increments from same-day counters.
+  // Missing history, a reset or a midnight crossing means omit precipitation.
+  const daily = nullableNumber(reading.rain_daily_mm);
+  if (daily !== null && daily >= 0) {
+    try {
+      const previous = await env.DB.prepare(
+        "SELECT epoch,rain_daily_mm FROM " + TABLE +
+        " WHERE epoch < ? AND epoch >= ? AND rain_daily_mm IS NOT NULL ORDER BY epoch DESC LIMIT 1"
+      ).bind(epoch,epoch - 900).first();
+      const interval = epoch - Number(previous?.epoch);
+      if (previous && interval >= 60 && interval <= 900 &&
+          stationDayKey(new Date(epoch * 1000)) === stationDayKey(new Date(Number(previous.epoch) * 1000)) &&
+          usableNumber(previous.rain_daily_mm) && daily >= Number(previous.rain_daily_mm)) {
+        put("precip", daily - Number(previous.rain_daily_mm), 3);
+        params.set("precip_interval", String(interval));
+      }
+    } catch (_) { /* Do not invent rainfall when history cannot be verified. */ }
+  }
+
+  if (!params.has("wind_avg") && !params.has("temperature") && !params.has("wind_direction"))
+    throw new Error("Missing usable outdoor measurements for Windguru");
+
+  try {
+    const endpoint = new URL("https://www.windguru.cz/upload/api.php");
+    endpoint.search = params.toString();
+    const response = await fetch(endpoint.toString(), {
+      method: "GET",
+      headers: {"Accept":"text/plain"},
+      signal: AbortSignal.timeout(10000)
+    });
+    const responseText = (await response.text()).trim();
+    // Windguru may return HTTP 200 with ERROR (...), so require explicit OK.
+    if (!response.ok || !/^OK(?:\b|\s|\()/i.test(responseText))
+      throw new Error("Windguru did not acknowledge upload (HTTP " + response.status +
+        "; response " + responseText.replace(/[^a-zA-Z0-9 ()._-]/g,"").slice(0,100) + ")");
+    await writeMeta(env, {
+      [WINDGURU_LAST_EPOCH_KEY]: epoch,
+      [WINDGURU_STATUS_KEY]: JSON.stringify({
+        at:new Date().toISOString(), state:"accepted_not_display_verified",
+        observation_epoch:epoch, http_status:response.status
+      })
+    });
+    return {accepted:true,epoch};
+  } catch (error) {
+    try {
+      await writeMeta(env, {
+        [WINDGURU_STATUS_KEY]:JSON.stringify({
+          at:new Date().toISOString(),state:"error",
+          observation_epoch:epoch,error:safeErrorMessage(error)
+        })
+      });
+    } catch (_) {}
+    throw error;
   }
 }
 
