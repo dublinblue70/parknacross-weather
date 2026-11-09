@@ -92,8 +92,9 @@
 <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261027-persistence" defer></script><link rel="stylesheet" href="station-page.css?v=20261109-network-grid"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
 <script src="site-polish.js?v=20261101-v38-4-239" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
+  <link rel="stylesheet" href="networks-page.css?v=20261109-sleek-directory">
 </head>
-<body>
+<body class="networks-directory-page">
 <div class="shell">
   <header class="topbar">
     <a class="brand" href="index.html" aria-label="Parknacross Weather home">
@@ -104,11 +105,10 @@
   </header>
 
 
-  <main id="main-content">
-    <section class="page-hero station-page-hero">
-      <span class="section-eyebrow">Parknacross Weather elsewhere</span>
+  <main id="main-content" class="networks-directory">
+    <section class="page-hero station-page-hero networks-intro">
       <h1 id="otherNetworksHeading">Other weather networks</h1>
-      <p>Explore our weather-network connections and other observation platforms.</p>
+      <p>Parknacross observations on other platforms — and networks we’re joining.</p>
     </section>
 
     <section class="station-external-networks" id="connectedNetworks" aria-labelledby="otherNetworksHeading">
@@ -116,51 +116,51 @@
         <article class="station-external-network" aria-labelledby="stationEcowittTitle">
           <div>
             <h3 id="stationEcowittTitle">Ecowitt.net</h3>
-            <p>View Parknacross Weather's shared sensor readings and history.</p>
+            <p>Shared sensor readings and history.</p>
           </div>
-          <a class="station-external-network-link" id="stationEcowittLink" href="https://www.ecowitt.net/home/share?authorize=RVM47S" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" aria-label="View shared Parknacross Weather observations on Ecowitt.net (opens in a new tab)">View on Ecowitt.net <span aria-hidden="true">↗</span></a>
+          <a class="station-external-network-link" id="stationEcowittLink" href="https://www.ecowitt.net/home/share?authorize=RVM47S" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" aria-label="View shared Parknacross Weather observations on Ecowitt.net (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationWeatherUndergroundTitle">
           <div>
             <h3 id="stationWeatherUndergroundTitle">Weather Underground</h3>
-            <p>Live observations, charts and weather history.</p>
+            <p>Live conditions, charts and history.</p>
           </div>
-          <a class="station-external-network-link" id="stationWeatherUndergroundLink" href="https://www.wunderground.com/dashboard/pws/IARDAM6" target="_blank" rel="noopener noreferrer" aria-label="View on Weather Underground (opens in a new tab)">View on Weather Underground <span aria-hidden="true">↗</span></a>
+          <a class="station-external-network-link" id="stationWeatherUndergroundLink" href="https://www.wunderground.com/dashboard/pws/IARDAM6" target="_blank" rel="noopener noreferrer" aria-label="View on Weather Underground (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationWindguruTitle">
           <div>
             <h3 id="stationWindguruTitle">Windguru</h3>
-            <p>Coastal wind and weather observations.</p>
+            <p>Coastal wind and weather readings.</p>
           </div>
-          <a class="station-external-network-link" id="stationWindguruLink" href="https://www.windguru.cz/station/16733" target="_blank" rel="noopener noreferrer" aria-label="View ParknacrossWX Windguru station 16733 (opens in a new tab)">View on Windguru <span aria-hidden="true">↗</span></a>
+          <a class="station-external-network-link" id="stationWindguruLink" href="https://www.windguru.cz/station/16733" target="_blank" rel="noopener noreferrer" aria-label="View ParknacrossWX Windguru station 16733 (opens in a new tab)">View wind data <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationWindyTitle">
           <div>
             <h3 id="stationWindyTitle">Windy.com</h3>
-            <p>Station readings on an interactive weather map.</p>
+            <p>Weather readings on an interactive map.</p>
           </div>
-          <a class="station-external-network-link" id="stationWindyLink" href="https://www.windy.com/station/pws-hdC7VHGr" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Windy.com (opens in a new tab)">View on Windy.com <span aria-hidden="true">↗</span></a>
+          <a class="station-external-network-link" id="stationWindyLink" href="https://www.windy.com/station/pws-hdC7VHGr" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Windy.com (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationWeathercloudTitle">
           <div>
             <h3 id="stationWeathercloudTitle">Weathercloud</h3>
-            <p>Current weather conditions and history.</p>
+            <p>Current conditions and history.</p>
           </div>
-          <a class="station-external-network-link" id="stationWeathercloudLink" href="https://app.weathercloud.net/d3781994059" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Weathercloud (opens in a new tab)">View on Weathercloud <span aria-hidden="true">↗</span></a>
+          <a class="station-external-network-link" id="stationWeathercloudLink" href="https://app.weathercloud.net/d3781994059" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Weathercloud (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationAwekasTitle">
           <div>
             <h3 id="stationAwekasTitle">AWEKAS</h3>
-            <p>Weather observations from our station.</p>
+            <p>Station observations and trends.</p>
           </div>
-          <a class="station-external-network-link" id="stationAwekasLink" href="https://www.awekas.at/en/instrument.php?id=54012" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on AWEKAS (opens in a new tab)">View on AWEKAS <span aria-hidden="true">↗</span></a>
+          <a class="station-external-network-link" id="stationAwekasLink" href="https://www.awekas.at/en/instrument.php?id=54012" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on AWEKAS (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationPwsweatherTitle">
           <div>
             <h3 id="stationPwsweatherTitle">PWSWeather</h3>
             <p>Current conditions and station history.</p>
           </div>
-          <a class="station-external-network-link" id="stationPwsweatherLink" href="https://www.pwsweather.com/station/pws/PARKNACROSSWX" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on PWSWeather (opens in a new tab)">View on PWSWeather <span aria-hidden="true">↗</span></a>
+          <a class="station-external-network-link" id="stationPwsweatherLink" href="https://www.pwsweather.com/station/pws/PARKNACROSSWX" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on PWSWeather (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationCwopTitle">
           <div>
@@ -172,7 +172,7 @@
         <article class="station-external-network" aria-labelledby="stationWowBeTitle">
           <div>
             <h3 id="stationWowBeTitle">WOW-BE</h3>
-            <p>Citizen weather observations · Connection not yet set up.</p>
+            <p>Connection not yet set up.</p>
           </div>
           <a class="station-external-network-link" id="stationWowBeLink" href="https://wow.meteo.be/en/" target="_blank" rel="noopener noreferrer" aria-label="Explore the WOW-BE weather observation network (opens in a new tab)">Explore WOW-BE <span aria-hidden="true">↗</span></a>
         </article>
