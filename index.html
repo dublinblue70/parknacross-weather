@@ -1643,97 +1643,101 @@
 
           <p id="dashboardChartSummary" class="visually-hidden" role="status" aria-live="polite">Dashboard weather charts are loading.</p>
 
-          <div class="chart-grid">
-            <article class="chart-card">
-              <div class="chart-title">
-                <div>
-                  <h3>Temperature & dew point</h3>
-                  <p>Last 24 hours</p>
-                </div>
-                <span>°C</span>
-              </div>
-              <div class="chart-wrap">
-                <canvas id="temperatureChart" role="img" aria-label="Temperature and dew-point observations for the last 24 hours"></canvas>
-              </div>
-            </article>
-            <article class="chart-card">
-              <div class="chart-title">
-                <div>
-                  <h3>Wind & gusts</h3>
-                  <p>Last 24 hours</p>
-                </div>
-                <span>km/h</span>
-              </div>
-              <div class="chart-wrap"><canvas id="windChart" role="img" aria-label="Wind speed and gust observations for the last 24 hours"></canvas></div>
-            </article>
-            <article class="chart-card">
-              <div class="chart-title">
-                <div>
-                  <h3>Sea-level pressure</h3>
-                  <p>Last 24 hours</p>
-                </div>
-                <span>hPa</span>
-              </div>
-              <div class="chart-wrap"><canvas id="pressureChart" role="img" aria-label="Sea-level pressure observations for the last 24 hours"></canvas></div>
-            </article>
-            <article class="chart-card">
-              <div class="chart-title">
-                <div>
-                  <h3>Solar radiation & UV</h3>
-                  <p>Last 24 hours · matching time axes with separate measurement scales</p>
-                </div>
-                <span>Sunlight &amp; UV</span>
-              </div>
-              <div class="solar-chart-stack">
-                <div class="solar-chart-panel"><strong>Solar radiation</strong><span>W/m²</span><div class="chart-wrap solar-chart-wrap"><canvas id="solarChart" role="img" aria-label="Solar radiation observations for the last 24 hours"></canvas></div></div>
-                <div class="solar-chart-panel"><strong>UV index</strong><span>0–11+</span><div class="chart-wrap solar-chart-wrap"><canvas id="uvChart" role="img" aria-label="UV index observations for the last 24 hours"></canvas></div></div>
-              </div>
-            </article>
-            <article class="chart-card">
-              <div class="chart-title">
-                <div>
-                  <h3>Recent rainfall</h3>
-                  <p>Daily totals · up to 7 days</p>
-                </div>
-                <span>mm</span>
-              </div>
-              <div class="chart-wrap"><canvas id="rainChart" role="img" aria-label="Daily rainfall totals for up to the last seven days"></canvas></div>
-            </article>
-            <article class="chart-card wind-card">
-              <div class="chart-title">
-                <div>
-                  <h3>Wind rose</h3>
-                  <p>Direction frequency · last 24 hours</p>
-                </div>
-                <span>Observed</span>
-              </div>
-              <div class="wind-rose-wrap">
-                <canvas
-                  id="windRose"
-                  role="img"
-                  aria-label="Wind direction frequency for the last 24 hours"
-                ></canvas>
-              </div>
-              <p id="dashboardWindRoseMeta" class="wind-rose-meta">
-                Building wind direction distribution…
-              </p>
-              <div class="wind-readout">
-                <div>
-                  <span>Prevailing direction · last 24h</span
-                  ><strong id="prevailing">--</strong>
-                </div>
-                <div>
-                  <span>Current wind direction</span
-                  ><strong id="currentDirection">--</strong>
-                </div>
-                <div>
-                  <span>Current wind</span><strong id="currentWind">--</strong>
-                </div>
-                <div>
-                  <span>Current gust</span><strong id="currentGust">--</strong>
-                </div>
-              </div>
-            </article>
+          <div class="chart-grid chart-grid--balanced">
+            <div class="chart-column chart-column--observations">
+              <article class="chart-card">
+<div class="chart-title">
+<div>
+<h3>Temperature & dew point</h3>
+<p>Last 24 hours</p>
+</div>
+<span>°C</span>
+</div>
+<div class="chart-wrap">
+<canvas id="temperatureChart" role="img" aria-label="Temperature and dew-point observations for the last 24 hours"></canvas>
+</div>
+</article>
+              <article class="chart-card">
+<div class="chart-title">
+<div>
+<h3>Wind & gusts</h3>
+<p>Last 24 hours</p>
+</div>
+<span>km/h</span>
+</div>
+<div class="chart-wrap"><canvas id="windChart" role="img" aria-label="Wind speed and gust observations for the last 24 hours"></canvas></div>
+</article>
+              <article class="chart-card">
+<div class="chart-title">
+<div>
+<h3>Sea-level pressure</h3>
+<p>Last 24 hours</p>
+</div>
+<span>hPa</span>
+</div>
+<div class="chart-wrap"><canvas id="pressureChart" role="img" aria-label="Sea-level pressure observations for the last 24 hours"></canvas></div>
+</article>
+              <article class="chart-card">
+<div class="chart-title">
+<div>
+<h3>Recent rainfall</h3>
+<p>Daily totals · up to 7 days</p>
+</div>
+<span>mm</span>
+</div>
+<div class="chart-wrap"><canvas id="rainChart" role="img" aria-label="Daily rainfall totals for up to the last seven days"></canvas></div>
+</article>
+            </div>
+            <div class="chart-column chart-column--analysis">
+              <article class="chart-card">
+<div class="chart-title">
+<div>
+<h3>Solar radiation & UV</h3>
+<p>Last 24 hours · matching time axes with separate measurement scales</p>
+</div>
+<span>Sunlight &amp; UV</span>
+</div>
+<div class="solar-chart-stack">
+<div class="solar-chart-panel"><strong>Solar radiation</strong><span>W/m²</span><div class="chart-wrap solar-chart-wrap"><canvas id="solarChart" role="img" aria-label="Solar radiation observations for the last 24 hours"></canvas></div></div>
+<div class="solar-chart-panel"><strong>UV index</strong><span>0–11+</span><div class="chart-wrap solar-chart-wrap"><canvas id="uvChart" role="img" aria-label="UV index observations for the last 24 hours"></canvas></div></div>
+</div>
+</article>
+              <article class="chart-card wind-card">
+<div class="chart-title">
+<div>
+<h3>Wind rose</h3>
+<p>Direction frequency · last 24 hours</p>
+</div>
+<span>Observed</span>
+</div>
+<div class="wind-rose-wrap">
+<canvas
+id="windRose"
+role="img"
+aria-label="Wind direction frequency for the last 24 hours"
+></canvas>
+</div>
+<p id="dashboardWindRoseMeta" class="wind-rose-meta">
+Building wind direction distribution…
+</p>
+<div class="wind-readout">
+<div>
+<span>Prevailing direction · last 24h</span
+><strong id="prevailing">--</strong>
+</div>
+<div>
+<span>Current wind direction</span
+><strong id="currentDirection">--</strong>
+</div>
+<div>
+<span>Current wind</span><strong id="currentWind">--</strong>
+</div>
+<div>
+<span>Current gust</span><strong id="currentGust">--</strong>
+</div>
+</div>
+</article>
+            </div>
           </div>
         </section>
 
