@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-251-notification-layout-20261106";
+const CACHE_NAME = "parknacross-v38-4-251-networks-page-20261109";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
@@ -50,6 +50,7 @@ const STATIC_ASSETS = [
   "./coast.html",
   "./sky.html",
   "./station.html",
+  "./networks.html",
   "./maintenance.html",
   "./status.html",
   "./cwop-status.js",
