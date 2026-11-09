@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#07131f">
-  <meta name="description" content="Explore Parknacross Weather on external observation networks including Weather Underground, Weathercloud, Windy.com, AWEKAS, PWSWeather, Windguru, WOW-BE and CWOP.">
+  <meta name="description" content="Explore Parknacross Weather on Ecowitt.net, Weather Underground, Windguru, Windy.com, Weathercloud, AWEKAS, PWSWeather, CWOP and WOW-BE.">
   <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -113,6 +113,13 @@
 
     <section class="station-external-networks" id="connectedNetworks" aria-labelledby="otherNetworksHeading">
       <div class="station-external-network-list">
+        <article class="station-external-network" aria-labelledby="stationEcowittTitle">
+          <div>
+            <h3 id="stationEcowittTitle">Ecowitt.net</h3>
+            <p>Station sensor readings and weather history · Sign-in may be required.</p>
+          </div>
+          <a class="station-external-network-link" id="stationEcowittLink" href="https://www.ecowitt.net/" target="_blank" rel="noopener noreferrer" aria-label="Open Ecowitt.net station dashboard (opens in a new tab)">Open Ecowitt.net <span aria-hidden="true">↗</span></a>
+        </article>
         <article class="station-external-network" aria-labelledby="stationWeatherUndergroundTitle">
           <div>
             <h3 id="stationWeatherUndergroundTitle">Weather Underground</h3>
@@ -120,12 +127,12 @@
           </div>
           <a class="station-external-network-link" id="stationWeatherUndergroundLink" href="https://www.wunderground.com/dashboard/pws/IARDAM6" target="_blank" rel="noopener noreferrer" aria-label="View on Weather Underground (opens in a new tab)">View on Weather Underground <span aria-hidden="true">↗</span></a>
         </article>
-        <article class="station-external-network" aria-labelledby="stationWeathercloudTitle">
+        <article class="station-external-network" aria-labelledby="stationWindguruTitle">
           <div>
-            <h3 id="stationWeathercloudTitle">Weathercloud</h3>
-            <p>Current weather conditions and history.</p>
+            <h3 id="stationWindguruTitle">Windguru</h3>
+            <p>Coastal wind and weather observations.</p>
           </div>
-          <a class="station-external-network-link" id="stationWeathercloudLink" href="https://app.weathercloud.net/d3781994059" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Weathercloud (opens in a new tab)">View on Weathercloud <span aria-hidden="true">↗</span></a>
+          <a class="station-external-network-link" id="stationWindguruLink" href="https://www.windguru.cz/station/16733" target="_blank" rel="noopener noreferrer" aria-label="View ParknacrossWX Windguru station 16733 (opens in a new tab)">View on Windguru <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationWindyTitle">
           <div>
@@ -133,6 +140,13 @@
             <p>Station readings on an interactive weather map.</p>
           </div>
           <a class="station-external-network-link" id="stationWindyLink" href="https://www.windy.com/station/pws-hdC7VHGr" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Windy.com (opens in a new tab)">View on Windy.com <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="station-external-network" aria-labelledby="stationWeathercloudTitle">
+          <div>
+            <h3 id="stationWeathercloudTitle">Weathercloud</h3>
+            <p>Current weather conditions and history.</p>
+          </div>
+          <a class="station-external-network-link" id="stationWeathercloudLink" href="https://app.weathercloud.net/d3781994059" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Weathercloud (opens in a new tab)">View on Weathercloud <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationAwekasTitle">
           <div>
@@ -148,12 +162,12 @@
           </div>
           <a class="station-external-network-link" id="stationPwsweatherLink" href="https://www.pwsweather.com/station/pws/PARKNACROSSWX" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on PWSWeather (opens in a new tab)">View on PWSWeather <span aria-hidden="true">↗</span></a>
         </article>
-        <article class="station-external-network" aria-labelledby="stationWindguruTitle">
+        <article class="station-external-network" aria-labelledby="stationCwopTitle">
           <div>
-            <h3 id="stationWindguruTitle">Windguru</h3>
-            <p>Coastal wind and weather observations.</p>
+            <h3 id="stationCwopTitle">CWOP</h3>
+            <p>Station GW8205 · Activation pending.</p>
           </div>
-          <a class="station-external-network-link" id="stationWindguruLink" href="https://www.windguru.cz/station/16733" target="_blank" rel="noopener noreferrer" aria-label="View ParknacrossWX Windguru station 16733 (opens in a new tab)">View on Windguru <span aria-hidden="true">↗</span></a>
+          <a class="station-external-network-link" id="stationCwopLink" href="http://www.findu.com/cgi-bin/wx.cgi?call=GW8205" target="_blank" rel="noopener noreferrer" aria-label="View CWOP station GW8205 on FindU (opens in a new tab)">View on FindU <span aria-hidden="true">↗</span></a>
         </article>
         <article class="station-external-network" aria-labelledby="stationWowBeTitle">
           <div>
@@ -161,13 +175,6 @@
             <p>Citizen weather observations · Connection not yet set up.</p>
           </div>
           <a class="station-external-network-link" id="stationWowBeLink" href="https://wow.meteo.be/en/" target="_blank" rel="noopener noreferrer" aria-label="Explore the WOW-BE weather observation network (opens in a new tab)">Explore WOW-BE <span aria-hidden="true">↗</span></a>
-        </article>
-        <article class="station-external-network" aria-labelledby="stationCwopTitle">
-          <div>
-            <h3 id="stationCwopTitle">CWOP</h3>
-            <p>Station GW8205 · Activation pending.</p>
-          </div>
-          <a class="station-external-network-link" id="stationCwopLink" href="http://www.findu.com/cgi-bin/wx.cgi?call=GW8205" target="_blank" rel="noopener noreferrer" aria-label="View CWOP station GW8205 on FindU (opens in a new tab)">View on FindU <span aria-hidden="true">↗</span></a>
         </article>
       </div>
     </section>
