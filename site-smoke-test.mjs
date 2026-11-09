@@ -381,12 +381,24 @@ if (!stationNetworksHtml.includes('id="stationEcowittLink" href="https://www.eco
 if (stationNetworkPositions.some(pos => pos < 0) || stationNetworkPositions.some((pos, i) => i && pos <= stationNetworkPositions[i - 1])) {
   failures.push("networks.html: all nine weather-network links must appear in priority order");
 }
+const networkDirectoryCss = await readFile(join(root, "networks-page.css"), "utf8");
 if (!stationNetworksHtml.includes('aria-labelledby="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('id="otherNetworksHeading"') ||
-    !stationNetworksCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") ||
-    !stationNetworksCss.includes("grid-template-columns: minmax(0, 1fr)") ||
-    !stationNetworksCss.includes("@media (max-width: 760px)")) {
-  failures.push("networks.html: accessible title and 2-column desktop / 1-column mobile layout required");
+    !stationNetworksHtml.includes('class="networks-directory-page"') ||
+    !stationNetworksHtml.includes('networks-page.css?v=20261109-sleek-directory') ||
+    !networkDirectoryCss.includes("grid-template-columns: repeat(3, minmax(0, 1fr))") ||
+    !networkDirectoryCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") ||
+    !networkDirectoryCss.includes("grid-template-columns: minmax(0, 1fr)") ||
+    !networkDirectoryCss.includes("@media (min-width: 1200px)") ||
+    !networkDirectoryCss.includes("@media (max-width: 760px)") ||
+    !networkDirectoryCss.includes("background: transparent") ||
+    !stationNetworksCss.includes(".station-external-network-list")) {
+  failures.push("networks.html: sleek compact directory requires accessible heading, subtle links and responsive 3/2/1 columns");
+}
+if (stationNetworksHtml.includes("Parknacross Weather elsewhere") ||
+    stationNetworksHtml.includes(">View on Weather Underground <") ||
+    stationNetworksHtml.includes(">View on Windy.com <")) {
+  failures.push("networks.html: avoid duplicate hero eyebrow and oversized verbose link labels");
 }
 const networkCardMarkup = [...stationNetworksHtml.matchAll(/<article class="station-external-network"[^>]*>([\s\S]*?)<\/article>/g)].map(match => match[1]);
 if (networkCardMarkup.length !== 9 || networkCardMarkup.some(card => (card.match(/<p(?:\s[^>]*)?>/g) || []).length !== 1)) {
@@ -411,7 +423,7 @@ for (const [id, url] of expectedStationNetworks) {
     failures.push("networks.html: invalid or inaccessible external network link " + id);
   }
 }
-if (!stationNetworksHtml.includes("Coastal wind and weather observations.") ||
+if (!stationNetworksHtml.includes("Coastal wind and weather readings.") ||
     stationNetworksHtml.includes("Station ID 16733 · Observations confirmed") ||
     stationNetworksHtml.includes("First live measurements were verified")) {
   failures.push("networks.html: Windguru card must be concise without technical upload history");
@@ -423,11 +435,11 @@ if ((windguruWorker.match(/scheduleWindguruFromGateway\(ctx, env, liveReading\);
     !windguruWorker.includes("sent_readings:")) {
   failures.push("Windguru: both GW3001 upload paths must relay fresh samples at minute cadence and record sent values");
 }
-if (!stationNetworksHtml.includes("View Parknacross Weather\'s shared sensor readings and history.") ||
+if (!stationNetworksHtml.includes("Shared sensor readings and history.") ||
     !stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h3>')) {
   failures.push("networks.html: Ecowitt card must use the owner-provided station sharing link");
 }
-if (!stationNetworksHtml.includes("Citizen weather observations · Connection not yet set up.") ||
+if (!stationNetworksHtml.includes("Connection not yet set up.") ||
     !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h3>')) {
   failures.push("networks.html: WOW-BE must have a concise card without claiming an active station");
 }
