@@ -388,7 +388,7 @@ if (networkCardMarkup.length !== 9 || networkCardMarkup.some(card => (card.match
   failures.push("networks.html: exactly nine concise network cards with one description each required");
 }
 const expectedStationNetworks = [
-  ["stationEcowittLink", "https://www.ecowitt.net/"],
+  ["stationEcowittLink", "https://www.ecowitt.net/home/index"],
   ["stationWeatherUndergroundLink", "https://www.wunderground.com/dashboard/pws/IARDAM6"],
   ["stationWindguruLink", "https://www.windguru.cz/station/16733"],
   ["stationWindyLink", "https://www.windy.com/station/pws-hdC7VHGr"],
@@ -418,9 +418,9 @@ if ((windguruWorker.match(/scheduleWindguruFromGateway\(ctx, env, liveReading\);
     !windguruWorker.includes("sent_readings:")) {
   failures.push("Windguru: both GW3001 upload paths must relay fresh samples at minute cadence and record sent values");
 }
-if (!stationNetworksHtml.includes("Station sensor readings and weather history · Sign-in may be required.") ||
+if (!stationNetworksHtml.includes("Sensor readings and history · Ecowitt sign-in required.") ||
     !stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h3>')) {
-  failures.push("networks.html: native Ecowitt platform must be listed first without suggesting an invented public station link");
+  failures.push("networks.html: native Ecowitt dashboard requires sign-in until an owner-generated share link is configured");
 }
 if (!stationNetworksHtml.includes("Citizen weather observations · Connection not yet set up.") ||
     !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h3>')) {
