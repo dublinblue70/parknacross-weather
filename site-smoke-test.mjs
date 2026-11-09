@@ -373,6 +373,11 @@ const stationNetworkIds = [
   "stationPwsweatherLink", "stationCwopLink", "stationWowBeLink"
 ];
 const stationNetworkPositions = stationNetworkIds.map(id => stationNetworksHtml.indexOf('id="' + id + '"'));
+if (!stationNetworksHtml.includes('id="stationEcowittLink" href="https://www.ecowitt.net/home/share?authorize=RVM47S"') ||
+    !stationNetworksHtml.includes('referrerpolicy="no-referrer"')) {
+  failures.push("networks.html: shared Ecowitt link must match provided URL and avoid referrer leaks");
+}
+
 if (stationNetworkPositions.some(pos => pos < 0) || stationNetworkPositions.some((pos, i) => i && pos <= stationNetworkPositions[i - 1])) {
   failures.push("networks.html: all nine weather-network links must appear in priority order");
 }
@@ -388,7 +393,7 @@ if (networkCardMarkup.length !== 9 || networkCardMarkup.some(card => (card.match
   failures.push("networks.html: exactly nine concise network cards with one description each required");
 }
 const expectedStationNetworks = [
-  ["stationEcowittLink", "https://www.ecowitt.net/home/index"],
+  ["stationEcowittLink", "https://www.ecowitt.net/home/share?authorize=RVM47S"],
   ["stationWeatherUndergroundLink", "https://www.wunderground.com/dashboard/pws/IARDAM6"],
   ["stationWindguruLink", "https://www.windguru.cz/station/16733"],
   ["stationWindyLink", "https://www.windy.com/station/pws-hdC7VHGr"],
@@ -418,9 +423,9 @@ if ((windguruWorker.match(/scheduleWindguruFromGateway\(ctx, env, liveReading\);
     !windguruWorker.includes("sent_readings:")) {
   failures.push("Windguru: both GW3001 upload paths must relay fresh samples at minute cadence and record sent values");
 }
-if (!stationNetworksHtml.includes("Sensor readings and history · Ecowitt sign-in required.") ||
+if (!stationNetworksHtml.includes("View Parknacross Weather\'s shared sensor readings and history.") ||
     !stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h3>')) {
-  failures.push("networks.html: native Ecowitt dashboard requires sign-in until an owner-generated share link is configured");
+  failures.push("networks.html: Ecowitt card must use the owner-provided station sharing link");
 }
 if (!stationNetworksHtml.includes("Citizen weather observations · Connection not yet set up.") ||
     !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h3>')) {
