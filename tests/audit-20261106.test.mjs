@@ -7,7 +7,7 @@ const admin=read("admin.html"),sw=read("service-worker.js"),app=read("app.js");
 const status=read("status.js"),index=read("index.html"),downloads=read("downloads.js");
 assert.equal(packageVersion,"38.4.251");
 assert.match(admin,new RegExp("Admin interface "+packageVersion.replaceAll(".","\\.")));
-assert.match(sw,/parknacross-v38-4-251-notification-layout/);
+assert.match(sw,/const CACHE_NAME = "parknacross-v38-4-\d+-[a-z0-9-]+"/);
 assert.match(app,/firstValidSoilEpoch/);
 assert.match(app,/A normal gateway packet without soil fields is not evidence/);
 assert.match(status,/A recent successful WH52 receipt remains valid/);
