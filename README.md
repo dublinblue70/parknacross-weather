@@ -45,6 +45,19 @@ Ecowitt GW3001 observations and does not change any existing gateway uploads.
    is disabled by default. Preserve all existing secrets, D1 bindings and
    cron schedules when deploying `_worker/worker.mjs`.
 
+**Update-alignment improvement (9 November 2026):** After a successful
+GW3001 direct-upload archive write, the Worker now relays the same validated
+observation to Windguru using `ctx.waitUntil`, without holding up the gateway
+response. It limits successful uploads to approximately once per minute
+(55-second minimum separation), retaining the five-minute Ecowitt cron as
+fallback. The `/windguru-status` response includes the actual values sent in
+`last_attempt.sent_readings`, along with the sample source and observation
+epoch. Compare with Parknacross `/current` at **the same observation time**.
+Windguru's API requires wind speeds in **knots**, so the relay intentionally
+converts the website's km/h readings by dividing by 1.852. Windguru's display
+may round or resample values. This improvement needs a fresh Cloudflare
+deployment of `_worker/worker.mjs`; editing GitHub alone does not activate it.
+
 The exporter sends current data to the official Windguru upload endpoint
 over HTTPS, signing each request with MD5(salt + UID + password) using a new
 salt. Wind speeds are converted from km/h into knots; temperature uses Celsius,
