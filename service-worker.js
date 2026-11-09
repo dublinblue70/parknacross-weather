@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-254-wowbe-upload-20261109";
+const CACHE_NAME = "parknacross-v38-4-255-premium-network-svgs-20261109";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
