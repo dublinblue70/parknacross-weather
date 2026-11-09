@@ -273,6 +273,16 @@ try {
 const skyPageHtml = await readFile(join(root, "sky.html"), "utf8");
 const skyStyles = await readFile(join(root, "styles.css"), "utf8");
 if (!dashboardHtml.includes('src="sky-like-storage.js?v=20261014-v38-4-210"') || !skyPageHtml.includes('src="sky-like-storage.js?v=20261014-v38-4-210"')) failures.push("sky photos: Safari-safe likes storage must load on both dashboard and Today’s Sky page");
+/* Today's Sky copy uses a top introduction and a separate lower photo detail area.
+ * This layout must keep the photo/likes controls and admin IDs intact. */
+if (!dashboardHtml.includes('class="today-sky-copy-intro"') ||
+    !dashboardHtml.includes('class="today-sky-copy-footer"') ||
+    !dashboardHtml.includes('class="today-sky-detail-label"') ||
+    !dashboardHtml.includes('id="todaySkyMeta" role="status" aria-live="polite"') ||
+    !dashboardHtml.includes("justify-content: space-between;") ||
+    !dashboardHtml.includes("Name for photo likes (optional)")) {
+  failures.push("index.html: Today's Sky copy hierarchy, photo status and discreet likes-name control must stay intact");
+}
 const dashboardSkyPhotoStyle = dashboardHtml.match(/\.today-sky-photo\s*\{([^}]+)\}/)?.[1] || "";
 if (!/height:\s*auto/.test(dashboardSkyPhotoStyle) || !/object-fit:\s*contain/.test(dashboardSkyPhotoStyle) || /max-height:\s*390px/.test(dashboardSkyPhotoStyle)) failures.push("index.html: dashboard sky photo must preserve its full image without cropping");
 if (!skyStyles.includes(".sky-page-photo .sky-image{display:block;width:100%;height:auto;min-height:0;max-height:none;aspect-ratio:auto;object-fit:contain")) failures.push("styles.css: Today’s Sky page photo must preserve its full image without cropping");
