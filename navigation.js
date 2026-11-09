@@ -34,7 +34,7 @@
       networksLink.setAttribute("aria-current", "page");
     }
     const links = [...menu.querySelectorAll(":scope > a")];
-    const explore = new Set(["climate.html","station.html","networks.html","coast.html","sky.html","records.html"]);
+    const explore = new Set(["climate.html","station.html","coast.html","sky.html","records.html"]);
     const reports = new Set(["monthly.html","annual.html","downloads.html"]);
     const groups = [
       ["Explore", links.filter(link => explore.has(link.getAttribute("href")))],
