@@ -17,7 +17,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261008-v38-4-170" />
-    <link rel="stylesheet" href="graphs-controls.css?v=20261031-visual-consistency" />
+    <link rel="stylesheet" href="graphs-controls.css?v=20261109-soil-three-cards" />
 
     <title>Weather Graphs &amp; Trends | Parknacross, Co. Wexford</title>
     <link rel="canonical" href="https://parknacrossweather.ie/graphs.html" />
@@ -231,22 +231,35 @@
                 Checking lightning archive…
               </p>
             </article>
-            <article class="chart-card" id="soilMoistureCard" aria-labelledby="soilMoistureTitle">
-              <div class="chart-title">
-                <div><h3 id="soilMoistureTitle">Soil moisture</h3><p>Ecowitt soil-sensor reading at the probe location</p></div>
-                <span>%</span>
-              </div>
-              <div class="chart-wrap"><canvas id="gSoilMoisture" role="img" aria-label="Soil moisture over the selected period"></canvas></div>
-              <p id="soilMoistureStatus" class="info-note">Moisture is location-specific; compare the trend with this sensor’s normal range.</p>
-            </article>
-            <article class="chart-card" id="soilDetailCard" aria-labelledby="soilDetailTitle">
-              <div class="chart-title">
-                <div><h3 id="soilDetailTitle">Soil temperature &amp; conductivity</h3><p>Root-zone temperature and dissolved-salt trend</p></div>
-                <span>Soil sensor</span>
-              </div>
-              <h4>Soil temperature</h4><p id="soilTempStats" class="info-note">Loading temperature range…</p><div class="chart-wrap"><canvas id="gSoilDetail" role="img" aria-label="Soil temperature over the selected period"></canvas></div>
-              <h4>Conductivity</h4><p id="soilEcStats" class="info-note">Loading conductivity range…</p><div class="chart-wrap"><canvas id="gSoilEc" role="img" aria-label="Soil conductivity over the selected period"></canvas></div><p class="info-note">Each chart has its own measurement scale. Temperature is zoomed to the recorded range; the bottom of the chart does not mean zero.</p><p id="soilDetailStatus" class="info-note">Conductivity is not a direct fertiliser reading; changes against the established baseline are most useful.</p>
-            </article>
+            <section class="soil-chart-grid" aria-label="Hydrangea soil sensor charts">
+              <article class="chart-card" id="soilMoistureCard" aria-labelledby="soilMoistureTitle">
+                <div class="chart-title">
+                  <div><h3 id="soilMoistureTitle">Soil moisture</h3><p>Moisture in the potted hydrangea</p></div>
+                  <span>%</span>
+                </div>
+                <div class="chart-wrap"><canvas id="gSoilMoisture" role="img" aria-label="Soil moisture over the selected period"></canvas></div>
+                <p id="soilMoistureStatus" class="info-note">Moisture is location-specific; compare the trend with this sensor’s normal range.</p>
+              </article>
+              <article class="chart-card" id="soilDetailCard" aria-labelledby="soilDetailTitle">
+                <div class="chart-title">
+                  <div><h3 id="soilDetailTitle">Soil temperature</h3><p>Hydrangea root-zone temperature</p></div>
+                  <span>°C</span>
+                </div>
+                <p id="soilTempStats" class="info-note">Loading temperature range…</p>
+                <div class="chart-wrap"><canvas id="gSoilDetail" role="img" aria-label="Soil temperature over the selected period"></canvas></div>
+                <p class="info-note">The temperature scale follows the recorded range; its lower edge is not zero.</p>
+              </article>
+              <article class="chart-card" id="soilConductivityCard" aria-labelledby="soilConductivityTitle">
+                <div class="chart-title">
+                  <div><h3 id="soilConductivityTitle">Conductivity</h3><p>Hydrangea compost conductivity trend</p></div>
+                  <span>µS/cm</span>
+                </div>
+                <p id="soilEcStats" class="info-note">Loading conductivity range…</p>
+                <div class="chart-wrap"><canvas id="gSoilEc" role="img" aria-label="Soil conductivity over the selected period"></canvas></div>
+                <p class="info-note">Changes are most useful compared with this sensor’s usual baseline.</p>
+                <p id="soilDetailStatus" class="info-note">Conductivity is not a direct fertiliser reading.</p>
+              </article>
+            </section>
             <article class="info-card chart-guide">
               <span class="section-eyebrow">Chart guide</span>
               <h2>How to read these charts</h2>
