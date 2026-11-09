@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-257-wowbe-station-link-20261109";
+const CACHE_NAME = "parknacross-v38-4-258-sitewide-weather-icons-20261109";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
@@ -52,6 +52,8 @@ const STATIC_ASSETS = [
   "./station.html",
   "./networks.html",
   "./networks-page.css",
+  "./weather-icons.css",
+  "./weather-icons.js",
   "./maintenance.html",
   "./status.html",
   "./cwop-status.js",
