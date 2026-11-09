@@ -22,12 +22,13 @@
     if (!networksLink) {
       networksLink = document.createElement("a");
       networksLink.href = "networks.html";
-      networksLink.textContent = "Other weather networks";
+      networksLink.textContent = "Other Networks";
       networksLink.setAttribute("role", "menuitem");
       const stationLink = menu.querySelector('a[href="station.html"]');
       if (stationLink) stationLink.after(networksLink);
       else menu.appendChild(networksLink);
     }
+    networksLink.textContent = "Other Networks";
     if (window.location.pathname.endsWith("/networks.html")) {
       networksLink.classList.add("active");
       networksLink.setAttribute("aria-current", "page");
