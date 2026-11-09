@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-256-station-quicklinks-20261109";
+const CACHE_NAME = "parknacross-v38-4-257-wowbe-station-link-20261109";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
