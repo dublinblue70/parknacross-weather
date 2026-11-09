@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-252-ecowitt-direct-share-20261109";
+const CACHE_NAME = "parknacross-v38-4-253-sleek-networks-20261109";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
@@ -51,6 +51,7 @@ const STATIC_ASSETS = [
   "./sky.html",
   "./station.html",
   "./networks.html",
+  "./networks-page.css",
   "./maintenance.html",
   "./status.html",
   "./cwop-status.js",
