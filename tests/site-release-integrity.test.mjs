@@ -6,12 +6,16 @@ import assert from 'node:assert/strict';
 const root=new URL('../',import.meta.url);
 const read=name=>fs.readFileSync(new URL(name,root),'utf8');
 const pages=fs.readdirSync(root).filter(file=>file.endsWith('.html'));
-const auditToken='site-polish.css?v=20261106-v38-4-248-audit';
+// All public pages must load the shared responsive stylesheet with a cache
+// version. Individual pages legitimately use newer query tokens as they ship.
 for(const page of pages){
   if(['offline.html','intelligence.html'].includes(page))continue;
   const html=read(page);
-  assert.ok(html.includes(auditToken),page+' must request current responsive UX stylesheet');
+  assert.match(html,/site-polish\\.css\\?v=[A-Za-z0-9._-]+/,page+' must request the responsive UX stylesheet with a cache version');
 }
+assert.match(read('index.html'),/site-polish\\.css\\?v=20261109-mobile-spacing-rhythm/);
+assert.match(read('index.html'),/class="section-heading planning-heading"/);
+assert.match(read('site-polish.css'),/body\\.dashboard-page \\.planning-heading \\.source-note/);
 const names=['status.js','status-ui.js','app.js','rain.js','history.js',
  'graphs.js','station-page.js','site-polish.js','review-tools.js','rain-gauge-audit.js','hydrangea-soil.js',
  'monthly.js','annual.js','sky.js','radar.js','coast.js',
