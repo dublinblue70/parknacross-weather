@@ -339,33 +339,57 @@ if (/mask-image\s*:/.test(styles)) {
 }
 
 
-/* Station network links: keep layout compact, URLs grounded and external-tab behaviour safe. */
-const stationNetworksHtml = await readFile(join(root, "station.html"), "utf8");
+/* External network directory: the six service links live on their own page. */
+const stationNetworksHtml = await readFile(join(root, "networks.html"), "utf8");
+const stationPageHtml = await readFile(join(root, "station.html"), "utf8");
 const stationNetworksCss = await readFile(join(root, "station-page.css"), "utf8");
-const stationNetworkIds = ["stationWeatherUndergroundLink", "stationWeathercloudLink", "stationWindyLink"];
+const stationNetworkIds = [
+  "stationWeatherUndergroundLink", "stationWeathercloudLink", "stationWindyLink",
+  "stationAwekasLink", "stationPwsweatherLink", "stationCwopLink"
+];
 const stationNetworkPositions = stationNetworkIds.map(id => stationNetworksHtml.indexOf('id="' + id + '"'));
-if (stationNetworkPositions.some(pos => pos < 0) || !(stationNetworkPositions[0] < stationNetworkPositions[1] && stationNetworkPositions[1] < stationNetworkPositions[2])) {
-  failures.push("station.html: Station external network links must remain grouped in Weather Underground, Weathercloud, Windy order");
+if (stationNetworkPositions.some(pos => pos < 0) || stationNetworkPositions.some((pos, i) => i && pos <= stationNetworkPositions[i - 1])) {
+  failures.push("networks.html: all six weather-network links must appear in the established order");
 }
 if (!stationNetworksHtml.includes('aria-labelledby="stationExternalNetworksHeading"') ||
     !stationNetworksHtml.includes('id="stationExternalNetworksHeading"') ||
     !stationNetworksCss.includes(".station-external-network-list") ||
     !stationNetworksCss.includes("@media (max-width: 760px)")) {
-  failures.push("station.html: weather network section needs a labelled heading and responsive compact layout");
+  failures.push("networks.html: network directory needs a labelled heading and responsive compact layout");
 }
 const expectedStationNetworks = [
   ["stationWeatherUndergroundLink", "https://www.wunderground.com/dashboard/pws/IARDAM6"],
   ["stationWeathercloudLink", "https://app.weathercloud.net/d3781994059"],
   ["stationWindyLink", "https://www.windy.com/station/pws-hdC7VHGr"],
+  ["stationAwekasLink", "https://www.awekas.at/en/instrument.php?id=54012"],
+  ["stationPwsweatherLink", "https://www.pwsweather.com/station/pws/PARKNACROSSWX"],
+  ["stationCwopLink", "http://www.findu.com/cgi-bin/wx.cgi?call=GW8205"]
 ];
 for (const [id, url] of expectedStationNetworks) {
-  const anchor = stationNetworksHtml.match(new RegExp('<a\\b[^>]*\\bid="' + id + '"[^>]*>', "i"))?.[0] || "";
+  const pos = stationNetworksHtml.indexOf('id="' + id + '"');
+  const anchor = pos >= 0 ? stationNetworksHtml.slice(stationNetworksHtml.lastIndexOf("<a", pos), stationNetworksHtml.indexOf(">", pos) + 1) : "";
   if (!anchor.includes('href="' + url + '"') || !anchor.includes('target="_blank"') ||
       !anchor.includes('rel="noopener noreferrer"') || !anchor.includes('aria-label=')) {
-    failures.push("station.html: invalid or inaccessible external network link " + id);
+    failures.push("networks.html: invalid or inaccessible external network link " + id);
   }
 }
-if (!stationNetworksHtml.includes("Linked weather networks may use their own terrain estimates")) {
+if (!stationNetworksHtml.includes("GW8205 · Pending activation")) {
+  failures.push("networks.html: CWOP registration must not be represented as active");
+}
+if (stationPageHtml.includes('class="station-external-network-list"') ||
+    !stationPageHtml.includes('href="networks.html">Other weather networks</a>')) {
+  failures.push("station.html: links must move to the separate networks page");
+}
+const navScript = await readFile(join(root, "navigation.js"), "utf8");
+if (!navScript.includes('networksLink.href = "networks.html"') ||
+    !stationNetworksHtml.includes('href="networks.html" class="active" aria-current="page"')) {
+  failures.push("navigation: new directory must appear as a correctly labelled, active More-menu option");
+}
+const networkAppCache = await readFile(join(root, "service-worker.js"), "utf8");
+if (!networkAppCache.includes('"./networks.html"')) {
+  failures.push("service-worker.js: network directory must be included in the offline site cache");
+}
+if (!stationPageHtml.includes("Linked weather networks may use their own terrain estimates")) {
   failures.push("station.html: explain the difference between approximate site elevation and network estimates");
 }
 
