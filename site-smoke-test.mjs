@@ -377,6 +377,13 @@ for (const [id, url] of expectedStationNetworks) {
 if (!stationNetworksHtml.includes("Station ID 16733 · Observations confirmed")) {
   failures.push("networks.html: Windguru listing must reflect verified public measurements");
 }
+const windguruWorker = await readFile(join(root, "_worker/worker.mjs"), "utf8");
+if ((windguruWorker.match(/scheduleWindguruFromGateway\(ctx, env, liveReading\);/g) || []).length !== 2 ||
+    !windguruWorker.includes("WINDGURU_MIN_UPLOAD_INTERVAL_SECONDS = 55") ||
+    !windguruWorker.includes('reason:"rate_limited_to_minute"') ||
+    !windguruWorker.includes("sent_readings:")) {
+  failures.push("Windguru: both GW3001 upload paths must relay fresh samples at minute cadence and record sent values");
+}
 if (!stationNetworksHtml.includes("GW8205 · Pending activation")) {
   failures.push("networks.html: CWOP registration must not be represented as active");
 }
