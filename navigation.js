@@ -16,11 +16,29 @@
 
   function groupMenu(menu, menuIndex) {
     if (menu.querySelector(".nav-menu-group")) return;
+    // Make the dedicated network directory available throughout the website.
+    // Keep this idempotent for pages that already include the link in HTML.
+    let networksLink = menu.querySelector('a[href="networks.html"]');
+    if (!networksLink) {
+      networksLink = document.createElement("a");
+      networksLink.href = "networks.html";
+      networksLink.textContent = "Other weather networks";
+      networksLink.setAttribute("role", "menuitem");
+      const stationLink = menu.querySelector('a[href="station.html"]');
+      if (stationLink) stationLink.after(networksLink);
+      else menu.appendChild(networksLink);
+    }
+    if (window.location.pathname.endsWith("/networks.html")) {
+      networksLink.classList.add("active");
+      networksLink.setAttribute("aria-current", "page");
+    }
     const links = [...menu.querySelectorAll(":scope > a")];
+    const explore = new Set(["climate.html","station.html","networks.html","coast.html","sky.html","records.html"]);
+    const reports = new Set(["monthly.html","annual.html","downloads.html"]);
     const groups = [
-      ["Explore", links.slice(0, 5)],
-      ["Reports", links.slice(5, 8)],
-      ["Site & app", links.slice(8)]
+      ["Explore", links.filter(link => explore.has(link.getAttribute("href")))],
+      ["Reports", links.filter(link => reports.has(link.getAttribute("href")))],
+      ["Site & app", links.filter(link => !explore.has(link.getAttribute("href")) && !reports.has(link.getAttribute("href")))]
     ];
     groups.forEach(([label, items], groupIndex) => {
       if (!items.length) return;
