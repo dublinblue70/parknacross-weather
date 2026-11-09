@@ -60,3 +60,48 @@
   .soil-chart-grid > .chart-card { height: auto; }
   .soil-chart-grid .chart-wrap { height: 235px; }
 }
+
+/* Chart Guide: fill the whole Graphs grid, rather than taking only its first
+   column. A full-width two-column tip list makes sensible use of laptop space.
+   Leave the existing heading, accessible list and all weather charts intact. */
+.v2-chart-grid > .chart-guide {
+  grid-column: 1 / -1;
+  align-self: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+.v2-chart-grid > .chart-guide > ul {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+@media (min-width: 980px) {
+  .v2-chart-grid > .chart-guide {
+    padding: 26px clamp(28px, 3vw, 42px);
+  }
+  .v2-chart-grid > .chart-guide > ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(32px, 4vw, 70px);
+    row-gap: 18px;
+    margin: 16px 0 0;
+    padding-left: 22px;
+    line-height: 1.6;
+  }
+  .v2-chart-grid > .chart-guide > ul > li {
+    min-width: 0;
+    margin: 0;
+    padding-left: 2px;
+  }
+}
+@media (max-width: 979px) {
+  .v2-chart-grid > .chart-guide > ul {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding-left: 21px;
+  }
+}
