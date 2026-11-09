@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-251-windguru-alignment-20261109";
+const CACHE_NAME = "parknacross-v38-4-251-networks-compact-grid-20261109";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
