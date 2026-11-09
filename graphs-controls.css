@@ -29,3 +29,34 @@
     line-height: 1.35;
   }
 }
+
+
+/* Hydrangea charts: one balanced grid row instead of a short moisture card
+   stretched to the combined height of two charts on its right. */
+.v2-chart-grid > .soil-chart-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+  min-width: 0;
+}
+.soil-chart-grid > .chart-card {
+  min-width: 0;
+  height: 100%;
+}
+.soil-chart-grid .chart-wrap {
+  height: 260px;
+}
+@media (min-width: 761px) and (max-width: 1199px) {
+  .v2-chart-grid > .soil-chart-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .v2-chart-grid > .soil-chart-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .soil-chart-grid > .chart-card { height: auto; }
+  .soil-chart-grid .chart-wrap { height: 235px; }
+}
