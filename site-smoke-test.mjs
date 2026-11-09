@@ -339,17 +339,17 @@ if (/mask-image\s*:/.test(styles)) {
 }
 
 
-/* External network directory: the six service links live on their own page. */
+/* External network directory: all registered service links live on their own page. */
 const stationNetworksHtml = await readFile(join(root, "networks.html"), "utf8");
 const stationPageHtml = await readFile(join(root, "station.html"), "utf8");
 const stationNetworksCss = await readFile(join(root, "station-page.css"), "utf8");
 const stationNetworkIds = [
   "stationWeatherUndergroundLink", "stationWeathercloudLink", "stationWindyLink",
-  "stationAwekasLink", "stationPwsweatherLink", "stationCwopLink"
+  "stationAwekasLink", "stationPwsweatherLink", "stationWindguruLink", "stationCwopLink"
 ];
 const stationNetworkPositions = stationNetworkIds.map(id => stationNetworksHtml.indexOf('id="' + id + '"'));
 if (stationNetworkPositions.some(pos => pos < 0) || stationNetworkPositions.some((pos, i) => i && pos <= stationNetworkPositions[i - 1])) {
-  failures.push("networks.html: all six weather-network links must appear in the established order");
+  failures.push("networks.html: all seven weather-network links must appear in the established order");
 }
 if (!stationNetworksHtml.includes('aria-labelledby="stationExternalNetworksHeading"') ||
     !stationNetworksHtml.includes('id="stationExternalNetworksHeading"') ||
@@ -363,6 +363,7 @@ const expectedStationNetworks = [
   ["stationWindyLink", "https://www.windy.com/station/pws-hdC7VHGr"],
   ["stationAwekasLink", "https://www.awekas.at/en/instrument.php?id=54012"],
   ["stationPwsweatherLink", "https://www.pwsweather.com/station/pws/PARKNACROSSWX"],
+  ["stationWindguruLink", "https://www.windguru.cz/station/16733"],
   ["stationCwopLink", "http://www.findu.com/cgi-bin/wx.cgi?call=GW8205"]
 ];
 for (const [id, url] of expectedStationNetworks) {
@@ -372,6 +373,9 @@ for (const [id, url] of expectedStationNetworks) {
       !anchor.includes('rel="noopener noreferrer"') || !anchor.includes('aria-label=')) {
     failures.push("networks.html: invalid or inaccessible external network link " + id);
   }
+}
+if (!stationNetworksHtml.includes("Station ID 16733 · Registered; data upload not yet confirmed")) {
+  failures.push("networks.html: Windguru must not be represented as transmitting before first upload");
 }
 if (!stationNetworksHtml.includes("GW8205 · Pending activation")) {
   failures.push("networks.html: CWOP registration must not be represented as active");
