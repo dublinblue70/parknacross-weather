@@ -1,3 +1,19 @@
+## Premium SVG icon system (9 November 2026)
+
+The site uses a small reusable, first-party icon library:
+`weather-icons.js` creates decorative, accessible inline SVG weather glyphs;
+`weather-icons.css` provides the same restrained coastal styling and mobile
+sizes across the Dashboard, Station, Graphs, Rain, Sea & Swim, System Status,
+Summary, Today’s Sky and Downloads pages. Each of these nine pages imports
+both versioned assets. The PWA service worker precaches them.
+
+All icons are `aria-hidden`, with their original text labels still visible.
+Existing hand-drawn dashboard metric SVGs, data plots, external network logos
+and live System Status state badges are not replaced. The script runs once
+after DOM parsing, does not alter live measurements, and does not make any
+network requests. New page sections can opt into an existing icon in the
+page-specific selectors of `weather-icons.js`.
+
 # Parknacross Weather — deployment and maintenance
 
 Website: https://parknacrossweather.ie · GitHub Pages (main branch)
