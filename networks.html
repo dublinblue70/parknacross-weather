@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="api-routing.js?v=20261010-v38-4-188"></script>
+<link rel="stylesheet" href="footer-links.css?v=20261015-aligned-footer">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07131f">
+  <meta name="description" content="Find Parknacross Weather station observations on Weather Underground, Weathercloud, Windy.com, AWEKAS, PWSWeather and CWOP FindU.">
+  <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css?v=20261010-v38-4-196">
+  <title>Other Weather Networks | Parknacross Weather</title>
+  <link rel="canonical" href="https://parknacrossweather.ie/networks.html">
+
+  <style>
+    .storage-panel {
+      margin-top: 18px;
+    }
+    .storage-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .storage-stat {
+      min-width: 0;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--surface-soft);
+    }
+    .storage-stat span,
+    .storage-stat small {
+      display: block;
+      color: var(--muted);
+    }
+    .storage-stat span {
+      margin-bottom: 7px;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .storage-stat strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      overflow-wrap: anywhere;
+    }
+    .storage-stat small {
+      font-size: .78rem;
+      line-height: 1.4;
+    }
+    .storage-meter {
+      height: 12px;
+      margin-top: 18px;
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--surface-2);
+    }
+    .storage-meter-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--green);
+      transition: width .45s ease;
+    }
+    .storage-meter-copy {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+    .storage-note {
+      margin: 15px 0 0;
+      color: var(--muted);
+      font-size: .84rem;
+      line-height: 1.55;
+    }
+    @media (max-width: 900px) {
+      .storage-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      .storage-summary { grid-template-columns: 1fr; }
+      .storage-meter-copy { flex-direction: column; gap: 3px; }
+    }
+  </style>
+<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261027-persistence" defer></script><link rel="stylesheet" href="station-page.css?v=20261106-notifications-spacing-fix"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
+<script src="site-polish.js?v=20261101-v38-4-239" defer></script>
+<link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Parknacross Weather home">
+      <img class="brand-mark" src="favicon.svg" alt="">
+      <div class="brand-copy"><div class="brand-title">PARKNACROSS WEATHER</div><p>52.6°N · 6.3°W · North Wexford Coast · Ireland</p></div>
+    </a>
+    <nav class="nav" aria-label="Main navigation"><a href="index.html">Dashboard</a><a href="summary.html">Summary</a><a href="radar.html">Radar</a><a href="graphs.html">Graphs</a><a href="rain.html">Rain</a><a href="history.html">History</a><div class="nav-more"><button class="nav-more-button nav-more-active" type="button" aria-expanded="false" aria-haspopup="menu">More <span aria-hidden="true">▾</span></button><div class="nav-more-menu" role="menu" hidden><a role="menuitem" href="climate.html">Climate</a><a role="menuitem" href="station.html">Station</a><a role="menuitem" href="networks.html" class="active" aria-current="page">Other weather networks</a><a role="menuitem" href="coast.html">Sea &amp; swim</a><a role="menuitem" href="sky.html">Today’s sky</a><a role="menuitem" href="records.html">Records</a><a role="menuitem" href="monthly.html">Monthly report</a><a role="menuitem" href="annual.html">Annual report</a><a role="menuitem" href="downloads.html">Downloads</a><a role="menuitem" href="status.html">System status</a><a role="menuitem" href="install.html">Install help</a><a role="menuitem" href="privacy.html">Privacy</a></div></div></nav>
+  </header>
+
+
+  <main id="main-content">
+    <section class="page-hero station-page-hero">
+      <span class="section-eyebrow">Parknacross Weather elsewhere</span>
+      <h1>Other weather networks</h1>
+      <p>Explore Parknacross Weather observations on the other weather platforms we connect to. Each service processes and displays data independently, so update times and reported values may differ.</p>
+    </section>
+
+    <section class="station-external-networks" id="connectedNetworks" aria-labelledby="stationExternalNetworksHeading">
+      <div class="station-external-networks-intro">
+        <span class="section-eyebrow">Other weather networks</span>
+        <h2 id="stationExternalNetworksHeading">Explore Parknacross elsewhere</h2>
+        <p>See our observations on other weather platforms. Update times may differ between services.</p>
+      </div>
+      <div class="station-external-network-list">
+        <article class="station-external-network" aria-labelledby="stationWeatherUndergroundTitle">
+          <div>
+            <h3 id="stationWeatherUndergroundTitle">Weather Underground</h3>
+            <p>Parknacross station observations, charts and history.</p>
+          </div>
+          <a class="station-external-network-link" id="stationWeatherUndergroundLink" href="https://www.wunderground.com/dashboard/pws/IARDAM6" target="_blank" rel="noopener noreferrer" aria-label="View on Weather Underground (opens in a new tab)">View on Weather Underground <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="station-external-network" aria-labelledby="stationWeathercloudTitle">
+          <div>
+            <h3 id="stationWeathercloudTitle">Weathercloud</h3>
+            <p>View Parknacross Weather observations and history on Weathercloud.</p>
+          </div>
+          <a class="station-external-network-link" id="stationWeathercloudLink" href="https://app.weathercloud.net/d3781994059" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Weathercloud (opens in a new tab)">View on Weathercloud <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="station-external-network" aria-labelledby="stationWindyTitle">
+          <div>
+            <h3 id="stationWindyTitle">Windy.com</h3>
+            <p>Parknacross observations on Windy’s interactive weather map.</p>
+          </div>
+          <a class="station-external-network-link" id="stationWindyLink" href="https://www.windy.com/station/pws-hdC7VHGr" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Windy.com (opens in a new tab)">View on Windy.com <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="station-external-network" aria-labelledby="stationAwekasTitle">
+          <div>
+            <h3 id="stationAwekasTitle">AWEKAS</h3>
+            <p>View Parknacross station observations on AWEKAS.</p>
+          </div>
+          <a class="station-external-network-link" id="stationAwekasLink" href="https://www.awekas.at/en/instrument.php?id=54012" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on AWEKAS (opens in a new tab)">View on AWEKAS <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="station-external-network" aria-labelledby="stationPwsweatherTitle">
+          <div>
+            <h3 id="stationPwsweatherTitle">PWSWeather</h3>
+            <p>View Parknacross observations on PWSWeather. Readings and update times can differ from this site.</p>
+          </div>
+          <a class="station-external-network-link" id="stationPwsweatherLink" href="https://www.pwsweather.com/station/pws/PARKNACROSSWX" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on PWSWeather (opens in a new tab)">View on PWSWeather <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="station-external-network" aria-labelledby="stationCwopTitle">
+          <div>
+            <h3 id="stationCwopTitle">Citizen Weather Observer Program (CWOP)</h3>
+            <p>Parknacross Weather is registered as station GW8205 with CWOP, a programme sharing weather observations for meteorological monitoring and quality assessment.</p>
+            <p class="station-cwop-registration"><strong>GW8205 · Pending activation</strong> — Registration is in progress. A station listing on FindU does not by itself confirm official CWOP activation.</p>
+          </div>
+          <a class="station-external-network-link" id="stationCwopLink" href="http://www.findu.com/cgi-bin/wx.cgi?call=GW8205" target="_blank" rel="noopener noreferrer" aria-label="View CWOP station GW8205 on FindU (opens in a new tab)">View on FindU <span aria-hidden="true">↗</span></a>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© <span id="year"></span> Parknacross Weather</span>
+    <span>Hyperlocal weather observations · Ardamine, Co. Wexford, Ireland</span>
+  <nav class="footer-links" aria-label="Parknacross Weather links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a><span aria-hidden="true">·</span><a href="install.html">Install help</a><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></nav></footer>
+</div>
+<script>document.getElementById("year").textContent = String(new Date().getFullYear());</script>
+<script src="offline.js?v=20261010-v38-4-190"></script>
+<script src="site-config.js?v=20261010-v38-4-188"></script>
+<script src="pwa-update.js?v=20261008-v38-4-170"></script>
+<script src="accessibility.js?v=20260924-v38-4-97"></script>
+<script src="navigation.js?v=20261109-networks-page"></script>
+<script src="site-help.js?v=20261008-v38-4-170"></script>
+<script src="review-tools.js?v=20261106-notification-duplication-fix" defer></script>
+</body>
+</html>
