@@ -182,6 +182,29 @@ if (/live camera feed/i.test(skyHtml) && !/not a continuous live camera feed/i.t
 const coastHtml = await readFile(join(root, "coast.html"), "utf8");
 if (/What to wear today|Outdoor clothing guide/.test(coastHtml)) failures.push("coast.html: land-based clothing guide must not appear on the Sea & Swim page");
 const dashboardHtml = await readFile(join(root, "index.html"), "utf8");
+const dashboardChartsCss = await readFile(join(root, "dashboard-ui.css"), "utf8");
+if (!dashboardHtml.includes('class="chart-grid chart-grid--balanced"') ||
+    !dashboardHtml.includes('class="chart-column chart-column--observations"') ||
+    !dashboardHtml.includes('class="chart-column chart-column--analysis"') ||
+    !dashboardHtml.includes('dashboard-ui.css?v=20261109-balanced-trend-columns') ||
+    !dashboardChartsCss.includes("body.dashboard-page .trends-section .chart-grid.chart-grid--balanced") ||
+    !dashboardChartsCss.includes("align-items: start") ||
+    !dashboardChartsCss.includes("flex: 0 0 auto") ||
+    !dashboardChartsCss.includes("@media (max-width: 760px)") ||
+    !dashboardChartsCss.includes("grid-template-columns: minmax(0, 1fr)")) {
+  failures.push("Dashboard trends: balanced independent columns must avoid huge empty rainfall card and stack on mobile");
+}
+const dashboardTrendSection = dashboardHtml.split('class="chart-grid chart-grid--balanced"')[1]?.split('class="records-section"')[0] || "";
+const standardCharts = dashboardTrendSection.split('class="chart-column chart-column--observations"')[1]?.split('class="chart-column chart-column--analysis"')[0] || "";
+const detailedCharts = dashboardTrendSection.split('class="chart-column chart-column--analysis"')[1] || "";
+const chartIDs = ["temperatureChart","windChart","pressureChart","rainChart","solarChart","uvChart","windRose"];
+if (chartIDs.some(id => (dashboardTrendSection.match(new RegExp('id="' + id + '"','g')) || []).length !== 1) ||
+    ["temperatureChart","windChart","pressureChart","rainChart"].some(id => !standardCharts.includes('id="' + id + '"')) ||
+    ["solarChart","uvChart","windRose"].some(id => !detailedCharts.includes('id="' + id + '"')) ||
+    (dashboardTrendSection.match(/class="chart-card(?: wind-card)?"/g) || []).length !== 6) {
+  failures.push("Dashboard trends: six preserved charts must occupy correct two balanced columns exactly once");
+}
+
 const historyHtml = await readFile(join(root, "history.html"), "utf8");
 const historyApp = await readFile(join(root, "history.js"), "utf8");
 if (/Weather diary|weatherDiary|Notable Parknacross weather/.test(historyHtml + historyApp)) failures.push("history: removed Weather Diary content remains");
