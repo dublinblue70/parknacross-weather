@@ -434,7 +434,7 @@ const expectedStationNetworks = [
   ["stationAwekasLink", "https://www.awekas.at/en/instrument.php?id=54012"],
   ["stationPwsweatherLink", "https://www.pwsweather.com/station/pws/PARKNACROSSWX"],
   ["stationCwopLink", "http://www.findu.com/cgi-bin/wx.cgi?call=GW8205"],
-  ["stationWowBeLink", "https://wow.meteo.be/en/"]
+  ["stationWowBeLink", "https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"]
 ];
 for (const [id, url] of expectedStationNetworks) {
   const pos = stationNetworksHtml.indexOf('id="' + id + '"');
@@ -490,6 +490,11 @@ if ((windguruWorker.match(/scheduleWindguruFromGateway\(ctx, env, liveReading\);
 if (!stationNetworksHtml.includes("Shared sensor readings and history.") ||
     !stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h3>')) {
   failures.push("networks.html: Ecowitt card must use the owner-provided station sharing link");
+}
+if (!stationNetworksHtml.includes('id="stationWowBeLink" href="https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"') ||
+    !stationNetworksHtml.includes('aria-label="View Parknacross station on WOW-BE') ||
+    stationNetworksHtml.includes('id="stationWowBeLink" href="https://wow.meteo.be/en/"')) {
+  failures.push("networks.html: WOW-BE link must deep-link to registered Parknacross site rather than provider homepage");
 }
 if (!stationNetworksHtml.includes("Station registered · Upload activation pending.") ||
     !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h3>')) {
