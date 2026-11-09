@@ -374,8 +374,8 @@ for (const [id, url] of expectedStationNetworks) {
     failures.push("networks.html: invalid or inaccessible external network link " + id);
   }
 }
-if (!stationNetworksHtml.includes("Station ID 16733 · Registered; data upload not yet confirmed")) {
-  failures.push("networks.html: Windguru must not be represented as transmitting before first upload");
+if (!stationNetworksHtml.includes("Station ID 16733 · Observations confirmed")) {
+  failures.push("networks.html: Windguru listing must reflect verified public measurements");
 }
 if (!stationNetworksHtml.includes("GW8205 · Pending activation")) {
   failures.push("networks.html: CWOP registration must not be represented as active");
