@@ -24,6 +24,45 @@ and a read-only admin capability check. A failed warning source must show
 **unavailable**, never an unverified all-clear.
 
 
+## WOW-BE (Royal Meteorological Institute of Belgium) — Parknacross
+
+The owner has registered Parknacross on the new WOW-BE platform, with short
+station ID **`d8bbdb70`**. The email registration also supplies an authentication
+key. **Never put that key in GitHub, source files, public diagnostics or URLs.**
+
+The authoritative Worker at `_worker/worker.mjs` now has an opt-in WOW-BE
+Weather Underground-protocol publisher. It forwards outdoor observations from
+the existing GW3001 direct-ingestion pipeline, with an Ecowitt cloud fallback,
+without changing the GW3001 Customized/DIY Upload Server configuration.
+It uses HTTPS POST JSON to
+`https://wow.meteo.be/api/v2/send/weatherunderground`.
+
+**Enable in Cloudflare only after deploying the updated Worker:**
+
+- Add `WOWBE_AUTH_KEY` as a **secret**, with the personal WOW-BE station
+  authentication key from the registration email (not the Ecowitt password).
+- Add `WOWBE_ENABLED` as a **text variable** with value `true`.
+- Preserve the existing Worker D1/R2 bindings, gateway ingress secret,
+  cron trigger, and all other network credentials.
+
+The exporter sends at approximately 60-second observation intervals; it
+rejects missing/stale data and skips successful duplicate observations.
+It converts temperatures to °F, wind from km/h to mph, relative sea-level
+pressure from hPa to inHg, and the **WH40H rain rate** from mm/h to inches/hour
+(the `rainin` parameter on WOW-BE denotes *intensity*, not the WU-style
+hourly accumulation). It excludes all indoor and soil readings.
+
+**Verification:** after the updated Worker is deployed, GET
+`/wowbe-status` and visit `status.html#wowbeHealth`. The endpoint reports
+whether the key is configured and uploads are enabled, the latest observation
+epoch, an HTTP acknowledgement or a safe error code, and the outdoor values
+sent. `accepted_not_display_verified` means the server acknowledged receipt;
+it does not independently prove the report is shown on WOW-BE's public map.
+Confirm visibility from the station dashboard at
+https://wow.meteo.be/web/login .
+
+Official guide: https://wow.meteo.be/en/join/ .
+
 ## Windguru station 16733 — ParknacrossWX
 
 The authoritative Cloudflare Worker source now contains an **opt-in** Windguru
