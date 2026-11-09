@@ -1,0 +1,159 @@
+/* Parknacross shared weather iconography — small, consistent, decorative
+   inline SVGs. No external fonts or logo requests. Health state always remains
+   expressed by the existing badges and text, never by decorative glyph colour. */
+:root {
+  --wx-icon-ink: #8ad4e8;
+  --wx-icon-bg: rgba(123, 215, 239, .09);
+  --wx-icon-stroke: rgba(123, 215, 239, .18);
+}
+.wx-svg-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  overflow: visible;
+  color: var(--wx-icon-ink);
+  vertical-align: middle;
+  pointer-events: none;
+}
+.wx-icon-heading,
+.wx-icon-small {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.wx-icon-heading > .wx-svg-icon {
+  width: 33px;
+  height: 33px;
+  padding: 7px;
+  border: 1px solid var(--wx-icon-stroke);
+  border-radius: 10px;
+  background: var(--wx-icon-bg);
+}
+.wx-icon-small {
+  gap: 8px;
+}
+.wx-icon-small > .wx-svg-icon {
+  width: 26px;
+  height: 26px;
+  padding: 4px;
+  border: 1px solid var(--wx-icon-stroke);
+  border-radius: 8px;
+  background: var(--wx-icon-bg);
+}
+.wx-icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.wx-icon-label > .wx-svg-icon {
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+}
+.wx-icon-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  min-width: 0;
+}
+.wx-icon-nav > .wx-svg-icon {
+  width: 18px;
+  height: 18px;
+}
+.wx-svg-icon--sun, .wx-svg-icon--cloudSun { color: #ecc780; }
+.wx-svg-icon--wind, .wx-svg-icon--compass { color: #8fd0e9; }
+.wx-svg-icon--drop, .wx-svg-icon--cloudRain, .wx-svg-icon--waves { color: #85c8f2; }
+.wx-svg-icon--thermometer { color: #ebaaa0; }
+.wx-svg-icon--zap { color: #ecc781; }
+.wx-svg-icon--sprout, .wx-svg-icon--leaf { color: #8edbb1; }
+.wx-svg-icon--gauge, .wx-svg-icon--activity { color: #a2b8e7; }
+.wx-svg-icon--calendar, .wx-svg-icon--archive, .wx-svg-icon--database,
+.wx-svg-icon--download, .wx-svg-icon--chart { color: #a4bfe5; }
+.wx-svg-icon--camera, .wx-svg-icon--moon { color: #c7b8ed; }
+.wx-svg-icon--bell { color: #efd09a; }
+.wx-svg-icon--radio, .wx-svg-icon--shield, .wx-svg-icon--map { color: #8fcfda; }
+
+/* Dashboard: shortcut cards gain quiet icon rhythm, existing live-reading
+   metrics retain their own hand-drawn SVG and are deliberately not duplicated. */
+body.dashboard-page .dashboard-shortcuts a.wx-icon-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+body.dashboard-page .dashboard-shortcuts .wx-svg-icon {
+  width: 19px;
+  height: 19px;
+}
+body.dashboard-page .hero-stat > span.wx-icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+body.dashboard-page .hero-stat > span .wx-svg-icon {
+  width: 17px;
+  height: 17px;
+}
+body.dashboard-page .today-sky-copy h2.wx-icon-heading {
+  justify-content: flex-start;
+  gap: 11px;
+}
+body.dashboard-page .today-sky-copy h2.wx-icon-heading > .wx-svg-icon {
+  width: 37px;
+  height: 37px;
+}
+/* Station: sensor quick-select controls keep their complete text names and
+   stay fully clickable, with an icon only in their label span. */
+.station-sensor-buttons .wx-icon-label,
+.station-specs .wx-icon-label { gap: 6px; }
+.station-sensor-buttons .wx-svg-icon,
+.station-specs .wx-svg-icon { width: 18px; height: 18px; }
+.station-jumps a.wx-icon-nav { display: inline-flex; gap: 6px; align-items: center; }
+
+/* Chart headings remain compact; icon badges do not reduce chart canvas width. */
+.chart-title h3.wx-icon-small,
+.chart-title h2.wx-icon-heading { flex-wrap: nowrap; }
+.v2-chart-grid .chart-title h3.wx-icon-small > .wx-svg-icon { width: 24px; height: 24px; padding: 3px; }
+.chart-title h3.wx-icon-small, .chart-title h2.wx-icon-heading { text-wrap: pretty; }
+
+/* System Health: visual identity does not imply a health state.
+   The live status badges and diagnostic messages remain authoritative. */
+.health-group-heading h2.wx-icon-heading { gap: 9px; }
+.health-group .card-head h2.wx-icon-small {
+  display: inline-flex;
+  gap: 7px;
+  align-items: flex-start;
+}
+.health-group .card-head h2.wx-icon-small .wx-svg-icon {
+  width: 23px;
+  height: 23px;
+  padding: 3px;
+  margin-top: -2px;
+}
+.health-group .card-head .badge { flex: 0 0 auto; }
+
+/* Archive download cards: do not interfere with buttons or form inputs. */
+body:has(#downloadPreviewHeading) .grid > article.card > h2.wx-icon-small {
+  gap: 9px;
+}
+body:has(#downloadPreviewHeading) .grid > article.card > h2.wx-icon-small > .wx-svg-icon {
+  width: 29px;
+  height: 29px;
+}
+
+/* Conserve narrow columns, avoiding overflow near action controls. */
+@media (max-width: 760px) {
+  .wx-icon-heading { gap: 8px; }
+  .wx-icon-heading > .wx-svg-icon { width: 29px; height: 29px; padding: 5px; }
+  .wx-icon-small > .wx-svg-icon { width: 23px; height: 23px; padding: 3px; }
+  .wx-icon-nav > .wx-svg-icon { width: 17px; height: 17px; }
+  .wx-icon-label > .wx-svg-icon { width: 18px; height: 18px; }
+  .chart-title h3.wx-icon-small { gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wx-svg-icon { animation: none !important; transition: none !important; }
+}
