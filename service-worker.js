@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-252-soil-layout-ecowitt-dashboard-20261109";
+const CACHE_NAME = "parknacross-v38-4-252-ecowitt-direct-share-20261109";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
