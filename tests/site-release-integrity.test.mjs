@@ -11,11 +11,11 @@ const pages=fs.readdirSync(root).filter(file=>file.endsWith('.html'));
 for(const page of pages){
   if(['offline.html','intelligence.html'].includes(page))continue;
   const html=read(page);
-  assert.match(html,/site-polish\\.css\\?v=[A-Za-z0-9._-]+/,page+' must request the responsive UX stylesheet with a cache version');
+  assert.match(html,/site-polish\.css\?v=[A-Za-z0-9._-]+/,page+' must request the responsive UX stylesheet with a cache version');
 }
-assert.match(read('index.html'),/site-polish\\.css\\?v=20261109-mobile-spacing-rhythm/);
+assert.match(read('index.html'),/site-polish\.css\?v=20261109-mobile-spacing-rhythm/);
 assert.match(read('index.html'),/class="section-heading planning-heading"/);
-assert.match(read('site-polish.css'),/body\\.dashboard-page \\.planning-heading \\.source-note/);
+assert.match(read('site-polish.css'),/body\.dashboard-page \.planning-heading \.source-note/);
 const names=['status.js','status-ui.js','app.js','rain.js','history.js',
  'graphs.js','station-page.js','site-polish.js','review-tools.js','rain-gauge-audit.js','hydrangea-soil.js',
  'monthly.js','annual.js','sky.js','radar.js','coast.js',
