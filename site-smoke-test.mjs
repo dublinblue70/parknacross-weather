@@ -428,6 +428,37 @@ if (!stationNetworksHtml.includes("Coastal wind and weather readings.") ||
     stationNetworksHtml.includes("First live measurements were verified")) {
   failures.push("networks.html: Windguru card must be concise without technical upload history");
 }
+const wowBeWorker = await readFile(join(root, "_worker/worker.mjs"), "utf8");
+const wowBeStatusClient = await readFile(join(root, "wowbe-status.js"), "utf8");
+const wowBeStatusHtml = await readFile(join(root, "status.html"), "utf8");
+if (!wowBeWorker.includes('const WOWBE_SHORT_ID = "d8bbdb70"') ||
+    (wowBeWorker.match(/scheduleWowBeFromGateway\(ctx, env, liveReading\);/g) || []).length !== 2 ||
+    !wowBeWorker.includes("const wowbeResult = await publishWowBe(env, syncResult)") ||
+    !wowBeWorker.includes('url.pathname === "/wowbe-status"') ||
+    !wowBeWorker.includes("WOWBE_MIN_UPLOAD_INTERVAL_SECONDS = 60") ||
+    !wowBeWorker.includes('WOWBE_AUTH_KEY') ||
+    !wowBeWorker.includes('WOWBE_ENABLED') ||
+    !wowBeWorker.includes('method:"POST"') ||
+    !wowBeWorker.includes('api/v2/send/weatherunderground') ||
+    !wowBeWorker.includes('body:JSON.stringify(body)') ||
+    !wowBeWorker.includes('put("rainin",rate/25.4,4)') ||
+    !wowBeWorker.includes('put("baromin",p*0.0295299830714,3)')) {
+  failures.push("WOW-BE: secure opt-in GW3001 uploader, UTC time, rain rate, pressure and status endpoint required");
+}
+if (!wowBeStatusHtml.includes('id="wowbeHealth"') ||
+    !wowBeStatusHtml.includes('wowbe-status.js?v=20261109-wowbe') ||
+    !wowBeStatusClient.includes('api+"/wowbe-status"') ||
+    !wowBeStatusClient.includes("accepted_not_display_verified")) {
+  failures.push("WOW-BE: system status must separately report upload acknowledgement and public verification");
+}
+if (!stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h3>') ||
+    !stationNetworksHtml.includes("Station registered · Upload activation pending.")) {
+  failures.push("WOW-BE: public network card must reflect registration without inventing live transmission");
+}
+const wowBeAppCache = await readFile(join(root, "service-worker.js"), "utf8");
+if (!wowBeAppCache.includes('"./wowbe-status.js"')) {
+  failures.push("WOW-BE: system status client must be cached for offline page shell");
+}
 const windguruWorker = await readFile(join(root, "_worker/worker.mjs"), "utf8");
 if ((windguruWorker.match(/scheduleWindguruFromGateway\(ctx, env, liveReading\);/g) || []).length !== 2 ||
     !windguruWorker.includes("WINDGURU_MIN_UPLOAD_INTERVAL_SECONDS = 55") ||
@@ -439,9 +470,9 @@ if (!stationNetworksHtml.includes("Shared sensor readings and history.") ||
     !stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h3>')) {
   failures.push("networks.html: Ecowitt card must use the owner-provided station sharing link");
 }
-if (!stationNetworksHtml.includes("Connection not yet set up.") ||
+if (!stationNetworksHtml.includes("Station registered · Upload activation pending.") ||
     !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h3>')) {
-  failures.push("networks.html: WOW-BE must have a concise card without claiming an active station");
+  failures.push("networks.html: WOW-BE must show registered status until public data is verified");
 }
 if (!stationNetworksHtml.includes("Station GW8205 · Activation pending.") ||
     stationNetworksHtml.includes("A station listing on FindU")) {
