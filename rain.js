@@ -12,13 +12,15 @@
   const piezoEpoch=usable(current?.piezo_observed_epoch)?Number(current.piezo_observed_epoch)*1000:NaN;
   const piezoAge=Date.now()-piezoEpoch;
   const currentAge=Date.now()-stamp;
-  const piezoDetected=fresh&&currentAge>=-120000&&currentAge<=180000
-    &&Number.isFinite(piezoEpoch)&&piezoAge>=-120000&&piezoAge<=420000
-    &&usable(current?.piezo_rain_rate_mm_h)&&Number(current.piezo_rain_rate_mm_h)>0;
+  const piezoFresh=fresh&&currentAge>=-120000&&currentAge<=180000
+    &&Number.isFinite(piezoEpoch)&&piezoAge>=-120000&&piezoAge<=420000;
+  const piezoDetected=piezoFresh&&usable(current?.piezo_rain_rate_mm_h)&&Number(current.piezo_rain_rate_mm_h)>0;
+  const piezoDailyMm=piezoFresh&&dayKey(new Date(stamp))===dayKey(new Date())&&usable(current?.piezo_daily_mm)
+    ? Math.max(0,Number(current.piezo_daily_mm)):null;
   const rows=Array.isArray(history?.readings)?history.readings:[],now=current?.received_at?new Date(current.received_at).getTime():(usable(current?.epoch)?Number(current.epoch)*1000:Date.now());let lastIncrease=null,prev=null;
   for(const row of rows){const t=row?.received_at?new Date(row.received_at).getTime():usable(row?.epoch)?Number(row.epoch)*1000:NaN,total=usable(row?.rain_daily_mm)?Number(row.rain_daily_mm):NaN;if(!Number.isFinite(t)||!Number.isFinite(total))continue;if(prev&&total>=prev.total+0.05)lastIncrease=t;prev={t,total};}
   const currentTotal=usable(current?.rain_daily_mm)?Number(current.rain_daily_mm):null;if(prev&&currentTotal!==null&&currentTotal>=prev.total+0.05)lastIncrease=now;if(rate!==null&&rate>0)lastIncrease=now;
-  const age=lastIncrease?Math.max(0,now-lastIncrease):Infinity;return{rate,piezoDetected,isRaining:(rate!==null&&rate>0)||fresh&&age<=5*60*1000,rainRecently:fresh&&(rate===null||rate<=0)&&age>5*60*1000&&age<=15*60*1000,lastIncrease};
+  const age=lastIncrease?Math.max(0,now-lastIncrease):Infinity;return{rate,piezoDetected,piezoDailyMm,isRaining:(rate!==null&&rate>0)||fresh&&age<=5*60*1000,rainRecently:fresh&&(rate===null||rate<=0)&&age>5*60*1000&&age<=15*60*1000,lastIncrease};
  };
  function eventGraphLink(event){const start=Number(event.start_epoch),end=Number(event.end_epoch),now=Math.floor(Date.now()/1000);const from=Number.isFinite(start)&&start>0?Math.floor(start)-1800:null,to=Number.isFinite(end)&&end>=start?Math.min(now,Math.ceil(end)+1800):now;return from&&to>from&&to-from<=31*86400?`graphs.html?from=${from}&to=${to}#gRain`:'history.html';}
  let chart=null,loading=false;
@@ -52,7 +54,16 @@
    const rs=rainState(s,h,c);
    set("rainCondition",rs.isRaining?"Rain detected by WH40H":rs.piezoDetected
       ? "Light rain detected by WS90 piezo · WH40H not yet measuring this shower"
-      : rs.rate===null?"Live WH40H rain unavailable":rs.rainRecently?"Rain recently":"No rain detected by the station");
+      : rs.piezoDailyMm>0&&usable(c?.rain_daily_mm)&&Number(c.rain_daily_mm)<0.05
+        ? "WS90 reports rain today · WH40H still 0.0 mm"
+        : rs.rate===null?"Live WH40H rain unavailable":rs.rainRecently?"Rain recently":"No rain detected by the station");
+   const piezoToday=$("rainPiezoToday");
+   if(piezoToday){
+     piezoToday.hidden=!usable(rs.piezoDailyMm);
+     piezoToday.textContent=usable(rs.piezoDailyMm)
+       ? `WS90 piezo estimate today: ${n(rs.piezoDailyMm)} mm · WH40H measured total remains separate. The gauges may disagree; check the WH40H if the difference persists.`
+       : "";
+   }
    set("rainLoadStatus",results.some(x=>x.status==="rejected")?"Some rainfall sources are unavailable. Showing the readings that loaded successfully.":"");window.ParknacrossRainEvidence?.render(c,h.readings||[],s.last_measurable_rain?.received_at);
    const todayRain=correctedCurrentRain(c)??(usable(s.today_mm)?Number(s.today_mm):null);
    set("rainNow",rs.isRaining&&!(rs.rate>0)?"Rain detected":rs.rate===null?"--":`${n(rs.rate)} mm/h`);set("rainToday",usable(todayRain)?`${n(todayRain)} mm`:"--");set("rainYesterday",`${n(s.yesterday_mm)} mm`);set("rain7",`${n(s.last_7_days_mm)} mm`);
