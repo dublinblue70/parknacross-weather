@@ -23,19 +23,22 @@ vm.createContext(ctx);
 vm.runInContext(grab('function gatewayNumber(','function gatewayDewPointC('),ctx);
 vm.runInContext(grab('function gatewayWeatherReading(','function gatewayLiveReading('),ctx);
 const both=ctx.gatewayWeatherReading({
-  rainratein:0.07874,dailyrainin:0.11811,rrain_piezo:0.9,drain_piezo:0.8
+  rainratein:0.07874,dailyrainin:0.11811,rrain_piezo:0.9,drain_piezo:0.01574803
 },null);
 assert.equal(both.rain_rate_mm_h,2.0,'WH40H rate wins over WS90 piezo rate');
 assert.equal(both.rain_daily_mm,3.0,'WH40H total wins over WS90 piezo total');
 assert.equal(both.piezo_rain_rate_mm_h,22.9,'WS90 rate is exposed separately, not counted as WH40H rainfall');
+assert.equal(both.piezo_daily_mm,0.4,'WS90 daily estimate is independent of WH40H total');
 const zero=ctx.gatewayWeatherReading({rainratein:0,dailyrainin:0,rrain_piezo:0.9,drain_piezo:0.8},null);
 assert.equal(zero.rain_rate_mm_h,0,'traditional zero is not replaced by piezo rain');
 assert.equal(zero.rain_daily_mm,0);
 assert.equal(zero.piezo_rain_rate_mm_h,22.9,'Early piezo signal survives while WH40H remains zero');
+assert.equal(zero.piezo_daily_mm,20.3,'WS90 day total remains separate from an authoritative WH40H zero');
 const piezoOnly=ctx.gatewayWeatherReading({rrain_piezo:0.9,drain_piezo:0.8},null);
 assert.equal(piezoOnly.rain_rate_mm_h,null,'missing traditional rain stays unavailable');
 assert.equal(piezoOnly.rain_daily_mm,null);
 assert.equal(piezoOnly.piezo_rain_rate_mm_h,22.9);
+assert.equal(piezoOnly.piezo_daily_mm,20.3);
 const select=grab('    rain_rate_mm_h: valueAt(data, [','    solar_w_m2: valueAt(data, [');
 assert.match(select,/piezo_rain_rate_mm_h: valueAt\(data,/,'cloud reads WS90 rate as an independent signal');
 const path=(obj,name)=>name.split('.').reduce((acc,k)=>acc?.[k],obj);
@@ -50,14 +53,19 @@ const values=vm.runInContext(cloudExpression,cloudCtx);
 assert.equal(values.rain_rate_mm_h,0);
 assert.equal(values.rain_daily_mm,5.2);
 assert.equal(values.piezo_rain_rate_mm_h,80);
+assert.equal(values.piezo_daily_mm,120);
 cloudCtx.data={rainfall_piezo:{rain_rate:{value:80},daily:{value:120}}};
 const missing=vm.runInContext(cloudExpression,cloudCtx);
 assert.equal(missing.rain_rate_mm_h,null);
 assert.equal(missing.rain_daily_mm,null);
 assert.equal(missing.piezo_rain_rate_mm_h,80,'Missing WH40H stays unavailable even when WS90 detects rain');
+assert.equal(missing.piezo_daily_mm,120,'WS90 accumulated day estimate does not fill missing WH40H totals');
 assert.match(worker,/wh40h_primary_rain:true/);
 assert.match(worker,/readRecentCloudPiezo/);
 assert.match(worker,/piezo_observed_epoch/);
+assert.match(worker,/piezo_daily_mm: nullableNumber\(row.piezo_daily_mm\)/);
+assert.match(read('index.html'),/id="heroPiezoRain"/);
+assert.match(read('rain.html'),/id="rainPiezoToday"/);
 const dashboard=read('app.js');
 assert.match(dashboard,/tag: "Light rain detected"/);
 assert.match(dashboard,/piezoIndicatesRain/);
@@ -90,6 +98,8 @@ const vis={
 vm.createContext(vis);
 vm.runInContext(appCode.slice(ai,aj),vis);
 const base={epoch:clock,rain_rate_mm_h:0,rain_daily_mm:0,wind_speed_kmh:0,solar_w_m2:0,uv_index:0};
+assert.equal(vis.conditionInfo({...base,piezo_daily_mm:0.4,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},true).tag,
+ 'Rain noted today','WS90 recorded rain earlier, so show discrepancy even with current rate zero');
 assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0.6,piezo_observed_epoch:clock},true).tag,
  'Light rain detected','Fresh WS90 signal overrides the time-of-day label');
 assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},true).tag,
