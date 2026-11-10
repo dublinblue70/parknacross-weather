@@ -2361,16 +2361,23 @@ export default {
         if (!latest) return json({ error: "No weather readings available" }, 503, {"Cache-Control":"no-store"});
 
         const formatted = formatRow(latest);
-        if (!usableNumber(formatted.piezo_rain_rate_mm_h)) {
+        if (!usableNumber(formatted.piezo_rain_rate_mm_h) || !usableNumber(formatted.piezo_daily_mm)) {
           try {
             const piezo = await readRecentCloudPiezo(env, nowEpoch);
             if (piezo) {
-              formatted.piezo_rain_rate_mm_h = piezo.rate;
-              formatted.piezo_observed_epoch = piezo.epoch;
+              if (!usableNumber(formatted.piezo_rain_rate_mm_h) && piezo.rate !== null) {
+                formatted.piezo_rain_rate_mm_h = piezo.rate;
+              }
+              if (!usableNumber(formatted.piezo_daily_mm) && piezo.daily !== null) {
+                formatted.piezo_daily_mm = piezo.daily;
+              }
+              if (usableNumber(formatted.piezo_rain_rate_mm_h) || usableNumber(formatted.piezo_daily_mm)) {
+                formatted.piezo_observed_epoch = piezo.epoch;
+              }
             }
           } catch (error) {
-            // WS90 detection is optional and must not affect live weather.
-            console.warn("WS90 piezo signal unavailable:", error);
+            // WS90 diagnostics are optional and must not affect WH40H weather.
+            console.warn("WS90 piezo data unavailable:", error);
           }
         }
 
@@ -4702,6 +4709,7 @@ function validateWeatherReading(reading) {
   clean.rain_daily_mm = boundedSensorNumber(clean.rain_daily_mm, 0, 1000);
   // WS90 rain is a separate, non-accumulating early-detection signal.
   clean.piezo_rain_rate_mm_h = boundedSensorNumber(clean.piezo_rain_rate_mm_h, 0, 500);
+  clean.piezo_daily_mm = boundedSensorNumber(clean.piezo_daily_mm, 0, 1000);
   clean.solar_w_m2 = boundedSensorNumber(clean.solar_w_m2, 0, 1800);
   clean.uv_index = boundedSensorNumber(clean.uv_index, 0, 25);
   clean.battery_v = boundedSensorNumber(clean.battery_v, 0, 5);
@@ -4756,6 +4764,9 @@ function gatewayWeatherReading(payload, soil) {
     piezo_rain_rate_mm_h: inchesToMm(gatewayNumber(payload,
       "rrain_piezo", "rainratein_piezo", "rainrate_piezo",
       "piezo_rainratein", "piezo_rainrate")),
+    piezo_daily_mm: inchesToMm(gatewayNumber(payload,
+      "drain_piezo", "dailyrainin_piezo", "dailyrain_piezo",
+      "piezo_dailyrainin", "piezo_dailyrain")),
     solar_w_m2: gatewayNumber(payload, "solarradiation", "solarradiationwpm2"),
     uv_index: gatewayNumber(payload, "uv"),
     battery_v: null,
@@ -4789,7 +4800,7 @@ function gatewayLiveReading(payload, soil, receivedEpoch) {
     epoch,
     received_at: new Date(epoch * 1000).toISOString(),
     ...reading,
-    piezo_observed_epoch: usableNumber(reading.piezo_rain_rate_mm_h) ? epoch : null,
+    piezo_observed_epoch: usableNumber(reading.piezo_rain_rate_mm_h) || usableNumber(reading.piezo_daily_mm) ? epoch : null,
     source: "gw3001_direct_live"
   };
 }
@@ -4822,11 +4833,16 @@ async function readRecentCloudPiezo(env, nowEpoch) {
   if (epoch === null || epoch > nowEpoch + 90 || nowEpoch - epoch > 420 || !row?.raw_json) return null;
   let payload;
   try { payload = JSON.parse(row.raw_json); } catch (_) { return null; }
-  const rate = boundedSensorNumber(valueAt(payload?.data || {}, [
+  const data = payload?.data || {};
+  const rate = boundedSensorNumber(valueAt(data, [
     "rainfall_piezo.rain_rate.value",
     "rainfall_piezo.rain_rate"
   ]), 0, 500);
-  return rate === null ? null : { rate, epoch };
+  const daily = boundedSensorNumber(valueAt(data, [
+    "rainfall_piezo.daily.value",
+    "rainfall_piezo.daily"
+  ]), 0, 1000);
+  return rate === null && daily === null ? null : { rate, daily, epoch };
 }
 
 async function archiveGatewayObservation(env, payload, soil, receivedEpoch) {
@@ -5031,6 +5047,10 @@ async function syncEcowitt(env) {
     piezo_rain_rate_mm_h: valueAt(data, [
       "rainfall_piezo.rain_rate.value",
       "rainfall_piezo.rain_rate"
+    ]),
+    piezo_daily_mm: valueAt(data, [
+      "rainfall_piezo.daily.value",
+      "rainfall_piezo.daily"
     ]),
     solar_w_m2: valueAt(data, [
       "solar_and_uvi.solar.value",
@@ -9322,6 +9342,7 @@ function formatRow(row) {
     rain_rate_mm_h: nullableNumber(row.rain_rate_mm_h),
     rain_daily_mm: nullableNumber(row.rain_daily_mm),
     piezo_rain_rate_mm_h: nullableNumber(row.piezo_rain_rate_mm_h),
+    piezo_daily_mm: nullableNumber(row.piezo_daily_mm),
     piezo_observed_epoch: nullableNumber(row.piezo_observed_epoch),
     solar_w_m2: nullableNumber(row.solar_w_m2),
     uv_index: nullableNumber(row.uv_index),
