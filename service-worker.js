@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-260-full-width-chart-guide-20261109";
+const CACHE_NAME = "parknacross-v38-4-260-dual-sensor-rain-20261110";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
