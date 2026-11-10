@@ -71,4 +71,32 @@ assert.match(read('maintenance-log.js'),/2026-11-03.*WH40H/);
 assert.match(read('history.html'),/Rain-gauge change.*3 Nov 2026/);
 assert.match(read('downloads.html'),/Rainfall sensor history:/);
 assert.ok(read('admin.html').includes('Admin interface '+JSON.parse(read('package.json')).version),'Admin label must match the public site release');
+// The headline must react to WS90 rain without using it as a rainfall total.
+const appCode=read('app.js');
+const ai=appCode.indexOf('function rainActivity('),aj=appCode.indexOf('/* NOAA-style',ai);
+assert.ok(ai>=0&&aj>ai,'Dashboard condition functions must be present');
+const clock=Math.floor(Date.now()/1000);
+const vis={
+  history24:[],
+  lastObservedRainDay:null,lastObservedRainTotal:null,lastRainIncreaseTime:null,
+  RAIN_INCREMENT_EPSILON_MM:0.05,RAIN_ACTIVE_WINDOW_MS:300000,RAIN_RECENT_WINDOW_MS:900000,
+  usable:v=>number(v)!==null,
+  readingTime:row=>Number(row?.epoch||0)*1000,
+  stationDateKeyFromTime:()=> '2026-11-10',
+  correctedDailyRain:row=>number(row?.rain_daily_mm),
+  localDateKey:()=> '2026-11-10',
+  n:v=>Number(v).toFixed(1)
+};
+vm.createContext(vis);
+vm.runInContext(appCode.slice(ai,aj),vis);
+const base={epoch:clock,rain_rate_mm_h:0,rain_daily_mm:0,wind_speed_kmh:0,solar_w_m2:0,uv_index:0};
+assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0.6,piezo_observed_epoch:clock},true).tag,
+ 'Light rain detected','Fresh WS90 signal overrides the time-of-day label');
+assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},true).tag,
+ 'Night','No WS90 or WH40H signal leaves night-time label unchanged');
+assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0.6,piezo_observed_epoch:clock-900},true).tag,
+ 'Night','Stale piezo readings cannot claim current rain');
+assert.equal(vis.conditionInfo({...base,rain_rate_mm_h:3,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},true).tag,
+ 'Rainy','Actual WH40H rain still takes priority over WS90');
+
 console.log('PASS: WH40H rain priority, zeros, missing-data fail-closed, public source labels and version parity.');
