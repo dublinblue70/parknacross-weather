@@ -22,8 +22,8 @@ assert.match(sw,/Array\.from\(\{length:Math\.min\(12,orderedAssets\.length\)\}/,
 const css=await readFile(join(root,"site-polish.css"),"utf8");
 assert.match(css,/--ui-font/);
 assert.match(css,/@media\(max-width:700px\)/);
-const station=await readFile(join(root,"station.html"),"utf8");
-assert.match(station,/aria-label="View on Weather Underground/, "Station link must have a readable accessible name");
+const networks=await readFile(join(root,"networks.html"),"utf8");
+assert.match(networks,/aria-label="View on Weather Underground/, "Other Networks link must have a readable accessible name");
 const admin=await readFile(join(root,"admin.html"),"utf8");
 const release=JSON.parse(await readFile(join(root,"package.json"),"utf8")).version;
 assert.ok(admin.includes("Admin interface "+release), "Admin release label must match site version");
