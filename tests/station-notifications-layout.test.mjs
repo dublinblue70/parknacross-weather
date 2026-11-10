@@ -10,7 +10,7 @@ assert.equal(count(page,/id="backgroundAlertStatus"/g),1);
 assert.equal(count(page,/class="alert-setup-item"/g),3);
 assert.equal(count(page,/class="alert-test-row"/g),1);
 assert.doesNotMatch(review,/Test notification on this device|notificationFeedback\(\)/,'Review script must not insert duplicate test widgets');
-assert.match(page,/station-page\.css\?v=20261106-compact-notifications/);
+assert.match(page,/station-page\.css\?v=20261106-notifications-spacing-fix/);
 assert.match(page,/review-tools\.js\?v=20261106-notification-duplication-fix/);
 assert.match(styles,/\.alert-settings-panel \.alert-setup-item > \.source-note/);
 assert.match(styles,/\.alert-settings-panel \.alert-test-row #alertsTestButton/);
