@@ -608,10 +608,14 @@ function rainActivity(current) {
     && piezoAge >= -120000 && piezoAge <= 420000;
   const piezoIndicatesRain = piezoFresh && usable(current?.piezo_rain_rate_mm_h)
     && Number(current.piezo_rain_rate_mm_h) > 0;
+  const piezoDailyMm = piezoFresh && usable(current?.piezo_daily_mm) && currentDay === stationDateKeyFromTime(Date.now())
+    ? Math.max(0, Number(current.piezo_daily_mm))
+    : null;
   return {
     rainRate,
     rainAvailable,
     piezoIndicatesRain,
+    piezoDailyMm,
     recentIncreaseMm,
     isRaining: rainRate > 0 || age <= RAIN_ACTIVE_WINDOW_MS,
     rainRecently: rainRate <= 0 && age > RAIN_ACTIVE_WINDOW_MS && age <= RAIN_RECENT_WINDOW_MS,
@@ -660,6 +664,18 @@ function conditionInfo(current, isNight) {
   }
   if (!rainState.rainAvailable) {
     return { tag: "Rain data unavailable", icon: "☁️", story: "The latest observation is missing rain-sensor data, so conditions cannot be described reliably.", className: "weather-neutral", rainState };
+  }
+  // Daily WS90 accumulation cannot prove it is raining right now. It can,
+  // however, prevent us describing a previously wet day as entirely dry.
+  if (rainState.piezoDailyMm > 0 && usable(current?.rain_daily_mm)
+      && Number(current.rain_daily_mm) <= 0.01) {
+    return {
+      tag: "Rain noted today",
+      icon: "🌦️",
+      story: `WS90 piezo indicates ${n(rainState.piezoDailyMm)} mm today; WH40H still records 0.0 mm. Rain falling right now is not confirmed.`,
+      className: "weather-neutral",
+      rainState
+    };
   }
   if (wind >= 35) {
     return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy" };
@@ -1531,6 +1547,14 @@ function updateDashboard(current) {
   set("heroWind", `${n(current.wind_speed_kmh)} km/h`);
   set("heroGust", `Gust ${n(current.wind_gust_kmh)} km/h`);
   set("heroRain", `${n(rainToday)} mm`);
+  const piezoToday = condition.rainState?.piezoDailyMm;
+  const piezoHero = $("heroPiezoRain");
+  if (piezoHero) {
+    piezoHero.hidden = !usable(piezoToday);
+    piezoHero.textContent = usable(piezoToday)
+      ? `WS90 piezo: ${n(piezoToday)} mm indicative`
+      : "";
+  }
   set("heroPressure", `${n(current.pressure_hpa)} hPa`);
   set("heroTrend", pressure.trend === "--" ? "--" : `${pressure.trend} pressure`);
   set("weatherStory", condition.story);
@@ -1608,6 +1632,13 @@ function updateDashboard(current) {
       : direction
   );
   set("rainVal", n(rainToday));
+  const piezoMetric = $("rainPiezoDaily");
+  if (piezoMetric) {
+    piezoMetric.hidden = !usable(piezoToday);
+    piezoMetric.textContent = usable(piezoToday)
+      ? `WS90 piezo estimate today: ${n(piezoToday)} mm · separate from WH40H`
+      : "";
+  }
   set(
     "rainRateVal",
     condition.rainState?.isRaining && Number(current.rain_rate_mm_h || 0) <= 0
