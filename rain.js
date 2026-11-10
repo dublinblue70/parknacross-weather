@@ -11,7 +11,9 @@
   const rate=fresh&&usable(current?.rain_rate_mm_h)?Number(current.rain_rate_mm_h):null;
   const piezoEpoch=usable(current?.piezo_observed_epoch)?Number(current.piezo_observed_epoch)*1000:NaN;
   const piezoAge=Date.now()-piezoEpoch;
-  const piezoDetected=fresh&&Number.isFinite(piezoEpoch)&&piezoAge>=-120000&&piezoAge<=420000
+  const currentAge=Date.now()-stamp;
+  const piezoDetected=fresh&&currentAge>=-120000&&currentAge<=180000
+    &&Number.isFinite(piezoEpoch)&&piezoAge>=-120000&&piezoAge<=420000
     &&usable(current?.piezo_rain_rate_mm_h)&&Number(current.piezo_rain_rate_mm_h)>0;
   const rows=Array.isArray(history?.readings)?history.readings:[],now=current?.received_at?new Date(current.received_at).getTime():(usable(current?.epoch)?Number(current.epoch)*1000:Date.now());let lastIncrease=null,prev=null;
   for(const row of rows){const t=row?.received_at?new Date(row.received_at).getTime():usable(row?.epoch)?Number(row.epoch)*1000:NaN,total=usable(row?.rain_daily_mm)?Number(row.rain_daily_mm):NaN;if(!Number.isFinite(t)||!Number.isFinite(total))continue;if(prev&&total>=prev.total+0.05)lastIncrease=t;prev={t,total};}
