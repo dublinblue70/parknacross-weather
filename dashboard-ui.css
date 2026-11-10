@@ -485,3 +485,17 @@ body.dashboard-page .trends-section .chart-grid--balanced .wind-card {
     gap: 12px;
   }
 }
+
+/* Separate WS90 indicative daily rainfall; never replace the WH40H total. */
+body.dashboard-page .hero-stat .rain-piezo-comparison{
+  display:block;
+  margin-top:6px;
+  padding-top:5px;
+  border-top:1px solid rgba(174,210,232,.24);
+  font-size:clamp(.83rem,1vw,.95rem);
+  line-height:1.4;
+  color:#80dfd0;
+  font-weight:750;
+  white-space:normal;
+}
+body.dashboard-page .hero-stat .rain-piezo-comparison[hidden]{display:none!important;}
