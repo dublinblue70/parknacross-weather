@@ -599,9 +599,19 @@ function rainActivity(current) {
     : 0;
 
   const age = lastRainIncreaseTime ? Math.max(0, currentTime - lastRainIncreaseTime) : Infinity;
+  // Live-only WS90 indication. Never use piezo readings to calculate rain
+  // totals or to declare a confirmed WH40H bucket tip. Reject stale snapshots.
+  const piezoEpoch = usable(current?.piezo_observed_epoch) ? Number(current.piezo_observed_epoch) * 1000 : null;
+  const observationAge = Date.now() - currentTime;
+  const piezoAge = piezoEpoch === null ? Infinity : Date.now() - piezoEpoch;
+  const piezoFresh = observationAge >= -120000 && observationAge <= 180000
+    && piezoAge >= -120000 && piezoAge <= 420000;
+  const piezoIndicatesRain = piezoFresh && usable(current?.piezo_rain_rate_mm_h)
+    && Number(current.piezo_rain_rate_mm_h) > 0;
   return {
     rainRate,
     rainAvailable,
+    piezoIndicatesRain,
     recentIncreaseMm,
     isRaining: rainRate > 0 || age <= RAIN_ACTIVE_WINDOW_MS,
     rainRecently: rainRate <= 0 && age > RAIN_ACTIVE_WINDOW_MS && age <= RAIN_RECENT_WINDOW_MS,
@@ -630,6 +640,17 @@ function conditionInfo(current, isNight) {
       return { tag: "Possible recent rain", icon: "🌦️", story: "The station registered a small amount of rain within the last few minutes.", className: "weather-neutral", rainState };
     }
     return { tag: "Raining", icon: "🌧️", story: "Rain has been detected within the last few minutes.", className: "weather-rain", rainState };
+  }
+  if (rainState.piezoIndicatesRain) {
+    return {
+      tag: "Light rain detected",
+      icon: "🌦️",
+      story: rainState.rainAvailable
+        ? "WS90 piezo is detecting rain, but the WH40H has not yet registered this shower. Rainfall totals remain WH40H-only."
+        : "WS90 piezo is detecting possible light rain. The WH40H rain reading is unavailable; no rainfall total is inferred.",
+      className: "weather-rain",
+      rainState
+    };
   }
   if (rainState.rainRecently) {
     if (rainState.recentIncreaseMm < 0.2 - 1e-6) {
@@ -1476,7 +1497,7 @@ function updateDashboard(current) {
     : usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : null;
   const isNight = updateSunInfo(current);
   const condition = conditionInfo(current, isNight);
-  latestRainDetected=Boolean(condition.rainState?.isRaining);
+  latestRainDetected=Boolean(condition.rainState?.isRaining || condition.rainState?.piezoIndicatesRain);
   updateWhatToWear(current, latestRainDetected);
   updateSoilPanel(current);
 
@@ -1590,8 +1611,10 @@ function updateDashboard(current) {
   set(
     "rainRateVal",
     condition.rainState?.isRaining && Number(current.rain_rate_mm_h || 0) <= 0
-      ? `${n(current.rain_rate_mm_h)} mm/h · rain detected`
-      : `${n(current.rain_rate_mm_h)} mm/h`
+      ? `${n(current.rain_rate_mm_h)} mm/h · recent WH40H tip`
+      : condition.rainState?.piezoIndicatesRain
+        ? `${n(current.rain_rate_mm_h)} mm/h · WS90 early rain signal`
+        : `${n(current.rain_rate_mm_h)} mm/h`
   );
   set("pressureVal", n(current.pressure_hpa));
   set("pressureTrend", pressure.trend);
