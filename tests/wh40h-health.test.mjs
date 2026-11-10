@@ -26,5 +26,5 @@ assert.match(source,/read\("rainSource"/);
 assert.match(source,/const totalChecks=20/);
 assert.match(ui,/of 20 sources checked/);
 assert.match(ui,/wh40h:\[/);
-assert.match(html,/status\.js\?v=20261106-wh52-offline/);
+assert.match(html,/status\.js\?v=20261106-m2-behaviour-tested/);
 console.log('PASS: WH40H source-check card, error states, valid zero rain, freshness and recheck integration.');
