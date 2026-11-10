@@ -2361,6 +2361,18 @@ export default {
         if (!latest) return json({ error: "No weather readings available" }, 503, {"Cache-Control":"no-store"});
 
         const formatted = formatRow(latest);
+        if (!usableNumber(formatted.piezo_rain_rate_mm_h)) {
+          try {
+            const piezo = await readRecentCloudPiezo(env, nowEpoch);
+            if (piezo) {
+              formatted.piezo_rain_rate_mm_h = piezo.rate;
+              formatted.piezo_observed_epoch = piezo.epoch;
+            }
+          } catch (error) {
+            // WS90 detection is optional and must not affect live weather.
+            console.warn("WS90 piezo signal unavailable:", error);
+          }
+        }
 
         // Optional battery cloud recovery must never delay live weather.
         try {
@@ -4688,6 +4700,8 @@ function validateWeatherReading(reading) {
   clean.pressure_hpa = boundedSensorNumber(clean.pressure_hpa, 850, 1100);
   clean.rain_rate_mm_h = boundedSensorNumber(clean.rain_rate_mm_h, 0, 500);
   clean.rain_daily_mm = boundedSensorNumber(clean.rain_daily_mm, 0, 1000);
+  // WS90 rain is a separate, non-accumulating early-detection signal.
+  clean.piezo_rain_rate_mm_h = boundedSensorNumber(clean.piezo_rain_rate_mm_h, 0, 500);
   clean.solar_w_m2 = boundedSensorNumber(clean.solar_w_m2, 0, 1800);
   clean.uv_index = boundedSensorNumber(clean.uv_index, 0, 25);
   clean.battery_v = boundedSensorNumber(clean.battery_v, 0, 5);
@@ -4738,6 +4752,10 @@ function gatewayWeatherReading(payload, soil) {
     // *_piezo fields as a hidden fallback if the WH40H is unavailable.
     rain_rate_mm_h: inchesToMm(gatewayNumber(payload, "rainratein", "rainrate")),
     rain_daily_mm: inchesToMm(gatewayNumber(payload, "dailyrainin", "dailyrain")),
+    // Distinct WS90 piezo value; never substitute it for WH40H totals/rate.
+    piezo_rain_rate_mm_h: inchesToMm(gatewayNumber(payload,
+      "rrain_piezo", "rainratein_piezo", "rainrate_piezo",
+      "piezo_rainratein", "piezo_rainrate")),
     solar_w_m2: gatewayNumber(payload, "solarradiation", "solarradiationwpm2"),
     uv_index: gatewayNumber(payload, "uv"),
     battery_v: null,
@@ -4771,6 +4789,7 @@ function gatewayLiveReading(payload, soil, receivedEpoch) {
     epoch,
     received_at: new Date(epoch * 1000).toISOString(),
     ...reading,
+    piezo_observed_epoch: usableNumber(reading.piezo_rain_rate_mm_h) ? epoch : null,
     source: "gw3001_direct_live"
   };
 }
@@ -4790,6 +4809,24 @@ async function readGatewayLiveReading(env, nowEpoch = Math.floor(Date.now() / 10
     epoch,
     received_at: live.received_at || new Date(epoch * 1000).toISOString()
   });
+}
+
+// Optional WS90 fallback when the authenticated gateway did not include piezo
+// fields. Read the latest saved Ecowitt payload only; no additional API calls
+// and no alterations to archived WH40H rain measurements.
+async function readRecentCloudPiezo(env, nowEpoch) {
+  const row = await env.DB.prepare(
+    `SELECT epoch, raw_json FROM ${PAYLOAD_TABLE} WHERE id = 1 LIMIT 1`
+  ).first();
+  const epoch = nullableNumber(row?.epoch);
+  if (epoch === null || epoch > nowEpoch + 90 || nowEpoch - epoch > 420 || !row?.raw_json) return null;
+  let payload;
+  try { payload = JSON.parse(row.raw_json); } catch (_) { return null; }
+  const rate = boundedSensorNumber(valueAt(payload?.data || {}, [
+    "rainfall_piezo.rain_rate.value",
+    "rainfall_piezo.rain_rate"
+  ]), 0, 500);
+  return rate === null ? null : { rate, epoch };
 }
 
 async function archiveGatewayObservation(env, payload, soil, receivedEpoch) {
@@ -4989,6 +5026,11 @@ async function syncEcowitt(env) {
     rain_daily_mm: valueAt(data, [
       "rainfall.daily.value",
       "rainfall.daily"
+    ]),
+    // Independent WS90 rain indicator, not a WH40H measurement.
+    piezo_rain_rate_mm_h: valueAt(data, [
+      "rainfall_piezo.rain_rate.value",
+      "rainfall_piezo.rain_rate"
     ]),
     solar_w_m2: valueAt(data, [
       "solar_and_uvi.solar.value",
@@ -9279,6 +9321,8 @@ function formatRow(row) {
     pressure_hpa: nullableNumber(row.pressure_hpa),
     rain_rate_mm_h: nullableNumber(row.rain_rate_mm_h),
     rain_daily_mm: nullableNumber(row.rain_daily_mm),
+    piezo_rain_rate_mm_h: nullableNumber(row.piezo_rain_rate_mm_h),
+    piezo_observed_epoch: nullableNumber(row.piezo_observed_epoch),
     solar_w_m2: nullableNumber(row.solar_w_m2),
     uv_index: nullableNumber(row.uv_index),
     battery_v: batteryVoltageFromRow(row),
