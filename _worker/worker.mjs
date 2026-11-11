@@ -2472,9 +2472,18 @@ export default {
         let lastAttempt = null;
         try { lastAttempt = JSON.parse(meta[PWSWEATHER_LAST_ATTEMPT_META_KEY] || "null"); } catch (_) {}
         const epoch = Number(meta[PWSWEATHER_LAST_EPOCH_META_KEY]);
+        const acceptedEpoch = Number.isFinite(epoch) && epoch > 0 ? epoch : null;
+        const persistedAcceptedAt = meta[PWSWEATHER_LAST_ACCEPTED_AT_META_KEY] || null;
+        const attemptAcceptedAt = lastAttempt?.state === "accepted_not_display_verified" &&
+          Number(lastAttempt?.observation_epoch) === acceptedEpoch ? lastAttempt.at : null;
+        const acceptedAt = persistedAcceptedAt || attemptAcceptedAt || null;
+        const ageSeconds = acceptedEpoch === null ? null : Math.max(0, Math.floor(Date.now()/1000)-acceptedEpoch);
         return json({station_id:PWSWEATHER_STATION_ID,credential_configured:credentialConfigured,
-          last_accepted_observation_epoch:Number.isFinite(epoch)&&epoch>0?epoch:null,
-          last_accepted_at:meta[PWSWEATHER_LAST_ACCEPTED_AT_META_KEY]||null,
+          last_accepted_observation_epoch:acceptedEpoch,
+          last_accepted_at:acceptedAt,
+          last_accepted_at_source:persistedAcceptedAt?"persisted":attemptAcceptedAt?"last_attempt":"unavailable",
+          observation_age_seconds:ageSeconds,
+          upload_stale:ageSeconds === null || ageSeconds > 15*60,
           last_attempt:lastAttempt,
           delivery_note:"A PWSWeather success response confirms acknowledgement, not public visibility."
         },200,{"Cache-Control":"no-store"});
@@ -4181,7 +4190,6 @@ async function publishPwsWeatherAttempt(env, syncResult) {
   params.set("PASSWORD", apiKey);
   params.set("dateutc", new Date(epoch * 1000).toISOString().slice(0, 19).replace("T", " "));
   params.set("softwaretype", "ParknacrossWeather_38.4.243");
-  params.set("action", "updateraw");
 
   const putNumber = (name, value, digits = 2) => {
     if (usableNumber(value)) params.set(name, Number(value).toFixed(digits));
@@ -4205,6 +4213,8 @@ async function publishPwsWeatherAttempt(env, syncResult) {
   if (usableNumber(rainHourlyMm)) putNumber("rainin", Number(rainHourlyMm) / 25.4, 4);
   if (usableNumber(reading.solar_w_m2)) putNumber("solarradiation", reading.solar_w_m2);
   if (usableNumber(reading.uv_index)) putNumber("UV", reading.uv_index);
+  // PWSWeather's updateraw examples place the action marker after all readings.
+  params.set("action", "updateraw");
 
   const endpoint = new URL("https://pwsupdate.pwsweather.com/api/v1/submitwx");
   endpoint.search = params.toString();
