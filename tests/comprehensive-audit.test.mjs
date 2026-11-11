@@ -51,7 +51,7 @@ const monitor=await checkPublicSite({now:now*1000,fetcher:async url=>{
  if(url.endsWith('/stats'))return new Response('{}',{status:503});
  if(url.endsWith('/'))return new Response('PARKNACROSS WEATHER');
  if(url.includes('export.csv'))return new Response('epoch,observation_time_ireland\n1,time\n');
- if(url.includes('/outdoor-outlook'))return Response.json({fetched_at:new Date(now*1000).toISOString(),points:[{epoch:now+3600}]});
+ if(url.includes('/outdoor-outlook'))return Response.json({fetched_at:new Date(now*1000).toISOString(),points:Array.from({length:24},(_,i)=>({epoch:Math.ceil(now/3600)*3600+i*3600,temperature_c:10,wind_kmh:12,rain_mm:0}))});
  if(url.includes('/sky-photo/history/dates'))return Response.json({month:new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now*1000)).slice(0,7),days:[]});
  if(url.includes('/push/public-key'))return Response.json({available:true,public_key:'fixture'});
  if(url.includes('/site-capabilities'))return Response.json({features:{wh40h_primary_rain:true}});
