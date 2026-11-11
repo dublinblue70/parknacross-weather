@@ -19,7 +19,7 @@ for(const width of [320,390,768,1280])test(`history tooltips fit and overview va
  }
  await page.locator('#dailyTempChart').screenshot({path:info.outputPath('temperature-tooltip.png')});
  await page.goto('/index.html');await expect(page.locator('#heroRain')).toContainText('3.0');
- const cards=page.locator('.hero-stat');const windLabel=await cards.nth(0).locator('span').boundingBox(),rainLabel=await cards.nth(1).locator('span').boundingBox(),windValue=await cards.nth(0).locator('strong').boundingBox(),rainValue=await cards.nth(1).locator('strong').boundingBox();
+ const cards=page.locator('.hero-stat');const windLabel=await cards.nth(0).locator('span').boundingBox(),rainLabel=await cards.nth(1).locator('span').boundingBox(),windValue=await cards.nth(0).locator('#heroWind').boundingBox(),rainValue=await cards.nth(1).locator('#heroRain').boundingBox();
  expect(Math.abs(windLabel.y-rainLabel.y)).toBeLessThan(1);expect(Math.abs(windValue.y-rainValue.y)).toBeLessThan(1);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.locator('.hero-side').screenshot({path:info.outputPath('aligned-weather-cards.png')});

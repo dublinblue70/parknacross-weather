@@ -4,6 +4,7 @@ const current={epoch,received_at:instant.toISOString(),temperature_c:10.5,feels_
 const rows=[{...current,epoch:epoch-3600,temperature_c:16.4,solar_w_m2:575},{...current,epoch:epoch-300,temperature_c:8.1},{...current}];
 async function prepare(page,{delayHistory,forecastFailure=false,installClock=true}={}) {
  if(installClock)await page.clock.install({time:instant});
+ if(forecastFailure)await page.route('**/api.open-meteo.com/**',r=>r.fulfill({status:503,body:'{}'}));
  await page.route('**/static.cloudflareinsights.com/**',route=>route.fulfill({contentType:'application/javascript',body:''}));
  await page.route('**/*.workers.dev/**',async route=>{
   const path=new URL(route.request().url()).pathname;let data={};

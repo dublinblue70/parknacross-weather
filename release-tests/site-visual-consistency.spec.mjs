@@ -48,8 +48,8 @@ test('major pages stay within the viewport on desktop',async({page})=>{
 
 test('Station page Weather Underground link opens the Parknacross station dashboard',async({page})=>{
  await page.setViewportSize({width:390,height:844});
- await page.goto('/station.html');
- const link=page.getByRole('link',{name:/View on Weather Underground/});
+ await page.goto('/networks.html');
+ const link=page.locator('#stationWeatherUndergroundLink');
  await expect(link).toBeVisible();
  await expect(link).toHaveAttribute('target','_blank');
  await expect(link).toHaveAttribute('rel',/noopener/);

@@ -6,7 +6,7 @@ test.beforeEach(async({page})=>{
  await page.route('**/*.workers.dev/**',r=>{
   const p=new URL(r.request().url()).pathname;
   if(fail&&(p==='/outdoor-outlook'||p==='/current'))return r.fulfill({status:503,body:'{}'});
-  const data=p==='/outdoor-outlook'?{fetched_at:new Date(now).toISOString(),points:Array.from({length:6},(_,i)=>({epoch:start/1000+i*3600,rain_mm:missing&&i===0?null:!dryForecast&&i===2?.5:0}))}:p==='/current'?{epoch:now/1000,received_at:new Date(now).toISOString(),wind_speed_kmh:calm?0:12,wind_gust_kmh:18,wind_direction_deg:dir,rain_rate_mm_h:raining?.6:0}:{};
+  const data=p==='/outdoor-outlook'?{fetched_at:new Date(now).toISOString(),points:Array.from({length:27},(_,i)=>({epoch:start/1000+i*3600,rain_mm:missing&&i===0?null:!dryForecast&&i===2?.5:0,temperature_c:12,wind_kmh:10,daylight:i%24>=7&&i%24<=18}))}:p==='/current'?{epoch:now/1000,received_at:new Date(now).toISOString(),wind_speed_kmh:calm?0:12,wind_gust_kmh:18,wind_direction_deg:dir,rain_rate_mm_h:raining?.6:0}:{};
   return r.fulfill({contentType:'application/json',body:JSON.stringify(data)});
  });
  await page.route('**/static.cloudflareinsights.com/**',r=>r.fulfill({body:''}));

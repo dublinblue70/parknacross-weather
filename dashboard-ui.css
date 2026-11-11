@@ -509,3 +509,6 @@ body.dashboard-page .hero-stat .rain-piezo-comparison[hidden]{display:none!impor
    min-width: 0;
  }
 }
+
+/* Equal label space for Wind and Rain (WH40H provenance wraps on phones). */
+body.dashboard-page .hero-side > .hero-stat > span:first-child {display:block;min-height:2.9em;line-height:1.45;overflow-wrap:anywhere;}

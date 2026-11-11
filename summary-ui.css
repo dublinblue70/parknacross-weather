@@ -18,3 +18,6 @@
   .summary-page #dayStory{max-width:100%;font-size:clamp(1.04rem,1.1vw,1.16rem);line-height:1.72;letter-spacing:.002em}
   .summary-page #dayStory::selection{background:rgba(123,215,239,.3)}
 }
+
+/* Align overview values when labels have different line counts. */
+.summary-page #summaryOverview .climate-card {grid-template-rows:minmax(4.1em,auto) auto 1fr;}

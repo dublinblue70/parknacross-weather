@@ -13,7 +13,7 @@ test('dashboard prioritises actual live readings, then forecast, then planning o
       y.push(box.y);
     }
     for(let i=1;i<y.length;i++)expect(y[i],order[i]+' must appear after '+order[i-1]).toBeGreaterThan(y[i-1]);
-    await expect(page.locator('.dashboard-shortcuts a')).toHaveCount(6);
+    await expect(page.locator('.dashboard-shortcuts a')).toHaveCount(9);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3)).toBe(true);
   }
 });

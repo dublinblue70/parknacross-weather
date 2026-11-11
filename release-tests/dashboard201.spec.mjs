@@ -52,15 +52,17 @@ test('dashboard navigation is balanced and never overflows from 320 to 1024 px',
     await page.setViewportSize({width,height:844});
     await page.goto('/index.html');
     const nav=page.locator('.dashboard-shortcuts');
-    await expect(nav.locator('a')).toHaveCount(6);
-    const b=await Promise.all([0,1,2,3,4,5].map(index=>nav.locator('a').nth(index).boundingBox()));
+    await expect(nav.locator('a')).toHaveCount(9);
+    const b=await Promise.all(Array.from({length:9},(_,index)=>nav.locator('a').nth(index).boundingBox()));
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),`viewport ${width}`).toBe(true);
     if(width<=640){
-      expect(Math.abs(b[0].y-b[1].y),`first row at ${width}`).toBeLessThan(2);
-      expect(Math.abs(b[2].y-b[3].y),`second row at ${width}`).toBeLessThan(2);
-      expect(b[4].y,`third row at ${width}`).toBeGreaterThan(b[2].y);
-      expect(Math.abs(b[4].y-b[5].y),`third row is balanced at ${width}`).toBeLessThan(2);
-      expect(Math.abs(b[4].width-b[5].width),`third row has equal-width shortcuts at ${width}`).toBeLessThan(3);
+      for(let i=0;i<8;i+=2){
+        expect(Math.abs(b[i].y-b[i+1].y),`pair ${i/2+1} at ${width}`).toBeLessThan(2);
+        expect(Math.abs(b[i].width-b[i+1].width),`equal-width pair ${i/2+1} at ${width}`).toBeLessThan(3);
+        if(i>0)expect(b[i].y,`row ${i/2+1} follows previous at ${width}`).toBeGreaterThan(b[i-2].y);
+      }
+      expect(b[8].y).toBeGreaterThan(b[6].y);
+      expect(b[8].width).toBeGreaterThan(b[7].width);
     }
     await nav.screenshot({path:testInfo.outputPath(`shortcuts-${width}.png`)});
   }
