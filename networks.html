@@ -204,7 +204,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationCwopTitle">CWOP</h2>
-              <p>Station GW8205 · CWOP account verified; public reporting not yet confirmed.</p>
+              <p>Verified account · FindU display unconfirmed.</p>
             </div>
           </div>
           <div class="station-network-links" aria-label="CWOP station GW8205 data views">
@@ -219,7 +219,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationWowBeTitle">WOW-BE</h2>
-              <p>Station registered · Upload activation pending.</p>
+              <p>Registered · Public display unconfirmed.</p>
             </div>
           </div>
           <a class="station-external-network-link" id="stationWowBeLink" href="https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross station on WOW-BE (opens in a new tab)">View Parknacross <span aria-hidden="true">↗</span></a>
@@ -249,35 +249,39 @@
     "https://parknacross-weather.dave-s-carter.workers.dev").replace(/\/$/, "");
   const timestamp = epoch => {
     const n = Number(epoch);
-    return Number.isFinite(n) && n > 0
-      ? new Date(n * 1000).toLocaleString("en-IE", {timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})
-      : null;
+    if (!Number.isFinite(n) || n <= 0) return null;
+    const date = new Date(n * 1000);
+    const zone = "Europe/Dublin";
+    const day = value => new Intl.DateTimeFormat("en-CA", {timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit"}).format(value);
+    const time = date.toLocaleTimeString("en-IE", {timeZone:zone,hour:"2-digit",minute:"2-digit"});
+    return day(date) === day(new Date()) ? time
+      : date.toLocaleDateString("en-IE", {timeZone:zone,day:"numeric",month:"short"}) + ", " + time;
   };
   const entries = [
     {
       heading:"stationCwopTitle",
       path:"/cwop-status",
-      fallback:"CWOP account verified · Upload status unavailable; FindU reporting unverified.",
+      fallback:"Verified · Upload status unavailable.",
       read:data => {
         if (data?.enabled !== true || data?.coordinates_configured !== true)
-          return "CWOP account verified · Upload not enabled or coordinates not configured · FindU reporting unverified.";
+          return "Verified · Upload not configured.";
         const sent = timestamp(data.last_sent_observation_epoch);
         return data.last_attempt?.state === "error"
-          ? "CWOP account verified · Latest transmission failed · FindU reporting unverified."
-          : sent ? "Account verified · Packet sent " + sent + " Irish time · FindU reporting unverified."
-          : "CWOP account verified · Uploader ready; awaiting first transmission · FindU reporting unverified.";
+          ? "Verified · Last upload failed."
+          : sent ? "Verified · Sent " + sent + " · FindU unconfirmed."
+          : "Verified · Awaiting first upload.";
       }
     },
     {
       heading:"stationWowBeTitle",
       path:"/wowbe-status",
       read:data => {
-        if (data?.registered !== true) return "Registration not verified · Public listing unverified.";
+        if (data?.registered !== true) return "Registration not confirmed.";
         if (data?.enabled !== true || data?.credential_configured !== true)
-          return "Station registered · Upload not fully enabled.";
+          return "Registered · Upload not configured.";
         const sent = timestamp(data.last_sent_observation_epoch);
-        return sent ? "Upload acknowledged " + sent + " Irish time · Public display not verified."
-          : "Station registered · Uploader enabled, awaiting an acknowledged observation.";
+        return sent ? "Uploaded " + sent + " · Display unconfirmed."
+          : "Registered · Awaiting first upload.";
       }
     }
   ];
@@ -292,7 +296,7 @@
       if (data?.error) throw Error("Status unavailable");
       paragraph.textContent = entry.read(data);
     } catch (_) {
-      paragraph.textContent = entry.fallback || "Upload status temporarily unavailable · Public listing not verified.";
+      paragraph.textContent = entry.fallback || "Upload status unavailable.";
     }
   });
 })();

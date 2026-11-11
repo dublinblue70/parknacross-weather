@@ -515,7 +515,7 @@ if (!wowBeStatusHtml.includes('id="wowbeHealth"') ||
   failures.push("WOW-BE: system status must separately report upload acknowledgement and public verification");
 }
 if (!stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h2>') ||
-    !stationNetworksHtml.includes("Station registered · Upload activation pending.")) {
+    !stationNetworksHtml.includes("Registered · Public display unconfirmed.")) {
   failures.push("WOW-BE: public network card must reflect registration without inventing live transmission");
 }
 const wowBeAppCache = await readFile(join(root, "service-worker.js"), "utf8");
@@ -538,14 +538,14 @@ if (!stationNetworksHtml.includes('id="stationWowBeLink" href="https://wow.meteo
     stationNetworksHtml.includes('id="stationWowBeLink" href="https://wow.meteo.be/en/"')) {
   failures.push("networks.html: WOW-BE link must deep-link to registered Parknacross site rather than provider homepage");
 }
-if (!stationNetworksHtml.includes("Station registered · Upload activation pending.") ||
+if (!stationNetworksHtml.includes("Registered · Public display unconfirmed.") ||
     !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h2>')) {
   failures.push("networks.html: WOW-BE must show registered status until public data is verified");
 }
 if (!stationNetworksHtml.includes('id="stationCwopRawLink" href="https://www.findu.com/cgi-bin/wx.cgi?call=GW8205"') ||
     !stationNetworksHtml.includes('id="stationCwopLink" href="https://www.findu.com/cgi-bin/wxpage.cgi?call=GW8205&amp;last=24"') ||
-    !stationNetworksHtml.includes("Station GW8205 · CWOP account verified; public reporting not yet confirmed.") ||
-    !stationNetworksHtml.includes("FindU reporting unverified") ||
+    !stationNetworksHtml.includes("Verified account · FindU display unconfirmed.") ||
+    !stationNetworksHtml.includes("FindU unconfirmed") ||
     stationNetworksHtml.includes("Station GW8205 · Activation pending.")) {
   failures.push("networks.html: verified CWOP account must be distinct from packet sending and public FindU reporting");
 }
