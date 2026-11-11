@@ -238,5 +238,58 @@
 <script src="navigation.js?v=20261109-networks-site-app"></script>
 <script src="site-help.js?v=20261008-v38-4-170"></script>
 <script src="review-tools.js?v=20261106-notification-duplication-fix" defer></script>
+<script>
+/* Network registration, upload acknowledgement and public listing are different states.
+   Use only read-only Cloudflare diagnostics; never claim provider acceptance from a sent packet. */
+(() => {
+  const base = (window.PARKNACROSS_CONFIG?.apiBase || window.PARKNACROSS_API_BASE ||
+    "https://parknacross-weather.dave-s-carter.workers.dev").replace(/\/$/, "");
+  const timestamp = epoch => {
+    const n = Number(epoch);
+    return Number.isFinite(n) && n > 0
+      ? new Date(n * 1000).toLocaleString("en-IE", {timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})
+      : null;
+  };
+  const entries = [
+    {
+      heading:"stationCwopTitle",
+      path:"/cwop-status",
+      read:data => {
+        if (data?.enabled !== true || data?.coordinates_configured !== true)
+          return "Station GW8205 · Upload not fully enabled; public listing unverified.";
+        const sent = timestamp(data.last_sent_observation_epoch);
+        return sent ? "Packet sent " + sent + " Irish time · FindU listing not verified."
+          : "Uploader enabled · awaiting first confirmed packet; public listing unverified.";
+      }
+    },
+    {
+      heading:"stationWowBeTitle",
+      path:"/wowbe-status",
+      read:data => {
+        if (data?.registered !== true) return "Registration not verified · Public listing unverified.";
+        if (data?.enabled !== true || data?.credential_configured !== true)
+          return "Station registered · Upload not fully enabled.";
+        const sent = timestamp(data.last_sent_observation_epoch);
+        return sent ? "Upload acknowledged " + sent + " Irish time · Public display not verified."
+          : "Station registered · Uploader enabled, awaiting an acknowledged observation.";
+      }
+    }
+  ];
+  entries.forEach(async entry => {
+    const paragraph = document.getElementById(entry.heading)?.nextElementSibling;
+    if (!paragraph) return;
+    paragraph.setAttribute("aria-live", "polite");
+    try {
+      const response = await fetch(base + entry.path,{cache:"no-store",signal:AbortSignal.timeout(8000)});
+      if (!response.ok) throw Error("Network status endpoint unavailable");
+      const data = await response.json();
+      if (data?.error) throw Error("Status unavailable");
+      paragraph.textContent = entry.read(data);
+    } catch (_) {
+      paragraph.textContent = "Upload status temporarily unavailable · Public listing not verified.";
+    }
+  });
+})();
+</script>
 </body>
 </html>
