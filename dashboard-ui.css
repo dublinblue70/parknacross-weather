@@ -499,3 +499,13 @@ body.dashboard-page .hero-stat .rain-piezo-comparison{
   white-space:normal;
 }
 body.dashboard-page .hero-stat .rain-piezo-comparison[hidden]{display:none!important;}
+
+/* WebKit mobile disclosure: explicitly restore the detailed forecast pane
+   when its toggle is expanded. Do not interfere with desktop display:contents. */
+@media (max-width: 640px) {
+ body.dashboard-page #forecast > .mobile-detail-body[data-collapsed="false"] {
+   display: block !important;
+   width: 100%;
+   min-width: 0;
+ }
+}

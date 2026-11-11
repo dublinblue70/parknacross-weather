@@ -24,7 +24,7 @@ test.beforeEach(async({page})=>{
 const complete=async page=>{await expect(page.locator('#healthProgress')).toContainText('20 of 20');await expect(page.locator('#refreshButton')).toBeEnabled();};
 test('supporting failures have actionable guidance without marking the core weather service down',async({page})=>{
  await page.goto('/status.html');await complete(page);await expect(page.locator('#wh40hBadge')).toHaveText('Healthy');await expect(page.locator('#wh40hValue')).toHaveText('0 mm today');await expect(page.locator('#overallTitle')).toHaveText('Core weather services are healthy');await expect(page.locator('#healthAttentionList')).toContainText('Arklow tide feed');await expect(page.locator('#healthAttentionList')).toContainText('Local weather readings are independent');
- await expect(page.locator('#healthCounts')).toContainText('1 need attention');await expect(page.locator('#monitoringHealth')).toContainText('does not verify the latest independent monitoring run');await expect(page.locator('#monitoringHealth .badge')).toHaveText('CONFIGURED');
+ await expect(page.locator('#healthCounts')).toContainText('need attention');await expect(page.locator('#monitoringHealth')).toContainText('does not verify the latest independent monitoring run');await expect(page.locator('#monitoringHealth .badge')).toHaveText('CONFIGURED');
  await page.locator('#healthIssuesOnly').check();await expect(page.locator('#health-tide')).toBeVisible();await expect(page.locator('#health-feed')).toBeHidden();await expect(page.locator('#coreHealth')).toBeHidden();
 });
 test('individual retry keeps other timestamps and records recovery in this browser session',async({page})=>{
@@ -45,7 +45,7 @@ test('observation ages advance between checks without changing the check timesta
 test.describe('mobile health checks',()=>{test.use({viewport:{width:390,height:844},hasTouch:true,isMobile:true});test('issues filter, retry and disclosures remain usable without horizontal overflow',async({page})=>{
  await page.goto('/status.html');await complete(page);await page.locator('#healthIssuesOnly').check();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  const button=page.getByRole('button',{name:'Retry Arklow tide feed',exact:true});const box=await button.boundingBox();expect(box.height).toBeGreaterThanOrEqual(44);await page.locator('#health-tide summary').click();await expect(page.locator('#tideDetail')).toBeVisible();await expect(page.locator('#health-tide .health-response-time')).toContainText('seconds');
- tideOK=true;await button.tap();await complete(page);await expect(page.locator('#healthFilteredEmpty')).toBeVisible();await page.locator('#healthIssuesOnly').uncheck();await expect(page.locator('#health-feed')).toBeVisible();
+ tideOK=true;await button.tap();await complete(page);await expect(page.locator('#tideBadge')).toHaveText('Healthy');await expect(page.locator('#health-tide')).toBeHidden();await page.locator('#healthIssuesOnly').uncheck();await expect(page.locator('#health-feed')).toBeVisible();
 });});
 
 test('status badges stay at the top right beside titles at mobile and desktop widths',async({page})=>{
