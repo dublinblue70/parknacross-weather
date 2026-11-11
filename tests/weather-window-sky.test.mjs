@@ -39,6 +39,7 @@ const t=Date.now();
 const point={fetched_at:new Date(t).toISOString(),points:[{epoch:t/1000-1800,cloud_percent:10},{epoch:t/1000+1800,cloud_percent:90}]};
 assert.equal(sky.resolvePoint(point,t).cloud_percent,50);
 assert.equal(sky.resolvePoint(point,t).sky,'partly-cloudy');
+assert.equal(sky.resolvePoint({...point,source:'Open-Meteo'},t).source,'open-meteo');
 assert.equal(sky.resolvePoint({...point,fetched_at:new Date(t-3*3600000).toISOString()},t),null);
 assert.equal(sky.resolvePoint({...point,points:[{epoch:t/1000+7200,cloud_percent:10}]},t),null);
 console.log('Hourly sky percentages interpolate between valid hours and fall back when stale or distant.');

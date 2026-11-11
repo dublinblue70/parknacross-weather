@@ -1320,7 +1320,7 @@
               </div>
               <p id="weatherWindowSkySource" class="weather-window-sky-source">Checking the forecast sky…</p>
               <p class="weather-window-note">Wind and rain reflect the Parknacross station readings. Clouds come from the forecast and may differ from the sky overhead.</p>
-              <details id="weatherWindowInfo" class="weather-window-info"><summary>How this scene works</summary><ul><li><strong>Wind:</strong> moving streaks, a swaying tree and swaying flowers show wind or gusts measured at Parknacross. Stronger winds create more movement.</li><li><strong>Rain:</strong> raindrops appear when the station measures rainfall.</li><li><strong>Sky:</strong> clouds follow Met Éireann’s hourly forecast for Ardamine, or its Leinster forecast if hourly data is unavailable. This is a forecast, not a live camera view.</li><li><strong>Sun and night:</strong> the scene follows local daylight times, and the sun moves across the scene during the day.</li></ul><p>Any manual sky or rain adjustment is clearly labelled and expires automatically.</p><p>If your device uses reduced motion, the wind streaks and tree lean remain visible without animation.</p></details>
+              <details id="weatherWindowInfo" class="weather-window-info"><summary>How this scene works</summary><ul><li><strong>Wind:</strong> moving streaks, a swaying tree and swaying flowers show wind or gusts measured at Parknacross. Stronger winds create more movement.</li><li><strong>Rain:</strong> raindrops appear when the station measures rainfall.</li><li><strong>Sky:</strong> clouds follow Met Éireann’s hourly forecast for Ardamine, with a clearly labelled Open-Meteo cloud-cover backup or regional guidance if hourly data fails. This is a forecast, not a live camera view.</li><li><strong>Sun and night:</strong> the scene follows local daylight times, and the sun moves across the scene during the day.</li></ul><p>Any manual sky or rain adjustment is clearly labelled and expires automatically.</p><p>If your device uses reduced motion, the wind streaks and tree lean remain visible without animation.</p></details>
               <div id="weatherWindowSkyAdmin" class="weather-window-admin" hidden><p><a href="admin.html">Preview settings and check feature compatibility in administration →</a></p>
                 <label for="weatherWindowSkySelect">The sky you can see now</label>
                 <select id="weatherWindowSkySelect">
@@ -1849,8 +1849,8 @@ Building wind direction distribution…
     <script src="offline.js?v=20261010-v38-4-190"></script>
     <script src="notification-storage.js?v=20261027-persistence"></script><script src="alert-settings.js?v=20261027-persistence"></script><script src="background-alerts.js?v=20261027-persistence"></script>
     <script src="data-corrections.js?v=20260924-v38-4-97"></script>
-    <script src="weather-window-sky.js?v=20261008-v38-4-170"></script>
-    <script src="action-feedback.js?v=20261008-v38-4-170"></script><script src="weather-window.js?v=20261009-v38-4-179"></script>
+    <script src="weather-window-sky.js?v=20261111-sky-failover"></script>
+    <script src="action-feedback.js?v=20261008-v38-4-170"></script><script src="weather-window.js?v=20261111-sky-failover"></script>
     <script>
       // The social publishing console is administrator-only. Avoid downloading
       // its code and initiating its listeners for ordinary weather visitors.

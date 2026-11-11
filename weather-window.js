@@ -47,13 +47,36 @@
     if (hourly) return hourly;
     return window.ParknacrossWeatherSky?.resolve(forecast,{...c,isNight:detail.isNight}) || {sky:"unknown", source:"unavailable"};
   }
+  // Cloud cover is modelled guidance, not an observation from the station.
+  async function backupPointSky() {
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=52.6247&longitude=-6.25&hourly=cloud_cover&timeformat=unixtime&timezone=GMT&forecast_days=2";
+    const response = await fetch(url,{cache:"no-store",signal:AbortSignal.timeout(9000)});
+    if (!response.ok) throw Error("Backup cloud forecast unavailable");
+    const hourly = (await response.json())?.hourly;
+    if (!Array.isArray(hourly?.time) || !Array.isArray(hourly?.cloud_cover)) throw Error("Backup cloud coverage is missing");
+    const now = Date.now()/1000;
+    const points = hourly.time.map((epoch,i)=>({epoch:Number(epoch),cloud_percent:hourly.cloud_cover[i]}))
+      .filter(p=>Number.isInteger(p.epoch)&&p.epoch>now-7200&&p.epoch<now+10800 &&
+        p.cloud_percent!==null&&Number.isFinite(Number(p.cloud_percent))&&
+        Number(p.cloud_percent)>=0&&Number(p.cloud_percent)<=100);
+    if (!points.length) throw Error("Backup cloud forecast has no nearby hour");
+    return {source:"Open-Meteo",fetched_at:new Date().toISOString(),points};
+  }
   async function refreshPointSky() {
     try {
-      const response = await fetch(`${apiBase}/met/point-sky`,{signal:AbortSignal.timeout(10000)});
-      if (!response.ok) return;
-      pointForecast = await response.json();
-      if (latestDetail) render(latestDetail);
-    } catch (_) { /* The regional description remains the optional fallback. */ }
+      const response = await fetch(`${apiBase}/met/point-sky`,{cache:"no-store",signal:AbortSignal.timeout(10000)});
+      if (response.ok) {
+        const candidate = await response.json();
+        if (window.ParknacrossWeatherSky?.resolvePoint(candidate)) {
+          pointForecast=candidate;
+          if(latestDetail)render(latestDetail);
+          return;
+        }
+      }
+    } catch (_) { /* Continue to independent forecast backup. */ }
+    try { pointForecast=await backupPointSky(); }
+    catch (_) { pointForecast=null; /* Regional forecast remains final fallback. */ }
+    if(latestDetail)render(latestDetail);
   }
   async function refreshOverride() {
     try {
@@ -94,7 +117,7 @@
     const sky = skyState(detail);
     const skyName = skyLabels[sky.sky] || skyLabels.unknown;
     scene.dataset.sky = sky.sky;
-    const provenance = sky.source === "observer" ? "Sky set from a local visual observation" : sky.source === "point" ? `Met Éireann hourly forecast for Ardamine · ${sky.cloud_percent}% cloud cover` : sky.source === "forecast" ? "Sky guided by Met Éireann’s Leinster forecast" : "Forecast sky unavailable · local readings continue";
+    const provenance = sky.source === "observer" ? "Sky set from a local visual observation" : sky.source === "point" ? `Met Éireann hourly forecast for Ardamine · ${sky.cloud_percent}% cloud cover` : sky.source === "open-meteo" ? `Open-Meteo cloud-cover forecast (backup) · ${sky.cloud_percent}% cloud cover` : sky.source === "forecast" ? "Sky guided by Met Éireann’s Leinster forecast" : "Forecast sky unavailable · local readings continue";
     if (sourceLabel) sourceLabel.textContent = `${skyName}. ${provenance}.`;
     const speed = numberOrNull(current.wind_speed_kmh);
     const gust = numberOrNull(current.wind_gust_kmh);

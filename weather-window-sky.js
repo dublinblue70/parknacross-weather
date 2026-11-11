@@ -59,7 +59,7 @@
       if (!closest || Math.abs(closest.epoch-t)>90*60) return null;
       percent = Number(closest.cloud_percent);
     }
-    return {sky:fromCloudPercent(percent),source:"point",cloud_percent:Math.round(percent)};
+    return {sky:fromCloudPercent(percent),source:data?.source==="Open-Meteo"?"open-meteo":"point",cloud_percent:Math.round(percent)};
   }
   window.ParknacrossWeatherSky = Object.freeze({period, classify, selectText, resolve, fromCloudPercent, resolvePoint});
 })();

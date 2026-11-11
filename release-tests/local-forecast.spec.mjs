@@ -5,7 +5,7 @@ test.beforeEach(async({page})=>{
  await page.route('**/api.open-meteo.com/**',r=>{
   if(backupFail)return r.fulfill({status:503,body:'{}'});
   const time=Array.from({length:72},(_,i)=>Date.parse('2026-10-21T00:00:00Z')/1000+i*3600);
-  const hourly={time,temperature_2m:time.map(()=>10),wind_speed_10m:time.map(()=>14),precipitation:time.map((_,i)=>i===15?0.5:0),is_day:time.map((_,i)=>i%24>=7&&i%24<18?1:0)};
+  const hourly={time,temperature_2m:time.map(()=>10),wind_speed_10m:time.map(()=>14),precipitation:time.map((_,i)=>i===15?0.5:0),cloud_cover:time.map(()=>65),is_day:time.map((_,i)=>i%24>=7&&i%24<18?1:0)};
   return r.fulfill({contentType:'application/json',body:JSON.stringify({hourly})});
  });
  await page.route('**/static.cloudflareinsights.com/**',r=>r.fulfill({body:''}));
