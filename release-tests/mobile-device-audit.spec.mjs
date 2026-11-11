@@ -35,6 +35,16 @@ test('collapsed mobile forecast shows three compact periods before expanded deta
  for(const label of ['Today','Tonight','Tomorrow'])await expect(preview).toContainText(label);
  await toggle.click();
  await expect(preview).toBeHidden();
+ const auditState=await page.evaluate(()=>{
+   const f=document.querySelector('#forecast'), b=f?.querySelector('.mobile-detail-body'),
+     a=f?.querySelector('.forecast-grid article'), t=f?.querySelector('.mobile-detail-toggle'),
+     p=f?.querySelector('.forecast-mobile-preview');
+   const info=x=>x?{display:getComputedStyle(x).display,visibility:getComputedStyle(x).visibility,
+     rect:x.getBoundingClientRect().toJSON(),hidden:x.hidden}:null;
+   return {button:t?.getAttribute('aria-expanded'),collapsed:b?.dataset.collapsed,
+     section:info(f),body:info(b),article:info(a),preview:info(p),width:innerWidth};
+ });
+ console.log('FORECAST_WEBKIT_LAYOUT_AUDIT',JSON.stringify(auditState));
  await expect(forecast.locator('.forecast-grid article').first()).toBeVisible();
  await noOverflow(page,'mobile forecast');
 });
