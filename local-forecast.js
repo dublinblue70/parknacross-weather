@@ -77,6 +77,15 @@
  }
  function render(feed,now=Date.now()){
   const result=describe(feed,now);if(!result){unavailable();return;}
+  const backup = feed?.fallback === true && feed?.source === 'Open-Meteo';
+  const provider = $('forecastProvider');
+  if (provider) provider.textContent = backup
+    ? 'Open-Meteo hourly forecast (backup) for Ardamine · 52.6247°N, 6.25°W'
+    : 'Met Éireann hourly point forecast for Ardamine · 52.6247°N, 6.25°W';
+  const note = document.querySelector('.forecast-local-note');
+  if (note) note.textContent = backup
+    ? 'Met Éireann point data is temporarily unavailable. This clearly labelled Open-Meteo backup uses hourly model guidance for Ardamine, not station measurements. Rain is assigned to its correct forecast hour. The periods shown depend on available data; wind is sustained speed rather than gust speed.'
+    : 'Descriptions and figures are calculated from Met Éireann hourly model data for Ardamine. Cloud cover and wind direction are not provided in this feed. The hours shown are the available forecast window; tomorrow may cover only the morning. Wind is sustained speed, not gust speed. Station observations are shown separately.';
   window.dispatchEvent(new CustomEvent("parknacross:local-forecast",{detail:feed}));
   ['Today','Tonight','Tomorrow'].forEach((name,i)=>{
    $('forecast'+name+'Label').textContent=result.periods[i].label;
@@ -88,7 +97,7 @@
   if(!rest){rest=document.createElement('article');rest.id='forecastRestOfNight';rest.className='forecast-card';$('forecastTodayLabel')?.closest('article,.forecast-card')?.before(rest);}
   rest.replaceChildren();rest.hidden=!result.restOfNight;
   if(result.restOfNight){for(const [tag,value] of [['h3',result.restOfNight.label],['p',result.restOfNight.summary],['small',result.restOfNight.coverage]]){const node=document.createElement(tag);node.textContent=value;rest.append(node);}}
-  $('forecastFreshness').textContent=`Local hourly forecast retrieved ${stamp(result.fetched)} Irish time`;
+  $('forecastFreshness').textContent=`${backup?'Backup':'Local'} hourly forecast retrieved ${stamp(result.fetched)} Irish time`;
  }
  window.ParknacrossLocalForecast={describe,render,unavailable};
 })();
