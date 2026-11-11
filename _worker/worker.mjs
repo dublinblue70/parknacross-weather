@@ -71,6 +71,8 @@ const WH52_UPLOAD_META_KEY = "wh52_gateway_latest_v1";
 const WH52_UPLOAD_STATUS_META_KEY = "wh52_gateway_status_v1";
 const PWSWEATHER_LAST_EPOCH_META_KEY = "pwsweather_last_upload_epoch_v1";
 const PWSWEATHER_LAST_ACCEPTED_AT_META_KEY = "pwsweather_last_accepted_at_v1";
+const PWSWEATHER_LAST_ATTEMPT_META_KEY = "pwsweather_last_attempt_v1";
+const PWSWEATHER_MIN_UPLOAD_INTERVAL_SECONDS = 120;
 const PWSWEATHER_STATION_ID = "PARKNACROSSWX";
 const CWOP_ID = "GW8205";
 const CWOP_LAST_EPOCH_KEY = "cwop_last_sent_epoch_v1";
@@ -2466,11 +2468,14 @@ export default {
     if (url.pathname === "/pwsweather-status" && request.method === "GET") {
       try {
         const credentialConfigured = Boolean(await readSecret(env.PWSWEATHER_API_KEY));
-        const meta = await readMetaMap(env, [PWSWEATHER_LAST_EPOCH_META_KEY, PWSWEATHER_LAST_ACCEPTED_AT_META_KEY]);
+        const meta = await readMetaMap(env, [PWSWEATHER_LAST_EPOCH_META_KEY, PWSWEATHER_LAST_ACCEPTED_AT_META_KEY, PWSWEATHER_LAST_ATTEMPT_META_KEY]);
+        let lastAttempt = null;
+        try { lastAttempt = JSON.parse(meta[PWSWEATHER_LAST_ATTEMPT_META_KEY] || "null"); } catch (_) {}
         const epoch = Number(meta[PWSWEATHER_LAST_EPOCH_META_KEY]);
         return json({station_id:PWSWEATHER_STATION_ID,credential_configured:credentialConfigured,
           last_accepted_observation_epoch:Number.isFinite(epoch)&&epoch>0?epoch:null,
           last_accepted_at:meta[PWSWEATHER_LAST_ACCEPTED_AT_META_KEY]||null,
+          last_attempt:lastAttempt,
           delivery_note:"A PWSWeather success response confirms acknowledgement, not public visibility."
         },200,{"Cache-Control":"no-store"});
       } catch (_) {return json({error:"PWSWeather status temporarily unavailable"},503,{"Cache-Control":"no-store"});}
@@ -2837,6 +2842,7 @@ export default {
           }
           if(ctx?.waitUntil)ctx.waitUntil(runBackgroundAlerts(env,liveReading).catch(()=>console.warn("Background alert evaluation failed")));
           scheduleWindguruFromGateway(ctx, env, liveReading);
+          schedulePwsWeatherFromGateway(ctx, env, liveReading);
         scheduleWowBeFromGateway(ctx, env, liveReading);
           scheduleWowBeFromGateway(ctx, env, liveReading);
           const recovery = recoverArchiveFromGateway(env, receivedEpoch);
@@ -2894,6 +2900,7 @@ export default {
         }
         if(ctx?.waitUntil)ctx.waitUntil(runBackgroundAlerts(env,liveReading).catch(()=>console.warn("Background alert evaluation failed")));
         scheduleWindguruFromGateway(ctx, env, liveReading);
+        schedulePwsWeatherFromGateway(ctx, env, liveReading);
         const recovery = recoverArchiveFromGateway(env, receivedEpoch);
         if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(recovery);
         else await recovery;
@@ -3633,14 +3640,6 @@ export default {
         } catch (error) {
           console.warn("Scheduled WOW-BE publish failed:", safeErrorMessage(error));
         }
-        try {
-          const pwsResult = await publishPwsWeather(env, syncResult);
-          if (pwsResult?.accepted) {
-            console.info("PWSWeather accepted observation", { epoch: pwsResult.epoch });
-          }
-        } catch (error) {
-          console.warn("Scheduled PWSWeather publish failed:", safeErrorMessage(error));
-        }
       } catch (error) {
         try {
           await writeMeta(env, {
@@ -3648,6 +3647,14 @@ export default {
           });
         } catch (_) {}
         console.warn("Scheduled Ecowitt sync failed:", error);
+      }
+      // PWSWeather must run even when the Ecowitt cloud sync fails.
+      // A fresh authenticated gateway observation is preferred automatically.
+      try {
+        const pwsResult = await publishPwsWeather(env, cwopSyncResult);
+        if (pwsResult?.accepted) console.info("PWSWeather accepted an observation", {epoch:pwsResult.epoch});
+      } catch (error) {
+        console.warn("Scheduled PWSWeather publish failed:", safeErrorMessage(error));
       }
       // CWOP is independent of cloud sync: fresh authenticated GW3001 uploads
       // can still supply the report when the Ecowitt cloud API is unavailable.
@@ -4107,7 +4114,24 @@ async function publishWowBe(env, syncResult) {
   }
 }
 
+// Direct GW3001 publisher runs independently of the Ecowitt cloud API.
+// Use waitUntil to avoid delaying the authenticated gateway HTTP response.
+function schedulePwsWeatherFromGateway(ctx, env, liveReading) {
+  if (!liveReading || !ctx || typeof ctx.waitUntil !== "function") return;
+  ctx.waitUntil(publishPwsWeather(env, {reading:liveReading,epoch:liveReading.epoch})
+    .catch(error => console.warn("PWSWeather direct relay failed:",safeErrorMessage(error))));
+}
 async function publishPwsWeather(env, syncResult) {
+  try { return await publishPwsWeatherAttempt(env, syncResult); }
+  catch (error) {
+    try { await writeMeta(env, { [PWSWEATHER_LAST_ATTEMPT_META_KEY]:JSON.stringify({
+      at:new Date().toISOString(),state:"error",error:safeErrorMessage(error),
+      source:syncResult?.reading ? "gateway_or_ecowitt" : "gateway_only"
+    }) }); } catch (_) {}
+    throw error;
+  }
+}
+async function publishPwsWeatherAttempt(env, syncResult) {
   const apiKey = await readSecret(env.PWSWEATHER_API_KEY);
   if (!apiKey) return { skipped: true, reason: "secret_not_configured" };
 
@@ -4135,6 +4159,9 @@ async function publishPwsWeather(env, syncResult) {
   if (Number.isFinite(lastUploadedEpoch) && epoch <= lastUploadedEpoch) {
     return { skipped: true, reason: "observation_already_sent", epoch };
   }
+  if (lastUploadedEpoch > 0 && epoch - lastUploadedEpoch < PWSWEATHER_MIN_UPLOAD_INTERVAL_SECONDS) {
+    return { skipped: true, reason: "upload_interval", epoch };
+  }
 
   // Use the same corrected daily rainfall total that the website stores in
   // its daily summary. The gateway's instantaneous daily counter can reset or
@@ -4145,6 +4172,9 @@ async function publishPwsWeather(env, syncResult) {
   ).bind(day).first() : null;
   const websiteRainMm = day ? correctedRainForDay(day, dailyRainRow?.rain_mm) : null;
   const pwsRainMm = usableNumber(websiteRainMm) ? websiteRainMm : nullableNumber(reading.rain_daily_mm);
+  // PWSWeather rainin means rolling hourly rainfall, not the rain rate.
+  // If WH40H archive coverage is missing, omit rather than reporting zero.
+  const rainHourlyMm = await cwopRollingRain(env, epoch, pwsRainMm, 3600).catch(() => null);
 
   const params = new URLSearchParams();
   params.set("ID", PWSWEATHER_STATION_ID);
@@ -4172,6 +4202,7 @@ async function publishPwsWeather(env, syncResult) {
   if (usableNumber(pwsRainMm)) {
     putNumber("dailyrainin", Number(pwsRainMm) / 25.4, 4);
   }
+  if (usableNumber(rainHourlyMm)) putNumber("rainin", Number(rainHourlyMm) / 25.4, 4);
   if (usableNumber(reading.solar_w_m2)) putNumber("solarradiation", reading.solar_w_m2);
   if (usableNumber(reading.uv_index)) putNumber("UV", reading.uv_index);
 
@@ -4190,7 +4221,15 @@ async function publishPwsWeather(env, syncResult) {
     throw new Error(reason + " (HTTP " + response.status + ")");
   }
 
-  await writeMeta(env, { [PWSWEATHER_LAST_EPOCH_META_KEY]: epoch, [PWSWEATHER_LAST_ACCEPTED_AT_META_KEY]: new Date().toISOString() });
+  const at = new Date().toISOString();
+  await writeMeta(env, {
+    [PWSWEATHER_LAST_EPOCH_META_KEY]: epoch,
+    [PWSWEATHER_LAST_ACCEPTED_AT_META_KEY]: at,
+    [PWSWEATHER_LAST_ATTEMPT_META_KEY]: JSON.stringify({at,state:"accepted_not_display_verified",
+      observation_epoch:epoch,source:gatewayReading?"gw3001_direct_live":"ecowitt_cloud",
+      rain_daily_mm:usableNumber(pwsRainMm)?pwsRainMm:null,
+      rain_hourly_mm:usableNumber(rainHourlyMm)?rainHourlyMm:null})
+  });
   return { accepted: true, epoch };
 }
 

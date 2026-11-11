@@ -85,6 +85,7 @@
     try{
       const d=await get("/pwsweather-status");
       if(d.credential_configured!==true){set("pws","Upload not configured.");return;}
+      if(d.last_attempt?.state==="error"){set("pws","Last upload failed.","error",d.last_attempt.error||"Check the PWSWeather pipeline logs.");return;}
       const accepted=safeEpoch(d.last_accepted_at);
       const observed=safeEpoch(d.last_accepted_observation_epoch);
       const epoch=accepted??observed;

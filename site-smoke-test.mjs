@@ -580,7 +580,12 @@ if(networkStatusIds.some(name=>!stationNetworksHtml.includes('id="station'+name+
 const providerWorker = await readFile(join(root,"_worker/worker.mjs"),"utf8");
 if(!providerWorker.includes('url.pathname === "/pwsweather-status"') ||
    !providerWorker.includes('url.pathname === "/wunderground-status"') ||
-   !providerWorker.includes("PWSWEATHER_LAST_ACCEPTED_AT_META_KEY")) {
+   !providerWorker.includes("PWSWEATHER_LAST_ACCEPTED_AT_META_KEY") ||
+   !providerWorker.includes("PWSWEATHER_LAST_ATTEMPT_META_KEY") ||
+   !providerWorker.includes("PWSWEATHER_MIN_UPLOAD_INTERVAL_SECONDS") ||
+   (providerWorker.match(/schedulePwsWeatherFromGateway\(ctx, env, liveReading\);/g)||[]).length!==2 ||
+   !providerWorker.includes("await publishPwsWeather(env, cwopSyncResult)") ||
+   !providerWorker.includes('putNumber("rainin", Number(rainHourlyMm) / 25.4, 4)')) {
   failures.push("Worker: provider acceptance timestamps and optional authenticated WU observation lookup required");
 }
 
