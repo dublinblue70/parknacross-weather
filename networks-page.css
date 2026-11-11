@@ -269,3 +269,21 @@ body.networks-directory-page .station-network-status::before {
 body.networks-directory-page .station-network-status[data-state="recent"]::before { background: #65cfb4; }
 body.networks-directory-page .station-network-status[data-state="stale"]::before { background: #f4bd73; }
 body.networks-directory-page .station-network-status[data-state="error"]::before { background: #e89091; }
+
+/* Visitor-first directory: remove operational status clutter and reduce card
+   height while preserving each destination and keyboard focus behaviour. */
+body.networks-directory-page .station-external-network {
+  min-height: 104px;
+  gap: 8px;
+  padding: 16px 18px 11px;
+}
+body.networks-directory-page .station-network-identity { align-items: center; }
+body.networks-directory-page .station-network-copy { padding-top: 0; }
+body.networks-directory-page .station-external-network-link { min-height: 30px; }
+body.networks-directory-page .station-network-links { row-gap: 0; }
+@media (max-width: 760px) {
+  body.networks-directory-page .station-external-network {
+    min-height: 0; padding: 13px 15px 9px; gap: 4px;
+  }
+  body.networks-directory-page .station-external-network-link { min-height: 40px; }
+}
