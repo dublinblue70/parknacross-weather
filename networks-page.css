@@ -223,7 +223,7 @@ body.networks-directory-page .station-external-network-link:hover span[aria-hidd
   }
 }
 
-/* The CWOP card opens its graphs by default while retaining the raw data table. */
+/* Keep provider card action alignment consistent, including the CWOP primary link. */
 body.networks-directory-page .station-network-links {
   display: flex;
   flex-wrap: wrap;
@@ -236,10 +236,6 @@ body.networks-directory-page .station-network-links {
 body.networks-directory-page .station-network-links > .station-external-network-link {
   margin-left: 0;
   overflow-wrap: anywhere;
-}
-body.networks-directory-page .station-network-raw-link {
-  color: #aec2cf;
-  font-weight: 500;
 }
 @media (max-width: 760px) {
   body.networks-directory-page .station-network-links { margin-left: 49px; column-gap: 14px; }
@@ -336,7 +332,7 @@ body.networks-directory-page .station-network-links { row-gap: 0; }
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-/* Long translated names and the CWOP second link may wrap as needed. */
+/* Permit long translated primary link labels to wrap without overflow. */
 body.networks-directory-page .station-network-links > .station-external-network-link {
   white-space: normal;
 }

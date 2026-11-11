@@ -113,6 +113,7 @@ function todayKey(){const parts=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,yea
 function expectedSamples(day){if(day===todayKey()){const parts=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date()),m=Object.fromEntries(parts.map(p=>[p.type,p.value])),minutes=Number(m.hour||0)*60+Number(m.minute||0);return Math.max(1,Math.floor(minutes/5)+1);}const y=Number(day.slice(0,4));if(day===lastSunday(y,2))return 276;if(day===lastSunday(y,9))return 300;return 288;}
 
 let heatmapPositioned=false;
+let heatmapRangeDays=90;
 function heatmapDayInfo(day){
   const row=dailyMap.get(day),coverage=coverageRows.get(day),today=day===todayKey();
   const hasCoverage=coverage&&usable(coverage.actual_slots)&&usable(coverage.expected_slots)&&Number(coverage.expected_slots)>0;
@@ -133,11 +134,11 @@ function showHeatmapDay(day,select=false){
 }
 function renderHeatmap(){
   const host=$("archiveHeatmap");if(!host)return;host.innerHTML="";
-  const today=todayKey(),end=new Date(`${today}T12:00:00Z`),start=new Date(end);start.setUTCDate(start.getUTCDate()-364);
+  const today=todayKey(),end=new Date(`${today}T12:00:00Z`),start=new Date(end);start.setUTCDate(start.getUTCDate()-(heatmapRangeDays-1));
   const weekday=(start.getUTCDay()+6)%7;start.setUTCDate(start.getUTCDate()-weekday);
   const first=start.toISOString().slice(0,10),months=[],cells=[];
   let complete=0,populated=0,totalExpected=0,totalActual=0;
-  for(let i=0;i<371;i++){
+  for(let i=0;i<heatmapRangeDays+7;i++){
     const d=new Date(start);d.setUTCDate(start.getUTCDate()+i);const day=d.toISOString().slice(0,10);if(day>today)break;
     if(i===0||d.getUTCDate()===1){const column=Math.floor(i/7)+1;if(months.at(-1)?.column===column)months.pop();months.push({column,label:d.toLocaleDateString("en-IE",{timeZone:TZ,month:"short",year:"numeric"})});}
     const info=heatmapDayInfo(day),cell=document.createElement("button");cell.type="button";cell.className="heatmap-day";cell.dataset.day=day;cell.style.gridColumn=String(Math.floor(i/7)+1);cell.style.gridRow=String(i%7+2);
@@ -153,6 +154,7 @@ function renderHeatmap(){
   months.forEach((month,i)=>{const next=months[i+1]?.column||columns+1,span=next-month.column;if(span<2&&i===0)return;const label=document.createElement("span");label.className="heatmap-month";label.textContent=month.label;label.style.gridRow="1";label.style.gridColumn=`${month.column} / span ${Math.max(2,span)}`;host.appendChild(label);});
   const active=selectedHeatmapDay||selectedArchiveDay||today;if(!cells.some(cell=>cell.tabIndex===0)&&cells.length)cells.at(-1).tabIndex=0;showHeatmapDay(active);
   set("heatmapDateRange",`${dateLabel(first+"T12:00:00Z")} – ${dateLabel(today+"T12:00:00Z")} · Irish local dates`);
+  host.setAttribute("aria-label",`Daily archive coverage for ${heatmapRangeDays===90?"recent 90 days":"the past year"}`);
   if(!heatmapPositioned&&host.parentElement){host.parentElement.scrollLeft=Math.max(0,host.scrollWidth-host.parentElement.clientWidth);heatmapPositioned=true;}
   const pct=usable(coverageSummary?.coverage_percent)?Number(coverageSummary.coverage_percent):(totalExpected?Math.min(100,totalActual/totalExpected*100):null);
   set("heatmapSummary",populated?`${populated} archived day${populated===1?"":"s"} in view · ${complete} at ≥98% coverage${pct!==null?` · ${pct.toFixed(1)}% of unique five-minute slots captured since archiving began`:""}.` : (dailyRows.length?"Archive coverage is unavailable. Saved weather observations remain available below.":"The completeness map will fill as the archive grows."));
@@ -326,5 +328,5 @@ async function loadHistory(){
 }
 
 
-document.addEventListener("DOMContentLoaded",()=>{$("archiveDayRetry")?.addEventListener("click",()=>{if(selectedArchiveDay)loadDay(selectedArchiveDay);});$("historicalSkyRetry")?.addEventListener("click",()=>{if(selectedArchiveDay)loadHistoricalSky(selectedArchiveDay);});createCharts();set("year",new Date().getFullYear());document.querySelectorAll("[data-days]").forEach(button=>button.addEventListener("click",()=>{selectedDays=Number(button.dataset.days);document.querySelectorAll("[data-days]").forEach(b=>b.classList.toggle("active",b===button));renderCharts();}));$("calendarPrev")?.addEventListener("click",()=>{calendarCursor=shiftMonth(calendarCursor,-1);renderCalendar();});$("calendarNext")?.addEventListener("click",()=>{calendarCursor=shiftMonth(calendarCursor,1);renderCalendar();});$("previousArchiveDay")?.addEventListener("click",event=>{const day=event.currentTarget.dataset.day;if(day)openArchiveDay(day);});$("nextArchiveDay")?.addEventListener("click",event=>{const day=event.currentTarget.dataset.day;if(day)openArchiveDay(day);});$("archiveDateButton")?.addEventListener("click",()=>{const day=$("archiveDateSearch")?.value;if(day)openArchiveDay(day);});$("archiveDateSearch")?.addEventListener("change",event=>{const day=event.currentTarget.value;if(day)openArchiveDay(day);});$("archiveDateSearch")?.addEventListener("keydown",event=>{if(event.key==='Enter'){event.preventDefault();const day=event.currentTarget.value;if(day)openArchiveDay(day);}});loadHistory();});
+document.addEventListener("DOMContentLoaded",()=>{document.querySelectorAll("[data-heatmap-days]").forEach(button=>button.addEventListener("click",()=>{const next=Number(button.dataset.heatmapDays);if(next!==90&&next!==365)return;heatmapRangeDays=next;heatmapPositioned=false;document.querySelectorAll("[data-heatmap-days]").forEach(b=>b.setAttribute("aria-pressed",String(b===button)));renderHeatmap();}));$("archiveDayRetry")?.addEventListener("click",()=>{if(selectedArchiveDay)loadDay(selectedArchiveDay);});$("historicalSkyRetry")?.addEventListener("click",()=>{if(selectedArchiveDay)loadHistoricalSky(selectedArchiveDay);});createCharts();set("year",new Date().getFullYear());document.querySelectorAll("[data-days]").forEach(button=>button.addEventListener("click",()=>{selectedDays=Number(button.dataset.days);document.querySelectorAll("[data-days]").forEach(b=>b.classList.toggle("active",b===button));renderCharts();}));$("calendarPrev")?.addEventListener("click",()=>{calendarCursor=shiftMonth(calendarCursor,-1);renderCalendar();});$("calendarNext")?.addEventListener("click",()=>{calendarCursor=shiftMonth(calendarCursor,1);renderCalendar();});$("previousArchiveDay")?.addEventListener("click",event=>{const day=event.currentTarget.dataset.day;if(day)openArchiveDay(day);});$("nextArchiveDay")?.addEventListener("click",event=>{const day=event.currentTarget.dataset.day;if(day)openArchiveDay(day);});$("archiveDateButton")?.addEventListener("click",()=>{const day=$("archiveDateSearch")?.value;if(day)openArchiveDay(day);});$("archiveDateSearch")?.addEventListener("change",event=>{const day=event.currentTarget.value;if(day)openArchiveDay(day);});$("archiveDateSearch")?.addEventListener("keydown",event=>{if(event.key==='Enter'){event.preventDefault();const day=event.currentTarget.value;if(day)openArchiveDay(day);}});loadHistory();});
 

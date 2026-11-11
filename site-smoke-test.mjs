@@ -249,7 +249,8 @@ if (moonFunctionStart < 0 || moonFunctionEnd < 0) {
 }
 if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
 if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-97')) failures.push("index.html: shared data corrections must load before the dashboard application");
-if (!dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: forecast-aware clothing note is missing");
+if (dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: redundant forecast advice banner must remain removed");
+if (!dashboardApp.includes('const forecastNote=$("wearForecast")')) failures.push("app.js: removed forecast banner must be guarded when absent");
 if (!dashboardHtml.includes('aria-label="Daily sun phases"') || !dashboardHtml.includes('aria-label="Eight phases of the Moon"')) failures.push("index.html: visual sun and moon phase cycles are missing");
 if (!dashboardHtml.includes('id="seasonNextMarker"') || !dashboardHtml.includes('id="seasonDateNote"') || !dashboardHtml.includes("data-season-date")) failures.push("index.html: year-specific annual equinox and solstice outlook is missing");
 if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
@@ -263,8 +264,8 @@ for (const page of ["install.html", "station.html"]) {
 const diagnosticsSource = await readFile(new URL("pwa-diagnostics.js", import.meta.url), "utf8");
 if (/v\d+\.\d+\.\d+/.test(diagnosticsSource)) failures.push("pwa-diagnostics.js: release number must be read dynamically");
 if (!dashboardHtml.includes('class="ww-coastline"') || !dashboardHtml.includes('class="ww-sea-lines"') || !dashboardHtml.includes('class="ww-garden"')) failures.push("index.html: Ardamine Weather Window should include the added coastal, sea and garden illustration details");
-if (dashboardHtml.indexOf('id="wearForecast"') > dashboardHtml.indexOf('id="todaySkyPanel"')) failures.push("index.html: forecast-only rain context must be near current conditions");
-if (!dashboardHtml.includes("Station observations are shown separately")) failures.push("app.js: forecast rain must be distinguished from measured local rain");
+if (dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: removed forecast advice banner must not reappear");
+if (!dashboardHtml.includes("separate from live station readings")) failures.push("index.html: forecast must remain clearly distinct from measured observations");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
 const coastScript = await readFile(join(root, "coast.js"), "utf8");
 if (/Math\.(?:floor|ceil)\(Math\.(?:min|max)\(model,buoy\)\*2\)/.test(coastScript)) failures.push("coast.js: sea-temperature range still expands to half-degree bounds");
@@ -427,7 +428,7 @@ const networkDirectoryCss = await readFile(join(root, "networks-page.css"), "utf
 if (!stationNetworksHtml.includes('aria-labelledby="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('id="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('class="networks-directory-page"') ||
-    !stationNetworksHtml.includes('networks-page.css?v=20261111-network-health') ||
+    !/networks-page\.css\?v=[A-Za-z0-9._-]+/.test(stationNetworksHtml) ||
     !networkDirectoryCss.includes("grid-template-columns: repeat(3, minmax(0, 1fr))") ||
     !networkDirectoryCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") ||
     !networkDirectoryCss.includes("grid-template-columns: minmax(0, 1fr)") ||
@@ -443,7 +444,7 @@ if (stationNetworksHtml.includes("Parknacross Weather elsewhere") ||
   failures.push("networks.html: avoid duplicate hero eyebrow and oversized verbose link labels");
 }
 const networkCardMarkup = [...stationNetworksHtml.matchAll(/<article class="station-external-network"[^>]*>([\s\S]*?)<\/article>/g)].map(match => match[1]);
-if (networkCardMarkup.length !== 9 || networkCardMarkup.some(card => (card.match(/<p(?:\s[^>]*)?>/g) || []).length !== 1)) {
+if (networkCardMarkup.length !== 9 || networkCardMarkup.some(card => (card.match(/<p(?:\s[^>]*)?>/g) || []).length !== 0 || (card.match(/View weather data <span/g) || []).length !== 1)) {
   failures.push("networks.html: exactly nine concise network cards with one description each required");
 }
 const stationBrandSlugs = [
@@ -486,10 +487,10 @@ for (const [id, url] of expectedStationNetworks) {
     failures.push("networks.html: invalid or inaccessible external network link " + id);
   }
 }
-if (!stationNetworksHtml.includes("Upload status not yet checked.") ||
-    stationNetworksHtml.includes("Station ID 16733 · Observations confirmed") ||
-    stationNetworksHtml.includes("First live measurements were verified")) {
-  failures.push("networks.html: Windguru card must be concise without technical upload history");
+if (stationNetworksHtml.includes("Upload status not yet checked.") ||
+    stationNetworksHtml.includes("First live measurements were verified") ||
+    stationNetworksHtml.includes("Station ID 16733 · Observations confirmed")) {
+  failures.push("networks.html: visitor cards must not show unverified upload status or operational jargon");
 }
 const wowBeWorker = await readFile(join(root, "_worker/worker.mjs"), "utf8");
 const wowBeStatusClient = await readFile(join(root, "wowbe-status.js"), "utf8");
@@ -515,8 +516,8 @@ if (!wowBeStatusHtml.includes('id="wowbeHealth"') ||
   failures.push("WOW-BE: system status must separately report upload acknowledgement and public verification");
 }
 if (!stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h2>') ||
-    !stationNetworksHtml.includes("Registered · Upload status not yet checked.")) {
-  failures.push("WOW-BE: public network card must reflect registration without inventing live transmission");
+    stationNetworksHtml.includes("Registered · Upload status not yet checked.")) {
+  failures.push("WOW-BE: simple public card must retain provider identity without unverified status claims");
 }
 const wowBeAppCache = await readFile(join(root, "service-worker.js"), "utf8");
 if (!wowBeAppCache.includes('"./wowbe-status.js"')) {
@@ -529,25 +530,20 @@ if ((windguruWorker.match(/scheduleWindguruFromGateway\(ctx, env, liveReading\);
     !windguruWorker.includes("sent_readings:")) {
   failures.push("Windguru: both GW3001 upload paths must relay fresh samples at minute cadence and record sent values");
 }
-if (!stationNetworksHtml.includes("Ecowitt cloud sync not yet checked.") ||
-    !stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h2>')) {
-  failures.push("networks.html: Ecowitt card must use the owner-provided station sharing link");
+if (!stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h2>') ||
+    stationNetworksHtml.includes("Ecowitt cloud sync not yet checked.")) {
+  failures.push("networks.html: Ecowitt must link to the shared station without technical status clutter");
 }
 if (!stationNetworksHtml.includes('id="stationWowBeLink" href="https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"') ||
     !stationNetworksHtml.includes('aria-label="View Parknacross station on WOW-BE') ||
     stationNetworksHtml.includes('id="stationWowBeLink" href="https://wow.meteo.be/en/"')) {
   failures.push("networks.html: WOW-BE link must deep-link to registered Parknacross site rather than provider homepage");
 }
-if (!stationNetworksHtml.includes("Registered · Upload status not yet checked.") ||
-    !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h2>')) {
-  failures.push("networks.html: WOW-BE must show registered status until public data is verified");
-}
-if (!stationNetworksHtml.includes('id="stationCwopRawLink" href="https://www.findu.com/cgi-bin/wx.cgi?call=GW8205"') ||
-    !stationNetworksHtml.includes('id="stationCwopLink" href="https://www.findu.com/cgi-bin/wxpage.cgi?call=GW8205&amp;last=24"') ||
-    !stationNetworksHtml.includes("Verified · Upload status not yet checked.") ||
-    !stationNetworksHtml.includes("network-status.js?v=20261111-provider-telemetry") ||
-    stationNetworksHtml.includes("Station GW8205 · Activation pending.")) {
-  failures.push("networks.html: verified CWOP account must be distinct from packet sending and public FindU reporting");
+if (!stationNetworksHtml.includes('id="stationCwopLink" href="https://www.findu.com/cgi-bin/wxpage.cgi?call=GW8205&amp;last=24"') ||
+    stationNetworksHtml.includes('id="stationCwopRawLink"') ||
+    stationNetworksHtml.includes("Verified · Upload status not yet checked.") ||
+    stationNetworksHtml.includes("Registered · Upload status not yet checked.")) {
+  failures.push("networks.html: CWOP must have a single direct station link without raw-table clutter");
 }
 if (stationPageHtml.includes('class="station-external-network-list"') ||
     stationPageHtml.includes('id="otherWeatherNetworks"') ||
@@ -566,16 +562,15 @@ if (!networkAppCache.includes('"./networks.html"')) {
 }
 const networkClient = await readFile(join(root,"network-status.js"),"utf8");
 const networkStatusIds = ["Ecowitt","WeatherUnderground","Windguru","Windy","Weathercloud","Awekas","Pwsweather","Cwop","WowBe"];
-if(networkStatusIds.some(name=>!stationNetworksHtml.includes('id="station'+name+'Status" data-state="unknown"')) ||
-   !networkClient.includes('get("/health")') ||
-   !networkClient.includes('get("/wunderground-status")') ||
-   !networkClient.includes('get("/windguru-status")') ||
-   !networkClient.includes('get("/pwsweather-status")') ||
-   !networkClient.includes('get("/cwop-status")') ||
-   !networkClient.includes('get("/wowbe-status")') ||
-   !networkDirectoryCss.includes('station-network-status[data-state="stale"]') ||
-   !networkAppCache.includes('"./network-status.js"')) {
-  failures.push("networks.html: all nine networks require honest, differentiated, responsive health indicators");
+if (networkStatusIds.some(name => stationNetworksHtml.includes('id="station'+name+'Status"')) ||
+    stationNetworksHtml.includes('src="network-status.js')) {
+  failures.push("networks.html: operational telemetry belongs in System Status, not visitor cards");
+}
+if (!networkClient.includes('get("/wunderground-status")') ||
+    !networkClient.includes('get("/cwop-status")') ||
+    !networkClient.includes('get("/wowbe-status")') ||
+    !networkAppCache.includes('"./network-status.js"')) {
+  failures.push("network-status.js: provider diagnostic support must remain available for operators");
 }
 const providerWorker = await readFile(join(root,"_worker/worker.mjs"),"utf8");
 if(!providerWorker.includes('url.pathname === "/pwsweather-status"') ||
