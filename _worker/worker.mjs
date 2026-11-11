@@ -4236,12 +4236,32 @@ async function publishPwsWeatherAttempt(env, syncResult) {
     headers: { "Accept": "text/plain" },
     signal: AbortSignal.timeout(10000)
   });
-  const responseText = (await response.text()).trim().toLowerCase();
-  if (!response.ok || responseText !== "success") {
+  const rawResponseText = (await response.text()).trim();
+  const responseText = rawResponseText.toLowerCase();
+  // A HTTP 200 alone is not proof of ingestion. Capture a sanitized diagnostic
+  // when the provider responds with anything except its documented success.
+  // Never log the request URL: it contains the station's API key.
+  let explicitSuccess = response.ok && responseText === "success";
+  if (!explicitSuccess && response.ok && rawResponseText.startsWith("{")) {
+    try {
+      const result = JSON.parse(rawResponseText);
+      explicitSuccess = result?.success === true ||
+        (result?.status === "success" && result?.error == null);
+    } catch (_) {}
+  }
+  if (!explicitSuccess) {
+    const safeExcerpt = rawResponseText
+      .replaceAll(apiKey, "[REDACTED]")
+      .replace(/(password|api[_-]?key|token|secret)\s*[:=]\s*[^\s,;&"']+/gi, "$1=[REDACTED]")
+      .replace(/[\r\n\t]+/g, " ").slice(0, 180);
     const reason = responseText.includes("invalidpasswordid")
       ? "station ID or API key rejected"
-      : "PWSWeather did not accept the observation";
-    throw new Error(reason + " (HTTP " + response.status + ")");
+      : "PWSWeather acknowledgement was not a recognized success";
+    await recordAttempt("rejected", {
+      reason, http_status:response.status, provider_response:safeExcerpt || "(empty response)",
+      observation_epoch:epoch
+    });
+    return {accepted:false,reason,http_status:response.status};
   }
 
   const at = new Date().toISOString();
