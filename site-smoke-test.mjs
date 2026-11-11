@@ -250,7 +250,7 @@ if (moonFunctionStart < 0 || moonFunctionEnd < 0) {
 if ((dashboardHtml.match(/id="wearTodayHeading"/g)||[]).length !== 1) failures.push("index.html: expected exactly one Dashboard clothing guide");
 if (!dashboardHtml.includes('data-corrections.js?v=20260924-v38-4-97')) failures.push("index.html: shared data corrections must load before the dashboard application");
 if (dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: redundant forecast advice banner must remain removed");
-if (!appJs.includes('const forecastNote=$("wearForecast")')) failures.push("app.js: removed forecast banner must be guarded when absent");
+if (!dashboardApp.includes('const forecastNote=$("wearForecast")')) failures.push("app.js: removed forecast banner must be guarded when absent");
 if (!dashboardHtml.includes('aria-label="Daily sun phases"') || !dashboardHtml.includes('aria-label="Eight phases of the Moon"')) failures.push("index.html: visual sun and moon phase cycles are missing");
 if (!dashboardHtml.includes('id="seasonNextMarker"') || !dashboardHtml.includes('id="seasonDateNote"') || !dashboardHtml.includes("data-season-date")) failures.push("index.html: year-specific annual equinox and solstice outlook is missing");
 if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
