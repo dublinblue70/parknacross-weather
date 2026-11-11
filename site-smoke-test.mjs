@@ -544,7 +544,7 @@ if (!stationNetworksHtml.includes("Station registered · Upload activation pendi
 }
 if (!stationNetworksHtml.includes("Station GW8205 · CWOP account verified; public reporting not yet confirmed.") ||
     !stationNetworksHtml.includes("FindU reporting unverified") ||
-    stationNetworksHtml.includes("Activation pending.")) {
+    stationNetworksHtml.includes("Station GW8205 · Activation pending.")) {
   failures.push("networks.html: verified CWOP account must be distinct from packet sending and public FindU reporting");
 }
 if (stationPageHtml.includes('class="station-external-network-list"') ||
