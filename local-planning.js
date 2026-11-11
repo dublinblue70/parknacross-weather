@@ -83,13 +83,14 @@
   const text=(host,key,value)=>{const el=host?.querySelector(`[data-${key}]`);if(el)el.textContent=value;};
   const time=t=>new Date(t).toLocaleTimeString('en-IE',{timeZone:'Europe/Dublin',hour:'2-digit',minute:'2-digit'});
   let forecast=null,current=null,rainLoading=false,windLoading=false;
+  const forecastSource=()=>forecast?.fallback===true?'Open-Meteo forecast (backup)':'Met Éireann point forecast';
   function renderRain(){if(!rain)return;const view=rainOutlook(forecast),observed=observedRain(current),list=rain.querySelector('[data-rain-slots]');list.replaceChildren();
    text(rain,'rain-summary',rainHeadline(view,observed));
    text(rain,'rain-observed',observed?`Station observation · ${time(observed.time)} Irish time · ${observed.rate.toFixed(1)} mm/h${observed.detected?' detected.':'. Light rain may not register on the sensor.'}`:'Current station rain reading unavailable. Forecast amounts below do not confirm whether it is raining now.');
    if(!view){text(rain,'rain-context','Try Refresh, or open the radar for the latest rain picture.');text(rain,'rain-source','Forecast data is missing or too old to use.');return;}
    text(rain,'rain-context',`${view.complete?'Six forecast hours':`${view.covered} of 6 forecast hours available`} · ${observed?.detected&&!view.wet?'The forecast is missing the rain detected locally. ':''}Forecasts can miss light rain and local showers; 0 mm does not mean it is dry now.`);
    for(const s of view.slots){const item=document.createElement('li');item.dataset.level=s.mm===null?'missing':s.mm>=1?'wet':s.mm>=.1?'light':'dry';const label=document.createElement('span'),value=document.createElement('strong');label.textContent=`${time(s.from)}–${time(s.to)}`;value.textContent=s.mm===null?'Unavailable':s.mm===0?'0.0 mm':s.mm<.1?'<0.1 mm':`${s.mm.toFixed(1)} mm`;item.append(label,value);list.append(item);}
-   text(rain,'rain-source',`Met Éireann point forecast · retrieved ${time(view.retrieved)} Irish time. Amounts cover whole forecast hours, including the current hour; this is forecast rain, not detected rain or a radar arrival estimate.`);
+   text(rain,'rain-source',`${forecastSource()} · retrieved ${time(view.retrieved)} Irish time. Amounts cover whole forecast hours, including the current hour; this is forecast rain, not detected rain or a radar arrival estimate.`);
   }
   function renderLaundry(){
    if(!laundry)return;
@@ -102,12 +103,12 @@
    }
    if(view.state==='sparse'){
     text(laundry,'laundry-summary','Not enough complete hourly data');
-    text(laundry,'laundry-source',`Met Éireann forecast · ${view.covered} complete hours available. Rain, temperature, wind and daylight are all required for a window.`);
+    text(laundry,'laundry-source',`${forecastSource()} · ${view.covered} complete hours available. Rain, temperature, wind and daylight are all required for a window.`);
     return;
    }
    if(!view.windows.length){
     text(laundry,'laundry-summary','No promising drying window in the next 24 hours');
-    text(laundry,'laundry-source',`Met Éireann hourly point forecast · ${view.covered} complete forecast hours. No two-hour rain-free daylight period with useful warmth and airflow was found.`);
+    text(laundry,'laundry-source',`${forecastSource()} · ${view.covered} complete forecast hours. No two-hour rain-free daylight period with useful warmth and airflow was found.`);
     return;
    }
    text(laundry,'laundry-summary',view.windows.length===1?'A possible outdoor drying window':'Best outdoor drying windows');
@@ -123,7 +124,7 @@
     meta.textContent=`${window.quality} · ${window.hours} hours · ${window.temperature.toFixed(0)}°C · ${window.wind.toFixed(0)} km/h wind`;
     detail.append(range,meta);const badge=document.createElement('span');badge.className='laundry-quality';badge.textContent=window.quality;item.append(detail,badge);list.append(item);
    }
-   text(laundry,'laundry-source',`Met Éireann point forecast · ${view.covered} complete hours checked. Estimated from forecast rain, temperature, wind and daylight; humidity is not forecast in this feed, and drying time varies by fabric, shade and how items are hung.`);
+   text(laundry,'laundry-source',`${forecastSource()} · ${view.covered} complete hours checked. Estimated from forecast rain, temperature, wind and daylight; humidity is not forecast in this feed, and drying time varies by fabric, shade and how items are hung.`);
   }
   function renderWind(){if(!wind)return;const v=coastalWind(current),arrow=wind.querySelector('[data-wind-arrow]');arrow.hidden=v.state!=='wind';arrow.style.display=v.state==='wind'?'':'none';
    if(v.state==='unavailable'){text(wind,'wind-summary','Live wind unavailable');text(wind,'wind-detail','A fresh station reading is needed to show the wind direction.');text(wind,'wind-source','Station data is missing or over 10 minutes old.');return;}
@@ -136,11 +137,12 @@
    text(wind,'wind-detail',`${speed}. Blowing towards ${v.toName} (${Math.round(v.to)}°).`);
   }
   async function get(path){const r=await fetch(base+path,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Feed unavailable');return r.json();}
-  async function loadRain(){if((!rain&&!laundry)||rainLoading)return;rainLoading=true;const buttons=[rain?.querySelector('button'),laundry?.querySelector('button')].filter(Boolean);buttons.forEach(b=>b.disabled=true);try{forecast=await get('/outdoor-outlook');window.dispatchEvent(new CustomEvent('parknacross:local-forecast',{detail:forecast}));}catch{forecast=null;window.dispatchEvent(new CustomEvent('parknacross:local-forecast',{detail:null}));}finally{rainLoading=false;buttons.forEach(b=>b.disabled=false);renderRain();renderLaundry();}}
+  async function loadRain(){if((!rain&&!laundry)||rainLoading)return;rainLoading=true;const buttons=[rain?.querySelector('button'),laundry?.querySelector('button')].filter(Boolean);buttons.forEach(b=>b.disabled=true);try{forecast=await (window.ParknacrossForecastService?.get?.()||get('/outdoor-outlook'));}catch{forecast=null;}finally{rainLoading=false;buttons.forEach(b=>b.disabled=false);renderRain();renderLaundry();}}
   async function loadWind(){if((!wind&&!rain)||windLoading)return;windLoading=true;try{current=await get('/current');}catch{current=null;}finally{windLoading=false;renderWind();renderRain();}}
   rain?.querySelector('button').addEventListener('click',()=>{loadRain();loadWind();});
   laundry?.querySelector('button').addEventListener('click',loadRain);
   window.addEventListener('parknacross:current-observation',e=>{current=e.detail?.current||null;renderWind();renderRain();});
+  window.addEventListener('parknacross:local-forecast',e=>{if(e.detail?.points){forecast=e.detail;renderRain();renderLaundry();}});
   loadRain();loadWind();
   (window.ParknacrossRefresh?.every||setInterval)(()=>{renderRain();renderWind();renderLaundry();},60000);
   (window.ParknacrossRefresh?.every||setInterval)(loadRain,15*60000);

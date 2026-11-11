@@ -37,6 +37,20 @@ export function validMarineForecast(data,now=Date.now()){
   const issued=Date.parse(data?.issued_at||data?.issued||'');
   return Boolean(!data?.error&&data?.forecast_available===true&&Number.isFinite(issued)&&now-issued>=-90000&&now-issued<=24*3600000&&['wind','weather','visibility'].every(field=>typeof data.local_area?.[field]==='string'&&data.local_area[field].trim().length>0));
 }
+export function validHourlyForecast(data,now=Date.now()){
+  const issued=Date.parse(data?.fetched_at||'');
+  if(!Array.isArray(data?.points)||!Number.isFinite(issued)||issued>now+90000||now-issued>90*60000)return false;
+  const rows=data.points.filter(p=>{
+    const epoch=Number(p?.epoch);
+    return Number.isSafeInteger(epoch)&&epoch%3600===0&&epoch*1000>now&&epoch*1000<=now+26*3600000 &&
+      p.temperature_c!==null&&Number.isFinite(Number(p.temperature_c))&&
+      p.wind_kmh!==null&&Number.isFinite(Number(p.wind_kmh))&&
+      p.rain_mm!==null&&Number.isFinite(Number(p.rain_mm));
+  }).sort((a,b)=>a.epoch-b.epoch);
+  if(rows.length<6||rows[0].epoch*1000>now+3*3600000)return false;
+  return rows.slice(1,6).every((row,i)=>row.epoch===rows[i].epoch+3600);
+}
+
 export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https://parknacrossweather.ie',api='https://parknacross-weather.dave-s-carter.workers.dev'}={}) {
   const results=[];
   const exportDay=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now));
@@ -70,7 +84,7 @@ export async function checkPublicSite({fetcher=fetch,now=Date.now(),site='https:
     ['Archive coverage',api+'/coverage?days=371',async r=>{const d=await r.json();assert.ok(Array.isArray(d.days)&&d.days.length&&d.summary&&Number.isFinite(d.summary.coverage_percent)&&!d.error,'Archive coverage unavailable');}],
     ['Statistics',api+'/stats',async r=>{const d=await r.json();assert.ok(Number(d.total_samples)>0&&d.records&&typeof d.records==='object'&&!d.error,'Archive statistics are missing');}],
     ['Export preview',api+`/export-preview?from=${exportFrom}&to=${exportDay}`,async r=>{const d=await r.json();assert.ok(Number(d.count)>0&&fresh(d.last_epoch)&&d.columns?.includes('soil_moisture_pct')&&d.columns?.includes('lightning_strikes'),'Export preview is incomplete or delayed');}],
-    ['Local hourly forecast',api+'/outdoor-outlook',async r=>{const d=await r.json();assert.ok(Array.isArray(d.points)&&d.points.some(p=>Number(p.epoch)*1000>=now)&&now-Date.parse(d.fetched_at)<5400000&&Date.parse(d.fetched_at)<=now+90000,'Local forecast is missing or delayed');}],
+    ['Local hourly forecast',api+'/outdoor-outlook',async r=>{const d=await r.json();assert.ok(validHourlyForecast(d,now),'Local hourly forecast has insufficient fresh, usable or continuous hours');}],
     ['Public photo calendar',api+'/sky-photo/history/dates?month='+exportDay.slice(0,7),async r=>{const d=await r.json();assert.ok(d.month===exportDay.slice(0,7)&&Array.isArray(d.days),'Photo calendar data is invalid');}],
     ['Background push configuration',api+'/push/public-key',async r=>{const d=await r.json();assert.ok(d.available===true&&typeof d.public_key==='string','Push configuration is unavailable');}],
     ['Marine forecast',api+'/met/marine',async r=>{const d=await r.json();assert.ok(validMarineForecast(d,now),'Marine forecast is missing or delayed');}],

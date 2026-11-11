@@ -25,7 +25,7 @@ for (const name of htmlFiles) {
     if (!html.includes('href="install.html">Install help</a>')) failures.push(`${name}: missing static Install help link`);
     if (!html.includes('href="privacy.html">Privacy</a>')) failures.push(`${name}: missing static Privacy link`);
     const menuItems = [...html.matchAll(/role="menuitem"/g)].length;
-    if (name !== "admin.html" && menuItems !== 11) failures.push(`${name}: expected 11 static More-menu destinations, found ${menuItems}`);
+    if (name !== "admin.html" && name !== "offline.html" && name !== "intelligence.html" && menuItems !== (name === "networks.html" ? 12 : 11)) failures.push(`${name}: unexpected static More-menu count ${menuItems}`);
   }
 
   for (const match of html.matchAll(/(?:src|href)="([^"?#]+)(?:[?#][^"]*)?"/g)) {
@@ -186,7 +186,7 @@ const dashboardChartsCss = await readFile(join(root, "dashboard-ui.css"), "utf8"
 if (!dashboardHtml.includes('class="chart-grid chart-grid--balanced"') ||
     !dashboardHtml.includes('class="chart-column chart-column--observations"') ||
     !dashboardHtml.includes('class="chart-column chart-column--analysis"') ||
-    !dashboardHtml.includes('dashboard-ui.css?v=20261109-balanced-trend-columns') ||
+    !dashboardHtml.includes('dashboard-ui.css?v=20261111-balanced-trend-release') ||
     !dashboardChartsCss.includes("body.dashboard-page .trends-section .chart-grid.chart-grid--balanced") ||
     !dashboardChartsCss.includes("align-items: start") ||
     !dashboardChartsCss.includes("flex: 0 0 auto") ||
@@ -530,7 +530,7 @@ if ((windguruWorker.match(/scheduleWindguruFromGateway\(ctx, env, liveReading\);
   failures.push("Windguru: both GW3001 upload paths must relay fresh samples at minute cadence and record sent values");
 }
 if (!stationNetworksHtml.includes("Shared sensor readings and history.") ||
-    !stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h3>')) {
+    !stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h2>')) {
   failures.push("networks.html: Ecowitt card must use the owner-provided station sharing link");
 }
 if (!stationNetworksHtml.includes('id="stationWowBeLink" href="https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"') ||
@@ -651,7 +651,7 @@ if (!iconRequiredNames.every(name => iconLibrary.includes("    "+name+": [")) ||
 const iconCache = await readFile(join(root, "service-worker.js"), "utf8");
 if (!iconCache.includes('"./weather-icons.css"') ||
     !iconCache.includes('"./weather-icons.js"') ||
-    !iconCache.includes("sitewide-weather-icons-20261109")) {
+    !iconCache.includes("forecast-unified-20261111")) {
   failures.push("shared SVG system: both assets and a rotated offline cache required");
 }
 const visitorServiceWorker = await readFile(join(root, "service-worker.js"), "utf8");

@@ -73,7 +73,8 @@
    if($('forecast'+name+'Summary'))$('forecast'+name+'Summary').textContent='';
    if($('forecast'+name+'Coverage'))$('forecast'+name+'Coverage').textContent='No verified hourly coverage';
   }
-  if($('forecastFreshness'))$('forecastFreshness').textContent='The Ardamine point forecast could not be verified. Try refreshing shortly.';
+  if($('forecastFreshness'))$('forecastFreshness').textContent='Hourly forecast unavailable from both providers. Try refreshing shortly.';
+  if($('forecastProvider'))$('forecastProvider').textContent='Ardamine hourly forecast · temporarily unavailable';
  }
  function render(feed,now=Date.now()){
   const result=describe(feed,now);if(!result){unavailable();return;}

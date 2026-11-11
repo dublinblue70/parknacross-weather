@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-251-rain-gauge-compare-20261110";
+const CACHE_NAME = "parknacross-v38-4-251-forecast-unified-20261111";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
@@ -215,7 +215,8 @@ self.addEventListener("fetch", event => {
     url.hostname.includes("rainviewer.com") ||
     url.hostname.includes("openstreetmap.org") ||
     url.hostname.includes("met.ie") ||
-    url.hostname.includes("marine.ie")
+    url.hostname.includes("marine.ie") ||
+    url.hostname === "api.open-meteo.com"
   ) return;
 
   if (request.mode === "navigate") {
@@ -242,6 +243,9 @@ self.addEventListener("fetch", event => {
     url.origin === self.location.origin &&
     (url.pathname.endsWith("/styles.css") ||
       url.pathname.endsWith("/app.js") ||
+      url.pathname.endsWith("/local-forecast.js") ||
+      url.pathname.endsWith("/local-planning.js") ||
+      url.pathname.endsWith("/outdoor-outlook.js") ||
       url.pathname.endsWith("/graphs.js") ||
       url.pathname.endsWith("/navigation.js") ||
       url.pathname.endsWith("/downloads.js") ||

@@ -2140,11 +2140,11 @@ function forecastPeriodsForCurrentDay(forecast, now = new Date()) {
  * timestamp back one hour to match our hour-start forecast convention.
  */
 async function getBackupArdamineOutlook() {
-  const url = "https://api.open-meteo.com/v1/forecast?latitude=52.6247&longitude=-6.25&hourly=temperature_2m,precipitation,wind_speed_10m&wind_speed_unit=kmh&precipitation_unit=mm&timeformat=unixtime&timezone=GMT&forecast_days=3";
+  const url = "https://api.open-meteo.com/v1/forecast?latitude=52.6247&longitude=-6.25&hourly=temperature_2m,precipitation,wind_speed_10m,is_day&wind_speed_unit=kmh&precipitation_unit=mm&timeformat=unixtime&timezone=GMT&forecast_days=3";
   const data = await getJSON(url, "no-store", 10000);
   const hours = data?.hourly;
   if (!Array.isArray(hours?.time) || !Array.isArray(hours?.temperature_2m) ||
-      !Array.isArray(hours?.wind_speed_10m) || !Array.isArray(hours?.precipitation)) {
+      !Array.isArray(hours?.wind_speed_10m) || !Array.isArray(hours?.precipitation) || !Array.isArray(hours?.is_day)) {
     throw new Error("Open-Meteo hourly fields unavailable");
   }
   const bounded = (value, low, high) =>
@@ -2160,7 +2160,8 @@ async function getBackupArdamineOutlook() {
       epoch,
       temperature_c: bounded(hours.temperature_2m[i], -40, 50),
       wind_kmh: bounded(hours.wind_speed_10m[i], 0, 200),
-      rain_mm: null
+      rain_mm: null,
+      daylight: hours.is_day[i] === 1
     });
   }
   for (let i = 0; i < hours.time.length; i++) {
@@ -2181,7 +2182,7 @@ async function getArdamineOutlookWithBackup() {
   try {
     const feed = await getJSON(`${API_BASE}/outdoor-outlook`, "no-store", 7500);
     const checked = window.ParknacrossLocalForecast?.describe(feed);
-    if (checked && checked.periods.some(period => period.summary)) return feed;
+    if (checked && checked.periods.filter(period => !!period.summary).length >= 2) return feed;
     throw new Error("Primary point forecast has no usable hourly periods");
   } catch (error) {
     console.warn("Met Éireann point forecast unavailable; trying labelled backup:", error);
@@ -2189,8 +2190,27 @@ async function getArdamineOutlookWithBackup() {
   }
 }
 
+// Share the same forecast source, freshness and failure policy across the dashboard,
+ // rainfall outlook and laundry planning, instead of independently mixing providers.
+let sharedHourlyRequest = null;
+let sharedHourlyAt = 0;
+window.ParknacrossForecastService = {
+  get() {
+    const now = Date.now();
+    if (sharedHourlyRequest && now - sharedHourlyAt < 3 * 60000) return sharedHourlyRequest;
+    sharedHourlyAt = now;
+    sharedHourlyRequest = getArdamineOutlookWithBackup().catch(error => {
+      sharedHourlyRequest = null;
+      throw error;
+    });
+    return sharedHourlyRequest;
+  },
+  source(feed) { return feed?.fallback === true && feed?.source === "Open-Meteo"
+    ? "Open-Meteo hourly forecast (backup)" : "Met Éireann hourly point forecast"; }
+};
+
 async function loadForecast() {
-  const localRequest = getArdamineOutlookWithBackup().then(feed => {
+  const localRequest = window.ParknacrossForecastService.get().then(feed => {
     if (!window.ParknacrossLocalForecast) throw new Error("Local forecast display unavailable");
     window.ParknacrossLocalForecast.render(feed);
   }).catch(error => {

@@ -1,7 +1,13 @@
 import {test,expect} from '@playwright/test';
-const now=Date.parse('2026-10-21T08:30:00Z');let fail,stale;
+const now=Date.parse('2026-10-21T08:30:00Z');let fail,stale,backupFail;
 test.beforeEach(async({page})=>{
- fail=false;stale=false;await page.clock.setFixedTime(new Date(now));
+ fail=false;stale=false;backupFail=false;await page.clock.setFixedTime(new Date(now));
+ await page.route('**/api.open-meteo.com/**',r=>{
+  if(backupFail)return r.fulfill({status:503,body:'{}'});
+  const time=Array.from({length:72},(_,i)=>Date.parse('2026-10-21T00:00:00Z')/1000+i*3600);
+  const hourly={time,temperature_2m:time.map(()=>10),wind_speed_10m:time.map(()=>14),precipitation:time.map((_,i)=>i===15?0.5:0),is_day:time.map((_,i)=>i%24>=7&&i%24<18?1:0)};
+  return r.fulfill({contentType:'application/json',body:JSON.stringify({hourly})});
+ });
  await page.route('**/static.cloudflareinsights.com/**',r=>r.fulfill({body:''}));
  await page.route('**/*.workers.dev/**',r=>{
   const path=new URL(r.request().url()).pathname;if(path==='/outdoor-outlook'&&fail)return r.fulfill({status:503,body:'{}'});
@@ -21,7 +27,18 @@ for(const width of [390,1280])test(`Ardamine forecast replaces broad text at ${w
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
  await page.locator('#forecast').screenshot({path:testInfo.outputPath('local-forecast.png')});
 });
-test('local forecast fails clearly instead of substituting national text',async({page})=>{
- fail=true;await page.goto('/index.html');await expect(page.locator('#forecastToday')).toContainText('Local hourly forecast temporarily unavailable');await expect(page.locator('#forecast')).not.toContainText('NATIONAL TEXT');
- fail=false;stale=true;await page.reload();await expect(page.locator('#forecastFreshness')).toContainText('could not be verified');await expect(page.locator('#forecastTodaySummary')).toBeEmpty();
+test('uses and labels the fallback when primary fails or is stale, never substitutes regional prose',async({page})=>{
+ fail=true;await page.goto('/index.html');
+ await expect(page.locator('#forecastProvider')).toContainText('Open-Meteo');
+ await expect(page.locator('#forecastTodaySummary')).not.toBeEmpty();
+ await expect(page.locator('#forecast')).not.toContainText('NATIONAL TEXT');
+ fail=false;stale=true;await page.reload();
+ await expect(page.locator('#forecastProvider')).toContainText('Open-Meteo');
+ await expect(page.locator('#forecastTonightSummary')).not.toBeEmpty();
+});
+test('fails clearly when both forecast sources fail',async({page})=>{
+ fail=true;backupFail=true;await page.goto('/index.html');
+ await expect(page.locator('#forecastFreshness')).toContainText('both providers');
+ await expect(page.locator('#forecastTodaySummary')).toBeEmpty();
+ await expect(page.locator('#forecast')).not.toContainText('NATIONAL TEXT');
 });
