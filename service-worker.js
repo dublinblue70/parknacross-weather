@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-251-20261111-cwop-account-integration";
+const CACHE_NAME = "parknacross-v38-4-251-forecast-unified-20261111-cwop-account-integration";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
