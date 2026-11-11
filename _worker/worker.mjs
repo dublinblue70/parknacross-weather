@@ -2472,11 +2472,12 @@ export default {
         let attempt = null;
         try { attempt = JSON.parse(data[CWOP_STATUS_KEY] || "null"); } catch (_) {}
         return json({
-          station_id: CWOP_ID, enabled, coordinates_configured: coordinatesConfigured,
+          station_id: CWOP_ID, account_verified: true, enabled, coordinates_configured: coordinatesConfigured,
+          upload_ready: enabled && coordinatesConfigured,
           last_sent_observation_epoch: Number(data[CWOP_LAST_EPOCH_KEY]) || null,
           last_attempt: attempt,
           delivery_note: "A TCP write is not confirmation that FindU or MADIS received or displayed the report.",
-          verify_url: "http://www.findu.com/cgi-bin/wx.cgi?call=GW8205"
+          verify_url: "https://www.findu.com/cgi-bin/wx.cgi?call=GW8205"
         }, 200, {"Cache-Control":"no-store"});
       } catch (_) { return json({error:"CWOP status temporarily unavailable"},503,{"Cache-Control":"no-store"}); }
     }
@@ -3581,18 +3582,14 @@ export default {
         console.warn("Automatic social weather post failed:", error);
       }
 
+      let cwopSyncResult = null;
       try {
         const syncResult = await syncEcowitt(env);
+        cwopSyncResult = syncResult;
         await writeMeta(env, {
           [SCHEDULED_SYNC_SUCCESS_META_KEY]: Math.floor(Date.now() / 1000),
           [SCHEDULED_SYNC_ERROR_META_KEY]: ""
         });
-        try {
-          const cwopResult = await publishCwop(env, syncResult);
-          if (cwopResult?.sent) console.info("CWOP report sent; verify independently on FindU", {epoch:cwopResult.epoch});
-        } catch (error) {
-          console.warn("Scheduled CWOP publish failed:", safeErrorMessage(error));
-        }
         try {
           const windguruResult = await publishWindguru(env, syncResult);
           if (windguruResult?.accepted) console.info("Windguru upload accepted", {epoch:windguruResult.epoch});
@@ -3620,6 +3617,14 @@ export default {
           });
         } catch (_) {}
         console.warn("Scheduled Ecowitt sync failed:", error);
+      }
+      // CWOP is independent of cloud sync: fresh authenticated GW3001 uploads
+      // can still supply the report when the Ecowitt cloud API is unavailable.
+      try {
+        const cwopResult = await publishCwop(env, cwopSyncResult);
+        if (cwopResult?.sent) console.info("CWOP TCP packet sent; verify FindU reception independently", {epoch:cwopResult.epoch});
+      } catch (error) {
+        console.warn("Scheduled CWOP publish failed:", safeErrorMessage(error));
       }
 
       try {await runBackgroundAlerts(env);}catch(error){console.warn("Scheduled background alerts failed");}

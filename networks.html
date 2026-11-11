@@ -204,7 +204,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationCwopTitle">CWOP</h2>
-              <p>Station GW8205 · Activation pending.</p>
+              <p>Station GW8205 · CWOP account verified; public reporting not yet confirmed.</p>
             </div>
           </div>
           <a class="station-external-network-link" id="stationCwopLink" href="https://www.findu.com/cgi-bin/wx.cgi?call=GW8205" target="_blank" rel="noopener noreferrer" aria-label="View CWOP station GW8205 on FindU (opens in a new tab)">View on FindU <span aria-hidden="true">↗</span></a>
@@ -254,12 +254,15 @@
     {
       heading:"stationCwopTitle",
       path:"/cwop-status",
+      fallback:"CWOP account verified · Upload status unavailable; FindU reporting unverified.",
       read:data => {
         if (data?.enabled !== true || data?.coordinates_configured !== true)
-          return "Station GW8205 · Upload not fully enabled; public listing unverified.";
+          return "CWOP account verified · Upload not enabled or coordinates not configured · FindU reporting unverified.";
         const sent = timestamp(data.last_sent_observation_epoch);
-        return sent ? "Packet sent " + sent + " Irish time · FindU listing not verified."
-          : "Uploader enabled · awaiting first confirmed packet; public listing unverified.";
+        return data.last_attempt?.state === "error"
+          ? "CWOP account verified · Latest transmission failed · FindU reporting unverified."
+          : sent ? "Account verified · Packet sent " + sent + " Irish time · FindU reporting unverified."
+          : "CWOP account verified · Uploader ready; awaiting first transmission · FindU reporting unverified.";
       }
     },
     {
@@ -286,7 +289,7 @@
       if (data?.error) throw Error("Status unavailable");
       paragraph.textContent = entry.read(data);
     } catch (_) {
-      paragraph.textContent = "Upload status temporarily unavailable · Public listing not verified.";
+      paragraph.textContent = entry.fallback || "Upload status temporarily unavailable · Public listing not verified.";
     }
   });
 })();

@@ -542,9 +542,10 @@ if (!stationNetworksHtml.includes("Station registered · Upload activation pendi
     !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h2>')) {
   failures.push("networks.html: WOW-BE must show registered status until public data is verified");
 }
-if (!stationNetworksHtml.includes("Station GW8205 · Activation pending.") ||
-    stationNetworksHtml.includes("A station listing on FindU")) {
-  failures.push("networks.html: retain concise, accurate CWOP pending status");
+if (!stationNetworksHtml.includes("Station GW8205 · CWOP account verified; public reporting not yet confirmed.") ||
+    !stationNetworksHtml.includes("FindU reporting unverified") ||
+    stationNetworksHtml.includes("Activation pending.")) {
+  failures.push("networks.html: verified CWOP account must be distinct from packet sending and public FindU reporting");
 }
 if (stationPageHtml.includes('class="station-external-network-list"') ||
     stationPageHtml.includes('id="otherWeatherNetworks"') ||
