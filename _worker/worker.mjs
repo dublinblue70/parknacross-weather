@@ -4141,8 +4141,19 @@ async function publishPwsWeather(env, syncResult) {
   }
 }
 async function publishPwsWeatherAttempt(env, syncResult) {
+  // Persist an attempt before any early exit so the status endpoint can
+  // distinguish no trigger from a skipped or unsuccessful publication.
+  const recordAttempt = async (state, extra = {}) => writeMeta(env, {
+    [PWSWEATHER_LAST_ATTEMPT_META_KEY]: JSON.stringify({
+      at:new Date().toISOString(), state, ...extra
+    })
+  });
+  await recordAttempt("started", {source:syncResult?.reading?"gateway_or_ecowitt":"gateway_or_archive"});
   const apiKey = await readSecret(env.PWSWEATHER_API_KEY);
-  if (!apiKey) return { skipped: true, reason: "secret_not_configured" };
+  if (!apiKey) {
+    await recordAttempt("skipped", {reason:"secret_not_configured"});
+    return { skipped: true, reason: "secret_not_configured" };
+  }
 
   const nowEpoch = Math.floor(Date.now() / 1000);
 
@@ -4166,9 +4177,11 @@ async function publishPwsWeatherAttempt(env, syncResult) {
   const meta = await readMetaMap(env, [PWSWEATHER_LAST_EPOCH_META_KEY]);
   const lastUploadedEpoch = Number(meta[PWSWEATHER_LAST_EPOCH_META_KEY] || 0);
   if (Number.isFinite(lastUploadedEpoch) && epoch <= lastUploadedEpoch) {
+    await recordAttempt("skipped", {reason:"observation_already_sent",observation_epoch:epoch,last_accepted_observation_epoch:lastUploadedEpoch});
     return { skipped: true, reason: "observation_already_sent", epoch };
   }
   if (lastUploadedEpoch > 0 && epoch - lastUploadedEpoch < PWSWEATHER_MIN_UPLOAD_INTERVAL_SECONDS) {
+    await recordAttempt("skipped", {reason:"upload_interval",observation_epoch:epoch,last_accepted_observation_epoch:lastUploadedEpoch});
     return { skipped: true, reason: "upload_interval", epoch };
   }
 
