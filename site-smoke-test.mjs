@@ -264,8 +264,8 @@ for (const page of ["install.html", "station.html"]) {
 const diagnosticsSource = await readFile(new URL("pwa-diagnostics.js", import.meta.url), "utf8");
 if (/v\d+\.\d+\.\d+/.test(diagnosticsSource)) failures.push("pwa-diagnostics.js: release number must be read dynamically");
 if (!dashboardHtml.includes('class="ww-coastline"') || !dashboardHtml.includes('class="ww-sea-lines"') || !dashboardHtml.includes('class="ww-garden"')) failures.push("index.html: Ardamine Weather Window should include the added coastal, sea and garden illustration details");
-if (dashboardHtml.indexOf('id="wearForecast"') > dashboardHtml.indexOf('id="todaySkyPanel"')) failures.push("index.html: forecast-only rain context must be near current conditions");
-if (!dashboardHtml.includes("Station observations are shown separately")) failures.push("app.js: forecast rain must be distinguished from measured local rain");
+if (dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: removed forecast advice banner must not reappear");
+if (!dashboardHtml.includes("separate from live station readings")) failures.push("index.html: forecast must remain clearly distinct from measured observations");
 if (!dashboardApp.includes('strikesToday===0?"None today"')) failures.push("app.js: zero-lightning wording is missing");
 const coastScript = await readFile(join(root, "coast.js"), "utf8");
 if (/Math\.(?:floor|ceil)\(Math\.(?:min|max)\(model,buoy\)\*2\)/.test(coastScript)) failures.push("coast.js: sea-temperature range still expands to half-degree bounds");
