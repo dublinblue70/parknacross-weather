@@ -95,9 +95,14 @@
    $('forecast'+name+'Summary').textContent=result.periods[i].summary;
   });
   let rest=$('forecastRestOfNight');
-  if(!rest){rest=document.createElement('article');rest.id='forecastRestOfNight';rest.className='forecast-card';$('forecastTodayLabel')?.closest('article,.forecast-card')?.before(rest);}
-  rest.replaceChildren();rest.hidden=!result.restOfNight;
-  if(result.restOfNight){for(const [tag,value] of [['h3',result.restOfNight.label],['p',result.restOfNight.summary],['small',result.restOfNight.coverage]]){const node=document.createElement(tag);node.textContent=value;rest.append(node);}}
+  // Only mount an extra forecast article when overnight hours really exist.
+  // A permanently hidden first article confuses both visitors' accessibility
+  // tree and generic first-card selection in mobile regression tests.
+  if(result.restOfNight){
+   if(!rest){rest=document.createElement('article');rest.id='forecastRestOfNight';rest.className='forecast-card';$('forecastTodayLabel')?.closest('article,.forecast-card')?.before(rest);}
+   rest.replaceChildren();rest.hidden=false;
+   for(const [tag,value] of [['h3',result.restOfNight.label],['p',result.restOfNight.summary],['small',result.restOfNight.coverage]]){const node=document.createElement(tag);node.textContent=value;rest.append(node);}
+  }else if(rest){rest.hidden=true;rest.replaceChildren();}
   $('forecastFreshness').textContent=`${backup?'Backup':'Local'} hourly forecast retrieved ${stamp(result.fetched)} Irish time`;
  }
  window.ParknacrossLocalForecast={describe,render,unavailable};
