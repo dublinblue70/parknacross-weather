@@ -92,7 +92,7 @@
 <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261027-persistence" defer></script><link rel="stylesheet" href="station-page.css?v=20261109-network-grid"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
 <script src="site-polish.js?v=20261101-v38-4-239" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
-  <link rel="stylesheet" href="networks-page.css?v=20261111-cwop-graphs">
+  <link rel="stylesheet" href="networks-page.css?v=20261111-network-health">
 </head>
 <body class="networks-directory-page">
 <div class="shell">
@@ -120,7 +120,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationEcowittTitle">Ecowitt.net</h2>
-              <p>Shared sensor readings and history.</p>
+              <p class="station-network-status" id="stationEcowittStatus" data-state="unknown">Ecowitt cloud sync not yet checked.</p>
             </div>
           </div>
           <a class="station-external-network-link" id="stationEcowittLink" href="https://www.ecowitt.net/home/share?authorize=RVM47S" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" aria-label="View shared Parknacross Weather observations on Ecowitt.net (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
@@ -132,7 +132,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationWeatherUndergroundTitle">Weather Underground</h2>
-              <p>Live conditions, charts and history.</p>
+              <p class="station-network-status" id="stationWeatherUndergroundStatus" data-state="unknown">Provider update unverified.</p>
             </div>
           </div>
           <a class="station-external-network-link" id="stationWeatherUndergroundLink" href="https://www.wunderground.com/dashboard/pws/IARDAM6" target="_blank" rel="noopener noreferrer" aria-label="View on Weather Underground (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
@@ -144,7 +144,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationWindguruTitle">Windguru</h2>
-              <p>Coastal wind and weather readings.</p>
+              <p class="station-network-status" id="stationWindguruStatus" data-state="unknown">Upload status not yet checked.</p>
             </div>
           </div>
           <a class="station-external-network-link" id="stationWindguruLink" href="https://www.windguru.cz/station/16733" target="_blank" rel="noopener noreferrer" aria-label="View ParknacrossWX Windguru station 16733 (opens in a new tab)">View wind data <span aria-hidden="true">↗</span></a>
@@ -156,7 +156,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationWindyTitle">Windy.com</h2>
-              <p>Weather readings on an interactive map.</p>
+              <p class="station-network-status" id="stationWindyStatus" data-state="unknown">Provider update unverified.</p>
             </div>
           </div>
           <a class="station-external-network-link" id="stationWindyLink" href="https://www.windy.com/station/pws-hdC7VHGr" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Windy.com (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
@@ -168,7 +168,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationWeathercloudTitle">Weathercloud</h2>
-              <p>Current conditions and history.</p>
+              <p class="station-network-status" id="stationWeathercloudStatus" data-state="unknown">Provider update unverified.</p>
             </div>
           </div>
           <a class="station-external-network-link" id="stationWeathercloudLink" href="https://app.weathercloud.net/d3781994059" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on Weathercloud (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
@@ -180,7 +180,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationAwekasTitle">AWEKAS</h2>
-              <p>Station observations and trends.</p>
+              <p class="station-network-status" id="stationAwekasStatus" data-state="unknown">Provider update unverified.</p>
             </div>
           </div>
           <a class="station-external-network-link" id="stationAwekasLink" href="https://www.awekas.at/en/instrument.php?id=54012" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on AWEKAS (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
@@ -192,7 +192,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationPwsweatherTitle">PWSWeather</h2>
-              <p>Current conditions and station history.</p>
+              <p class="station-network-status" id="stationPwsweatherStatus" data-state="unknown">Upload status not yet checked.</p>
             </div>
           </div>
           <a class="station-external-network-link" id="stationPwsweatherLink" href="https://www.pwsweather.com/station/pws/PARKNACROSSWX" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross Weather on PWSWeather (opens in a new tab)">View readings <span aria-hidden="true">↗</span></a>
@@ -204,7 +204,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationCwopTitle">CWOP</h2>
-              <p>Verified account · FindU display unconfirmed.</p>
+              <p class="station-network-status" id="stationCwopStatus" data-state="unknown">Verified · Upload status not yet checked.</p>
             </div>
           </div>
           <div class="station-network-links" aria-label="CWOP station GW8205 data views">
@@ -219,7 +219,7 @@
             </span>
             <div class="station-network-copy">
               <h2 id="stationWowBeTitle">WOW-BE</h2>
-              <p>Registered · Public display unconfirmed.</p>
+              <p class="station-network-status" id="stationWowBeStatus" data-state="unknown">Registered · Upload status not yet checked.</p>
             </div>
           </div>
           <a class="station-external-network-link" id="stationWowBeLink" href="https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3" target="_blank" rel="noopener noreferrer" aria-label="View Parknacross station on WOW-BE (opens in a new tab)">View Parknacross <span aria-hidden="true">↗</span></a>
@@ -241,65 +241,6 @@
 <script src="navigation.js?v=20261109-networks-site-app"></script>
 <script src="site-help.js?v=20261008-v38-4-170"></script>
 <script src="review-tools.js?v=20261106-notification-duplication-fix" defer></script>
-<script>
-/* Network registration, upload acknowledgement and public listing are different states.
-   Use only read-only Cloudflare diagnostics; never claim provider acceptance from a sent packet. */
-(() => {
-  const base = (window.PARKNACROSS_CONFIG?.apiBase || window.PARKNACROSS_API_BASE ||
-    "https://parknacross-weather.dave-s-carter.workers.dev").replace(/\/$/, "");
-  const timestamp = epoch => {
-    const n = Number(epoch);
-    if (!Number.isFinite(n) || n <= 0) return null;
-    const date = new Date(n * 1000);
-    const zone = "Europe/Dublin";
-    const day = value => new Intl.DateTimeFormat("en-CA", {timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit"}).format(value);
-    const time = date.toLocaleTimeString("en-IE", {timeZone:zone,hour:"2-digit",minute:"2-digit"});
-    return day(date) === day(new Date()) ? time
-      : date.toLocaleDateString("en-IE", {timeZone:zone,day:"numeric",month:"short"}) + ", " + time;
-  };
-  const entries = [
-    {
-      heading:"stationCwopTitle",
-      path:"/cwop-status",
-      fallback:"Verified · Upload status unavailable.",
-      read:data => {
-        if (data?.enabled !== true || data?.coordinates_configured !== true)
-          return "Verified · Upload not configured.";
-        const sent = timestamp(data.last_sent_observation_epoch);
-        return data.last_attempt?.state === "error"
-          ? "Verified · Last upload failed."
-          : sent ? "Verified · Sent " + sent + " · FindU unconfirmed."
-          : "Verified · Awaiting first upload.";
-      }
-    },
-    {
-      heading:"stationWowBeTitle",
-      path:"/wowbe-status",
-      read:data => {
-        if (data?.registered !== true) return "Registration not confirmed.";
-        if (data?.enabled !== true || data?.credential_configured !== true)
-          return "Registered · Upload not configured.";
-        const sent = timestamp(data.last_sent_observation_epoch);
-        return sent ? "Uploaded " + sent + " · Display unconfirmed."
-          : "Registered · Awaiting first upload.";
-      }
-    }
-  ];
-  entries.forEach(async entry => {
-    const paragraph = document.getElementById(entry.heading)?.nextElementSibling;
-    if (!paragraph) return;
-    paragraph.setAttribute("aria-live", "polite");
-    try {
-      const response = await fetch(base + entry.path,{cache:"no-store",signal:AbortSignal.timeout(8000)});
-      if (!response.ok) throw Error("Network status endpoint unavailable");
-      const data = await response.json();
-      if (data?.error) throw Error("Status unavailable");
-      paragraph.textContent = entry.read(data);
-    } catch (_) {
-      paragraph.textContent = entry.fallback || "Upload status unavailable.";
-    }
-  });
-})();
-</script>
+<script src="network-status.js?v=20261111-provider-telemetry"></script>
 </body>
 </html>

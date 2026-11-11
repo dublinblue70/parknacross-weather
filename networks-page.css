@@ -245,3 +245,27 @@ body.networks-directory-page .station-network-raw-link {
   body.networks-directory-page .station-network-links { margin-left: 49px; column-gap: 14px; }
   body.networks-directory-page .station-network-links > .station-external-network-link { min-height: 44px; }
 }
+
+/* Compact provider health: green only for a recent API-confirmed event,
+   amber for stale and neutral when publication is not independently known. */
+body.networks-directory-page .station-external-network p.station-network-status {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  overflow-wrap: anywhere;
+  color: #a7bccb;
+  font-variant-numeric: tabular-nums;
+}
+body.networks-directory-page .station-network-status::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 100%;
+  background: #8395a2;
+  align-self: center;
+}
+body.networks-directory-page .station-network-status[data-state="recent"]::before { background: #65cfb4; }
+body.networks-directory-page .station-network-status[data-state="stale"]::before { background: #f4bd73; }
+body.networks-directory-page .station-network-status[data-state="error"]::before { background: #e89091; }

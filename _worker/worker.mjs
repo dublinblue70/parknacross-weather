@@ -70,6 +70,7 @@ const META_TABLE = "parknacross_meta_v1";
 const WH52_UPLOAD_META_KEY = "wh52_gateway_latest_v1";
 const WH52_UPLOAD_STATUS_META_KEY = "wh52_gateway_status_v1";
 const PWSWEATHER_LAST_EPOCH_META_KEY = "pwsweather_last_upload_epoch_v1";
+const PWSWEATHER_LAST_ACCEPTED_AT_META_KEY = "pwsweather_last_accepted_at_v1";
 const PWSWEATHER_STATION_ID = "PARKNACROSSWX";
 const CWOP_ID = "GW8205";
 const CWOP_LAST_EPOCH_KEY = "cwop_last_sent_epoch_v1";
@@ -2462,6 +2463,36 @@ export default {
         }, 200, { "Cache-Control": "no-store" });
       } catch (_) { return json({error:"Windguru status temporarily unavailable"},503,{"Cache-Control":"no-store"}); }
     }
+    if (url.pathname === "/pwsweather-status" && request.method === "GET") {
+      try {
+        const credentialConfigured = Boolean(await readSecret(env.PWSWEATHER_API_KEY));
+        const meta = await readMetaMap(env, [PWSWEATHER_LAST_EPOCH_META_KEY, PWSWEATHER_LAST_ACCEPTED_AT_META_KEY]);
+        const epoch = Number(meta[PWSWEATHER_LAST_EPOCH_META_KEY]);
+        return json({station_id:PWSWEATHER_STATION_ID,credential_configured:credentialConfigured,
+          last_accepted_observation_epoch:Number.isFinite(epoch)&&epoch>0?epoch:null,
+          last_accepted_at:meta[PWSWEATHER_LAST_ACCEPTED_AT_META_KEY]||null,
+          delivery_note:"A PWSWeather success response confirms acknowledgement, not public visibility."
+        },200,{"Cache-Control":"no-store"});
+      } catch (_) {return json({error:"PWSWeather status temporarily unavailable"},503,{"Cache-Control":"no-store"});}
+    }
+    if (url.pathname === "/wunderground-status" && request.method === "GET") {
+      try {
+        // Owner-issued read-only key: never expose it in visitor responses.
+        const apiKey = await readSecret(env.WUNDERGROUND_API_KEY);
+        if (!apiKey) return json({confirmed:false,reason:"api_key_not_configured"},200,{"Cache-Control":"no-store"});
+        const endpoint = new URL("https://api.weather.com/v2/pws/observations/current");
+        endpoint.search = new URLSearchParams({stationId:"IARDAM6",format:"json",units:"m",apiKey}).toString();
+        const upstream = await fetch(endpoint.toString(),{headers:{Accept:"application/json"},signal:AbortSignal.timeout(6500)});
+        if (!upstream.ok) return json({confirmed:false,reason:"provider_response_unavailable"},200,{"Cache-Control":"no-store"});
+        const result = await upstream.json();
+        const observation = Array.isArray(result?.observations) ? result.observations.find(row=>String(row.stationID||row.stationId||"").toUpperCase()==="IARDAM6") : null;
+        const epoch = Math.floor(Date.parse(observation?.obsTimeUtc || "")/1000);
+        if (!Number.isFinite(epoch) || epoch<=0 || epoch>Date.now()/1000+90)
+          return json({confirmed:false,reason:"no_valid_station_observation"},200,{"Cache-Control":"no-store"});
+        return json({confirmed:true,station_id:"IARDAM6",observation_epoch:epoch,
+          source:"weather_underground_current_observation"},200,{"Cache-Control":"no-store"});
+      } catch (_) {return json({confirmed:false,reason:"provider_response_unavailable"},200,{"Cache-Control":"no-store"});}
+    }
     if (url.pathname === "/cwop-status" && request.method === "GET") {
       try {
         const enabled = String(env.CWOP_ENABLED ?? "").toLowerCase() === "true";
@@ -4159,7 +4190,7 @@ async function publishPwsWeather(env, syncResult) {
     throw new Error(reason + " (HTTP " + response.status + ")");
   }
 
-  await writeMeta(env, { [PWSWEATHER_LAST_EPOCH_META_KEY]: epoch });
+  await writeMeta(env, { [PWSWEATHER_LAST_EPOCH_META_KEY]: epoch, [PWSWEATHER_LAST_ACCEPTED_AT_META_KEY]: new Date().toISOString() });
   return { accepted: true, epoch };
 }
 
