@@ -28,7 +28,7 @@
  facebook:['Today’s Facebook delivery has not been confirmed, or its status is unavailable.','Check Buffer and the visible Facebook post.','https://www.facebook.com/1361994206992789'],
  x:['Today’s X delivery has not been confirmed, or its status is unavailable.','Check Buffer and the visible X post.','https://x.com/ParknacrossWx']
  };
- let cards=[],ready=false,issuesOnly=false,running=false,activeSource=null;
+ let cards=[],ready=false,issuesOnly=true,running=false,activeSource=null;
  let previous={},changes=[];
  try{const data=JSON.parse(sessionStorage.getItem('parknacross-health-session')||'{}');previous=data.previous&&typeof data.previous==='object'?data.previous:{};changes=Array.isArray(data.changes)?data.changes.filter(c=>guidance[c.key]&&['recovered','new','worsened','changed'].includes(c.kind)&&Number.isFinite(Date.parse(c.at))).slice(0,20):[];}catch{}
  const persist=()=>{try{sessionStorage.setItem('parknacross-health-session',JSON.stringify({previous,changes}));}catch{}};
