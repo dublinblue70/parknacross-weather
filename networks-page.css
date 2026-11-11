@@ -222,3 +222,26 @@ body.networks-directory-page .station-external-network-link:hover span[aria-hidd
     transition: none;
   }
 }
+
+/* The CWOP card opens its graphs by default while retaining the raw data table. */
+body.networks-directory-page .station-network-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 18px;
+  row-gap: 2px;
+  margin-left: 54px;
+  min-width: 0;
+}
+body.networks-directory-page .station-network-links > .station-external-network-link {
+  margin-left: 0;
+  overflow-wrap: anywhere;
+}
+body.networks-directory-page .station-network-raw-link {
+  color: #aec2cf;
+  font-weight: 500;
+}
+@media (max-width: 760px) {
+  body.networks-directory-page .station-network-links { margin-left: 49px; column-gap: 14px; }
+  body.networks-directory-page .station-network-links > .station-external-network-link { min-height: 44px; }
+}

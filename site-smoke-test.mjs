@@ -427,7 +427,7 @@ const networkDirectoryCss = await readFile(join(root, "networks-page.css"), "utf
 if (!stationNetworksHtml.includes('aria-labelledby="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('id="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('class="networks-directory-page"') ||
-    !stationNetworksHtml.includes('networks-page.css?v=20261109-premium-svg-icons') ||
+    !stationNetworksHtml.includes('networks-page.css?v=20261111-cwop-graphs') ||
     !networkDirectoryCss.includes("grid-template-columns: repeat(3, minmax(0, 1fr))") ||
     !networkDirectoryCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") ||
     !networkDirectoryCss.includes("grid-template-columns: minmax(0, 1fr)") ||
@@ -475,7 +475,7 @@ const expectedStationNetworks = [
   ["stationWeathercloudLink", "https://app.weathercloud.net/d3781994059"],
   ["stationAwekasLink", "https://www.awekas.at/en/instrument.php?id=54012"],
   ["stationPwsweatherLink", "https://www.pwsweather.com/station/pws/PARKNACROSSWX"],
-  ["stationCwopLink", "https://www.findu.com/cgi-bin/wx.cgi?call=GW8205"],
+  ["stationCwopLink", "https://www.findu.com/cgi-bin/wxpage.cgi?call=GW8205&amp;last=24"],
   ["stationWowBeLink", "https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"]
 ];
 for (const [id, url] of expectedStationNetworks) {
@@ -542,7 +542,9 @@ if (!stationNetworksHtml.includes("Station registered · Upload activation pendi
     !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h2>')) {
   failures.push("networks.html: WOW-BE must show registered status until public data is verified");
 }
-if (!stationNetworksHtml.includes("Station GW8205 · CWOP account verified; public reporting not yet confirmed.") ||
+if (!stationNetworksHtml.includes('id="stationCwopRawLink" href="https://www.findu.com/cgi-bin/wx.cgi?call=GW8205"') ||
+    !stationNetworksHtml.includes('id="stationCwopLink" href="https://www.findu.com/cgi-bin/wxpage.cgi?call=GW8205&amp;last=24"') ||
+    !stationNetworksHtml.includes("Station GW8205 · CWOP account verified; public reporting not yet confirmed.") ||
     !stationNetworksHtml.includes("FindU reporting unverified") ||
     stationNetworksHtml.includes("Station GW8205 · Activation pending.")) {
   failures.push("networks.html: verified CWOP account must be distinct from packet sending and public FindU reporting");
