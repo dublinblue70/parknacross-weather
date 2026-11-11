@@ -18,6 +18,12 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css?v=20261102-history-inspector-1" />
+    <style>
+      .heatmap-range-controls{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 8px}
+      .heatmap-range-controls button{padding:8px 13px;min-height:40px;border:1px solid rgba(174,210,232,.25);border-radius:9px;background:transparent;color:var(--text);font:inherit;cursor:pointer}
+      .heatmap-range-controls button[aria-pressed="true"]{background:rgba(123,215,239,.15);border-color:rgba(123,215,239,.65);color:#b3eefe}
+      .heatmap-range-controls button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+    </style>
     <title>
       Ardamine Weather History | Rainfall &amp; Records, North Wexford
     </title>
@@ -161,18 +167,19 @@
               <h2 id="completenessHeading">Archive coverage</h2>
               <p>
                 Shows how many expected five-minute readings were saved each day
-                over the past year. Hover, focus or tap a day for its details, then choose Open day to inspect saved observations.
+                over the selected period. Choose a range, then hover, focus or tap a day for details.
               </p>
             </div>
             <span class="source-badge source-observed">Observed locally</span>
           </div>
+          <div class="heatmap-range-controls" role="group" aria-label="Archive coverage range"><button type="button" data-heatmap-days="90" aria-pressed="true">Recent 90 days</button><button type="button" data-heatmap-days="365" aria-pressed="false">Full year</button></div>
           <p id="heatmapDateRange" class="heatmap-date-range"></p>
           <div class="archive-heatmap-frame"><div class="heatmap-weekdays" aria-hidden="true"><span></span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div><div class="archive-heatmap-wrap">
             <div
               id="archiveHeatmap"
               class="archive-heatmap"
               role="group"
-              aria-label="Daily archive coverage over the past year"
+              aria-label="Daily archive coverage for recent 90 days"
             ></div>
           </div>
           </div><div class="heatmap-day-inspector"><p id="heatmapDayDetail" role="status">Choose a day to see its date and coverage.</p><a id="heatmapOpenDay" href="history.html" hidden>Open day →</a></div>
