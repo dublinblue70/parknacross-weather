@@ -287,3 +287,56 @@ body.networks-directory-page .station-network-links { row-gap: 0; }
   }
   body.networks-directory-page .station-external-network-link { min-height: 40px; }
 }
+
+/* Consistent, compact desktop directory cards. Keep this page scoped. */
+@media (min-width: 761px) {
+  body.networks-directory-page .station-external-network-list {
+    gap: 14px;
+  }
+  body.networks-directory-page .station-external-network {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    align-content: center;
+    justify-content: stretch;
+    min-height: 114px;
+    gap: 12px;
+    padding: 18px 20px;
+  }
+  body.networks-directory-page .station-network-identity {
+    gap: 14px;
+    align-items: center;
+  }
+  body.networks-directory-page .station-network-brand {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+  }
+  body.networks-directory-page .station-external-network-link {
+    margin-left: 58px;
+    min-height: 24px;
+    padding: 0;
+    white-space: nowrap;
+  }
+  body.networks-directory-page .station-network-links {
+    margin-left: 58px;
+    gap: 8px 18px;
+  }
+  body.networks-directory-page .station-network-links > .station-external-network-link {
+    margin-left: 0;
+  }
+}
+@media (min-width: 1200px) {
+  body.networks-directory-page .station-external-network-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 761px) and (max-width: 1199px) {
+  body.networks-directory-page .station-external-network-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* Long translated names and the CWOP second link may wrap as needed. */
+body.networks-directory-page .station-network-links > .station-external-network-link {
+  white-space: normal;
+}
