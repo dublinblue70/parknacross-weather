@@ -2135,8 +2135,62 @@ function forecastPeriodsForCurrentDay(forecast, now = new Date()) {
   };
 }
 
+/* Independent, explicitly attributed backup for the Ardamine forecast panel.
+ * Open-Meteo precipitation is the sum for the PRECEDING hour; shift its
+ * timestamp back one hour to match our hour-start forecast convention.
+ */
+async function getBackupArdamineOutlook() {
+  const url = "https://api.open-meteo.com/v1/forecast?latitude=52.6247&longitude=-6.25&hourly=temperature_2m,precipitation,wind_speed_10m&wind_speed_unit=kmh&precipitation_unit=mm&timeformat=unixtime&timezone=GMT&forecast_days=3";
+  const data = await getJSON(url, "no-store", 10000);
+  const hours = data?.hourly;
+  if (!Array.isArray(hours?.time) || !Array.isArray(hours?.temperature_2m) ||
+      !Array.isArray(hours?.wind_speed_10m) || !Array.isArray(hours?.precipitation)) {
+    throw new Error("Open-Meteo hourly fields unavailable");
+  }
+  const bounded = (value, low, high) =>
+    value !== null && value !== undefined && value !== "" &&
+    Number.isFinite(Number(value)) && Number(value) >= low && Number(value) <= high
+      ? Number(value) : null;
+  const now = Math.floor(Date.now() / 1000), rows = new Map();
+  for (let i = 0; i < hours.time.length; i++) {
+    const epoch = Number(hours.time[i]);
+    if (!Number.isInteger(epoch) || epoch % 3600 !== 0 ||
+        epoch < now - 7200 || epoch > now + 30 * 3600) continue;
+    rows.set(epoch, {
+      epoch,
+      temperature_c: bounded(hours.temperature_2m[i], -40, 50),
+      wind_kmh: bounded(hours.wind_speed_10m[i], 0, 200),
+      rain_mm: null
+    });
+  }
+  for (let i = 0; i < hours.time.length; i++) {
+    const epoch = Number(hours.time[i]);
+    const previousHour = rows.get(epoch - 3600);
+    if (previousHour) previousHour.rain_mm =
+      bounded(hours.precipitation[i], 0, 100);
+  }
+  const points = [...rows.values()].sort((a, b) => a.epoch - b.epoch);
+  if (points.filter(row => row.epoch >= now && row.temperature_c !== null).length < 6) {
+    throw new Error("Open-Meteo returned insufficient future hourly coverage");
+  }
+  return { source: "Open-Meteo", fallback: true,
+    fetched_at: new Date().toISOString(), forecast: true, points };
+}
+
+async function getArdamineOutlookWithBackup() {
+  try {
+    const feed = await getJSON(`${API_BASE}/outdoor-outlook`, "no-store", 7500);
+    const checked = window.ParknacrossLocalForecast?.describe(feed);
+    if (checked && checked.periods.some(period => period.summary)) return feed;
+    throw new Error("Primary point forecast has no usable hourly periods");
+  } catch (error) {
+    console.warn("Met Éireann point forecast unavailable; trying labelled backup:", error);
+    return getBackupArdamineOutlook();
+  }
+}
+
 async function loadForecast() {
-  const localRequest = getJSON(`${API_BASE}/outdoor-outlook`).then(feed => {
+  const localRequest = getArdamineOutlookWithBackup().then(feed => {
     if (!window.ParknacrossLocalForecast) throw new Error("Local forecast display unavailable");
     window.ParknacrossLocalForecast.render(feed);
   }).catch(error => {
