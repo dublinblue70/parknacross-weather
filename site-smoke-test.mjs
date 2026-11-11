@@ -475,7 +475,7 @@ const expectedStationNetworks = [
   ["stationWeathercloudLink", "https://app.weathercloud.net/d3781994059"],
   ["stationAwekasLink", "https://www.awekas.at/en/instrument.php?id=54012"],
   ["stationPwsweatherLink", "https://www.pwsweather.com/station/pws/PARKNACROSSWX"],
-  ["stationCwopLink", "http://www.findu.com/cgi-bin/wx.cgi?call=GW8205"],
+  ["stationCwopLink", "https://www.findu.com/cgi-bin/wx.cgi?call=GW8205"],
   ["stationWowBeLink", "https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"]
 ];
 for (const [id, url] of expectedStationNetworks) {
@@ -514,7 +514,7 @@ if (!wowBeStatusHtml.includes('id="wowbeHealth"') ||
     !wowBeStatusClient.includes("accepted_not_display_verified")) {
   failures.push("WOW-BE: system status must separately report upload acknowledgement and public verification");
 }
-if (!stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h3>') ||
+if (!stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h2>') ||
     !stationNetworksHtml.includes("Station registered · Upload activation pending.")) {
   failures.push("WOW-BE: public network card must reflect registration without inventing live transmission");
 }
@@ -539,7 +539,7 @@ if (!stationNetworksHtml.includes('id="stationWowBeLink" href="https://wow.meteo
   failures.push("networks.html: WOW-BE link must deep-link to registered Parknacross site rather than provider homepage");
 }
 if (!stationNetworksHtml.includes("Station registered · Upload activation pending.") ||
-    !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h3>')) {
+    !stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h2>')) {
   failures.push("networks.html: WOW-BE must show registered status until public data is verified");
 }
 if (!stationNetworksHtml.includes("Station GW8205 · Activation pending.") ||
