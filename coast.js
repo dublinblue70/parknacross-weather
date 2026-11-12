@@ -1,6 +1,6 @@
 (() => {
  const cfg=window.PARKNACROSS_CONFIG||{},API=cfg.apiBase,$=id=>document.getElementById(id),set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
- const API_TIMEOUT_MS=12000;
+ const API_TIMEOUT_MS=20000;
  const usable=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v));
  const n=(v,d=1)=>usable(v)?Number(v).toFixed(d):"--";
  const comp=d=>{if(!usable(d))return"--";const a=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return a[Math.round((((Number(d)%360)+360)%360)/22.5)%16]};
