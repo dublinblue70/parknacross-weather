@@ -8223,24 +8223,32 @@ function parseCsvLine(line) {
 
 // Try the backup when the primary is stale as well as when it fails.
 async function getMarineInstituteM2SeaTemperature() {
-  const failures = [];
-  let lastVerified = null;
-  for (const [name, fetchObservation] of [
+  // Check both providers concurrently to prevent primary timeout + backup timeout
+  // from exceeding the browser health-check deadline. Prefer the newest report.
+  const sources = [
     ["Marine Institute", getMarineInstituteM2SeaTemperatureErddap],
     ["Met Éireann", getMetEireannM2SeaTemperature]
-  ]) {
-    try {
-      const observation = await fetchObservation();
-      if (!lastVerified || Date.parse(observation.observation_time) > Date.parse(lastVerified.observation_time)) {
-        lastVerified = observation;
-      }
-      if (!observation.is_stale) return { observation, state: "current", detail: null };
-      failures.push(name + ": latest observation is " + observation.observation_age_minutes + " minutes old");
-    } catch (error) {
-      failures.push(name + ": " + (error?.message || String(error)));
+  ];
+  const outcomes = await Promise.allSettled(sources.map(([, get]) => get()));
+  const failures = [];
+  let latest = null;
+  let latestCurrent = null;
+  for (let i = 0; i < outcomes.length; i++) {
+    const result = outcomes[i];
+    if (result.status === "rejected") {
+      failures.push(sources[i][0] + ": " + (result.reason?.message || String(result.reason)));
+      continue;
     }
+    const observation = result.value;
+    const observationTime = Date.parse(observation.observation_time);
+    if (!latest || observationTime > Date.parse(latest.observation_time)) latest = observation;
+    if (!observation.is_stale && (!latestCurrent ||
+        observationTime > Date.parse(latestCurrent.observation_time))) latestCurrent = observation;
+    if (observation.is_stale) failures.push(sources[i][0] +
+      ": latest observation is " + observation.observation_age_minutes + " minutes old");
   }
-  if (lastVerified) return { observation: lastVerified, state: "upstream_delayed",
+  if (latestCurrent) return { observation: latestCurrent, state: "current", detail: null };
+  if (latest) return { observation: latest, state: "upstream_delayed",
     detail: "Latest verified offshore observation exceeds 12 hours. " + failures.join("; ") };
   const retrievalFailed = failures.some(message => /timed out|timeout|HTTP |fetch failed|network|abort|invalid response/i.test(message));
   return { observation: null, state: retrievalFailed ? "retrieval_failed" : "unavailable",
