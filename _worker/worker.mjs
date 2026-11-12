@@ -3582,7 +3582,7 @@ export default {
       }
 
       if (url.pathname === "/marine/sea-temperature") {
-        return await cachedJson(request, ctx, 1800, () => getSeaSurfaceTemperature());
+        return await cachedJson(request, ctx, 1800, () => getSeaSurfaceTemperature(env));
       }
 
       if (url.pathname === "/climate-summary") {
@@ -8221,13 +8221,30 @@ function parseCsvLine(line) {
 }
 
 
+// Try the backup when the primary is stale as well as when it fails.
 async function getMarineInstituteM2SeaTemperature() {
-  try {
-    return await getMarineInstituteM2SeaTemperatureErddap();
-  } catch (error) {
-    console.warn("Marine Institute ERDDAP M2 query failed; trying Met Éireann buoy API:", error);
-    return await getMetEireannM2SeaTemperature();
+  const failures = [];
+  let lastVerified = null;
+  for (const [name, fetchObservation] of [
+    ["Marine Institute", getMarineInstituteM2SeaTemperatureErddap],
+    ["Met Éireann", getMetEireannM2SeaTemperature]
+  ]) {
+    try {
+      const observation = await fetchObservation();
+      if (!lastVerified || Date.parse(observation.observation_time) > Date.parse(lastVerified.observation_time)) {
+        lastVerified = observation;
+      }
+      if (!observation.is_stale) return { observation, state: "current", detail: null };
+      failures.push(name + ": latest observation is " + observation.observation_age_minutes + " minutes old");
+    } catch (error) {
+      failures.push(name + ": " + (error?.message || String(error)));
+    }
   }
+  if (lastVerified) return { observation: lastVerified, state: "upstream_delayed",
+    detail: "Latest verified offshore observation exceeds 12 hours. " + failures.join("; ") };
+  const retrievalFailed = failures.some(message => /timed out|timeout|HTTP |fetch failed|network|abort|invalid response/i.test(message));
+  return { observation: null, state: retrievalFailed ? "retrieval_failed" : "unavailable",
+    detail: failures.join("; ") || "No verified M2 observation was returned" };
 }
 
 async function getMarineInstituteM2SeaTemperatureErddap() {
@@ -8249,7 +8266,7 @@ async function getMarineInstituteM2SeaTemperatureErddap() {
 
   const { response, text } = await fetchTextWithTimeout(endpoint.toString(), {
     headers: { "Accept": "text/csv" }
-  }, 1800);
+  }, 8000);
 
   if (!response.ok) {
     throw new Error(`Marine Institute M2 buoy HTTP ${response.status}`);
@@ -8293,13 +8310,9 @@ async function getMarineInstituteM2SeaTemperatureErddap() {
   const latest = candidates[0];
   const ageMinutes = Math.max(0, (Date.now() - latest.epoch) / 60000);
 
-  // Do not describe an old buoy observation as current.  If the feed has not
-  // updated within 12 hours, fall through to the model sources below.
-  if (ageMinutes > 12 * 60) {
-    throw new Error(`Marine Institute M2 buoy observation is stale (${Math.round(ageMinutes)} min old)`);
-  }
-
+  // Preserve genuine old readings but never identify them as current.
   return {
+    is_stale: ageMinutes > 12 * 60,
     sea_surface_temperature_c: latest.value,
     observation_time: latest.time,
     // Kept for backwards compatibility with the existing coast.js display.
@@ -8357,11 +8370,9 @@ async function getMetEireannM2SeaTemperature() {
     if (!latest) throw new Error("Met Éireann M2 buoy has no usable sea-temperature observation");
 
     const ageMinutes = Math.max(0, (Date.now() - latest.timestamp.getTime()) / 60000);
-    if (ageMinutes > 12 * 60) {
-      throw new Error(`Met Éireann M2 buoy observation is stale (${Math.round(ageMinutes)} min old)`);
-    }
     const time = latest.timestamp.toISOString();
     return {
+      is_stale: ageMinutes > 12 * 60,
       sea_surface_temperature_c: latest.value,
       observation_time: time,
       model_time: time,
@@ -8549,39 +8560,61 @@ async function getLocalSeaTemperatureModel() {
   throw new Error(`Local modelled sea temperature unavailable. ${errors.join("; ")}`);
 }
 
-async function getSeaSurfaceTemperature() {
-  /*
-   * Return TWO independent readings:
-   *   1) local_model — modelled sea temperature near Parknacross;
-   *   2) m2_buoy    — observed open-water Irish Sea temperature at M2.
-   *
-   * The backwards-compatible top-level fields deliberately mirror the local
-   * model when it is available, because that is the geographically relevant
-   * value for Parknacross.  M2 remains available separately and is never
-   * presented as a local Poulshone/Ardamine measurement.
-   */
+// The last validated offshore observation is durable across Worker invocations.
+// A D1 fault must never cause the local sea-temperature model to fail.
+async function storeOrReadLastM2Observation(env, observation) {
+  if (!env?.DB?.prepare) return observation || null;
+  try {
+    await env.DB.prepare(
+      "CREATE TABLE IF NOT EXISTS marine_m2_last_observation (station_id TEXT PRIMARY KEY, observation_json TEXT NOT NULL, observed_at TEXT NOT NULL)"
+    ).run();
+    const date = observation && Date.parse(observation.observation_time);
+    const value = observation && Number(observation.sea_surface_temperature_c);
+    if (Number.isFinite(date) && date <= Date.now() + 120000 &&
+        Number.isFinite(value) && value >= -2 && value <= 35) {
+      const observedAt = new Date(date).toISOString();
+      await env.DB.prepare(
+        "INSERT INTO marine_m2_last_observation (station_id, observation_json, observed_at) VALUES ('M2', ?, ?) " +
+        "ON CONFLICT(station_id) DO UPDATE SET observation_json=excluded.observation_json, observed_at=excluded.observed_at " +
+        "WHERE excluded.observed_at > marine_m2_last_observation.observed_at"
+      ).bind(JSON.stringify(observation), observedAt).run();
+    }
+    const row = await env.DB.prepare(
+      "SELECT observation_json FROM marine_m2_last_observation WHERE station_id='M2'"
+    ).first();
+    const saved = row?.observation_json ? JSON.parse(row.observation_json) : null;
+    if (!saved || !Number.isFinite(Date.parse(saved.observation_time)) ||
+        !Number.isFinite(Number(saved.sea_surface_temperature_c))) return observation || null;
+    if (observation && Date.parse(observation.observation_time) > Date.parse(saved.observation_time)) return observation;
+    return saved;
+  } catch (error) {
+    console.warn("M2 last-observation persistence unavailable:", error);
+    return observation || null;
+  }
+}
+
+async function getSeaSurfaceTemperature(env) {
+  // Local model and offshore observation are separate evidence.
   const [localResult, m2Result] = await Promise.allSettled([
     getLocalSeaTemperatureModel(),
     getMarineInstituteM2SeaTemperature()
   ]);
-
   const localModel = localResult.status === "fulfilled" ? localResult.value : null;
-  const m2Buoy = m2Result.status === "fulfilled" ? m2Result.value : null;
-
-  if (!localModel && !m2Buoy) {
+  const m2Info = m2Result.status === "fulfilled" ? m2Result.value : {
+    observation: null, state: "retrieval_failed",
+    detail: m2Result.reason?.message || String(m2Result.reason)
+  };
+  const upstreamM2 = m2Info.observation || null;
+  const lastVerifiedM2 = await storeOrReadLastM2Observation(env, upstreamM2);
+  const m2Available = m2Info.state === "current" && Boolean(upstreamM2);
+  if (!localModel && !lastVerifiedM2) {
     const localError = localResult.status === "rejected"
-      ? (localResult.reason?.message || String(localResult.reason))
-      : "unavailable";
-    const m2Error = m2Result.status === "rejected"
-      ? (m2Result.reason?.message || String(m2Result.reason))
-      : "unavailable";
-    throw new Error(`Sea temperature unavailable. Local model: ${localError}; M2 buoy: ${m2Error}`);
+      ? (localResult.reason?.message || String(localResult.reason)) : "unavailable";
+    throw new Error("Sea temperature unavailable. Local model: " + localError +
+      "; M2 buoy: " + (m2Info.detail || "unavailable"));
   }
-
-  const legacyPrimary = localModel || m2Buoy;
-
+  const legacyPrimary = localModel || (m2Available ? upstreamM2 : null);
   return {
-    // Backwards-compatible fields. Prefer the geographically local model.
     sea_surface_temperature_c: legacyPrimary?.sea_surface_temperature_c ?? null,
     source: legacyPrimary?.source ?? null,
     source_short: legacyPrimary?.source_short ?? null,
@@ -8592,20 +8625,19 @@ async function getSeaSurfaceTemperature() {
     timestamp: legacyPrimary?.timestamp ?? legacyPrimary?.model_time ?? legacyPrimary?.observation_time ?? null,
     latitude: legacyPrimary?.latitude ?? null,
     longitude: legacyPrimary?.longitude ?? null,
-
-    // New explicit split used by the Coastal page.
     local_model: localModel,
-    m2_buoy: m2Buoy,
+    m2_buoy: lastVerifiedM2,
     local_model_available: Boolean(localModel),
-    m2_observation_available: Boolean(m2Buoy),
-    display_default: localModel ? "local_model" : "m2_buoy",
+    m2_observation_available: m2Available,
+    m2_source_status: m2Info.state,
+    m2_source_detail: m2Info.detail,
+    m2_last_verified_cached: Boolean(lastVerifiedM2 && (!upstreamM2 ||
+      Date.parse(lastVerifiedM2.observation_time) > Date.parse(upstreamM2.observation_time))),
+    display_default: localModel ? "local_model" : (m2Available ? "m2_buoy" : "unavailable"),
     errors: {
       local_model: localResult.status === "rejected"
-        ? (localResult.reason?.message || String(localResult.reason))
-        : null,
-      m2_buoy: m2Result.status === "rejected"
-        ? (m2Result.reason?.message || String(m2Result.reason))
-        : null
+        ? (localResult.reason?.message || String(localResult.reason)) : null,
+      m2_buoy: m2Available ? null : m2Info.detail || "No current M2 observation"
     }
   };
 }
@@ -9513,7 +9545,7 @@ async function cachedJson(request, ctx, ttlSeconds, producer) {
   const cacheUrl = new URL(request.url);
   cacheUrl.searchParams.set("__cache_version", EDGE_CACHE_VERSION);
   if (cacheUrl.pathname === "/marine/tides" || cacheUrl.pathname === "/marine/sea-temperature") {
-    cacheUrl.searchParams.set("__marine_source_version", "v38.4.81");
+    cacheUrl.searchParams.set("__marine_source_version", "v20261112-m2-history");
   }
   const cacheKey = new Request(cacheUrl.toString(), {
     method: "GET"
