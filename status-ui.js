@@ -28,6 +28,21 @@
  facebook:['Today’s Facebook delivery has not been confirmed, or its status is unavailable.','Check Buffer and the visible Facebook post.','https://www.facebook.com/1361994206992789'],
  x:['Today’s X delivery has not been confirmed, or its status is unavailable.','Check Buffer and the visible X post.','https://x.com/ParknacrossWx']
  };
+ function guidanceFor(key,results){
+  if(key!=='m2')return guidance[key];
+  const state=results?.m2?.m2_source_status;
+  if(state==='upstream_delayed')return [
+   'The latest verified offshore M2 observation is older than expected. Your local weather station is unaffected.',
+   'See the last verified time and age in the check details, or use the separate coastal model on Sea & Swim.',
+   'coast.html'
+  ];
+  if(state==='retrieval_failed')return [
+   'The website could not retrieve the official M2 data. This does not establish that the buoy itself is offline.',
+   'Retry the source check. Any historical reading is marked with its age and must not be treated as live.',
+   'coast.html'
+  ];
+  return guidance[key];
+ }
  let cards=[],ready=false,issuesOnly=true,running=false,activeSource=null;
  let previous={},changes=[];
  try{const data=JSON.parse(sessionStorage.getItem('parknacross-health-session')||'{}');previous=data.previous&&typeof data.previous==='object'?data.previous:{};changes=Array.isArray(data.changes)?data.changes.filter(c=>guidance[c.key]&&['recovered','new','worsened','changed'].includes(c.kind)&&Number.isFinite(Date.parse(c.at))).slice(0,20):[];}catch{}
@@ -72,7 +87,7 @@
    let timing=technical?.querySelector('.health-response-time');
    if(technical&&!timing){timing=document.createElement('p');timing.className='health-response-time';technical.append(timing);}
    if(timing)timing.textContent=checked?`Source check completed in ${(meta[card.source].elapsed/1000).toFixed(2)} seconds.`:'Response time will appear after the source check.';
-   const info=guidance[card.key];const impact=$(card.key+'Impact');
+   const info=guidanceFor(card.key,results);const impact=$(card.key+'Impact');
    if(impact)impact.textContent=state==='checking'?'Checking this source…':state==='good'?(card.key==='battery'?'Reported battery information is available; its measurement time may be unknown.':card.key==='soil'?'A recent WH52 gateway upload and current soil values are confirmed; the sensor’s radio transmission time is not supplied.':card.key==='wh40h'?'WH40H source mapping and live rain fields are available; physical battery and radio-link health are not independently checked.':card.key==='facebook'||card.key==='x'?'Delivery status is reported by the weather data service. Confirm the visible post on the platform.':'This check passed. Expand details for the source result.'):(info?.[0]||'This check needs review.');
    if(checked&&state!=='checking'&&!isRunning){
     const before=previous[card.key];
@@ -91,11 +106,12 @@
   for(const card of issues.sort((a,b)=>(a.element.dataset.healthState==='bad'?-1:1)-(b.element.dataset.healthState==='bad'?-1:1))){
    const li=document.createElement('li');li.className='health-attention-item '+card.element.dataset.healthState;
    const title=document.createElement('h3');title.textContent=card.title;
-   const impact=document.createElement('p');impact.textContent=guidance[card.key][0];
-   const action=document.createElement('p');action.className='health-next-step';action.textContent=guidance[card.key][1];
+   const guidanceText=guidanceFor(card.key,results);
+   const impact=document.createElement('p');impact.textContent=guidanceText[0];
+   const action=document.createElement('p');action.className='health-next-step';action.textContent=guidanceText[1];
    const links=document.createElement('div');links.className='health-attention-actions';
    const inspect=document.createElement('a');inspect.href='#health-'+card.key;inspect.textContent='View check';
-   const feature=document.createElement('a');feature.href=guidance[card.key][2];feature.textContent='Open related page';if(feature.href.startsWith('https:')&&!feature.href.startsWith(location.origin)){feature.target='_blank';feature.rel='noopener noreferrer';}
+   const feature=document.createElement('a');feature.href=guidanceText[2];feature.textContent='Open related page';if(feature.href.startsWith('https:')&&!feature.href.startsWith(location.origin)){feature.target='_blank';feature.rel='noopener noreferrer';}
    const retry=document.createElement('button');retry.type='button';retry.textContent=running?'Checking…':'Retry';retry.disabled=running;retry.setAttribute('aria-label','Retry '+card.title);retry.addEventListener('click',()=>window.runChecks(card.source));
    links.append(inspect,feature,retry);li.append(title,impact,action,links);host.append(li);
   }
