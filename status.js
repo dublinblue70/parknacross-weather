@@ -36,7 +36,7 @@ function classifyM2Observation(payload, now = Date.now()) {
     Number.isFinite(Number(value)) && Number(value) >= -2 && Number(value) <= 35;
   if (payload?.__error || payload?.m2_observation_available !== true ||
       !validValue || ageMinutes === null || ageMinutes < -2 || ageMinutes > 720) {
-    return {state:"unavailable", ageMinutes, timestamp:Number.isFinite(observedAt)?timestamp:null, value:null};
+    return {state:"unavailable", ageMinutes, timestamp:Number.isFinite(observedAt)?timestamp:null, value:validValue?Number(value):null};
   }
   return {state: ageMinutes <= 180 ? "good" : "warn", ageMinutes,
     timestamp, value:Number(value)};
@@ -316,11 +316,18 @@ function renderChecks(only=null) {
     const stamp=m2Time?fmtIrishDateTime(m2Time):null;
     const ageText=m2Age!==null&&m2Age>=-2?fmtAge(Math.max(0,m2Age)*60):null;
     if(decision.state==="unavailable"){
-      setBadge("m2Badge","warn","UNAVAILABLE");
-      setText("m2Value","No current reading");
-      setText("m2ObservationInfo",stamp?`Last supplied observation: ${stamp} Irish time · outside the current-data window.`:"Observation time unavailable · no verified current M2 temperature.");
-      const reason=m2.__error?.message||m2?.errors?.m2_buoy||"No sufficiently recent timestamped M2 observation was returned";
-      setText("m2Detail",`${reason}. The separate coastal model may still be available on the Sea & Swim page.`);
+      const sourceState=m2?.m2_source_status;
+      const historical=decision.value!==null&&m2Age!==null&&m2Age>=-2;
+      setBadge("m2Badge","warn",sourceState==="upstream_delayed"?"DELAYED":sourceState==="retrieval_failed"?"FETCH ERROR":"UNAVAILABLE");
+      setText("m2Value",historical?`${fmtNum(decision.value,1)} °C`:"No current reading");
+      setText("m2ObservationInfo",stamp?`Last verified: ${stamp} Irish time · ${ageText||"age unknown"} old · not live.`:"No timestamped historical M2 observation is available.");
+      const diagnosis=sourceState==="upstream_delayed"?
+        "Official feeds supplied an older buoy observation; newer data has not been verified.":
+        sourceState==="retrieval_failed"?
+        "The website could not retrieve or read the official M2 feeds.":
+        "Neither official source supplied a verified current M2 observation.";
+      const reason=m2?.m2_source_detail||m2?.errors?.m2_buoy||m2?.__error?.message;
+      setText("m2Detail",`${diagnosis}${reason?" "+reason:""} The separate local coastal model can remain available on Sea & Swim.`);
       states.push("warn");
     }else{
       setBadge("m2Badge",decision.state,decision.state==="good"?"LIVE":"AGING");
