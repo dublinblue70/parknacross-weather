@@ -674,7 +674,7 @@ if (!iconRequiredNames.every(name => iconLibrary.includes("    "+name+": [")) ||
 const iconCache = await readFile(join(root, "service-worker.js"), "utf8");
 if (!iconCache.includes('"./weather-icons.css"') ||
     !iconCache.includes('"./weather-icons.js"') ||
-    !iconCache.includes("forecast-unified-20261111")) {
+    !iconCache.includes("20261113-sensor-language")) {
   failures.push("shared SVG system: both assets and a rotated offline cache required");
 }
 const visitorServiceWorker = await readFile(join(root, "service-worker.js"), "utf8");
