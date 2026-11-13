@@ -24,7 +24,13 @@ test('unverified warning status never becomes a hidden banner',async({page})=>{
  marine={forecast_available:true,local_warning_status_available:false,local_warning_relevant:null};await page.goto('/index.html');
  await expect(page.locator('#marineWarningBanner')).toBeVisible();await expect(page.locator('#marineWarningTitle')).toHaveText('Official marine warnings unavailable');
 });
-test('coast page preserves local warnings while identifying missing forecast details',async({page})=>{
- await page.goto('/coast.html');await expect(page.locator('#coastWarn')).toHaveText('Gale and Small Craft warnings');await expect(page.locator('#marineForecastUpdated')).toHaveText('Marine forecast unavailable · local warnings checked separately');await expect(page.locator('#marineWind')).toHaveText('Marine forecast details unavailable');
- marine={forecast_available:true,local_warning_status_available:false,local_warning_relevant:null};await page.reload();await expect(page.locator('#coastWarn')).toHaveText('Marine warning status unavailable');
+test('coast page shows local-sector warnings without general marine forecasts',async({page})=>{
+ await page.goto('/coast.html');
+ await expect(page.locator('#coastWarn')).toHaveText('Gale and Small Craft warnings');
+ await expect(page.locator('#coastIssued')).toContainText('Wicklow Head to Carnsore Point');
+ await expect(page.getByRole('link',{name:/Official local marine warnings/})).toHaveAttribute('href',/warnings\/today\/marine\/EI811/);
+ await expect(page.locator('#marineArea,#marineWind,#marineForecastUpdated,#marineOutlook,#m2SeaTemp')).toHaveCount(0);
+ marine={forecast_available:true,local_warning_status_available:false,local_warning_relevant:null};
+ await page.reload();
+ await expect(page.locator('#coastWarn')).toHaveText('Marine warning status unavailable');
 });
