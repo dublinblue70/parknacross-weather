@@ -1,6 +1,7 @@
-const CACHE_NAME = "parknacross-v38-4-251-20261113-release-fixes-cahore-waterlevel-tide-labels";
+const CACHE_NAME = "parknacross-v38-4-251-20261113-release-fixes-cahore-waterlevel-tide-labels-privacy-providers";
 const STATIC_ASSETS = [
   "./site-polish.css",
+  "./privacy-providers.css",
   "./site-polish.js",
   "./notification-storage.js",
   "./notification-test.js",
