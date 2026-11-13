@@ -96,17 +96,17 @@
     const currentYear = frostSeasonKey(today);
     const current = groups.get(currentYear) || { first: null, frostDays: 0, observedDays: 0 };
     set("frostSeasonLabel", `Current frost season · ${frostSeasonLabel(currentYear)}`);
-    set("frostCurrentDate", current.first ? frostDateLabel(current.first) : "No frost recorded yet");
+    set("frostCurrentDate", current.first ? frostDateLabel(current.first) : "No air frost recorded yet");
     set("frostCurrentDetail", current.first
-      ? `Earliest recorded station low at or below 0.0°C this season.`
-      : "A recorded station low of 0.0°C or below marks the first frost.");
+      ? `First recorded air frost this season (0.0°C or below).`
+      : "The first station air temperature of 0.0°C or below marks an air frost.");
     set("frostSeasonCount", String(current.frostDays));
     set("frostSeasonCoverage", `${current.observedDays.toLocaleString("en-IE")} day${current.observedDays === 1 ? "" : "s"} with valid saved lows; gaps remain unknown`);
     set("frostArchiveRange", `${frostDateLabel(validDays[0].day)} – ${frostDateLabel(validDays[validDays.length - 1].day)}`);
     const history = [...groups.entries()].filter(([year]) => year < currentYear).sort((a, b) => b[0] - a[0]);
     $("frostSeasonHistory").hidden = history.length === 0;
     $("frostSeasonHistory").innerHTML = history.map(([year, group]) =>
-      `<article class="event-item"><time>${frostSeasonLabel(year)}</time><div><strong>${group.first ? `Earliest recorded frost · ${frostDateLabel(group.first)}` : "No frost recorded in available observations"}</strong><p>${group.frostDays} frost day${group.frostDays === 1 ? "" : "s"} among ${group.observedDays.toLocaleString("en-IE")} days with valid station lows.</p></div></article>`
+      `<article class="event-item"><time>${frostSeasonLabel(year)}</time><div><strong>${group.first ? `First recorded air frost · ${frostDateLabel(group.first)}` : "No air frost recorded in available observations"}</strong><p>${group.frostDays} air-frost day${group.frostDays === 1 ? "" : "s"} among ${group.observedDays.toLocaleString("en-IE")} days with valid station lows.</p></div></article>`
     ).join("");
     set("frostStatus", `Based on ${validDays.length.toLocaleString("en-IE")} archived days with usable temperature lows. A missing or unrecorded day is not treated as frost-free.`);
   }
