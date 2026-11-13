@@ -71,10 +71,10 @@ const predicted = await runApi(async url => ({ok:true,async json(){
   ]};
   return {};
 }}));
-assert.match(predicted.get("tideList").innerHTML,/0\\.46 m/);
-assert.match(predicted.get("tideList").innerHTML,/-0\\.09 m/);
+assert.match(predicted.get("tideList").innerHTML,/0\.46 m/);
+assert.match(predicted.get("tideList").innerHTML,/-0\.09 m/);
 assert.doesNotMatch(predicted.get("tideList").innerHTML,/OD Malin/);
-assert.match(predicted.get("nextTideTime").textContent,/0\\.46 m/);
+assert.match(predicted.get("nextTideTime").textContent,/0\.46 m/);
 assert.doesNotMatch(predicted.get("nextTideTime").textContent,/OD Malin/);
 
 console.log("Coast data fallback and understandable tide-height display tests passed.");
