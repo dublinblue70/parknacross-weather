@@ -16,8 +16,7 @@
   <link rel="canonical" href="https://parknacrossweather.ie/radar.html">
   <style>
     .radar-arrival-card{margin-top:16px}.radar-arrival-estimate{margin:8px 0 6px;font-size:1.08rem;font-weight:750;color:var(--text,#f4f8fb)}.radar-arrival-card .info-note{margin-bottom:0}
-    .satellite-jump-links,.satellite-source-links{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:14px}.satellite-jump-links a,.satellite-source-links a{color:var(--accent);font-size:.83rem;font-weight:650;text-decoration:none}.satellite-jump-links a:hover,.satellite-source-links a:hover{text-decoration:underline}
-    .satellite-section .section-heading p{margin:5px 0 0;color:var(--muted);font-size:.82rem}.satellite-stream-frame{display:block;width:100%;aspect-ratio:16/9;margin-top:14px;border:0;border-radius:12px;background:#07131f}.satellite-stream-status{margin:8px 0 0;color:var(--muted);font-size:.74rem;line-height:1.45}.satellite-source-links{margin-top:12px}.satellite-direct-link{display:inline-flex;align-items:center;gap:6px;margin-top:10px;color:var(--accent);font-size:.85rem;font-weight:700;text-decoration:none}.satellite-direct-link:hover{text-decoration:underline}.radar-controls .radar-center-button{white-space:nowrap}
+    .radar-controls .radar-center-button{white-space:nowrap}
   </style>
 <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
 <script src="site-polish.js?v=20261113-sensor-language" defer></script>
@@ -36,8 +35,8 @@
     <nav class="nav" aria-label="Main navigation"><a href="index.html">Dashboard</a><a href="summary.html">Summary</a><a href="radar.html" class="active" aria-current="page">Radar</a><a href="graphs.html">Graphs</a><a href="rain.html">Rain</a><a href="history.html">History</a><div class="nav-more"><button class="nav-more-button" type="button" aria-expanded="false" aria-haspopup="menu">More <span aria-hidden="true">▾</span></button><div class="nav-more-menu" role="menu" hidden><a role="menuitem" href="climate.html">Climate</a><a role="menuitem" href="station.html">Station</a><a role="menuitem" href="coast.html">Sea &amp; swim</a><a role="menuitem" href="sky.html">Today’s sky</a><a role="menuitem" href="records.html">Records</a><a role="menuitem" href="monthly.html">Monthly report</a><a role="menuitem" href="annual.html">Annual report</a><a role="menuitem" href="downloads.html">Downloads</a><a role="menuitem" href="status.html">System status</a><a role="menuitem" href="install.html">Install help</a><a role="menuitem" href="privacy.html">Privacy</a></div></div></nav>
   </header>
   <main>
-    <section class="page-hero"><span class="section-eyebrow">Radar &amp; satellite</span><h1>North Wexford radar and satellite</h1>
-      <p>Track recent precipitation on the radar, then use satellite imagery to see cloud patterns over Ireland and Europe.</p><div class="satellite-jump-links"><a href="#radarSection">Rain radar ↓</a><a href="#satelliteImagery">Satellite images ↓</a></div></section>
+    <section class="page-hero"><span class="section-eyebrow">Local rainfall</span><h1>North Wexford rain radar</h1>
+      <p>Track recent rain approaching Parknacross and compare it with rainfall measured at the station.</p></section>
     <section class="page-section radar-shell" id="radarSection" aria-labelledby="radarHeading">
       <h2 class="visually-hidden" id="radarHeading">Recent rain radar</h2>
       <div class="radar-toolbar"><div><strong id="radarTime">Loading radar…</strong><span id="radarStatus">Retrieving recent frames</span></div>
@@ -51,14 +50,7 @@
       </article>
       <div class="source-note"><a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">Radar data by RainViewer ↗</a>. Map © OpenStreetMap contributors. Official warnings and forecasts remain Met Éireann. Frames start paused; press Play to animate them.</div>
     </section>
-    <section class="page-section satellite-section" id="satelliteImagery" aria-labelledby="satelliteHeading">
-      <div class="section-heading"><div><span class="section-eyebrow">Satellite stream</span><h2 id="satelliteHeading">Live cloud view over Europe</h2><p>A near-real-time video stream from EUMETSAT’s Meteosat-12 satellite (not a still image).</p></div></div>
-      <iframe class="satellite-stream-frame" title="EUMETSAT Meteosat-12 live satellite view over Europe" data-satellite-stream data-stream-src="https://www.youtube-nocookie.com/embed/nigtvuOspmM?autoplay=0&amp;mute=1&amp;playsinline=1&amp;rel=0" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-      <p class="satellite-stream-status" data-satellite-status role="status" aria-live="polite">The player loads when you scroll near it. EUMETSAT updates imagery every 10 minutes; processing can add around 30 minutes of delay. If the player is blank or blocked, open the stream directly below.</p>
-      <a class="satellite-direct-link" data-satellite-direct href="https://www.youtube.com/watch?v=nigtvuOspmM" target="_blank" rel="noopener noreferrer">Open EUMETSAT stream directly ↗</a>
-      <div class="satellite-source-links"><a href="https://www.eumetsat.int/new-satellites-eye-views-europe-and-africa-streaming-online" target="_blank" rel="noopener noreferrer">EUMETSAT stream details ↗</a><a href="https://www.met.ie/latest-reports/satellites/ireland-visible" target="_blank" rel="noopener noreferrer">Met Éireann satellite imagery for Ireland ↗</a><a href="https://www.meteociel.fr/observations-meteo/satellite.php?mode=animation-truecolor-composition-mtg" target="_blank" rel="noopener noreferrer">Meteociel satellite animations ↗</a></div>
-      <p class="source-note">Source: EUMETSAT Meteosat-12 Earth view. This stream shows cloud patterns, not rainfall measured at Parknacross; use the radar above for precipitation.</p>
-    </section>
+    
     <section class="page-section two-column-cards">
       <article class="info-card"><span class="section-eyebrow">At Parknacross</span><h2>Current rainfall</h2><p id="radarRainUpdated" class="info-note" role="status">Checking observation time…</p><div class="mini-data-grid">
         <div><span>Rain rate</span><strong id="radarRainRate">--</strong></div><div><span>Today</span><strong id="radarRainToday">--</strong></div></div></article>
