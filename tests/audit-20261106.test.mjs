@@ -10,7 +10,7 @@ assert.match(admin,new RegExp("Admin interface "+packageVersion.replaceAll(".","
 assert.match(sw,/const CACHE_NAME = "parknacross-v38-4-\d+-[a-z0-9-]+"/);
 assert.match(app,/firstValidSoilEpoch/);
 assert.match(app,/A normal gateway packet without soil fields is not evidence/);
-assert.match(status,/A recent successful WH52 receipt remains valid/);
+assert.match(status,/A recent successful soil sensor receipt remains valid/);
 assert.match(index,/Jump to weather information/);
 assert.match(index,/href="#soilPanel"/);
 assert.match(downloads,/five-minute readings \(estimate; use Preview/);
