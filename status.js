@@ -247,7 +247,7 @@ async function runChecks(only=null) {
     // Unique query values bypass the Worker's long marine cache TTLs so this
     // health check can detect an upstream outage instead of only checking cache.
     read("tides",()=>fetchJSON(`${API_BASE}/marine/tides?station=Arklow&healthcheck=${Date.now()}`,10000).catch(e=>({__error:e}))),
-    read("cahore",()=>fetchJSON(`${API_BASE}/marine/cahore-water-level?healthcheck=${Date.now()}`,12000).catch(e=>({__error:e}))),
+    read("cahore",()=>fetchJSON(`${API_BASE}/marine/cahore-water-level`,12000).catch(e=>({__error:e}))),
     read("landWarnings",()=>fetchJSON(`${API_BASE}/met/warnings?healthcheck=${Date.now()}`,12000).catch(e=>({__error:e}))),
     read("marineWarnings",()=>fetchJSON(`${API_BASE}/met/marine?healthcheck=${Date.now()}`,15000).catch(e=>({__error:e}))),
     sitePromise,
