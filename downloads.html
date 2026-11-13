@@ -31,7 +31,7 @@
     "@type": "Place",
     "name": "Ardamine, Co. Wexford, Ireland"
   },
-  "measurementTechnique": "Ecowitt WH40H tipping-bucket rainfall from 2026-11-03 (previous rain gauge earlier), WS90 outdoor weather array, GW3001 gateway, lightning and garden-soil sensors",
+  "measurementTechnique": "dedicated tipping-bucket rainfall from 2026-11-03 (previous rain gauge earlier), outdoor weather array, indoor gateway, lightning and garden-soil sensors",
   "keywords": [
     "Ardamine weather",
     "North Wexford weather",
@@ -55,7 +55,7 @@
     "Rainfall",
     "Solar radiation",
     "UV index",
-    "WS90 battery voltage",
+    "Weather sensor battery voltage",
     "Lightning distance",
     "Lightning strike count",
     "Soil moisture",
@@ -103,8 +103,8 @@
     <p class="range-hint" id="customRangeLimit">Irish local dates are used. The range can include up to 365 days. For very large exports, check your browser’s downloads list after the request; if it fails, try smaller consecutive date ranges. Missing observations are not filled in.</p>
   </section>
   <div id="downloadStatus" class="status" aria-live="polite"></div>
-  <div class="note"><strong>Rainfall sensor history:</strong> WH40H is the primary tipping-bucket rain gauge from 3 Nov 2026. Older archived rainfall was recorded using the previous sensor. Files retain the original historical values, and 3 Nov may include readings across both setups.</div>
-  <div class="note">CSV downloads list the newest observations first and include readable Irish-local times, weather, WS90 battery, garden-soil and genuine lightning-event fields. The observation epoch is retained for technical analysis; the confusing raw lightning epoch is not exported. Soil columns are blank before the soil sensor was installed, and lightning columns are blank when no strike was detected—missing values are never changed to zero. Choose 7, 30, 90 or 365 days; every file includes all observations actually available within that period.</div>
+  <div class="note"><strong>Rainfall sensor history:</strong> dedicated rain gauge is the primary tipping-bucket rain gauge from 3 Nov 2026. Older archived rainfall was recorded using the previous sensor. Files retain the original historical values, and 3 Nov may include readings across both setups.</div>
+  <div class="note">CSV downloads list the newest observations first and include readable Irish-local times, weather, weather sensor battery, garden-soil and genuine lightning-event fields. The observation epoch is retained for technical analysis; the confusing raw lightning epoch is not exported. Soil columns are blank before the soil sensor was installed, and lightning columns are blank when no strike was detected—missing values are never changed to zero. Choose 7, 30, 90 or 365 days; every file includes all observations actually available within that period.</div>
 </main>
 <footer><span>© <span id="year"></span> Parknacross Weather</span><span>Hyperlocal weather observations · Ardamine, Co. Wexford, Ireland</span><nav class="footer-links" aria-label="Parknacross Weather links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a><span aria-hidden="true">·</span><a href="install.html">Install help</a><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></nav></footer>
 </div>

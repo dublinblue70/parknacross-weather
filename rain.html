@@ -52,18 +52,18 @@
           </div>
           <h1>Rainfall at Parknacross, Ardamine</h1>
           <p>
-            See live WS90 piezo rain indications alongside the WH40H gauge's measured rainfall totals and recent events. Earlier readings in the archive predate the gauge change.
+            See the early indications of rain from the piezo sensor alongside measured rainfall totals and recent events. Earlier readings in the archive predate the gauge change.
           </p>
         </section>
         <div class="rain-toolbar"><p id="rainUpdated" role="status">Waiting for a station reading…</p><button id="rainRefresh" type="button">Refresh rain data</button></div>
-        <p id="rainLoadStatus" class="info-note" role="status" aria-live="polite">Checking rainfall sources…</p><p class="source-note">Rainfall totals come from the WH40H gauge. The WS90 can indicate very light rain before the gauge records it.</p>
+        <p id="rainLoadStatus" class="info-note" role="status" aria-live="polite">Checking rainfall sources…</p><p class="source-note">Rainfall totals come from the dedicated rain gauge. The separate piezo sensor can indicate very light rain before the gauge records it.</p>
         <details class="rain-details rain-source-explainer"><summary>How rainfall is measured and why older totals differ</summary><div class="rain-detail-content">
-          <p class="source-note">Rainfall is sourced from the dedicated Ecowitt WH40H tipping-bucket gauge, selected as the primary sensor at approximately 13:00 Irish time on 3 November 2026, when it was dry. A reading of 0 mm/h means no measurable bucket tip during that interval; traces below the 0.1 mm resolution may not register. The WS90 piezo can give an early indication of light rain before the bucket tips, but can sometimes react to vibration. Piezo readings never contribute to rain totals or historical records. The hourly forecast is not a live rain measurement.</p>
+          <p class="source-note">Rainfall is sourced from the dedicated dedicated tipping-bucket rain gauge, selected as the primary sensor at approximately 13:00 Irish time on 3 November 2026, when it was dry. A reading of 0 mm/h means no measurable bucket tip during that interval; traces below the 0.1 mm resolution may not register. The piezo sensor can give an early indication of light rain before the bucket tips, but can sometimes react to vibration. Piezo readings never contribute to rain totals or historical records. The hourly forecast is not a live rain measurement.</p>
           <p class="source-note"><strong>Rain gauge change · 3 Nov 2026, about 13:00 GMT (Irish time), dry conditions:</strong> Recent charts and multi-day totals span two rainfall instruments. The 3 November changeover-day rainfall total is provisional because the two instruments may have different accumulated counters. Original observations are preserved; cross-gauge totals have not been invented.</p>
         </div></details>
         <section class="page-section rain-hero-grid" aria-label="Current rain and recent totals">
           <article class="rain-primary">
-            <span class="section-eyebrow">Right now</span><h2 id="rainCondition">Checking rain…</h2><strong id="rainNow">-- mm/h</strong><small>WH40H measured rain rate · mm/h</small><p id="rainPiezoToday" class="source-note" hidden></p>
+            <span class="section-eyebrow">Right now</span><h2 id="rainCondition">Checking rain…</h2><strong id="rainNow">-- mm/h</strong><small>Measured rain rate · mm/h</small><p id="rainPiezoToday" class="source-note" hidden></p>
             <p id="rainEventText">Checking the station…</p>
           </article>
           <article class="context-card">
@@ -80,15 +80,15 @@
           </article>
         </section>
         <details class="page-section rain-details" id="rainGaugeAudit">
-          <summary>WH40H verification and 3 November changeover analysis</summary>
+          <summary>Rain-gauge verification and 3 November changeover analysis</summary>
           <div class="rain-detail-content">
             <p class="source-note">This read-only check examines archived rainfall counters. It does not confirm gauge calibration, battery condition, radio reception or tipping-bucket operation. Archived totals are never modified.</p>
             <div class="rain-toolbar"><p id="rainGaugeAuditUpdated" role="status">Open this section to examine archived readings.</p><button id="rainGaugeAuditRefresh" type="button">Recheck archived rain readings</button></div>
             <div class="rain-stat-grid" aria-label="Rain gauge verification results">
-              <article class="climate-card"><span>WH40H data feed</span><strong id="rainGaugeFeedState">Not checked</strong><small id="rainGaugeFeedDetail">Current rain data is checked separately on System Status.</small></article>
+              <article class="climate-card"><span>Rain-gauge data feed</span><strong id="rainGaugeFeedState">Not checked</strong><small id="rainGaugeFeedDetail">Current rain data is checked separately on System Status.</small></article>
               <article class="climate-card"><span>Recent counter movement</span><strong id="rainGaugeTipState">Not checked</strong><small id="rainGaugeTipDetail">An unchanged counter is normal in dry weather.</small></article>
               <article class="climate-card"><span>3 Nov before changeover</span><strong id="rainGaugeBefore">Not checked</strong><small>Counter increases within the previous sensor's readings</small></article>
-              <article class="climate-card"><span>3 Nov after changeover</span><strong id="rainGaugeAfter">Not checked</strong><small>Counter increases within the WH40H-era readings</small></article>
+              <article class="climate-card"><span>3 Nov after changeover</span><strong id="rainGaugeAfter">Not checked</strong><small>Counter increases within the post-changeover readings</small></article>
             </div>
             <p class="source-note" id="rainGaugeReconciliation" role="status">The 3 November daily rainfall total remains provisional. Differences between two gauges' counters are not rainfall.</p>
             <p class="source-note" id="rainGaugeQuality">A dry spell can produce no bucket tips on a perfectly functioning sensor. Independently check battery and signal on the Ecowitt gateway, and compare accumulation during genuine rainfall.</p>

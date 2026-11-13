@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#07131f">
-  <meta name="description" content="About Parknacross Weather in Ardamine, Co. Wexford: Ecowitt WS90 wind and temperature array, dedicated WH40H tipping-bucket rain gauge, WH57 lightning detector and WH52 garden-soil sensor via a GW3001 gateway.">
+  <meta name="description" content="About Parknacross Weather in Ardamine, Co. Wexford: outdoor weather array, dedicated tipping-bucket rain gauge, lightning detector and soil sensor garden-soil sensor via a indoor gateway.">
   <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -144,7 +144,7 @@
       <div class="station-sensor-layout">
         <figure class="station-schematic">
           <svg viewBox="0 0 620 350" role="img" aria-labelledby="stationSceneTitle stationSceneDesc">
-            <title id="stationSceneTitle">Parknacross weather station setup</title><desc id="stationSceneDesc">A schematic of a roof-mounted WS90 weather array, indoor gateway, a pole-mounted WH40H rain gauge, a separate lightning detector and a soil sensor in a planting pot. The drawing does not show their precise locations.</desc>
+            <title id="stationSceneTitle">Parknacross weather station setup</title><desc id="stationSceneDesc">A schematic of the roof-mounted weather sensor, indoor gateway, a separate rain gauge, a separate lightning detector and a soil sensor in a planting pot. The drawing does not show their precise locations.</desc>
             <defs><linearGradient id="stationSky" x2="0" y2="1"><stop stop-color="#102e43"/><stop offset="1" stop-color="#214755"/></linearGradient></defs>
             <rect width="620" height="350" rx="18" fill="url(#stationSky)"/>
             <circle cx="530" cy="66" r="29" fill="#e8c87c" opacity=".8"/>
@@ -163,40 +163,40 @@
           </svg><figcaption>Illustrated setup · sensor positions are schematic.</figcaption>
         </figure>
         <div class="station-sensor-buttons" role="group" aria-label="Explore station equipment">
-          <button type="button" data-sensor="array" aria-pressed="true" aria-controls="stationSensorDetail"><span>01 · Weather array</span><small>Ecowitt WS90 · outdoor array</small></button>
-          <button type="button" data-sensor="rain" aria-pressed="false" aria-controls="stationSensorDetail"><span>02 · Rain gauge</span><small>Ecowitt WH40H · primary rainfall sensor</small></button>
-          <button type="button" data-sensor="lightning" aria-pressed="false" aria-controls="stationSensorDetail"><span>03 · Lightning detector</span><small>Ecowitt WH57 · nearby strikes</small></button>
-          <button type="button" data-sensor="soil" aria-pressed="false" aria-controls="stationSensorDetail"><span>04 · Potted hydrangea soil sensor</span><small>Ecowitt WH52 · hydrangea flowerpot</small></button>
-          <button type="button" data-sensor="gateway" aria-pressed="false" aria-controls="stationSensorDetail"><span>05 · Indoor gateway</span><small>Ecowitt GW3001 · connects the sensors</small></button>
+          <button type="button" data-sensor="array" aria-pressed="true" aria-controls="stationSensorDetail"><span>01 · Weather array</span><small>temperature, wind, humidity and sunshine</small></button>
+          <button type="button" data-sensor="rain" aria-pressed="false" aria-controls="stationSensorDetail"><span>02 · Rain gauge</span><small>primary rainfall sensor</small></button>
+          <button type="button" data-sensor="lightning" aria-pressed="false" aria-controls="stationSensorDetail"><span>03 · Lightning detector</span><small>Detects nearby strikes</small></button>
+          <button type="button" data-sensor="soil" aria-pressed="false" aria-controls="stationSensorDetail"><span>04 · Potted hydrangea soil sensor</span><small>Measures compost conditions</small></button>
+          <button type="button" data-sensor="gateway" aria-pressed="false" aria-controls="stationSensorDetail"><span>05 · Indoor gateway</span><small>Receives the sensor readings</small></button>
         </div>
       </div>
-      <div class="station-sensor-detail" id="stationSensorDetail" aria-live="polite" aria-atomic="true"><h3 id="stationSensorTitle">Outdoor weather array</h3><p id="stationSensorCopy">The WS90 measures outdoor air temperature, relative humidity, ultrasonic wind speed and direction, solar radiation and UV. Rainfall is measured separately by the dedicated WH40H tipping-bucket gauge.</p><a id="stationSensorLink" href="graphs.html">Explore weather charts →</a></div>
+      <div class="station-sensor-detail" id="stationSensorDetail" aria-live="polite" aria-atomic="true"><h3 id="stationSensorTitle">Outdoor weather array</h3><p id="stationSensorCopy">The outdoor weather array measures outdoor air temperature, relative humidity, ultrasonic wind speed and direction, solar radiation and UV. Rainfall is measured separately by the dedicated tipping-bucket rain gauge.</p><a id="stationSensorLink" href="graphs.html">Explore weather charts →</a></div>
     </section>
 
     <section class="station-story"><details class="station-fold"><summary>Full station specification</summary>
       <h2>Equipment &amp; location</h2>
       <p>
-        Parknacross Weather uses an Ecowitt WS90 ultrasonic outdoor array, a separate Ecowitt WH40H tipping-bucket rain gauge, and an Ecowitt GW3001 gateway.
-        The WS90 records the residential coastal microclimate in Parknacross, Ardamine. Only verified mounting dates and station positions should be used to compare historical observations. A detailed exposure history will be published when the change dates have been confirmed.
+        Parknacross Weather uses an outdoor weather sensor, a separate tipping-bucket rain gauge and an indoor gateway.
+        The outdoor weather array records the residential coastal microclimate in Parknacross, Ardamine. Only verified mounting dates and station positions should be used to compare historical observations. A detailed exposure history will be published when the change dates have been confirmed.
       </p>
       <p class="info-note">
         As a residential installation, the site is not intended to replicate an official World Meteorological Organization (WMO) reference station.
       </p>
 
       <div class="station-specs">
-        <div class="station-spec"><span>Outdoor array</span><strong>Ecowitt WS90</strong></div>
-        <div class="station-spec"><span>Gateway</span><strong>Ecowitt GW3001</strong></div>
-        <div class="station-spec"><span>Primary rain gauge</span><strong>Ecowitt WH40H · self-emptying tipping-bucket · 0.1 mm resolution</strong></div>
+        <div class="station-spec"><span>Outdoor array</span><strong>outdoor weather array</strong></div>
+        <div class="station-spec"><span>Gateway</span><strong>indoor gateway</strong></div>
+        <div class="station-spec"><span>Primary rain gauge</span><strong>self-emptying tipping-bucket rain gauge · 0.1 mm resolution</strong></div>
         <div class="station-spec"><span>Mounting</span><strong>Ultrasonic array · residential exposure</strong></div>
         <div class="station-spec"><span>Location</span><strong>Ardamine, north County Wexford, Ireland</strong></div>
         <div class="station-spec"><span>Approx. coordinates</span><strong>52.6°N · 6.3°W</strong></div>
         <div class="station-spec"><span>Elevation</span><strong>25 m above sea level</strong></div>
         <div class="station-spec"><span>Coastal setting</span><strong>Approx. 500 m from the Irish Sea</strong></div>
-        <div class="station-spec"><span>Lightning</span><strong id="stationLightning">Ecowitt WH57 lightning detector · approximate range up to 40 km</strong></div>
-        <div class="station-spec"><span>Potted hydrangea</span><strong>Ecowitt WH52 in hydrangea compost · moisture, root-zone temperature and electrical conductivity</strong></div>
+        <div class="station-spec"><span>Lightning</span><strong id="stationLightning">lightning detector · approximate range up to 40 km</strong></div>
+        <div class="station-spec"><span>Potted hydrangea</span><strong>soil probe in hydrangea compost · moisture, root-zone temperature and electrical conductivity</strong></div>
         <div class="station-spec"><span>Time zone</span><strong>Irish local time · GMT/IST</strong></div>
         <div class="station-spec"><span>Contact</span><strong><a href="mailto:info@parknacrossweather.ie" style="color:inherit;text-decoration:none">info@parknacrossweather.ie</a></strong></div>
-        <div class="station-spec"><span>Rainfall source</span><strong>WH40H selected as gateway rainfall priority · from about 13:00 GMT on 3 November 2026 (dry at changeover)</strong></div>
+        <div class="station-spec"><span>Rainfall source</span><strong>Dedicated rain gauge selected as the primary rainfall source · from about 13:00 GMT on 3 November 2026 (dry at changeover)</strong></div>
       </div>
       <p class="station-copy">Site elevation is an approximate 25 m above sea level. Linked weather networks may use their own terrain estimates, and sensor mounting height above ground is a separate measurement.</p>
     </details></section>
@@ -220,11 +220,11 @@
       <article class="info-card">
         <div class="section-heading compact-heading"><div><span class="section-eyebrow">Data path</span><h2>How the site works</h2></div></div>
         <div class="info-grid">
-          <div class="info-item"><span>Data collection</span><strong>WS90, WH40H and other sensors via the GW3001</strong></div>
+          <div class="info-item"><span>Data collection</span><strong>Temperature, humidity, wind, rainfall, lightning and soil conditions — collected by the weather station and transmitted to the website.</strong></div>
           <div class="info-item"><span>Data processing</span><strong>Secure cloud processing</strong></div>
           <div class="info-item"><span>Live dashboard</span><strong>Updated approximately every 60 seconds</strong></div>
           <div class="info-item"><span>Weather history</span><strong>Readings archived approximately every 5 minutes</strong></div>
-          <div class="info-item"><span>Garden soil feed</span><strong>Soil-sensor readings received through the GW3001 gateway</strong></div>
+          <div class="info-item"><span>Garden soil feed</span><strong>Soil conditions recorded from the potted hydrangea</strong></div>
           <div class="info-item"><span>Website</span><strong>Parknacrossweather.ie</strong></div>
           <div class="info-item"><span>Official forecast</span><strong>Met Éireann</strong></div>
           <div class="info-item"><span>System health</span><strong><a href="status.html" style="color:inherit;text-underline-offset:3px">Check live data &amp; sensor status</a></strong></div>
@@ -236,15 +236,15 @@
       <div class="section-heading"><div><span class="section-eyebrow">Reading the weather</span><h2 id="understandingHeading">Understanding these observations</h2><p>A little context helps when comparing Parknacross with another station.</p></div></div>
       <div class="station-context-grid">
         <article><h3>A residential coastal setting</h3><p>Nearby buildings, roofs and shelter can influence wind and temperature. Mounting details and historical dates should be verified before comparing installation periods. These observations describe this particular location; they are not an official reference-station record.</p></article>
-        <article><h3>Dedicated tipping-bucket rain gauge</h3><p>The WH40H collects rain in a funnel and records it using a self-emptying tipping-bucket mechanism. It offers 0.1 mm resolution and became the selected primary rainfall source at approximately 13:00 Irish time on 3 November 2026, when no rain was falling. Earlier archived rain observations came from the previous setup; values across the changeover are not a like-for-like instrument comparison.</p></article>
+        <article><h3>Dedicated tipping-bucket rain gauge</h3><p>The dedicated rain gauge collects rain in a funnel and records it using a self-emptying tipping-bucket mechanism. It offers 0.1 mm resolution and became the selected primary rainfall source at approximately 13:00 Irish time on 3 November 2026, when no rain was falling. Earlier archived rain observations came from the previous setup; values across the changeover are not a like-for-like instrument comparison.</p></article>
         <article><h3>Lightning distance is approximate</h3><p>The detector reports nearby lightning with an estimated range up to about 40 km. A zero count means no strikes were reported by this detector, rather than proof that no lightning occurred.</p></article>
-        <article><h3>Soil readings are very local</h3><p>The WH52 probe is installed in a pot containing a hydrangea. Its readings describe the compost around this plant. Conductivity measures electrical conductivity and is not a direct measure of plant nutrition.</p></article>
+        <article><h3>Soil readings are very local</h3><p>The soil probe is installed in a pot containing a hydrangea. Its readings describe the compost around this plant. Conductivity measures electrical conductivity and is not a direct measure of plant nutrition.</p></article>
       </div>
     </section>
 
     <section class="page-section" id="stationReliability">
       <div class="section-heading"><div><span class="section-eyebrow">Station quality</span><h2>Observation freshness &amp; archive coverage</h2><p>A simple overview of how reliably the station is collecting and saving weather data.</p></div></div>
-<div class="station-reliability-grid"><article class="climate-card"><span>Feed status</span><strong id="qualityFeed">--</strong><small id="qualityAge">Latest weather reading</small></article><article class="climate-card"><span>Archive reliability</span><strong id="qualityReliability">--</strong><small id="qualityReliabilityNote">Percentage of expected 5-minute readings successfully saved this month</small></article></div><p class="station-copy">Freshness describes the latest observation; coverage describes how many expected readings were saved. Missing older readings do not necessarily mean the station is offline now. <a href="history.html#completenessHeading">Explore archive coverage</a> · <a href="status.html">Open system status</a></p><details class="station-fold"><summary>More collection statistics</summary><div class="quality-grid"><article class="climate-card"><span>Readings saved (24h)</span><strong id="quality24">--</strong><small>Weather observations stored</small></article><article class="climate-card"><span>Typical update interval</span><strong id="qualityInterval">--</strong><small>Time between saved readings</small></article><article class="climate-card"><span>Longest archive gap</span><strong id="qualityGap">--</strong><small>Largest gap in the last 24 hours</small></article><article class="climate-card"><span>Total readings saved</span><strong id="qualityTotal">--</strong><small>Historical archive</small></article><article class="climate-card"><span>WS90 battery</span><strong id="qualityBattery">--</strong><small>Battery status</small></article></div></details>
+<div class="station-reliability-grid"><article class="climate-card"><span>Feed status</span><strong id="qualityFeed">--</strong><small id="qualityAge">Latest weather reading</small></article><article class="climate-card"><span>Archive reliability</span><strong id="qualityReliability">--</strong><small id="qualityReliabilityNote">Percentage of expected 5-minute readings successfully saved this month</small></article></div><p class="station-copy">Freshness describes the latest observation; coverage describes how many expected readings were saved. Missing older readings do not necessarily mean the station is offline now. <a href="history.html#completenessHeading">Explore archive coverage</a> · <a href="status.html">Open system status</a></p><details class="station-fold"><summary>More collection statistics</summary><div class="quality-grid"><article class="climate-card"><span>Readings saved (24h)</span><strong id="quality24">--</strong><small>Weather observations stored</small></article><article class="climate-card"><span>Typical update interval</span><strong id="qualityInterval">--</strong><small>Time between saved readings</small></article><article class="climate-card"><span>Longest archive gap</span><strong id="qualityGap">--</strong><small>Largest gap in the last 24 hours</small></article><article class="climate-card"><span>Total readings saved</span><strong id="qualityTotal">--</strong><small>Historical archive</small></article><article class="climate-card"><span>Weather sensor battery</span><strong id="qualityBattery">--</strong><small>Battery status</small></article></div></details>
     </section>
 
     <section class="page-section" id="stationMaintenance">
@@ -555,7 +555,7 @@ function renderStorage(storage) {
 
 
 async function restoreStationBatteryIfMissing(current) {
-  // /current already performs server-side WS90 battery recovery.
+  // /current already performs server-side Weather sensor battery recovery.
   return current;
 }
 
