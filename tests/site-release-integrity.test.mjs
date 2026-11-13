@@ -53,7 +53,7 @@ for(const provider of ['GitHub Pages','Cloudflare','Met Éireann','Marine Instit
   assert.ok(privacy.includes(provider),'Missing privacy provider '+provider);
 }
 assert.match(privacy,/Cahore readings are fetched through Cloudflare, not directly from your browser/);
-assert.match(privacy,/Open-Meteo[^<]*forecast directly/);
+assert.match(privacy,/Open-Meteo<\\/strong> forecast directly/);
 assert.match(privacy,/Last reviewed: 13 November 2026/);
 assert.doesNotMatch(privacy,/class="privacy-details"/,'Replace the dense accordion with grouped provider details');
 assert.match(privacy,/privacy-providers\.css\?v=20261113-structure/);
