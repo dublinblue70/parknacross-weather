@@ -336,3 +336,15 @@ body.networks-directory-page .station-network-links { row-gap: 0; }
 body.networks-directory-page .station-network-links > .station-external-network-link {
   white-space: normal;
 }
+
+/* Ensure every provider action has a 44px touch target on compact screens.
+   The directory's compact-card rule must not reduce accessible link heights. */
+@media (max-width: 760px) {
+  body.networks-directory-page .station-external-network-link,
+  body.networks-directory-page .station-network-links > .station-external-network-link {
+    box-sizing: border-box;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}

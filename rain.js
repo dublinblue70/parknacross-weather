@@ -56,7 +56,7 @@
       ? "Possible light rain · not yet measured by the rain gauge"
       : rs.piezoDailyMm>0&&usable(c?.rain_daily_mm)&&Number(c.rain_daily_mm)<0.05
         ? "Piezo sensor suggests rain today · gauge still records 0.0 mm"
-        : rs.rate===null?"Live dedicated rain unavailable":rs.rainRecently?"Rain recently":"No rain detected by the station");
+        : rs.rate===null?"Live rain-gauge data unavailable":rs.rainRecently?"Rain recently":"No rain detected by the station");
    const piezoToday=$("rainPiezoToday");
    if(piezoToday){
      piezoToday.hidden=!usable(rs.piezoDailyMm);
