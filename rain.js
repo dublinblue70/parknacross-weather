@@ -52,16 +52,16 @@
    const [s,d,h,c,e]=results.map(x=>x.status==="fulfilled"?x.value:{});
    const stamp=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null);set("rainUpdated",stamp?`Station reading: ${dt(stamp)} · Irish time`:"Live station reading unavailable");
    const rs=rainState(s,h,c);
-   set("rainCondition",rs.isRaining?"Rain detected by WH40H":rs.piezoDetected
-      ? "Light rain detected by WS90 piezo · WH40H not yet measuring this shower"
+   set("rainCondition",rs.isRaining?"Rain detected by the dedicated rain gauge":rs.piezoDetected
+      ? "Light rain detected by piezo sensor · dedicated rain gauge not yet measuring this shower"
       : rs.piezoDailyMm>0&&usable(c?.rain_daily_mm)&&Number(c.rain_daily_mm)<0.05
-        ? "WS90 reports rain today · WH40H still 0.0 mm"
-        : rs.rate===null?"Live WH40H rain unavailable":rs.rainRecently?"Rain recently":"No rain detected by the station");
+        ? "Piezo sensor suggests rain today · gauge still records 0.0 mm"
+        : rs.rate===null?"Live dedicated rain unavailable":rs.rainRecently?"Rain recently":"No rain detected by the station");
    const piezoToday=$("rainPiezoToday");
    if(piezoToday){
      piezoToday.hidden=!usable(rs.piezoDailyMm);
      piezoToday.textContent=usable(rs.piezoDailyMm)
-       ? `WS90 piezo estimate today: ${n(rs.piezoDailyMm)} mm · WH40H measured total remains separate. The gauges may disagree; check the WH40H if the difference persists.`
+       ? `Piezo sensor estimate today: ${n(rs.piezoDailyMm)} mm · rain-gauge measured total remains separate. The gauges may disagree; check the dedicated rain gauge if the difference persists.`
        : "";
    }
    set("rainLoadStatus",results.some(x=>x.status==="rejected")?"Some rainfall sources are unavailable. Showing the readings that loaded successfully.":"");window.ParknacrossRainEvidence?.render(c,h.readings||[],s.last_measurable_rain?.received_at);

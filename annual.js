@@ -49,7 +49,7 @@ function dublinYear() {
 }
 
 function render(year) {
-  set("annualRainSourceNote",String(year)==="2026"?"Rain-gauge changeover · 3 Nov 2026: the WH40H became the primary gauge. The 3 November daily total is provisional and contributes to year-to-date and monthly rainfall totals; original observations are preserved.":Number(year)<2026?"Rainfall in this year predates WH40H installation and came from the earlier sensing setup.":"Rainfall in this year is measured by the dedicated WH40H tipping-bucket gauge.");
+  set("annualRainSourceNote",String(year)==="2026"?"Rain-gauge changeover · 3 Nov 2026: the dedicated rain gauge became the primary source. The 3 November daily total is provisional and contributes to year-to-date and monthly rainfall totals; original observations are preserved.":Number(year)<2026?"Rainfall in this year predates the dedicated rain gauge's installation and came from the earlier sensing setup.":"Rainfall in this year is measured by the dedicated dedicated tipping-bucket rain gauge.");
   const rows = allRows.filter((r) =>
     String(r.day || "").startsWith(`${year}-`),
   );

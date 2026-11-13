@@ -599,8 +599,8 @@ function rainActivity(current) {
     : 0;
 
   const age = lastRainIncreaseTime ? Math.max(0, currentTime - lastRainIncreaseTime) : Infinity;
-  // Live-only WS90 indication. Never use piezo readings to calculate rain
-  // totals or to declare a confirmed WH40H bucket tip. Reject stale snapshots.
+  // Live-only outdoor weather sensor indication. Never use piezo readings to calculate rain
+  // totals or to declare a confirmed dedicated rain gauge bucket tip. Reject stale snapshots.
   const piezoEpoch = usable(current?.piezo_observed_epoch) ? Number(current.piezo_observed_epoch) * 1000 : null;
   const observationAge = Date.now() - currentTime;
   const piezoAge = piezoEpoch === null ? Infinity : Date.now() - piezoEpoch;
@@ -650,8 +650,8 @@ function conditionInfo(current, isNight) {
       tag: "Light rain detected",
       icon: "🌦️",
       story: rainState.rainAvailable
-        ? "WS90 piezo is detecting rain, but the WH40H has not yet registered this shower. Rainfall totals remain WH40H-only."
-        : "WS90 piezo is detecting possible light rain. The WH40H rain reading is unavailable; no rainfall total is inferred.",
+        ? "The piezo sensor indicates rain, but the dedicated rain gauge has not yet measured this shower. Rainfall totals are based on the dedicated gauge only."
+        : "The piezo sensor indicates possible light rain, but the rain-gauge reading is unavailable. No rainfall total is inferred.",
       className: "weather-rain",
       rainState
     };
@@ -665,14 +665,14 @@ function conditionInfo(current, isNight) {
   if (!rainState.rainAvailable) {
     return { tag: "Rain data unavailable", icon: "☁️", story: "The latest observation is missing rain-sensor data, so conditions cannot be described reliably.", className: "weather-neutral", rainState };
   }
-  // Daily WS90 accumulation cannot prove it is raining right now. It can,
+  // Daily outdoor weather sensor accumulation cannot prove it is raining right now. It can,
   // however, prevent us describing a previously wet day as entirely dry.
   if (rainState.piezoDailyMm > 0 && usable(current?.rain_daily_mm)
       && Number(current.rain_daily_mm) <= 0.01) {
     return {
       tag: "Rain noted today",
       icon: "🌦️",
-      story: `WS90 piezo indicates ${n(rainState.piezoDailyMm)} mm today; WH40H still records 0.0 mm. Rain falling right now is not confirmed.`,
+      story: `The piezo sensor estimates ${n(rainState.piezoDailyMm)} mm today, while the dedicated rain gauge records 0.0 mm. Rain falling right now is not confirmed.`,
       className: "weather-neutral",
       rainState
     };
@@ -1022,7 +1022,7 @@ function updateSunInfo(current = latestCurrent) {
 
   let isNight = !!(civilDawn && civilDusk && (now < civilDawn || now >= civilDusk));
 
-  /* A genuine WS90 solar reading is an additional real-world daylight check. */
+  /* A genuine outdoor weather sensor solar reading is an additional real-world daylight check. */
   if (usable(current?.solar_w_m2) && Number(current.solar_w_m2) >= 3) {
     isNight = false;
   }
@@ -1232,16 +1232,16 @@ function updateSoilFeedWarning(current) {
   const age = successEpoch === null ? null : Date.now() / 1000 - successEpoch;
   let message = "";
   if (age !== null && age >= -120 && age > 12 * 60) {
-    message = `WH52 soil upload delayed: no successful reading for ${Math.floor(age / 60)} minutes. Check the sensor and GW3001 custom upload settings.`;
+    message = `soil-sensor upload delayed: no successful reading for ${Math.floor(age / 60)} minutes. Check the sensor and indoor gateway’s custom upload settings.`;
   } else if (status?.gateway_upload_received === false || status?.status_error) {
-    message = "WH52 gateway status is unavailable. The last displayed soil values may be out of date.";
+    message = "soil-sensor feed status is unavailable. The last displayed soil values may be out of date.";
   } else if (!hasReading) {
     message = age !== null && age >= -120 && age <= 12 * 60
-      ? "The WH52 has recently uploaded, but soil readings are missing from the current weather response. Check System Status."
-      : "WH52 soil readings are unavailable. Check System Status for the last successful upload.";
+      ? "The soil sensor has recently uploaded, but soil readings are missing from the current weather response. Check System Status."
+      : "soil-sensor readings are unavailable. Check System Status for the last successful upload.";
   }
-  // A normal gateway packet without soil fields is not evidence the WH52 is
-  // offline while a separate, recent, successful WH52 receipt exists.
+  // A normal gateway packet without soil fields is not evidence the soil sensor is
+  // offline while a separate, recent, successful soil sensor receipt exists.
   warning.hidden = !message;
   warning.textContent = message;
 }
@@ -1254,12 +1254,12 @@ function updateSoilPanel(current) {
   panel.hidden = false;
   updateSoilFeedWarning(current);
   if (moisture === null && temperature === null && ec === null) {
-    set("soilSummary", "The WH52 sensor in the potted hydrangea has no current measurements.");
+    set("soilSummary", "The soil sensor in the potted hydrangea has no current measurements.");
     set("soilMoisture", "Unavailable");
     set("soilTemperature", "Unavailable");
     set("soilEc", "Unavailable");
     set("soilMoistureTrend", "Trend paused — no current reading");
-    set("soilEvent", "Soil trend analysis resumes when WH52 readings return.");
+    set("soilEvent", "Soil trend analysis resumes when soil readings return.");
     set("soilWateringStatus", "Reading unavailable");
     set("soilWateringAdvice", "Check the compost manually before deciding whether to water.");
     set("soilWateringContext", "The last known measurement is not shown as current. See System Status.");
@@ -1283,8 +1283,8 @@ function updateSoilPanel(current) {
   if(baselineNote){
     baselineNote.hidden=validBaseline&&!baselineBuilding;
     baselineNote.textContent=!validBaseline
-      ?"The first valid archived WH52 reading has not been confirmed; watering guidance is provisional."
-      :"The WH52 is building a 14-day archive-based baseline. Guidance is provisional during this period.";
+      ?"The first valid archived soil reading has not been confirmed; watering guidance is provisional."
+      :"The soil sensor is building a 14-day archive-based baseline. Guidance is provisional during this period.";
   }
   set("soilMoisture", moisture === null ? "Unavailable" : `${moisture.toFixed(0)}%`);
   set("soilTemperature", temperature === null ? "Unavailable" : `${temperature.toFixed(1)}°C`);
@@ -1326,7 +1326,7 @@ function updateSoilPanel(current) {
   }
   if(candidates.length<3 && moistureChange === null)eventText="More saved readings are needed to describe the soil moisture trend.";
   set("soilEvent",eventText);
-  set("soilSummary", "Ecowitt WH52 measuring compost in one potted hydrangea. Open Graphs to compare moisture, temperature and conductivity with its own history.");
+  set("soilSummary", "Soil sensor measuring compost in the potted hydrangea. Open Graphs to compare moisture, temperature and conductivity with its own history.");
   const soilGuide=window.ParknacrossHydrangeaSoil;
   if(soilGuide){
     const guidance=soilGuide.assess({
@@ -1380,13 +1380,13 @@ async function refreshSoilFreshness(){
     const epoch = usable(data?.last_successful_upload_epoch) ? Number(data.last_successful_upload_epoch)
       : data?.wh52_detected && usable(data.received_epoch) ? Number(data.received_epoch) : null;
     if (epoch === null) {
-      set("soilFreshness", "No successful WH52 gateway upload confirmed");
+      set("soilFreshness", "No successful soil-sensor upload confirmed");
     } else {
       const stamp = new Date(epoch*1000).toLocaleString("en-IE",{
         timeZone:STATION_TIME_ZONE,day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"
       });
       const age = Math.max(0,Date.now()/1000-epoch);
-      set("soilFreshness", `Last WH52 upload: ${stamp} Irish time · ${Math.floor(age/60)} min ago · sensor radio time not supplied`);
+      set("soilFreshness", `Last soil-sensor upload: ${stamp} Irish time · ${Math.floor(age/60)} min ago · sensor radio time not supplied`);
     }
     updateSoilFeedWarning(latestCurrent);
   } catch (_) {
@@ -1552,7 +1552,7 @@ function updateDashboard(current) {
   if (piezoHero) {
     piezoHero.hidden = !usable(piezoToday);
     piezoHero.textContent = usable(piezoToday)
-      ? `WS90 piezo: ${n(piezoToday)} mm indicative`
+      ? `Piezo sensor: ${n(piezoToday)} mm indicative`
       : "";
   }
   set("heroPressure", `${n(current.pressure_hpa)} hPa`);
@@ -1636,15 +1636,15 @@ function updateDashboard(current) {
   if (piezoMetric) {
     piezoMetric.hidden = !usable(piezoToday);
     piezoMetric.textContent = usable(piezoToday)
-      ? `WS90 piezo estimate today: ${n(piezoToday)} mm · separate from WH40H`
+      ? `Piezo sensor estimate today: ${n(piezoToday)} mm · separate from dedicated rain gauge`
       : "";
   }
   set(
     "rainRateVal",
     condition.rainState?.isRaining && Number(current.rain_rate_mm_h || 0) <= 0
-      ? `${n(current.rain_rate_mm_h)} mm/h · recent WH40H tip`
+      ? `${n(current.rain_rate_mm_h)} mm/h · recent rain-gauge tip`
       : condition.rainState?.piezoIndicatesRain
-        ? `${n(current.rain_rate_mm_h)} mm/h · WS90 early rain signal`
+        ? `${n(current.rain_rate_mm_h)} mm/h · early rain indication`
         : `${n(current.rain_rate_mm_h)} mm/h`
   );
   set("pressureVal", n(current.pressure_hpa));
@@ -2468,7 +2468,7 @@ async function loadWarnings() {
 
 
 async function restoreBatteryIfMissing(current) {
-  // /current already performs server-side WS90 battery recovery. Keep public
+  // /current already performs server-side weather sensor battery recovery. Keep public
   // clients away from the admin-only diagnostic endpoint.
   return current;
 }

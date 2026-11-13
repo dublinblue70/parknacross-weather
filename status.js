@@ -143,7 +143,7 @@ function analyzeRows(rows) {
   return issues;
 }
 
-// The Worker may reuse a saved WS90 voltage. Archive time is NOT proof of
+// The Worker may reuse a saved outdoor weather sensor voltage. Archive time is NOT proof of
 // a new physical battery measurement; show its provenance without falsely
 // telling users with new batteries that their batteries need replacing.
 function describeWs90Battery(quality) {
@@ -194,28 +194,28 @@ function observationAge(epoch, now=Date.now()/1000) {
   return usableNumber(epoch)&&Number(epoch)>0 ? now-Number(epoch) : null;
 }
 
-// A source-mapping and live rain-data check, not a physical WH40H radio or battery test.
+// A source-mapping and live rain-data check, not a physical dedicated rain gauge radio or battery test.
 // A zero rain rate and a zero daily total are perfectly valid in dry weather.
 function describeWh40hStatus(result, now=Date.now()/1000) {
   const caps=result?.capabilities, reading=result?.reading;
   if(result?.__error || !caps || !reading) {
-    return {state:"warn",label:"UNAVAILABLE",value:"Cannot verify",detail:"The WH40H check could not retrieve both the Worker capability and current rainfall observation."};
+    return {state:"warn",label:"UNAVAILABLE",value:"Cannot verify",detail:"The rain-gauge check could not retrieve both the Worker capability and current rainfall observation."};
   }
   if(caps.features?.wh40h_primary_rain!==true) {
-    return {state:"warn",label:"VERIFY",value:"Source unconfirmed",detail:`Deployed Worker ${caps.worker_version||"unknown"} does not confirm WH40H traditional rainfall mapping. Check that the latest Worker was deployed.`};
+    return {state:"warn",label:"VERIFY",value:"Source unconfirmed",detail:`Deployed Worker ${caps.worker_version||"unknown"} does not confirm primary-gauge traditional rainfall mapping. Check that the latest Worker was deployed.`};
   }
   const age=observationAge(reading.epoch,now);
   if(age===null || age < -120 || age >= 1800) {
-    return {state:"warn",label:"STALE",value:"Reading not current",detail:`Worker ${caps.worker_version||"unknown"} selects WH40H rainfall, but the latest station observation is ${age===null?"undated":fmtAge(Math.max(0,age))+" old"}. WH40H-specific radio and battery telemetry is not available.`};
+    return {state:"warn",label:"STALE",value:"Reading not current",detail:`Worker ${caps.worker_version||"unknown"} selects rain-gauge rainfall, but the latest station observation is ${age===null?"undated":fmtAge(Math.max(0,age))+" old"}. rain-gauge-specific radio and battery telemetry is not available.`};
   }
   const rateAvailable=usableNumber(reading.rain_rate_mm_h);
   const totalAvailable=usableNumber(reading.rain_daily_mm);
   if(!rateAvailable||!totalAvailable) {
     const missing=!rateAvailable&&!totalAvailable?"rain rate and daily total":!rateAvailable?"rain rate":"daily total";
-    return {state:"warn",label:"MISSING",value:"Rain data unavailable",detail:`Worker ${caps.worker_version||"unknown"} selects WH40H rainfall, but the latest reading lacks a valid ${missing}. The previous WS90 rain sensor is not used as a fallback.`};
+    return {state:"warn",label:"MISSING",value:"Rain data unavailable",detail:`Worker ${caps.worker_version||"unknown"} selects rain-gauge rainfall, but the latest reading lacks a valid ${missing}. The separate piezo sensor is not used as a fallback.`};
   }
   const state=age<600?"good":"warn";
-  return {state,label:state==="good"?"CURRENT":"DELAYED",value:`${fmtNum(reading.rain_daily_mm,1)} mm today`,detail:`Rain rate ${fmtNum(reading.rain_rate_mm_h,1)} mm/h · station reading ${fmtAge(age)} old · Worker ${caps.worker_version||"unknown"} selects WH40H traditional rainfall. Zero rain is valid. This verifies available rain fields, not independent sensor battery or radio health.`};
+  return {state,label:state==="good"?"CURRENT":"DELAYED",value:`${fmtNum(reading.rain_daily_mm,1)} mm today`,detail:`Rain rate ${fmtNum(reading.rain_rate_mm_h,1)} mm/h · station reading ${fmtAge(age)} old · Worker ${caps.worker_version||"unknown"} selects primary-gauge traditional rainfall. Zero rain is valid. This verifies available rain fields, not independent sensor battery or radio health.`};
 }
 async function runChecks(only=null) {
   if(checksRunning)return;checksRunning=true;
@@ -376,7 +376,7 @@ function renderChecks(only=null) {
   }
 
   if (checkResults.soilUpload) {
-    // The success timestamp comes from a separately retained WH52 record, not
+    // The success timestamp comes from a separately retained soil sensor record, not
     // from the latest general weather observation.
     const successEpoch=usableNumber(soilUpload.last_successful_upload_epoch)
       ? Number(soilUpload.last_successful_upload_epoch)
@@ -384,7 +384,7 @@ function renderChecks(only=null) {
         ? Number(soilUpload.received_epoch) : null;
     const age=observationAge(successEpoch);
     const validTime=age!==null && age>=-120;
-    // A recent successful WH52 receipt remains valid when a newer general
+    // A recent successful soil sensor receipt remains valid when a newer general
     // gateway packet omits the sensor fields.
     const goodUpload=validTime && age<=12*60
       && soilUpload.gateway_upload_received===true
@@ -399,12 +399,12 @@ function renderChecks(only=null) {
     const good=!soilUpload.__error && goodUpload && hasCurrentSoil;
     setBadge("soilBadge",good?"good":"warn",good?"LIVE":"CHECK");
     setText("soilValue",good?`${fmtNum(current.soil_moisture_pct,0)}% moisture`:!validTime?"No soil upload":goodUpload?"Readings missing":"Upload delayed");
-    setText("soilLastUpload",validTime?`Last successful WH52 upload: ${fmtIrishDateTime(new Date(successEpoch*1000).toISOString())} Irish time · ${fmtAge(age)} ago`:"Last successful WH52 upload: not recorded");
-    const explanation=soilUpload.__error?"Unable to check WH52 gateway upload status."
-      : !goodUpload?"WH52 data have not been confirmed in the last 12 minutes. Check the GW3001 Customized upload configuration."
-      : !hasCurrentSoil?"WH52 reached Cloudflare, but its measurements are missing from /current."
-      :"Live WH52 moisture, temperature and conductivity are confirmed.";
-    setText("soilDetail",`${explanation} The timestamp is when the Worker received the packet, not when the WH52 transmitted over radio. Other weather data may continue normally.`);
+    setText("soilLastUpload",validTime?`Last successful soil-sensor upload: ${fmtIrishDateTime(new Date(successEpoch*1000).toISOString())} Irish time · ${fmtAge(age)} ago`:"Last successful soil-sensor upload: not recorded");
+    const explanation=soilUpload.__error?"Unable to check soil-sensor upload status."
+      : !goodUpload?"Soil-sensor readings have not been confirmed in the last 12 minutes. Check the indoor gateway’s custom upload configuration."
+      : !hasCurrentSoil?"The soil sensor's upload reached the weather service, but its measurements are missing from /current."
+      :"Live soil moisture, temperature and conductivity are confirmed.";
+    setText("soilDetail",`${explanation} The timestamp is when the Worker received the packet, not when the soil sensor transmitted over radio. Other weather data may continue normally.`);
     states.push(good?"good":"warn");
   }
 

@@ -85,15 +85,15 @@ async function check(){
    const fresh=epoch!==null&&Date.now()/1000-epoch<=600&&epoch<=Date.now()/1000+120;
    const hasRainFields=num(current?.rain_daily_mm)&&num(current?.rain_rate_mm_h);
    set("rainGaugeFeedState",fresh&&hasRainFields&&traditionalMapped?"Mapped feed current":"Not verified");
-   set("rainGaugeFeedDetail",fresh&&hasRainFields&&traditionalMapped?"Worker confirms traditional WH40H mapping; latest observation "+when(epoch)+". This tests software data availability, not sensor hardware.":"Cannot confirm a fresh rain reading AND a deployed Worker with WH40H traditional source mapping.");
+   set("rainGaugeFeedDetail",fresh&&hasRainFields&&traditionalMapped?"Worker confirms the primary rain-gauge mapping; latest observation "+when(epoch)+". This tests software data availability, not sensor hardware.":"Cannot confirm a fresh rain reading AND a deployed Worker with primary-gauge traditional source mapping.");
    if(history&&Array.isArray(history.readings)){
      const activity=analyseRecentTips(history.readings);
      set("rainGaugeTipState",activity.lastRise?"Counter increased":activity.samples>1?"No recent tips observed":"Not verified");
      set("rainGaugeTipDetail",activity.lastRise?mm(activity.observedIncreaseMm)+" observed rises in the available 72-hour record, last at "+when(activity.lastRise)+". Not a calibration test.":activity.samples>1?"No counter increases in the available 72-hour record. This may simply reflect dry weather.":"Insufficient recent observations to determine counter movement.");
-     set("rainGaugeQuality",activity.samples+" archived samples checked; "+activity.gaps+" intervals over 20 minutes; "+activity.resets+" within-day counter resets. To check the physical WH40H, inspect battery and radio status in Ecowitt and corroborate measurements during genuine rain.");
+     set("rainGaugeQuality",activity.samples+" archived samples checked; "+activity.gaps+" intervals over 20 minutes; "+activity.resets+" within-day counter resets. To check the physical rain gauge, inspect battery and radio status in Ecowitt and corroborate measurements during genuine rain.");
    }else{
      set("rainGaugeTipState","Not verified");set("rainGaugeTipDetail","Recent archived rain readings unavailable.");
-     set("rainGaugeQuality","Software cannot verify the physical bucket or battery. Inspect WH40H status in Ecowitt and compare measurements during genuine rainfall.");
+     set("rainGaugeQuality","Software cannot verify the physical bucket or battery. Inspect rain-gauge status in Ecowitt and compare measurements during genuine rainfall.");
    }
    set("rainGaugeAuditUpdated","Checked "+new Date().toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+" Irish time · read-only, no records changed.");
  }catch(e){set("rainGaugeAuditUpdated","Gauge check unavailable: "+e.message);}

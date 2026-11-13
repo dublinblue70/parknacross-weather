@@ -78,7 +78,7 @@
       const legend = element("div", "site-source-legend");
       legend.setAttribute("aria-label", "Three different sources of rain information");
       for (const [cls, title, description] of [
-        ["observed", "Station detected", "Measured by the dedicated WH40H tipping-bucket gauge. Traces below 0.1 mm may not register."],
+        ["observed", "Station detected", "Measured by the dedicated dedicated tipping-bucket rain gauge. Traces below 0.1 mm may not register."],
         ["radar", "Radar echoes", "Estimated precipitation location. An echo does not prove rain reached the ground."],
         ["forecast", "Forecast rainfall", "Met Éireann model guidance for coming hours, not a live reading."]
       ]) {

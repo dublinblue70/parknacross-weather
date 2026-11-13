@@ -39,7 +39,7 @@
           ? `${Number(reliability.actual_samples).toLocaleString("en-IE")} of ${Number(reliability.expected_samples).toLocaleString("en-IE")} expected 5-minute readings saved this month`
           : reliability ? "Percentage of expected 5-minute readings successfully saved this month" : "Archive coverage could not be refreshed. Other station readings are shown independently.";
         set("qualityReliabilityNote", reliability?.label ? `${reliability.label} · ${reliabilityDetail}` : reliabilityDetail);
-        set("stationLightning", "Ecowitt WH57 lightning detector · approximate range up to 40 km");
+        set("stationLightning", "Lightning detector · approximate range up to 40 km");
         if (lightning?.available) {
           window.PWAlerts?.evaluateLightning?.(lightning);
         }
