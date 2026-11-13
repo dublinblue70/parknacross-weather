@@ -247,7 +247,7 @@ async function runChecks(only=null) {
     // Unique query values bypass the Worker's long marine cache TTLs so this
     // health check can detect an upstream outage instead of only checking cache.
     read("tides",()=>fetchJSON(`${API_BASE}/marine/tides?station=Arklow&healthcheck=${Date.now()}`,10000).catch(e=>({__error:e}))),
-    read("m2",()=>fetchJSON(`${API_BASE}/marine/sea-temperature?healthcheck=${Date.now()}`,20000).catch(e=>({__error:e}))),
+    read("cahore",()=>fetchJSON(`${API_BASE}/marine/cahore-water-level?healthcheck=${Date.now()}`,12000).catch(e=>({__error:e}))),
     read("landWarnings",()=>fetchJSON(`${API_BASE}/met/warnings?healthcheck=${Date.now()}`,12000).catch(e=>({__error:e}))),
     read("marineWarnings",()=>fetchJSON(`${API_BASE}/met/marine?healthcheck=${Date.now()}`,15000).catch(e=>({__error:e}))),
     sitePromise,
@@ -262,7 +262,7 @@ async function runChecks(only=null) {
 }
 
 function renderChecks(only=null) {
-  const {health={},current={},soilUpload={},rainSource={},quality={},history={},reliability={},backup={},social={},tides={},m2={},landWarnings={},marineWarnings={},site={},daily={},stats={},summaryHistory={},exportPreview={},rainEvents={},coverage={}}=checkResults;
+  const {health={},current={},soilUpload={},rainSource={},quality={},history={},reliability={},backup={},social={},tides={},cahore={},landWarnings={},marineWarnings={},site={},daily={},stats={},summaryHistory={},exportPreview={},rainEvents={},coverage={}}=checkResults;
   const apiElapsed=health.__elapsed_ms||0;
   let states=site.state?[site.state]:[];
   const latestEpoch=rows=>Math.max(0,...(Array.isArray(rows)?rows:[]).map(row=>usableNumber(row.epoch)?Number(row.epoch):Date.parse(row.received_at||"")/1000).filter(Number.isFinite));
@@ -309,33 +309,22 @@ function renderChecks(only=null) {
 
   }
 
-  if (checkResults.m2) {
-    const decision=classifyM2Observation(m2);
-    const m2Time=decision.timestamp;
-    const m2Age=decision.ageMinutes;
-    const stamp=m2Time?fmtIrishDateTime(m2Time):null;
-    const ageText=m2Age!==null&&m2Age>=-2?fmtAge(Math.max(0,m2Age)*60):null;
-    if(decision.state==="unavailable"){
-      const sourceState=m2?.m2_source_status;
-      const historical=decision.value!==null&&m2Age!==null&&m2Age>=-2;
-      setBadge("m2Badge","warn",sourceState==="upstream_delayed"?"DELAYED":sourceState==="retrieval_failed"?"FETCH ERROR":"UNAVAILABLE");
-      setText("m2Value",historical?`${fmtNum(decision.value,1)} °C`:"No current reading");
-      setText("m2ObservationInfo",stamp?`Last verified: ${stamp} Irish time · ${ageText||"age unknown"} old · not live.`:"No timestamped historical M2 observation is available.");
-      const diagnosis=sourceState==="upstream_delayed"?
-        "Official feeds supplied an older buoy observation; newer data has not been verified.":
-        sourceState==="retrieval_failed"?
-        "The website could not retrieve or read the official M2 feeds.":
-        "Neither official source supplied a verified current M2 observation.";
-      const reason=m2?.m2_source_detail||m2?.errors?.m2_buoy||m2?.__error?.message;
-      setText("m2Detail",`${diagnosis}${reason?" "+reason:""} The separate local coastal model can remain available on Sea & Swim.`);
-      states.push("warn");
-    }else{
-      setBadge("m2Badge",decision.state,decision.state==="good"?"LIVE":"AGING");
-      setText("m2Value",`${fmtNum(decision.value,1)} °C`);
-      setText("m2ObservationInfo",`${decision.state==="good"?"Observation":"Last available observation · not live"} · ${stamp?stamp+" Irish time · ":""}${ageText?ageText+" old":"Age not provided"}`);
-      setText("m2Detail",`M2 is approximately 110 km offshore. ${decision.state==="good"?"The observation is within the normal 3-hour freshness window.":"The reading is between 3 and 12 hours old and must not be treated as current."}`);
-      if(decision.state==="warn")states.push("warn");
-    }
+  if (checkResults.cahore) {
+    const observedMs=Date.parse(cahore?.observed_at||"");
+    const age=Number.isFinite(observedMs)?Date.now()-observedMs:NaN;
+    const current=!cahore.__error&&cahore.status==="ok"&&
+      Number.isFinite(age)&&age>=-10*60000&&age<=90*60000&&
+      cahore.water_level_m!==null&&cahore.water_level_m!==undefined&&
+      Number.isFinite(Number(cahore.water_level_m))&&
+      Number(cahore.water_level_m)>=-10&&Number(cahore.water_level_m)<=30;
+    setBadge("cahoreBadge",current?"good":"warn",current?"CURRENT":"UNAVAILABLE");
+    setText("cahoreValue",current?`${fmtNum(cahore.water_level_m,2)} m`:"No current reading");
+    setText("cahoreObservationInfo",current?`Observed ${fmtIrishDateTime(cahore.observed_at)} Irish time`:
+      Number.isFinite(observedMs)?`Last available ${fmtIrishDateTime(cahore.observed_at)} Irish time · not current`:
+      "No verified Cahore Pier observation");
+    setText("cahoreDetail",current?"OPW WaterLevel.ie · Cahore Pier staff-gauge zero. Heights are not tide predictions.":
+      "Cahore Pier data is delayed or the OPW relay is unavailable. Local station observations continue independently.");
+    if(!current)states.push("warn");
   }
 
   if (checkResults.health) {
