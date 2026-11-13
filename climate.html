@@ -100,7 +100,7 @@
             <div>
               <span class="section-eyebrow">Local temperature records</span>
               <h2>First frost tracker</h2>
-              <p>Tracks the earliest station air temperature at or below 0°C recorded at the Parknacross station in each July–June frost season.</p>
+              <p>Records the first air frost of each cold season (autumn to spring), when the Parknacross station air temperature falls to 0°C or below.</p>
             </div>
           </div>
           <div class="frost-tracker-grid">
@@ -110,7 +110,7 @@
               <p id="frostCurrentDetail">Checking saved station lows…</p>
             </article>
             <article class="context-card">
-              <span>Recorded frost days this season</span>
+              <span>Recorded air-frost days this season</span>
               <strong id="frostSeasonCount">--</strong>
               <small id="frostSeasonCoverage">Days with valid saved station lows</small>
             </article>
@@ -123,7 +123,7 @@
           <div id="frostSeasonHistory" class="event-timeline" aria-label="Previous frost seasons" aria-live="polite" style="margin-top:14px">
             <div class="empty-state">Loading frost history…</div>
           </div>
-          <p id="frostDataNote" class="info-note" role="note">Only measured station lows of 0.0°C or below count as frost. Forecast temperatures are not counted as observed frost; days without a usable saved low remain unknown.</p>
+          <p id="frostDataNote" class="info-note" role="note">An air frost is recorded when the station air temperature reaches 0.0°C or below. Ground frost can occur even when the air is above freezing and is not measured here. Forecasts are excluded; days without a usable saved low remain unknown.</p>
           <p id="frostStatus" class="info-note" role="status" aria-live="polite">Loading the Parknacross temperature archive…</p>
         </section>
         <section class="page-section" id="solarExposureTracker">
@@ -221,7 +221,7 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="offline.js?v=20261010-v38-4-190"></script>
     <script src="site-config.js?v=20261010-v38-4-188"></script>
-    <script src="comparison-alignment.js?v=20261028-current-delta"></script><script src="weather-fingerprint.js?v=20261019-fingerprint"></script><script src="climate.js?v=20261028-current-delta"></script>
+    <script src="comparison-alignment.js?v=20261028-current-delta"></script><script src="weather-fingerprint.js?v=20261019-fingerprint"></script><script src="climate.js?v=20261113-air-frost-copy"></script>
     <!-- Cloudflare Web Analytics -->
     <script
       type="module"
