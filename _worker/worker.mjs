@@ -2991,7 +2991,7 @@ export default {
             "/met/warnings",
             "/quality", "/battery-debug (admin)", "/rain-summary", "/rain-events?days=30", "/events", "/reliability", "/lightning", "/day?date=YYYY-MM-DD", "/backup-status", "/export.csv",
             "/met/johnstown", "/met/point", "/forecast-verification",
-            "/met/marine", "/marine/tides", "/marine/sea-temperature", "/climate-summary",
+            "/met/marine", "/marine/tides", "/marine/cahore-water-level", "/marine/sea-temperature", "/climate-summary",
             "/social-status", "/social-status-admin (admin)", "/social-recover-today (admin POST)", "/social-preview?date=YYYY-MM-DD (admin)"
           ]
         });
@@ -3579,6 +3579,11 @@ export default {
 
       if (url.pathname === "/marine/tides") {
         return await cachedJson(request, ctx, 3600, () => getTides(url));
+      }
+
+      if (url.pathname === "/marine/cahore-water-level") {
+        if(request.method!=="GET")return json({error:"Method not allowed"},405);
+        return await cachedJson(request, ctx, 900, () => getCahorePierWaterLevel());
       }
 
       if (url.pathname === "/marine/sea-temperature") {
@@ -8009,6 +8014,54 @@ async function fetchTextWithTimeout(input, init = {}, timeoutMs = MARINE_UPSTREA
   } finally {
     clearTimeout(timer);
   }
+}
+
+// OPW station 11061, sensor 0001: observed Cahore Pier staff-gauge level.
+function parseCahoreWaterLevelCsv(csv, nowMs=Date.now()){
+  function timeMs(raw){
+    const s=String(raw||"").trim();
+    let m=s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(?:UTC|Z))?$/i);
+    if(m)return Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+(m[6]||0));
+    m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    if(m)return Date.UTC(+m[3],+m[2]-1,+m[1],+m[4],+m[5],+(m[6]||0));
+    const stamp=Date.parse(s);
+    return /(?:Z|[+-]\d{2}:?\d{2})$/i.test(s)&&Number.isFinite(stamp)?stamp:NaN;
+  }
+  const rows=[];
+  for(const line of String(csv||"").replace(/^\uFEFF/,"").split(/\r?\n/)){
+    if(!line.trim()||line.startsWith("#"))continue;
+    const columns=parseCsvLine(line),ms=timeMs(columns[0]);
+    const raw=String(columns[1]||"").trim();
+    const value=/^[+-]?\d+(?:\.\d+)?$/.test(raw)?Number(raw):NaN;
+    if(!Number.isFinite(ms)||!Number.isFinite(value)||value< -10||value>30||
+       ms>nowMs+10*60000||ms<nowMs-48*3600000)continue;
+    rows.push({ms,time:new Date(ms).toISOString(),water_level_m:value});
+  }
+  rows.sort((a,b)=>a.ms-b.ms);
+  const unique=rows.filter((r,i)=>i===rows.length-1||r.ms!==rows[i+1].ms);
+  const latest=unique[unique.length-1]||null;
+  const fresh=Boolean(latest&&nowMs-latest.ms<=90*60000&&nowMs-latest.ms>=-10*60000);
+  const baseline=fresh?[...unique].reverse().find(r=>latest.ms-r.ms>=30*60000&&latest.ms-r.ms<=90*60000):null;
+  const delta=baseline?latest.water_level_m-baseline.water_level_m:null;
+  const trend=delta===null?null:delta>=0.03?"rising":delta<=-0.03?"falling":"steady";
+  return {
+    station:"Cahore Pier",station_id:11061,source:"OPW WaterLevel.ie",
+    datum:"local staff gauge zero",status:!latest?"unavailable":fresh?"ok":"stale",
+    observed_at:latest?.time||null,water_level_m:fresh?latest.water_level_m:null,
+    trend:fresh?trend:null,
+    readings:fresh?unique.filter(r=>r.ms>=nowMs-24*3600000).map(({time,water_level_m})=>({time,water_level_m})):[]
+  };
+}
+async function getCahorePierWaterLevel(){
+  // OPW asks automated clients not to poll more frequently than every 15 minutes.
+  // Rotate the cache-buster in the same 15-minute windows as the Worker edge TTL.
+  const window15=Math.floor(Date.now()/900000);
+  const url="https://waterlevel.ie/data/day/11061_0001.csv?"+window15;
+  const res=await fetch(url,{headers:{"Accept":"text/csv"},signal:AbortSignal.timeout(9000)});
+  if(!res.ok)throw Error("OPW water-level HTTP "+res.status);
+  const csv=await res.text();
+  if(csv.length>20000)throw Error("Unexpected OPW response length");
+  return parseCahoreWaterLevelCsv(csv);
 }
 
 async function getTides(url) {
