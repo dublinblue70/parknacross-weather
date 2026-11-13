@@ -9,7 +9,7 @@ async function runApi(api) {
   const document = {
     addEventListener(name, callback) { if (name === "DOMContentLoaded") this.ready = callback; },
     getElementById(id) {
-      if (!nodes.has(id)) nodes.set(id, { textContent: "", innerHTML: "" });
+      if (!nodes.has(id)) nodes.set(id, { textContent: "", innerHTML: "", classList: { add() {} }, dataset: {} });
       return nodes.get(id);
     }
   };
@@ -64,4 +64,17 @@ assert.equal(calm.get("coastExposure").textContent,"Calm");
 assert.match(calm.get("coastExposureDetail").textContent,/No meaningful wind direction/);
 assert.match(calm.get("swimSummary").textContent,/calm wind 0\.0 km\/h · direction unavailable/i);
 
-console.log("Coast data fallback tests passed.");
+const predicted = await runApi(async url => ({ok:true,async json(){
+  if(url.includes("/marine/tides"))return {events:[
+    {time:new Date(Date.now()-60*60*1000).toISOString(),type:"low",height_m:-0.09},
+    {time:new Date(Date.now()+4*60*60*1000).toISOString(),type:"high",height_m:0.46}
+  ]};
+  return {};
+}}));
+assert.match(predicted.get("tideList").innerHTML,/0\.46 m/);
+assert.match(predicted.get("tideList").innerHTML,/-0\.09 m/);
+assert.doesNotMatch(predicted.get("tideList").innerHTML,/OD Malin/);
+assert.match(predicted.get("nextTideTime").textContent,/0\.46 m/);
+assert.doesNotMatch(predicted.get("nextTideTime").textContent,/OD Malin/);
+
+console.log("Coast data fallback and understandable tide-height display tests passed.");
