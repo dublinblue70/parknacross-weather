@@ -43,4 +43,20 @@ assert.match(read('summary.html'),/Potted hydrangea · soil readings/);
 assert.match(read('index.html'),/id="soilWateringStatus"/);
 assert.match(read('summary.html'),/id="summarySoilWateringStatus"/);
 assert.match(read('service-worker.js'),/\.\/hydrangea-soil\.js/);
+// Privacy disclosures must stay readable and describe browser-facing providers.
+const privacy=read('privacy.html'),privacyCss=read('privacy-providers.css');
+assert.match(privacy,/<h2 id="privacyProvidersHeading">Technical details &amp; service providers<\/h2>/);
+for(const section of ['Website &amp; analytics','Weather &amp; sea observations','Forecast backup','Radar, maps &amp; satellite','Other weather networks &amp; external links']){
+  assert.ok(privacy.includes(section),'Missing privacy provider section '+section);
+}
+for(const provider of ['GitHub Pages','Cloudflare','Met Éireann','Marine Institute','Office of Public Works','WaterLevel.ie','Open-Meteo','RainViewer','OpenStreetMap','jsDelivr','EUMETSAT','YouTube','Weather Underground','Windy','Weathercloud']){
+  assert.ok(privacy.includes(provider),'Missing privacy provider '+provider);
+}
+assert.match(privacy,/Cahore readings are fetched through Cloudflare, not directly from your browser/);
+assert.match(privacy,/Open-Meteo<\/strong> forecast directly/);
+assert.match(privacy,/Last reviewed: 13 November 2026/);
+assert.doesNotMatch(privacy,/class="privacy-details"/,'Replace the dense accordion with grouped provider details');
+assert.match(privacy,/privacy-providers\.css\?v=20261113-structure/);
+assert.match(read('service-worker.js'),/\.\/privacy-providers\.css/);
+assert.match(privacyCss,/@media\(max-width:720px\)/);
 console.log('PASS: '+(pages.length-2)+' public pages use current mobile UX CSS; JavaScript syntax and WH40H provenance checks passed.');
