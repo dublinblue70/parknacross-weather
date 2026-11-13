@@ -16,9 +16,10 @@
    if(!wet.length)sentences.push(`Dry conditions are forecast for ${period}.`);
    else {
     const timing=ms=>new Date(ms).toLocaleTimeString('en-IE',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+    const day=ms=>new Date(ms).toLocaleDateString('en-IE',{timeZone:TZ,weekday:'long',day:'numeric',month:'long'});
     const peak=wet.reduce((a,b)=>a.rain>=b.rain?a:b);
     sentences.push(`Rain is forecast during ${wet.length===rows.length?'each hourly period':'some of the hours'} ${i===1?'tonight':'shown'}, totalling about ${number(total)} mm.`);
-    if(wet.length<rows.length)sentences.push(`The wettest forecast hour starts at ${timing(peak.ms)} Irish time.`);
+    if(wet.length<rows.length)sentences.push(`The heaviest rain is forecast around ${timing(peak.ms)} on ${day(peak.ms)} (Irish time).`);
    }
   }else sentences.push('Rainfall coverage is incomplete, so dry conditions cannot be confirmed for this whole window.');
   if(temps.length){
