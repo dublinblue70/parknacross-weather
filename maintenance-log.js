@@ -1,5 +1,5 @@
 window.PARKNACROSS_MAINTENANCE_LOG = [
-  {date:"2026-11-03",type:"Sensor expansion",title:"WH40H dedicated rain gauge installed",detail:"Mounted an Ecowitt WH40H self-emptying tipping-bucket rain gauge on a pole and selected the traditional rain gauge as the GW3001 rainfall priority at approximately 13:00 GMT (Irish time) on 3 November 2026. No rain was falling at the changeover. It becomes the primary source for new rain-rate and rainfall-accumulation observations. Historical rain readings remain unchanged; the changeover day may combine readings from different instruments, so avoid treating it as a direct like-for-like comparison."},
+  {date:"2026-11-03",type:"Sensor expansion",title:"Dedicated rain gauge installed",detail:"Mounted an self-emptying tipping-bucket rain gauge on a pole and selected the traditional rain gauge as the primary rainfall source at approximately 13:00 GMT (Irish time) on 3 November 2026. No rain was falling at the changeover. It becomes the primary source for new rain-rate and rainfall-accumulation observations. Historical rain readings remain unchanged; the changeover day may combine readings from different instruments, so avoid treating it as a direct like-for-like comparison."},
   {date:"2026-10-26",type:"Website",title:"Whole-site reliability and feature update",detail:"Corrected radar arrival timing, stale coastal summaries, notification subscription recovery and overnight forecast periods. Added accessible chart tables, day replay, rain-to-soil comparison, source monitoring. Improved responsive alignment and archive reporting."},
   {date:"2026-10-26",type:"Website",title:"Notification choices preserved",detail:"Selections are merged when permissions or background setup finishes, so a delayed response no longer overwrites newer choices."},
   {date:"2026-10-24",type:"Website",title:"Mobile chart and dashboard alignment",detail:"Improved archive-chart tooltips and aligned the daily observation cards and summary sections."},
@@ -33,13 +33,13 @@ window.PARKNACROSS_MAINTENANCE_LOG = [
   {
     date: "2026-09",
     type: "Firmware",
-    title: "WS90 firmware recorded",
-    detail: "WS90 firmware recorded as version 1.2.1."
+    title: "Outdoor sensor firmware recorded",
+    detail: "Outdoor sensor firmware recorded as version 1.2.1."
   },
   {
     date: "2026-09",
     type: "Commissioning",
-    title: "WS90 and GW3001 station commissioned",
-    detail: "Ecowitt WS90 array and GW3001 gateway brought into service."
+    title: "Weather station commissioned",
+    detail: "Outdoor weather array and indoor gateway brought into service."
   }
 ];

@@ -75,7 +75,7 @@ assert.match(read('station.html'),/data-sensor="rain"/);
 assert.match(read('station.html'),/self-emptying tipping-bucket rain gauge/);
 assert.doesNotMatch(read('station.html'),/WS90 piezoelectric sensor/);
 assert.doesNotMatch(read('rain.html'),/zero rain-rate reading means the WS90/i);
-assert.match(read('maintenance-log.js'),/2026-11-03.*WH40H/);
+assert.match(read('maintenance-log.js'),/2026-11-03.*Dedicated rain gauge/);
 assert.match(read('history.html'),/Rain-gauge change.*3 Nov 2026/);
 assert.match(read('downloads.html'),/Rainfall sensor history:/);
 assert.ok(read('admin.html').includes('Admin interface '+JSON.parse(read('package.json')).version),'Admin label must match the public site release');
