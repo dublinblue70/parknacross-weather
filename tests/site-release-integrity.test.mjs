@@ -23,7 +23,7 @@ const names=['status.js','status-ui.js','app.js','rain.js','history.js',
 for(const name of names){
   assert.doesNotThrow(()=>new vm.Script(read(name),{filename:name}),name+' has a JavaScript syntax error');
 }
-assert.match(read('radar.html'),/WH40H tipping-bucket gauge/);
+assert.match(read('radar.html'),/dedicated tipping-bucket rain gauge/);
 assert.doesNotMatch(read('radar.html'),/measured locally by the WS90/);
 assert.match(read('monthly.js'),/rainSourceNote/);
 assert.match(read('monthly.js'),/hasChangeoverRain\?/);

@@ -6,9 +6,9 @@ for(const path of ['status.js','status-ui.js','rain.js','history.js','monthly.js
   assert.doesNotThrow(()=>new vm.Script(read(path),{filename:path}),path+' must parse without a browser-blocking error');
 }
 const rainy=read('rain.js'),history=read('history.js'),monthly=read('monthly.js'),annual=read('annual.js');
-assert.match(read('radar.html'),/rainfall.*WH40H/i,'Radar describes the new primary rain sensor');
+assert.match(read('radar.html'),/rainfall.*dedicated tipping-bucket rain gauge/i,'Radar describes the new primary rain sensor');
 assert.doesNotMatch(read('radar.js'),/Check the WS90 reading for the local observation/,'Radar guidance must not name obsolete rain sensor');
-assert.match(read('radar.js'),/Check the WH40H rain-gauge reading/);
+assert.match(read('radar.js'),/Check the dedicated rain-gauge reading/);
 assert.match(read('maintenance-log.js'),/13:00 GMT.*No rain was falling/);
 assert.match(read('rain.html'),/13:00 GMT \(Irish time\), dry conditions/);
 assert.match(rainy,/rain-day-date/);
