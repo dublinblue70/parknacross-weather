@@ -59,4 +59,25 @@ assert.doesNotMatch(privacy,/class="privacy-details"/,'Replace the dense accordi
 assert.match(privacy,/privacy-providers\.css\?v=20261113-structure/);
 assert.match(read('service-worker.js'),/\.\/privacy-providers\.css/);
 assert.match(privacyCss,/@media\(max-width:720px\)/);
+// Maintain the site-wide editorial policy: publish North Wexford data only.
+// The explicitly requested EUMETSAT satellite embed is an acknowledged
+// regional exception, not a local observation.
+const coastLocal=read('coast.html'),radarLocal=read('radar.html');
+const dashboardLocal=read('index.html'),climateLocal=read('climate.html'),statusLocal=read('status.html');
+for(const id of ['marineArea','marineOutlook','marineWind','m2SeaTemp']){
+  assert.doesNotMatch(coastLocal,new RegExp('id="'+id+'"'));
+}
+assert.match(coastLocal,/North Wexford marine warning/);
+assert.match(coastLocal,/Wicklow Head to Carnsore Point/);
+assert.match(coastLocal,/Cahore Pier water level/);
+assert.doesNotMatch(dashboardLocal,/Johnstown Castle|Regional outlook/);
+assert.doesNotMatch(climateLocal,/Johnstown Castle/);
+assert.doesNotMatch(read('platform.js'),/\/met\/johnstown/);
+assert.doesNotMatch(read('app.js'),/Current sector forecast:/);
+assert.doesNotMatch(statusLocal,/id="health-m2"/);
+assert.match(statusLocal,/id="health-cahore"/);
+assert.match(read('status.js'),/\/marine\/cahore-water-level/);
+assert.match(radarLocal,/Ireland-focused satellite imagery/);
+assert.match(radarLocal,/not a measurement specific to Ardamine or North Wexford/);
+assert.match(radarLocal,/data-satellite-stream/);
 console.log('PASS: '+(pages.length-2)+' public pages use current mobile UX CSS; JavaScript syntax and WH40H provenance checks passed.');
