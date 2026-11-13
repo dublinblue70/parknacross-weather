@@ -22,27 +22,13 @@
  exportFeed:['Recent export-preview observations or required fields could not be verified.','Retry the preview before downloading; this check includes yesterday to avoid a midnight gap.','downloads.html'],
  rainEventsFeed:['The rain-event history feature could not be verified.','Retry the source; current rainfall readings may still be available.','rain.html'],
  tide:['Official Arklow tide predictions could not be verified. Local weather readings are independent.','Check the coastal page for available predictions and source information.','coast.html'],
- m2:['A recent offshore M2 observation could not be confirmed. If a temperature appears, it is a last available reading, not a live measurement. Your local weather station is unaffected.','Check the observation date and age above, or see Sea & Swim for the separate coastal model.','coast.html'],
+ cahore:['Cahore Pier water levels could not be verified. This does not affect readings from Parknacross weather station.','Check the observation time or view the official OPW station from Sea & Swim.','coast.html'],
  landWarning:['The official Wexford warning feed could not be verified.','Check Met Éireann directly for current warnings.','https://www.met.ie/warnings-today.html'],
  marineWarning:['The official local marine-warning feed could not be verified.','Check Met Éireann directly before relying on marine conditions.','https://www.met.ie/warnings-today.html'],
  facebook:['Today’s Facebook delivery has not been confirmed, or its status is unavailable.','Check Buffer and the visible Facebook post.','https://www.facebook.com/1361994206992789'],
  x:['Today’s X delivery has not been confirmed, or its status is unavailable.','Check Buffer and the visible X post.','https://x.com/ParknacrossWx']
  };
- function guidanceFor(key,results){
-  if(key!=='m2')return guidance[key];
-  const state=results?.m2?.m2_source_status;
-  if(state==='upstream_delayed')return [
-   'The latest verified offshore M2 observation is older than expected. Your local weather station is unaffected.',
-   'See the last verified time and age in the check details, or use the separate coastal model on Sea & Swim.',
-   'coast.html'
-  ];
-  if(state==='retrieval_failed')return [
-   'The website could not retrieve the official M2 data. This does not establish that the buoy itself is offline.',
-   'Retry the source check. Any historical reading is marked with its age and must not be treated as live.',
-   'coast.html'
-  ];
-  return guidance[key];
- }
+ function guidanceFor(key,results){return guidance[key];}
  let cards=[],ready=false,issuesOnly=true,running=false,activeSource=null;
  let previous={},changes=[];
  try{const data=JSON.parse(sessionStorage.getItem('parknacross-health-session')||'{}');previous=data.previous&&typeof data.previous==='object'?data.previous:{};changes=Array.isArray(data.changes)?data.changes.filter(c=>guidance[c.key]&&['recovered','new','worsened','changed'].includes(c.kind)&&Number.isFinite(Date.parse(c.at))).slice(0,20):[];}catch{}
