@@ -4,9 +4,11 @@ import vm from "node:vm";
 
 const read=name=>fs.readFileSync(new URL("../"+name,import.meta.url),"utf8");
 const status=read("status.js"),page=read("status.html"),ui=read("status-ui.js");
-assert.match(page,/id="m2ObservationInfo"[^>]*role="status"/);
-assert.match(status,/Last available observation · not live/);
-assert.match(ui,/a last available reading, not a live measurement/);
+assert.match(page,/id="cahoreObservationInfo"[^>]*role="status"/);
+assert.match(page,/id="health-cahore"/);
+assert.doesNotMatch(page,/id="health-m2"/);
+assert.match(status,/Cahore Pier data is delayed/);
+assert.match(ui,/Cahore Pier water levels could not be verified/);
 assert.match(page,/status-ui\.css\?v=20261106-m2-timestamp/);
 
 const sandbox={window:{},document:{addEventListener(){}},Date,Math,Number,Intl};
