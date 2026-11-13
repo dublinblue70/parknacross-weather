@@ -9,7 +9,7 @@ async function runApi(api) {
   const document = {
     addEventListener(name, callback) { if (name === "DOMContentLoaded") this.ready = callback; },
     getElementById(id) {
-      if (!nodes.has(id)) nodes.set(id, { textContent: "", innerHTML: "" });
+      if (!nodes.has(id)) nodes.set(id, { textContent: "", innerHTML: "", classList: { add() {} }, dataset: {} });
       return nodes.get(id);
     }
   };
