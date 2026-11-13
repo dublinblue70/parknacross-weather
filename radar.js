@@ -134,20 +134,13 @@
    updateArrivalEstimate();
   }catch(error){
    feedWarning=frames.length?"Radar refresh failed; showing the last loaded frames":"Radar feed temporarily unavailable";
-   if(frames.length){updateRadarStatus();updateArrivalEstimate();}else {set("radarTime","Radar temporarily unavailable");set("radarStatus",feedWarning+". Rain readings and satellite imagery remain available; refresh this page to retry.");setArrival("Radar arrival estimate unavailable","Waiting for the RainViewer radar feed to return.");playing=false;stopAnimation();set("radarPlay","Play");$("radarPlay").disabled=true;$("radarSlider").disabled=true;}
+   if(frames.length){updateRadarStatus();updateArrivalEstimate();}else {set("radarTime","Radar temporarily unavailable");set("radarStatus",feedWarning+". Local station rain readings remain available; refresh this page to retry.");setArrival("Radar arrival estimate unavailable","Waiting for the RainViewer radar feed to return.");playing=false;stopAnimation();set("radarPlay","Play");$("radarPlay").disabled=true;$("radarSlider").disabled=true;}
   }
  }
  async function loadRain(){try{const response=await fetch(API+"/current",{cache:"no-store"});if(!response.ok)throw Error("Rain reading unavailable");const c=await response.json();if(c.error)throw Error(c.error);const stamp=c.received_at?Date.parse(c.received_at):usable(c.epoch)?Number(c.epoch)*1000:NaN,age=Date.now()-stamp,fresh=Number.isFinite(stamp)&&age>=-90000&&age<=600000,day=v=>new Date(v).toLocaleDateString("en-CA",{timeZone:"Europe/Dublin"}),today=Number.isFinite(stamp)&&day(stamp)===day(Date.now());set("radarRainRate",fresh&&usable(c.rain_rate_mm_h)?Number(c.rain_rate_mm_h).toFixed(1)+" mm/h":"--");const correction=Number(window.PARKNACROSS_DATA_CORRECTIONS?.dailyRainMm?.[day(stamp)]||0);set("radarRainToday",today&&usable(c.rain_daily_mm)?Math.max(0,Number(c.rain_daily_mm)-correction).toFixed(1)+" mm":"--");set("radarRainUpdated",Number.isFinite(stamp)?(fresh?"Observed":"Saved reading")+" "+new Date(stamp).toLocaleString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+" Irish time"+(fresh?"":" · current rain status unavailable"):"Observation time unavailable");}catch{set("radarRainRate","--");set("radarRainToday","--");set("radarRainUpdated","Current station rainfall could not be checked.");}}
- function startSatelliteStream(){
-  const stream=document.querySelector("[data-satellite-stream]"),section=$("satelliteImagery"),status=document.querySelector("[data-satellite-status]");
-  if(!stream||!section)return;
-  let started=false;
-  const start=()=>{if(started)return;started=true;stream.addEventListener("load",()=>{if(status)status.textContent="Player loaded. Press play to view the stream; if playback is unavailable, use the direct link below."},{once:true});stream.addEventListener("error",()=>{if(status)status.textContent="The embedded player could not load. Open the EUMETSAT stream directly using the link below."},{once:true});stream.src=stream.dataset.streamSrc;};
-  if("IntersectionObserver"in window){const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){start();observer.disconnect();}},{rootMargin:"280px 0px",threshold:0});observer.observe(stream);}else start();
- }
  document.addEventListener("visibilitychange",()=>{if(document.hidden)stopAnimation();else if(playing)startAnimation();});
  document.addEventListener("DOMContentLoaded",()=>{
-  set("year",new Date().getFullYear());startSatelliteStream();loadRain();(window.ParknacrossRefresh?.every||setInterval)(loadRain,60*1000);
+  set("year",new Date().getFullYear());loadRain();(window.ParknacrossRefresh?.every||setInterval)(loadRain,60*1000);
   if(!window.L){set("radarStatus","The map library could not load. Retry this page to restore radar.");set("radarTime","Radar map unavailable");setArrival("Radar arrival estimate unavailable","The map library could not load.");["radarCenter","radarSlider","radarPlay"].forEach(id=>{if($(id))$(id).disabled=true;});return;}
   map=L.map("radarMap").setView(coords,7);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);
