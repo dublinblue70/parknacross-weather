@@ -46,13 +46,13 @@ const empty = await runApi(async url => ({
 assert.equal(empty.get("tideList").textContent, "Arklow tide predictions are temporarily unavailable.");
 assert.notEqual(empty.get("tideList").textContent, "Loading tide predictions…");
 assert.equal(empty.get("localSeaTemp").textContent, "Unavailable");
-assert.equal(empty.get("m2SeaTemp").textContent, "Unavailable");
-assert.notEqual(empty.get("marineWind").textContent, "Loading…");
+assert.equal(empty.get("coastWarn").textContent, "Marine warning status unavailable");
+assert.match(empty.get("coastIssued").textContent,/Wicklow Head to Carnsore Point/);
 
 const failed = await runApi(async () => { throw new Error("offline"); });
 assert.equal(failed.get("nextTide").textContent, "Unavailable");
 assert.equal(failed.get("localSeaTempTime").textContent, "Coastal estimate temporarily unavailable");
-assert.equal(failed.get("marineOutlook").textContent, "Marine forecast temporarily unavailable");
+assert.equal(failed.get("coastWarn").textContent, "Marine warning status unavailable");
 
 const calm = await runApi(async url => ({ok:true,async json(){
   if(url.endsWith("/current"))return {epoch:Date.now()/1000,wind_speed_kmh:0,wind_gust_kmh:0,wind_direction_deg:270};
@@ -77,4 +77,29 @@ assert.doesNotMatch(predicted.get("tideList").innerHTML,/OD Malin/);
 assert.match(predicted.get("nextTideTime").textContent,/0\.46 m/);
 assert.doesNotMatch(predicted.get("nextTideTime").textContent,/OD Malin/);
 
-console.log("Coast data fallback and understandable tide-height display tests passed.");
+const localOnly=await runApi(async url=>({ok:true,async json(){
+  if(url.includes("/met/marine"))return {
+    local_warning_status_available:true,local_warning_relevant:true,
+    local_small_craft_warning:true,local_warning_sector:"Wicklow Head to Carnsore Point",
+    local_warning_valid_text:"Today 12:00–18:00",
+    local_area:{area:"Belfast Lough to Mizen Head",wind:"Whole coast"},
+    outlook:{text:"Generic nationwide outlook"}
+  };
+  if(url.includes("/marine/tides"))return {events:[]};
+  if(url.includes("/marine/sea-temperature"))return {
+    local_model:{sea_surface_temperature_c:13.2,model_time:new Date().toISOString()},
+    m2_observation_available:true,
+    m2_buoy:{sea_surface_temperature_c:8.1,observation_time:new Date().toISOString()}
+  };
+  return {};
+}}));
+assert.equal(localOnly.get("coastWarn").textContent,"Small Craft warning");
+assert.match(localOnly.get("coastIssued").textContent,/Wicklow Head to Carnsore Point/);
+assert.equal(localOnly.get("localSeaTemp").textContent,"13.2 °C");
+assert.doesNotMatch(localOnly.get("swimSummary").textContent,/Belfast Lough|Mizen Head|nationwide|8\.1 °C/);
+const coastMarkup=await readFile(new URL("./coast.html",import.meta.url),"utf8");
+assert.doesNotMatch(coastMarkup,/id="marineArea"|id="marineOutlook"|id="m2SeaTemp"/);
+assert.match(coastMarkup,/North Wexford marine warning/);
+assert.match(coastMarkup,/warnings\/today\/marine\/EI811/);
+
+console.log("Coast data fallbacks and local-only marine presentation tests passed.");
