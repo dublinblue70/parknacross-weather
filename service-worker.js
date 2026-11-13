@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-251-20261113-release-fixes";
+const CACHE_NAME = "parknacross-v38-4-251-20261113-release-fixes-cahore-waterlevel";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",
@@ -48,6 +48,8 @@ const STATIC_ASSETS = [
   "./monthly.html",
   "./annual.html",
   "./coast.html",
+  "./cahore-waterlevel.css",
+  "./cahore-waterlevel.js",
   "./sky.html",
   "./station.html",
   "./networks.html",
