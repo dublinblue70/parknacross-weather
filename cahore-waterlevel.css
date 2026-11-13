@@ -1,0 +1,18 @@
+/* Compact observed-water-level card: distinct from predicted Arklow tides. */
+.cahore-water-level { overflow:hidden; }
+.cahore-water-head { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.cahore-water-head h2 { margin:.35rem 0 .2rem; }
+.cahore-current { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:baseline; margin:14px 0 6px; }
+.cahore-current strong { font-size:clamp(1.8rem,3vw,2.5rem); font-weight:680; letter-spacing:-.035em; font-variant-numeric:tabular-nums; line-height:1.16; }
+.cahore-current span { color:var(--muted); font-size:.95rem; }
+.cahore-water-level details { margin-top:18px; border-top:1px solid var(--line); padding-top:14px; }
+.cahore-water-level summary { cursor:pointer; color:var(--text, #eaf3f7); font-weight:600; min-height:32px; }
+.cahore-water-chart { width:100%; margin-top:14px; color:var(--muted); font-size:.875rem; }
+.cahore-water-chart svg { display:block; width:100%; height:auto; max-height:260px; }
+.cahore-water-level .source-note { margin-bottom:0; line-height:1.65; }
+.cahore-water-level a { text-underline-offset:.16em; }
+@media(max-width:620px) {
+  .cahore-current { display:block; }
+  .cahore-current span { display:block; margin-top:6px; }
+  .cahore-water-level .source-badge { max-width:100%; }
+}
