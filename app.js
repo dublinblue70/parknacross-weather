@@ -2422,12 +2422,10 @@ function renderMarineWarning(marine, weatherWarningVisible) {
   set("marineWarningTiming", timing);
 
   const sector = marine?.local_warning_sector || "Wicklow Head to Carnsore Point";
-  const localWind = String(marine?.local_area?.wind || "").trim();
-  const detail = localWind ? ` Current sector forecast: ${localWind}` : "";
 
   set(
     "marineWarningText",
-    `Met Éireann has a marine warning affecting ${sector}, which includes the coast off Ardamine/Parknacross.${detail}`
+    `Met Éireann has a marine warning affecting ${sector}, which includes the coast off Ardamine/Parknacross.`
   );
 
   const link = $("marineWarningLink");

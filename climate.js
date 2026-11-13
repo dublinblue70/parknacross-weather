@@ -17,32 +17,6 @@
   }[c]));
 
 
-  async function loadCurrentComparison() {
-    const [officialR, currentR] = await Promise.allSettled([
-      get("/met/johnstown"),
-      get("/current")
-    ]);
-
-    const official = officialR.status === "fulfilled" && usable(officialR.value?.temperature_c)
-      ? Number(officialR.value.temperature_c) : null;
-    set("climateOfficialTemp", official === null ? "--" : `${official.toFixed(1)}°C`);
-
-    const comparison = officialR.status === "fulfilled" && currentR.status === "fulfilled"
-      ? window.ParknacrossComparison?.latest(officialR.value, currentR.value) : null;
-    if (comparison) {
-      set("climateDelta", `${comparison.delta >= 0 ? "+" : ""}${comparison.delta.toFixed(1)}°C`);
-      set("climateDeltaDetail", `Parknacross ${comparison.local.toFixed(1)}°C − Johnstown Castle ${comparison.official.toFixed(1)}°C`);
-      const clock = window.ParknacrossComparison.clock;
-      const localTime = comparison.localEpoch === null ? "time unavailable" : clock(comparison.localEpoch);
-      const officialTime = comparison.officialEpoch === null ? "time unavailable" : clock(comparison.officialEpoch);
-      set("climateComparisonTime", `Latest readings · Parknacross ${localTime} · Johnstown Castle ${officialTime} Irish time. The readings may be from different report times.`);
-    } else {
-      set("climateDelta", "Unavailable");
-      set("climateDeltaDetail", "Both latest temperatures are needed to compare.");
-      set("climateComparisonTime", "A current temperature difference is unavailable because both latest readings could not be verified.");
-    }
-  }
-
   const DUBLIN_TZ = "Europe/Dublin";
   function dublinDayKey(date = new Date()) {
     const parts = new Intl.DateTimeFormat("en-CA", {
@@ -231,10 +205,8 @@
       Chart.defaults.animation = false;
     }
     set("year", new Date().getFullYear());
-    loadCurrentComparison();
-    get("/history?hours=168").then(renderSolarExposure).catch(renderSolarUnavailable);
-    (window.ParknacrossRefresh?.every || setInterval)(loadCurrentComparison, 5 * 60 * 1000);
-
+      get("/history?hours=168").then(renderSolarExposure).catch(renderSolarUnavailable);
+  
     // /rain-summary includes the latest WS90 daily counter and is the same
     // rainfall source used by the refreshed Dashboard figures.
     const promises=[
@@ -252,20 +224,12 @@
       const statsMonthRain = sR.status === "fulfilled" && usable(sR.value?.month_mm) ? Number(sR.value.month_mm) : null;
       const climateMonthRain = usable(c.station_month_rain_mm) ? Number(c.station_month_rain_mm) : null;
       const stationMonthRain = statsMonthRain !== null ? statsMonthRain : climateMonthRain;
-      const ltaMonthRain = usable(c.johnstown_lta_month_rain_mm) ? Number(c.johnstown_lta_month_rain_mm) : null;
-      const rainPct = stationMonthRain !== null && ltaMonthRain !== null && ltaMonthRain > 0
-        ? (stationMonthRain / ltaMonthRain) * 100
-        : usable(c.rain_percent_of_lta_month) ? Number(c.rain_percent_of_lta_month) : null;
       const monthName = new Intl.DateTimeFormat("en-IE", {timeZone:"Europe/Dublin",month:"long"}).format(new Date());
-
-      set("climateRainHeading", `${monthName} rainfall`);
-      set("climateRainPct", stationMonthRain !== null ? `${n(stationMonthRain)} mm` : "--");
-      const archiveSince = stR.status === "fulfilled" && usable(stR.value?.first_epoch)
-        ? new Date(Number(stR.value.first_epoch)*1000).toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"long",year:"numeric"})
-        : null;
-      set("climateRainText", ltaMonthRain !== null
-        ? `At Parknacross so far this ${monthName}${rainPct !== null ? ` · ${Math.round(rainPct)}% of Johnstown Castle’s full-${monthName} average` : ""}. The 1991–2020 average for the whole month is ${n(ltaMonthRain)} mm. This compares rainfall so far with a full month, not the average expected by today.`
-        : `${n(stationMonthRain)} mm at Parknacross so far. A Johnstown Castle long-term rainfall comparison is not configured for ${monthName} yet.`);
+      set("climateRainHeading", `${monthName} rainfall at Parknacross`);
+      set("climateRainPct", stationMonthRain !== null ? `${n(stationMonthRain)} mm` : "Unavailable");
+      set("climateRainText", stationMonthRain !== null
+        ? `Rain measured at Parknacross so far this ${monthName}. This month is still in progress.`
+        : "No verified Parknacross rainfall total is available for this month.");
       set("climateLocalMean", `${n(c.station_month_mean_temperature_c)}°C`);
       if (c.on_this_day?.available) {
         set("onDayTitle", c.on_this_day.title);

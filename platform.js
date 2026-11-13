@@ -21,106 +21,20 @@
     return j;
   }
 
-  const MAX_LOCAL_AGE_MS = 15 * 60 * 1000;
-  const MAX_REPORT_AGE_MS = 2 * 60 * 60 * 1000;
-  const OFFICIAL_CACHE_KEY = "parknacross.official.johnstown.v1";
-  let officialRetryTimer = null;
-  const readOfficialCache = () => {
-    try {
-      const cached = JSON.parse(localStorage.getItem(OFFICIAL_CACHE_KEY) || "null");
-      return cached && typeof cached === "object" ? cached.value : null;
-    } catch (_) { return null; }
-  };
-  const saveOfficialCache = value => {
-    try {
-      localStorage.setItem(OFFICIAL_CACHE_KEY, JSON.stringify({saved_at:Date.now(),value}));
-    } catch (_) {}
-  };
-  const scheduleOfficialRetry = () => {
-    if (officialRetryTimer) return;
-    officialRetryTimer = window.setTimeout(() => {
-      officialRetryTimer = null;
-      loadContext();
-    }, 60 * 1000);
-  };
-  const ageFrom = raw => {
-    if (raw === null || raw === undefined || raw === "") return null;
-    const parsed = typeof raw === "number" || /^\d{10,13}$/.test(String(raw))
-      ? new Date(Number(raw) < 1e12 ? Number(raw) * 1000 : Number(raw))
-      : new Date(raw);
-    const age = Date.now() - parsed.getTime();
-    return Number.isFinite(age) && age >= -5*60*1000 ? age : null;
-  };
-  const reportClock = raw => new Date(raw).toLocaleString("en-IE", {
-    timeZone: STATION_TIME_ZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
-  });
-
   async function loadContext() {
-    const [currentR, officialR, climateR, rainR, eventR, storageR] = await Promise.allSettled([
-      get("/current"), get("/met/johnstown"), get("/climate-summary"), get("/rain-summary"),
-      get("/events"), get("/storage-stats")
+    const [currentR,rainR,eventR,storageR] = await Promise.allSettled([
+      get("/current"),get("/rain-summary"),get("/events"),get("/storage-stats")
     ]);
-
-    const officialLive = officialR.status === "fulfilled" ? officialR.value : null;
-    if (officialLive && usable(officialLive.temperature_c) && officialLive.report_time) {
-      saveOfficialCache(officialLive);
-      if (officialRetryTimer) window.clearTimeout(officialRetryTimer);
-      officialRetryTimer = null;
-    } else {
-      scheduleOfficialRetry();
-    }
-    const official = officialLive || readOfficialCache();
-    const officialIsCached = !officialLive && Boolean(official);
-
-    // Compare recent observations only. The Met heading is a *report* time;
-    // individual station measurements may be earlier. Never treat fetch time
-    // as the observation time or present an unverified difference as live.
-    if (currentR.status === "fulfilled" && official) {
-      const aligned = await window.ParknacrossComparison?.load(official, currentR.value, get);
-      set("contextComparisonSource", "Time-matched comparison");
-      if (aligned) {
-        set("contextTempDelta", `${aligned.delta >= 0 ? "+" : ""}${aligned.delta.toFixed(1)}°C`);
-        set("contextJohnstownTemp", `Johnstown Castle ${aligned.official.toFixed(1)}°C · Parknacross ${aligned.local.toFixed(1)}°C · official ${window.ParknacrossComparison.clock(aligned.officialEpoch)} · local ${window.ParknacrossComparison.clock(aligned.localEpoch)} Irish time${officialIsCached ? " · last available official report" : ""}. Observations matched within five minutes.`);
-      } else {
-        set("contextTempDelta", "Matched reading unavailable");
-        set("contextJohnstownTemp", "No recent Parknacross observation within five minutes of the official report is available. A temperature difference is withheld until matching observations are available.");
-      }
-    } else if (currentR.status === "fulfilled") {
-      set("contextComparisonSource", "Official feed retrying");
-      set("contextTempDelta", "Official reading temporarily unavailable");
-      set("contextJohnstownTemp", "Parknacross is reporting normally. The Johnstown Castle feed could not be reached and will be checked again automatically.");
-    } else {
-      set("contextComparisonSource", "Data check");
-      set("contextTempDelta", "Local reading temporarily unavailable");
-      set("contextJohnstownTemp", "The Parknacross feed could not be reached, so no comparison is shown. The website will retry automatically.");
-    }
-
-    if (climateR.status === "fulfilled") {
-      const monthName = new Intl.DateTimeFormat("en-IE", {timeZone:STATION_TIME_ZONE, month:"long"}).format(new Date());
-      set("contextRainHeading", `${monthName} rainfall so far`);
-      const stationMonthRain = rainR.status === "fulfilled" && usable(rainR.value?.month_mm) ? Number(rainR.value.month_mm) : usable(climateR.value.station_month_rain_mm) ? Number(climateR.value.station_month_rain_mm) : null;
-      const ltaMonthRain = usable(climateR.value.johnstown_lta_month_rain_mm) ? Number(climateR.value.johnstown_lta_month_rain_mm) : null;
-      const rainPct = stationMonthRain !== null && ltaMonthRain !== null && ltaMonthRain > 0
-        ? (stationMonthRain / ltaMonthRain) * 100
-        : usable(climateR.value.rain_percent_of_lta_month) ? Number(climateR.value.rain_percent_of_lta_month) : null;
-      if (rainPct !== null) {
-        set("contextRainLta", `${Math.round(rainPct)}% of monthly average`);
-        const firstEpoch = storageR.status === "fulfilled" && usable(storageR.value.first_epoch)
-          ? Number(storageR.value.first_epoch) : null;
-        const firstDate = firstEpoch !== null ? new Date(firstEpoch * 1000) : null;
-        const monthKey = stationDayKey(new Date())?.slice(0, 7);
-        const archiveStartedThisMonth = firstDate && stationDayKey(firstDate)?.slice(0, 7) === monthKey;
-        const startLabel = archiveStartedThisMonth
-          ? `since ${firstDate.toLocaleDateString("en-IE", {timeZone:STATION_TIME_ZONE,day:"numeric",month:"short"})}`
-          : "so far this month";
-        set("contextRainDetail", `Station rainfall ${startLabel}, compared with Johnstown Castle's FULL-MONTH ${monthName} average (1991–2020). This is not a same-date rainfall comparison.`);
-      } else {
-        set("contextRainLta", "Monthly average unavailable");
-        set("contextRainDetail", `The usual rainfall for ${monthName} is not available yet.`);
-      }
-    } else {
-      set("contextRainLta", "Building context");
-    }
+    const current=currentR.status==="fulfilled"?currentR.value:null;
+    const received=current?.received_at ? Date.parse(current.received_at) : Number(current?.epoch)*1000;
+    const isFresh=Number.isFinite(received)&&received<=Date.now()+90000&&Date.now()-received<=600000;
+    set("contextCurrentTemp",isFresh&&usable(current?.temperature_c)?`${n(current.temperature_c)} °C`:"Unavailable");
+    set("contextCurrentNote",isFresh?"Latest Parknacross observation · "+new Date(received).toLocaleString("en-IE",{timeZone:STATION_TIME_ZONE,day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Fresh station observation unavailable");
+    const monthName=new Intl.DateTimeFormat("en-IE",{timeZone:STATION_TIME_ZONE,month:"long"}).format(new Date());
+    set("contextRainHeading",`${monthName} rainfall at Parknacross`);
+    const monthly=rainR.status==="fulfilled"&&usable(rainR.value?.month_mm)?Number(rainR.value.month_mm):null;
+    set("contextRainLta",monthly!==null?`${n(monthly)} mm`:"Unavailable");
+    set("contextRainDetail",monthly!==null?"Measured at Parknacross so far this month · month still in progress":"Current station monthly total unavailable");
 
     if (eventR.status === "fulfilled" && eventR.value.events?.length) {
       const e = eventR.value.events[0];

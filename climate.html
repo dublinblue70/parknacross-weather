@@ -23,6 +23,11 @@
   <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="weather-fingerprint.css?v=20261026-v38-4-232"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
 <script src="site-polish.js?v=20261113-sensor-language" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
+<style>
+/* The local-only almanac has two overview cards, not four remote comparisons. */
+body .climate-context-grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);}
+@media(max-width:760px){body .climate-context-grid{grid-template-columns:minmax(0,1fr);}}
+</style>
 </head>
   <body>
     <div class="shell">
@@ -44,15 +49,13 @@
         <section class="page-hero">
           <span class="section-eyebrow">Climate Almanac</span>
           <div class="source-badge-row">
-            <span class="source-badge source-observed">Observed locally</span
-            ><span class="source-badge source-official">Official context</span>
+            <span class="source-badge source-observed">Observed locally</span>
           </div>
           <h1>Parknacross Climate & Weather Records</h1>
           <p>
-            Station records alongside official Johnstown Castle observations and
-            available long-term monthly rainfall context.
+            Temperature, rainfall and seasonal records from Parknacross weather station in Ardamine.
           </p>
-          <p class="source-note">Station rainfall switched to the dedicated tipping-bucket rain gauge on 3 November 2026; earlier saved totals came from the previous sensor. Official Johnstown Castle observations remain a separate comparison source.</p>
+          <p class="source-note">Station rainfall switched to the dedicated tipping-bucket rain gauge on 3 November 2026; earlier saved totals came from the previous sensor.</p>
         </section>
         <section class="page-section climate-context-grid">
           <article class="climate-focus">
@@ -67,18 +70,6 @@
               >Observed locally</span
             ><strong id="climateLocalMean">--</strong
             ><small>Average of saved Parknacross readings</small>
-          </article>
-          <article class="context-card">
-            <span>Current official temperature</span
-            ><span class="source-badge source-official card-source"
-              >Official</span
-            ><strong id="climateOfficialTemp">--</strong
-            ><small>Johnstown Castle · Met Éireann</small>
-          </article>
-          <article class="context-card">
-            <span>Current local difference</span
-            ><strong id="climateDelta">--</strong
-            ><small id="climateDeltaDetail">Parknacross minus Johnstown Castle</small>
           </article>
         </section>
         <section class="page-section weather-fingerprint" id="weatherFingerprint" aria-labelledby="fingerprintHeading">
@@ -221,7 +212,7 @@
     <script src="chart.umd.min.js?v=4.4.4"></script>
     <script src="offline.js?v=20261010-v38-4-190"></script>
     <script src="site-config.js?v=20261010-v38-4-188"></script>
-    <script src="comparison-alignment.js?v=20261028-current-delta"></script><script src="weather-fingerprint.js?v=20261019-fingerprint"></script><script src="climate.js?v=20261113-air-frost-copy"></script>
+    <script src="comparison-alignment.js?v=20261028-current-delta"></script><script src="weather-fingerprint.js?v=20261019-fingerprint"></script><script src="climate.js?v=20261113-local-almanac"></script>
     <!-- Cloudflare Web Analytics -->
     <script
       type="module"
