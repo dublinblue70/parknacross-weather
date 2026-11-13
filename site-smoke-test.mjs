@@ -324,8 +324,9 @@ if (!radarHtml.includes('id="radarCenter"') || !radarScript.includes('map.setVie
 if (!radarHtml.includes("not a still image") || !radarHtml.includes("Open EUMETSAT stream directly") || !radarHtml.includes("player is blank or blocked")) failures.push("satellite stream must be clearly labelled and include a direct fallback link");
 if (!radarScript.includes("Latest frame captured") || !radarScript.includes("Radar frames are stale") || !radarScript.includes("Radar feed may be delayed")) failures.push("radar must show latest frame time and stale-feed warnings");
 if (!radarScript.includes("playing=false") || !radarHtml.includes("Frames start paused")) failures.push("radar animation must start paused to reduce motion and loading");
-if (!coastHtml.includes('id="coastLocalFreshness"') || !coastScript.includes("Parknacross local readings · observed") || !coastScript.includes("formatSourceStamp(m.issued)")) failures.push("coastal observations and official marine forecasts must show source freshness");
-if (!coastHtml.includes('id="marineForecastUpdated"')) failures.push("coast.html: marine forecast issue time must have a visible status field");
+if (!coastHtml.includes('id="coastLocalFreshness"') || !coastScript.includes("Parknacross local readings · observed")) failures.push("coast.html: local observation freshness must be visible");
+if (!coastHtml.includes('id="coastWarn"') || !coastHtml.includes('Wicklow Head to Carnsore Point') || !coastHtml.includes('warnings/today/marine/EI811')) failures.push("coast.html: verified North Wexford coastal-sector warnings need source and official link");
+if (/id="marineArea"|id="marineOutlook"|id="marineWind"|id="m2SeaTemp"/.test(coastHtml)) failures.push("coast.html: non-local forecasts and offshore M2 reference must not be displayed");
 const graphHtml = await readFile(join(root, "graphs.html"), "utf8");
 const summaryPageHtml = await readFile(join(root, "summary.html"), "utf8");
 if (!summaryPageHtml.includes('href="graphs.html?hours=168#soilMoistureCard"')) failures.push("summary: soil chart link must open the weekly graph range at the soil charts");
