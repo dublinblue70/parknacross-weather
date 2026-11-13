@@ -1326,7 +1326,7 @@ function updateSoilPanel(current) {
   }
   if(candidates.length<3 && moistureChange === null)eventText="More saved readings are needed to describe the soil moisture trend.";
   set("soilEvent",eventText);
-  set("soilSummary", "Soil sensor measuring compost in the potted hydrangea. Open Graphs to compare moisture, temperature and conductivity with its own history.");
+  set("soilSummary", "The soil sensor measures compost in the potted hydrangea. Open Graphs to compare moisture, temperature and conductivity with its own history.");
   const soilGuide=window.ParknacrossHydrangeaSoil;
   if(soilGuide){
     const guidance=soilGuide.assess({
@@ -1636,7 +1636,7 @@ function updateDashboard(current) {
   if (piezoMetric) {
     piezoMetric.hidden = !usable(piezoToday);
     piezoMetric.textContent = usable(piezoToday)
-      ? `Piezo sensor estimate today: ${n(piezoToday)} mm · separate from dedicated rain gauge`
+      ? `Piezo estimate today: ${n(piezoToday)} mm · separate from the gauge's measured total`
       : "";
   }
   set(

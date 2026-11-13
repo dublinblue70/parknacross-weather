@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-251-forecast-unified-20261111-audit-quality-release";
+const CACHE_NAME = "parknacross-v38-4-251-20261113-sensor-language";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./site-polish.js",

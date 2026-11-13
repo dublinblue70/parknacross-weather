@@ -202,20 +202,20 @@ function describeWh40hStatus(result, now=Date.now()/1000) {
     return {state:"warn",label:"UNAVAILABLE",value:"Cannot verify",detail:"The rain-gauge check could not retrieve both the Worker capability and current rainfall observation."};
   }
   if(caps.features?.wh40h_primary_rain!==true) {
-    return {state:"warn",label:"VERIFY",value:"Source unconfirmed",detail:`Deployed Worker ${caps.worker_version||"unknown"} does not confirm primary-gauge traditional rainfall mapping. Check that the latest Worker was deployed.`};
+    return {state:"warn",label:"VERIFY",value:"Source unconfirmed",detail:`Deployed Worker ${caps.worker_version||"unknown"} does not confirm the primary rain-gauge source mapping. Check that the latest Worker was deployed.`};
   }
   const age=observationAge(reading.epoch,now);
   if(age===null || age < -120 || age >= 1800) {
-    return {state:"warn",label:"STALE",value:"Reading not current",detail:`Worker ${caps.worker_version||"unknown"} selects rain-gauge rainfall, but the latest station observation is ${age===null?"undated":fmtAge(Math.max(0,age))+" old"}. rain-gauge-specific radio and battery telemetry is not available.`};
+    return {state:"warn",label:"STALE",value:"Reading not current",detail:`Worker ${caps.worker_version||"unknown"} uses the dedicated rain-gauge readings, but the latest station observation is ${age===null?"undated":fmtAge(Math.max(0,age))+" old"}. Gauge-specific radio and battery telemetry is not available.`};
   }
   const rateAvailable=usableNumber(reading.rain_rate_mm_h);
   const totalAvailable=usableNumber(reading.rain_daily_mm);
   if(!rateAvailable||!totalAvailable) {
     const missing=!rateAvailable&&!totalAvailable?"rain rate and daily total":!rateAvailable?"rain rate":"daily total";
-    return {state:"warn",label:"MISSING",value:"Rain data unavailable",detail:`Worker ${caps.worker_version||"unknown"} selects rain-gauge rainfall, but the latest reading lacks a valid ${missing}. The separate piezo sensor is not used as a fallback.`};
+    return {state:"warn",label:"MISSING",value:"Rain data unavailable",detail:`Worker ${caps.worker_version||"unknown"} uses the dedicated rain-gauge readings, but the latest reading lacks a valid ${missing}. The separate piezo sensor is not used as a fallback.`};
   }
   const state=age<600?"good":"warn";
-  return {state,label:state==="good"?"CURRENT":"DELAYED",value:`${fmtNum(reading.rain_daily_mm,1)} mm today`,detail:`Rain rate ${fmtNum(reading.rain_rate_mm_h,1)} mm/h · station reading ${fmtAge(age)} old · Worker ${caps.worker_version||"unknown"} selects primary-gauge traditional rainfall. Zero rain is valid. This verifies available rain fields, not independent sensor battery or radio health.`};
+  return {state,label:state==="good"?"CURRENT":"DELAYED",value:`${fmtNum(reading.rain_daily_mm,1)} mm today`,detail:`Rain rate ${fmtNum(reading.rain_rate_mm_h,1)} mm/h · station reading ${fmtAge(age)} old · Worker ${caps.worker_version||"unknown"} uses the dedicated rain-gauge readings. Zero rain is valid. This verifies available rain fields, not independent sensor battery or radio health.`};
 }
 async function runChecks(only=null) {
   if(checksRunning)return;checksRunning=true;
