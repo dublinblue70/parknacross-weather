@@ -107,7 +107,7 @@
       const nav = {
         "#todayHeading":"calendar", "#observationsHeading":"thermometer",
         "#forecast":"cloudSun", "#planning":"compass",
-        "#graphs":"chart", "#soilPanel":"sprout",
+        "#graphs":"chart", "#soilPanel":"sprout", "#sunMoon":"sun",
         "rain.html":"cloudRain", "coast.html":"waves", "summary.html":"calendar"
       };
       group(".dashboard-shortcuts a", el=>nav[el.getAttribute("href")], "nav");
