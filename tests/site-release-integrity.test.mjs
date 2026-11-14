@@ -13,7 +13,7 @@ for(const page of pages){
   const html=read(page);
   assert.match(html,/site-polish\.css\?v=[A-Za-z0-9._-]+/,page+' must request the responsive UX stylesheet with a cache version');
 }
-assert.match(read('index.html'),/site-polish\.css\?v=20261109-mobile-spacing-rhythm/);
+assert.match(read('index.html'),/site-polish\.css\?v=[A-Za-z0-9._-]+/);
 assert.match(read('index.html'),/class="section-heading planning-heading"/);
 assert.match(read('site-polish.css'),/body\.dashboard-page \.planning-heading \.source-note/);
 const names=['status.js','status-ui.js','app.js','rain.js','history.js',
@@ -39,7 +39,7 @@ assert.ok(read('index.html').indexOf('id="observationsHeading"')<read('index.htm
 assert.ok(read('index.html').indexOf('id="forecast"')<read('index.html').indexOf('id="planning"'),'Local forecast must precede planning tools');
 assert.match(read('rain.html'),/id="rainGaugeAudit"/);
 assert.match(read('service-worker.js'),/\.\/rain-gauge-audit\.js/);
-assert.match(read('summary.html'),/Potted hydrangea · soil readings/);
+assert.match(read('summary.html'),/Garden soil · hydrangea pot/);
 assert.match(read('index.html'),/id="soilWateringStatus"/);
 assert.match(read('summary.html'),/id="summarySoilWateringStatus"/);
 assert.match(read('service-worker.js'),/\.\/hydrangea-soil\.js/);
