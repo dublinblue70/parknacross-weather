@@ -60,36 +60,8 @@
 #health-m2[data-health-state="warn"] #m2ObservationInfo{color:#f4d08a}
 #health-m2 .metric{margin-bottom:4px}
 
-/* Compact, visitor-friendly network summaries and optional status history. */
-.health-network-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.health-network-grid .card{min-width:0;min-height:0;padding:15px}
-.health-network-grid .metric{font-size:1rem;line-height:1.4;margin:12px 0 5px;font-weight:650}
-.health-network-grid .health-check-time{display:block}
-.health-network-grid .health-technical{margin-top:8px}
-.health-network-grid .health-technical[open]{padding-bottom:12px}
-.health-network-grid .health-technical a{display:inline-flex;align-items:center;min-height:44px;margin:0 12px 0 0;font-size:.86rem}
-.health-network-grid .health-technical .health-retry{margin-top:8px}
-.health-network-grid .badge.warning{background:var(--warn);color:#07131f}
+
+/* Keep the optional session history discreet. */
 .health-aux-details{padding:12px 16px}
 .health-aux-details>summary{cursor:pointer;font-weight:600;min-height:44px;display:list-item;padding:10px 0}
 .health-brief-note{color:var(--muted);font-size:.8rem;margin:16px 0 4px}
-@media(max-width:850px){.health-network-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:560px){.health-network-grid{grid-template-columns:1fr}.health-network-grid .card{padding:14px}.health-network-grid .metric{margin-top:8px}.health-network-grid .health-technical summary{padding:8px 0}}
-
-/* All nine external networks: short, glanceable status cards. */
-.health-network-card{min-height:0;align-self:stretch}
-.health-network-card .card-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
-.health-network-card .card-head h2{font-size:.94rem;line-height:1.35;min-width:0}
-.health-network-card h2 a{color:var(--text);text-decoration:none}
-.health-network-card h2 a:hover,.health-network-card h2 a:focus-visible{text-decoration:underline;text-underline-offset:3px}
-.health-network-badge{display:inline-flex;align-items:center;justify-content:center;min-height:27px;padding:4px 9px;border-radius:999px;background:#71808a;color:#07131f;font-size:.73rem;font-weight:750;white-space:nowrap}
-.health-network-badge[data-state="recent"]{background:var(--good)}
-.health-network-badge[data-state="stale"]{background:var(--warn)}
-.health-network-badge[data-state="error"]{background:var(--bad)}
-.health-network-status{font-size:.78rem;color:var(--muted);line-height:1.45;margin:9px 0 0;overflow-wrap:anywhere}
-.health-network-note{font-size:.79rem;color:var(--muted);line-height:1.5;margin:12px 0 2px}
-@media(max-width:560px){
-  .health-network-grid .card{padding:13px 15px}
-  .health-network-card .card-head{gap:8px}
-  .health-network-card .health-network-status{margin-top:5px;font-size:.79rem}
-}
