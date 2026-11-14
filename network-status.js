@@ -41,7 +41,24 @@
     el.dataset.state=state;
     if(source)el.title=source;
     else el.removeAttribute("title");
+    // Keep the System Health display compact; retain the full provider evidence below.
+    const badge=document.getElementById("networkBadge-"+key);
+    if(badge){
+      const lowered=label.toLowerCase();
+      let short;
+      if(state==="recent")short=key==="ecowitt"?"Synced":key==="wu"?"Observed":key==="cwop"?"Sent":"Accepted";
+      else if(state==="stale")short="Stale";
+      else if(state==="error")short="Failed";
+      else if(lowered.includes("not configured"))short="Not set";
+      else if(lowered.includes("awaiting"))short="Waiting";
+      else short="Unverified";
+      badge.textContent=short;
+      badge.dataset.state=state;
+      badge.setAttribute("aria-label",short+": "+nameFor(key));
+    }
   }
+  const names={ecowitt:"Ecowitt.net",wu:"Weather Underground",windguru:"Windguru",windy:"Windy.com",weathercloud:"Weathercloud",awekas:"AWEKAS",pws:"PWSWeather",cwop:"CWOP",wowbe:"WOW-BE"};
+  function nameFor(key){return names[key]||key;}
   async function get(path){
     const response=await fetch(base+path,{cache:"no-store",signal:AbortSignal.timeout(9000)});
     if(!response.ok)throw Error("Provider diagnostic unavailable");
