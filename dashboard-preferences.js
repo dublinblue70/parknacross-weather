@@ -6,8 +6,16 @@
  // Visitors who deliberately customised an earlier version retain their saved section order.
  const definitions=[['today-section','At a glance'],['metrics-section','Detailed readings'],['forecast','Ardamine forecast'],['sinceVisitPanel','Since your last visit'],['todaySkyPanel','Today’s sky'],['weather-window-section','Weather Window'],['lightning-group','Lightning'],['wear-today-section','Clothing guide'],['astronomy-strip','Sun and moon'],['soilPanel','Garden soil'],['climate-section','Station climate'],['graphs','Weather graphs'],['records-section','Station records'],['signature-section','Local context']];
  const sections=definitions.map(([key,label])=>({key,label,node:document.getElementById(key)||main.querySelector('.'+key)})).filter(item=>item.node);
- const key='parknacross:dashboard-layout:v1';let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{};}catch(_){}
- const known=new Set(sections.map(s=>s.key));let order=Array.isArray(saved.order)?[...new Set(saved.order.filter(id=>known.has(id)))]:[];order.push(...sections.map(s=>s.key).filter(id=>!order.includes(id)));const hidden=new Set(Array.isArray(saved.hidden)?saved.hidden.filter(id=>known.has(id)):[]);
+ // One-time migration makes Sun & Moon visible again for anyone who hid it previously.
+ // Keep all other saved positions and visibility choices; users may hide it again later.
+ const key='parknacross:dashboard-layout:v2',legacyKey='parknacross:dashboard-layout:v1';
+ let saved={},firstRestore=true;
+ try{
+  const current=localStorage.getItem(key);
+  firstRestore=!current;
+  saved=JSON.parse(current||localStorage.getItem(legacyKey)||'{}')||{};
+ }catch(_){} 
+ const known=new Set(sections.map(s=>s.key));let order=Array.isArray(saved.order)?[...new Set(saved.order.filter(id=>known.has(id)))]:[];order.push(...sections.map(s=>s.key).filter(id=>!order.includes(id)));const hidden=new Set(Array.isArray(saved.hidden)?saved.hidden.filter(id=>known.has(id)):[]);if(firstRestore)hidden.delete('astronomy-strip');
  const controls=document.createElement('details');controls.className='dashboard-customise';const title=document.createElement('summary');title.textContent='Customise your dashboard';controls.append(title);
  const copy=document.createElement('p');copy.textContent='Choose which sections to show and move them up or down. Preferences stay on this device. Current conditions and official warning banners remain visible.';controls.append(copy);
  const list=document.createElement('ul'),note=document.createElement('p'),reset=document.createElement('button');list.className='dashboard-preference-list';note.setAttribute('role','status');reset.type='button';reset.textContent='Reset dashboard layout';controls.append(list,reset,note);
@@ -20,5 +28,5 @@
  check.addEventListener('change',()=>{if(check.checked)hidden.delete(item.key);else hidden.add(item.key);apply();if(persist())note.textContent=item.label+(check.checked?' shown.':' hidden.');});
  for(const [button,delta] of [[up,-1],[down,1]])button.addEventListener('click',()=>{const index=order.indexOf(item.key),next=index+delta;if(next<0||next>=order.length)return;[order[index],order[next]]=[order[next],order[index]];apply();button.focus();if(persist())note.textContent=item.label+' moved '+(delta<0?'up.':'down.');});}
  main.append(controls);
- reset.addEventListener('click',()=>{order=sections.map(s=>s.key);hidden.clear();apply();if(persist())note.textContent='Default dashboard layout restored.';});apply();
+ reset.addEventListener('click',()=>{order=sections.map(s=>s.key);hidden.clear();apply();if(persist())note.textContent='Default dashboard layout restored.';});apply();if(firstRestore)persist();
 })();
