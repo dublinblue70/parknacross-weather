@@ -5,7 +5,7 @@ const read=name=>fs.readFileSync(new URL("../"+name,import.meta.url),"utf8");
 const packageVersion=JSON.parse(read("package.json")).version;
 const admin=read("admin.html"),sw=read("service-worker.js"),app=read("app.js");
 const status=read("status.js"),index=read("index.html"),downloads=read("downloads.js");
-assert.equal(packageVersion,"38.4.251");
+assert.match(packageVersion,/^\d+\.\d+\.\d+$/); // Release version is checked against admin, not pinned to an old patch.
 assert.match(admin,new RegExp("Admin interface "+packageVersion.replaceAll(".","\\.")));
 assert.match(sw,/const CACHE_NAME = "parknacross-v38-4-\d+-[a-z0-9-]+"/);
 assert.match(app,/firstValidSoilEpoch/);
