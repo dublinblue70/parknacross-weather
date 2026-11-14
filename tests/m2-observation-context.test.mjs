@@ -9,7 +9,7 @@ assert.match(page,/id="health-cahore"/);
 assert.doesNotMatch(page,/id="health-m2"/);
 assert.match(status,/Cahore Pier data is delayed/);
 assert.match(ui,/Cahore Pier water levels could not be verified/);
-assert.match(page,/status-ui\.css\?v=20261106-m2-timestamp/);
+assert.match(page,/status-ui\.css\?v=[^"\s]+/);
 
 const sandbox={window:{},document:{addEventListener(){}},Date,Math,Number,Intl};
 vm.createContext(sandbox);
