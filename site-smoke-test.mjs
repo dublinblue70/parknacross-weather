@@ -510,11 +510,12 @@ if (!wowBeWorker.includes('const WOWBE_SHORT_ID = "d8bbdb70"') ||
     !wowBeWorker.includes('put("baromin",p*0.0295299830714,3)')) {
   failures.push("WOW-BE: secure opt-in GW3001 uploader, UTC time, rain rate, pressure and status endpoint required");
 }
-if (!wowBeStatusHtml.includes('id="wowbeHealth"') ||
-    !wowBeStatusHtml.includes('wowbe-status.js?v=20261109-wowbe') ||
+if (wowBeStatusHtml.includes('id="networkHealth"') ||
+    wowBeStatusHtml.includes('src="network-status.js') ||
+    wowBeStatusHtml.includes('id="wowbeHealth"') ||
     !wowBeStatusClient.includes('api+"/wowbe-status"') ||
     !wowBeStatusClient.includes("accepted_not_display_verified")) {
-  failures.push("WOW-BE: system status must separately report upload acknowledgement and public verification");
+  failures.push("External upload telemetry stays available in backend diagnostics, but no longer clutters public System Health");
 }
 if (!stationNetworksHtml.includes('id="stationWowBeTitle">WOW-BE</h2>') ||
     stationNetworksHtml.includes("Registered · Upload status not yet checked.")) {
