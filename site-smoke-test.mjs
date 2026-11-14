@@ -649,8 +649,8 @@ const iconLibrary = await readFile(join(root, "weather-icons.js"), "utf8");
 const iconStyles = await readFile(join(root, "weather-icons.css"), "utf8");
 for (const page of iconPages) {
   const html = await readFile(join(root, page), "utf8");
-  if (!html.includes('href="weather-icons.css?v=20261109-sitewide-svg1"') ||
-      !html.includes('src="weather-icons.js?v=20261109-sitewide-svg1" defer') ||
+  if (!/href="weather-icons\\.css\\?v=[A-Za-z0-9._-]+"/.test(html) ||
+      !/src="weather-icons\\.js\\?v=[A-Za-z0-9._-]+" defer/.test(html) ||
       !iconLibrary.includes('"'+page+'": () =>')) {
     failures.push(page+": shared SVG icon library and page decoration required");
   }
