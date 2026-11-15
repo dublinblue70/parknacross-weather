@@ -80,4 +80,17 @@ assert.match(read('status.js'),/\/marine\/cahore-water-level/);
 assert.match(radarLocal,/Ireland-focused satellite imagery/);
 assert.match(radarLocal,/not a measurement specific to Ardamine or North Wexford/);
 assert.match(radarLocal,/data-satellite-stream/);
+// Public visitors need actual freshness and outages, not an uptime-monitor configuration.
+const stationPage=read('station.html');
+assert.doesNotMatch(stationPage,/System monitoring|UptimeRobot|technicalMonitoringHeading|System monitoring configuration/);
+assert.match(stationPage,/id="stationArchive"/,'Archive details should remain accessible as a collapsible section');
+assert.match(stationPage,/href="#stationTechnical">Archive storage<\/a>/,'On-page navigation still reaches the archive');
+assert.match(stationPage,/id="stationFeed"/);
+assert.match(stationPage,/id="stationLastUpdatedRelative"/);
+assert.match(stationPage,/href="status.html">Open system status<\/a>/);
+assert.match(dashboardLocal,/id="lastUpdatedRelative"/);
+assert.match(dashboardLocal,/id="livePill"/);
+assert.match(statusLocal,/id="overallTitle"/);
+assert.match(statusLocal,/id="apiBadge"/);
+assert.match(read('public-monitor.mjs'),/assertPublishedRelease/,'Independent public-release checks remain in place');
 console.log('PASS: '+(pages.length-2)+' public pages use current mobile UX CSS; JavaScript syntax and WH40H provenance checks passed.');

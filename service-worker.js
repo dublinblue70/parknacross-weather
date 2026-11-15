@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-252-20261113-explicit-forecast-rain-dates-wind-rose-legend";
+const CACHE_NAME = "parknacross-v38-4-252-20261113-explicit-forecast-rain-dates-wind-rose-legend-no-public-monitoring";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./privacy-providers.css",
