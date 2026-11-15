@@ -512,3 +512,56 @@ body.dashboard-page .hero-stat .rain-piezo-comparison[hidden]{display:none!impor
 
 /* Equal label space for Wind and Rain (WH40H provenance wraps on phones). */
 body.dashboard-page .hero-side > .hero-stat > span:first-child {display:block;min-height:2.9em;line-height:1.45;overflow-wrap:anywhere;}
+
+/* Day-to-date archive coverage: concise values, distinct from live sensor health. */
+body.dashboard-page .today-section .dashboard-coverage {
+  display:grid;
+  gap:5px;
+  margin:14px 0 0;
+  padding:16px 18px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(255,255,255,.02);
+  max-width:620px;
+  min-width:0;
+}
+body.dashboard-page .today-section .dashboard-coverage-label {
+  color:var(--muted);
+  font-size:.84rem;
+  font-weight:600;
+  letter-spacing:.01em;
+}
+body.dashboard-page .today-section .dashboard-coverage > strong {
+  font-size:1.08rem;
+  line-height:1.35;
+  color:var(--accent,#7bd7ef);
+  font-weight:700;
+}
+body.dashboard-page .today-section .dashboard-coverage[data-state="partial"] > strong {
+  color:#f4c979;
+}
+body.dashboard-page .today-section .dashboard-coverage[data-state="unknown"] > strong {
+  color:var(--muted);
+}
+body.dashboard-page .today-section .dashboard-coverage-counts {
+  font-size:.92rem;
+  line-height:1.5;
+  color:var(--text,#edf7fb);
+  font-variant-numeric:tabular-nums;
+}
+body.dashboard-page .today-section .dashboard-coverage small {
+  color:var(--muted);
+  font-size:.83rem;
+  line-height:1.5;
+}
+@media (max-width:700px) {
+  body.dashboard-page .today-section .dashboard-coverage {
+    padding:15px 16px;
+    max-width:none;
+  }
+  body.dashboard-page .today-section .dashboard-coverage-label,
+  body.dashboard-page .today-section .dashboard-coverage small {
+    font-size:max(13px,.8125rem);
+  }
+  body.dashboard-page .today-section .dashboard-coverage > strong {font-size:1.02rem;}
+}
