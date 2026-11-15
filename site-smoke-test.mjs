@@ -478,8 +478,11 @@ const expectedStationNetworks = [
   ["stationAwekasLink", "https://www.awekas.at/en/instrument.php?id=54012"],
   ["stationPwsweatherLink", "https://www.pwsweather.com/station/pws/PARKNACROSSWX"],
   ["stationCwopLink", "https://www.findu.com/cgi-bin/wxpage.cgi?call=GW8205&amp;last=24"],
-  ["stationWowBeLink", "https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"]
+  ["stationWowBeLink", "https://www.meteo.be/services/wow-be/index.php?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"]
 ];
+if (stationNetworksHtml.includes('href="https://wow.meteo.be/?id=')) {
+  failures.push("WOW-BE link must use the Royal Meteorological Institute station map, not its information landing page");
+}
 for (const [id, url] of expectedStationNetworks) {
   const pos = stationNetworksHtml.indexOf('id="' + id + '"');
   const anchor = pos >= 0 ? stationNetworksHtml.slice(stationNetworksHtml.lastIndexOf("<a", pos), stationNetworksHtml.indexOf(">", pos) + 1) : "";
@@ -536,7 +539,7 @@ if (!stationNetworksHtml.includes('id="stationEcowittTitle">Ecowitt.net</h2>') |
     stationNetworksHtml.includes("Ecowitt cloud sync not yet checked.")) {
   failures.push("networks.html: Ecowitt must link to the shared station without technical status clutter");
 }
-if (!stationNetworksHtml.includes('id="stationWowBeLink" href="https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"') ||
+if (!stationNetworksHtml.includes('id="stationWowBeLink" href="https://www.meteo.be/services/wow-be/index.php?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"') ||
     !stationNetworksHtml.includes('aria-label="View Parknacross station on WOW-BE') ||
     stationNetworksHtml.includes('id="stationWowBeLink" href="https://wow.meteo.be/en/"')) {
   failures.push("networks.html: WOW-BE link must deep-link to registered Parknacross site rather than provider homepage");
