@@ -244,13 +244,29 @@ body.dashboard-page :where(#forecast,#planning,#graphs,#soilPanel,#sunMoon,#obse
 /* 9 Nov 2026 — dashboard mobile reading rhythm and layout */
 @media (max-width: 640px) {
   /* Collapsed station/climate controls should read as separate, calm sections. */
-  body.dashboard-page #dashboard > .site-detail-toggle {
+  /* The dashboard preferences script moves the climate section into
+     #dashboardOptionalSections. Keep the mobile disclosure spacing in either
+     DOM location so the button never touches the Garden soil card. */
+  body.dashboard-page #dashboard > .site-detail-toggle,
+  body.dashboard-page #dashboardOptionalSections > .site-detail-toggle {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     margin: 20px 0 0;
+    min-height: 58px;
     padding: 15px 17px;
     font-size: .94rem;
     line-height: 1.5;
   }
-  body.dashboard-page #dashboard > .site-detail-copy {
+  body.dashboard-page #dashboard > .site-detail-toggle::after,
+  body.dashboard-page #dashboardOptionalSections > .site-detail-toggle::after {
+    flex: 0 0 auto;
+    float: none;
+  }
+  body.dashboard-page #dashboard > .site-detail-copy,
+  body.dashboard-page #dashboardOptionalSections > .site-detail-copy {
     margin: 12px 2px 0;
     font-size: .88rem;
     line-height: 1.65;
