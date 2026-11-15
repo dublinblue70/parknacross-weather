@@ -92,5 +92,5 @@ assert.match(dashboardLocal,/id="lastUpdatedRelative"/);
 assert.match(dashboardLocal,/id="livePill"/);
 assert.match(statusLocal,/id="overallTitle"/);
 assert.match(statusLocal,/id="apiBadge"/);
-assert.match(read('public-monitor.mjs'),/health/,'Monitoring integration should remain unchanged for administrators');
+assert.match(read('public-monitor.mjs'),/assertPublishedRelease/,'Independent public-release checks remain in place');
 console.log('PASS: '+(pages.length-2)+' public pages use current mobile UX CSS; JavaScript syntax and WH40H provenance checks passed.');
