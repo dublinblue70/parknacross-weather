@@ -8,7 +8,7 @@ const duplicate=distribution([...rows,...rows],{endEpoch:end,hours:24});assert.e
 const css=fs.readFileSync(new URL('../wind-rose.css',import.meta.url),'utf8');
 for(const page of ['index.html','graphs.html']){
   const html=fs.readFileSync(new URL('../'+page,import.meta.url),'utf8');
-  assert.match(html,/wind-rose\\.css\\?v=20261115-full-width-legend/);
+  assert.ok(html.includes("wind-rose.css?v=20261115-full-width-legend"),page+" must load the latest wind rose layout");
 }
 assert.match(css,/\.wind-rose-info \.wind-rose-legend\{display:grid;grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
 assert.match(css,/grid-template-columns: repeat\(3, minmax\(0,1fr\)\)/);
