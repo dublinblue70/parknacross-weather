@@ -186,7 +186,7 @@ const dashboardChartsCss = await readFile(join(root, "dashboard-ui.css"), "utf8"
 if (!dashboardHtml.includes('class="chart-grid chart-grid--balanced"') ||
     !dashboardHtml.includes('class="chart-column chart-column--observations"') ||
     !dashboardHtml.includes('class="chart-column chart-column--analysis"') ||
-    !/dashboard-ui\\.css\\?v=[A-Za-z0-9._-]+/.test(dashboardHtml) ||
+    !/dashboard-ui\.css\?v=[A-Za-z0-9._-]+/.test(dashboardHtml) ||
     !dashboardChartsCss.includes("body.dashboard-page .trends-section .chart-grid.chart-grid--balanced") ||
     !dashboardChartsCss.includes("align-items: start") ||
     !dashboardChartsCss.includes("flex: 0 0 auto") ||
