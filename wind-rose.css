@@ -12,7 +12,9 @@
 .wind-rose-info{display:grid;gap:9px;max-width:760px;margin:12px auto 0}
 @media(min-width:761px){
   .wind-rose-info{padding:15px 17px;border:1px solid rgba(154,188,208,.2);border-radius:14px;background:rgba(255,255,255,.018)}
-  .wind-rose-info .wind-rose-legend{justify-content:flex-start;max-width:none;margin:0;padding:0 0 11px;border-bottom:1px solid rgba(154,188,208,.15)}
+  /* Six evenly spaced positions: five speed bands plus the km/h label. */
+  .wind-rose-info .wind-rose-legend{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-items:center;width:100%;max-width:none;gap:8px;margin:0;padding:0 0 11px;border-bottom:1px solid rgba(154,188,208,.15)}
+  .wind-rose-info .wind-rose-legend>.wind-rose-unit{justify-self:end}
   .wind-rose-info .wind-rose-calm-note{box-sizing:border-box;max-width:none;margin:0;padding:10px 12px;border-left:3px solid #f5cf56;border-radius:0 8px 8px 0;background:rgba(245,207,86,.065);text-align:left}
   .wind-rose-info .wind-rose-explanation{max-width:none;margin:0;text-align:left}
   .wind-rose-info .wind-rose-meta{max-width:none;margin:0;padding-top:9px;border-top:1px solid rgba(154,188,208,.15);text-align:left}
@@ -23,12 +25,16 @@
 @media (max-width: 760px) {
   .wind-rose-info { max-width: 100%; padding: 10px 12px; gap: 10px; }
   .wind-rose-info .wind-rose-legend {
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    align-items: center;
+    width: 100%;
     max-width: none;
     margin: 0;
     font-size: .82rem;
     gap: 8px 12px;
   }
+  .wind-rose-info .wind-rose-legend > .wind-rose-unit { justify-self: end; }
   .wind-rose-info .wind-rose-explanation,
   .wind-rose-info .wind-rose-calm-note {
     max-width: none;
@@ -46,3 +52,6 @@
     color: #b9ccda;
   }
 }
+
+/* Narrow phones: distribute all six labels in two balanced columns. */
+@media(max-width:380px){.wind-rose-info .wind-rose-legend{grid-template-columns:repeat(2,minmax(0,1fr))}}
