@@ -634,7 +634,7 @@
         }
       }
     </style>
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261027-compact-zoom"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261111-align-weather-values"><link rel="stylesheet" href="hydrangea-soil.css?v=20261106-wh52-offline"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="wind-rose.css?v=20261115-full-width-legend"><link rel="stylesheet" href="local-forecast.css?v=20261021-descriptions"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261115-climate-panel-spacing">
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261027-compact-zoom"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261115-coverage-clarity"><link rel="stylesheet" href="hydrangea-soil.css?v=20261106-wh52-offline"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="wind-rose.css?v=20261115-full-width-legend"><link rel="stylesheet" href="local-forecast.css?v=20261021-descriptions"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261115-climate-panel-spacing">
 <script src="site-polish.js?v=20261113-sensor-language" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
   <link rel="stylesheet" href="weather-icons.css?v=20261109-sitewide-svg1">
@@ -824,7 +824,13 @@
           <div class="section-heading compact-heading">
             <div>
               <span class="section-eyebrow">Today</span>
-              <h2 id="todayHeading">Today at a glance</h2><p id="dashboardCoverage" class="source-note" role="status">Checking today’s archive coverage…</p>
+              <h2 id="todayHeading">Today at a glance</h2>
+              <div id="dashboardCoverage" class="dashboard-coverage" role="status" aria-live="polite">
+                <span class="dashboard-coverage-label">Archive coverage today</span>
+                <strong id="dashboardCoveragePercent">Checking coverage…</strong>
+                <span id="dashboardCoverageCounts" class="dashboard-coverage-counts"></span>
+                <small id="dashboardCoverageFullDay"></small>
+              </div>
             </div>
           </div>
 
@@ -1849,7 +1855,7 @@ Building wind direction distribution…
     </script>
     <script src="source-freshness.js?v=20261026-v38-4-232"></script>
     <script src="dashboard-enhancements.js?v=20261114-sun-moon-visible"></script>
-    <script src="archive-quality.js?v=20261008-v38-4-170"></script>
+    <script src="archive-quality.js?v=20261115-coverage-clarity"></script>
 <script src="chart-explorer.js?v=20261027-compact-zoom"></script><script src="dashboard-preferences.js?v=20261114-sun-moon-restore"></script><script src="local-forecast.js?v=20261114-brief-forecast"></script><script src="hydrangea-soil.js?v=20261113-sensor-language"></script><script src="app.js?v=20261113-north-wexford-only"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
