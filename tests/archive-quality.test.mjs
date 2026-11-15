@@ -3,4 +3,25 @@ const window={addEventListener(){}};vm.runInNewContext(fs.readFileSync(new URL('
 const rows=[{epoch:1000,temperature_c:10},{epoch:1300,temperature_c:null},{epoch:2500,temperature_c:11}];const data=q.gaps(rows);assert.equal(data.gaps,1);assert.equal(data.rows.length,4);assert.equal(data.rows[2]._gap,true);assert.equal(data.rows[2].temperature_c,undefined);assert.equal(rows.length,3,'raw observations unchanged');assert.equal(q.gaps([{epoch:1000},{epoch:1600}]).gaps,0);
 assert.equal(q.bounds('2026-03-29').end-q.bounds('2026-03-29').start,23*3600);assert.equal(q.bounds('2026-10-25').end-q.bounds('2026-10-25').start,25*3600);assert.equal(q.bounds('2026-10-07').end-q.bounds('2026-10-07').start,24*3600);
 assert.match(q.coverageText({coverage_percent:100,actual_slots:120,expected_slots:120,coverage_scope:'since_first_observation'},'2026-09-11'),/Partial archive.*since collection began/);assert.match(q.coverageText({coverage_percent:80,actual_slots:230,expected_slots:288},'2026-09-12'),/80.0%.*incomplete/);assert.match(q.coverageText(null,'2026-09-10'),/Coverage unavailable/);
+// The visitor dashboard counts saved readings up to now, not a full 24-hour day.
+const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Dublin'}).format(new Date());
+const complete=q.coverageCard({day:today,coverage_percent:100,actual_slots:244,expected_slots:244,full_day_expected_slots:288,day_in_progress:true,coverage_scope:'day_so_far'},today);
+assert.equal(complete.headline,'100% complete so far');
+assert.equal(complete.count,'244 of 244 expected readings saved.');
+assert.equal(complete.fullDay,'288 readings expected by midnight.');
+assert.equal(complete.state,'complete');
+const partial=q.coverageCard({day:today,coverage_percent:95.1,actual_slots:232,expected_slots:244,full_day_expected_slots:288,coverage_scope:'day_so_far'},today);
+assert.equal(partial.headline,'95.1% saved so far');
+assert.equal(partial.count,'232 of 244 expected readings saved.');
+assert.equal(partial.state,'partial');
+const firstDay=q.coverageCard({day:today,coverage_percent:100,actual_slots:40,expected_slots:40,full_day_expected_slots:288,coverage_scope:'since_first_observation'},today);
+assert.equal(firstDay.headline,'100% since recording began');
+assert.match(firstDay.fullDay,/excludes the time before the first saved reading/);
+assert.equal(firstDay.state,'partial');
+assert.equal(q.coverageCard(null,today).state,'unknown');
+assert.equal(q.coverageCard({coverage_percent:100,actual_slots:20,expected_slots:0},today).state,'unknown');
+assert.match(q.coverageCard({coverage_percent:100,actual_slots:10,expected_slots:10},'2026-03-29').fullDay,/276 readings expected/);
+assert.match(q.coverageCard({coverage_percent:100,actual_slots:10,expected_slots:10},'2026-10-25').fullDay,/300 readings expected/);
+assert.match(q.coverageCard({coverage_percent:100,actual_slots:10,expected_slots:10},'2026-10-07').fullDay,/288 readings expected/);
+console.log('PASS: visitor coverage distinguishes saved readings so far, full-day totals, Irish clock changes and missing data.');
 console.log('PASS: gaps preserve missing data, ten-minute threshold, Irish DST day lengths, partial first day and unavailable coverage.');
