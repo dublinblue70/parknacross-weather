@@ -1283,7 +1283,7 @@ async function buildRainForecastAccuracy(env,now=Math.floor(Date.now()/1000)){
   const pairs=[];
   for(const group of groups.values()){
     const met=group.met_eireann,open=group.open_meteo;
-    if(!met||!open||met.status!=='scored'||open.status!=='scored'||!Number.isFinite(Number(met.observed_mm))||!Number.isFinite(Number(open.observed_mm)))continue;
+    if(!met||!open||met.status!=='scored'||open.status!=='scored'||met.observed_mm===null||open.observed_mm===null||Number(met.captured_epoch)>=group.start||Number(open.captured_epoch)>=group.start||!Number.isFinite(Number(met.observed_mm))||!Number.isFinite(Number(open.observed_mm)))continue;
     const measured=Number(met.observed_mm);
     if(Math.abs(measured-Number(open.observed_mm))>.11)continue;
     pairs.push({start_epoch:group.start,end_epoch:group.end,period:group.period,observed_mm:measured,
@@ -1297,7 +1297,7 @@ async function buildRainForecastAccuracy(env,now=Math.floor(Date.now()/1000)){
   const metMae=means('met_error_mm'),openMae=means('open_error_mm');
   const winner=recent.length<10?'insufficient_data':
     Math.abs(metMae-openMae)<.3?'too_close':metMae<openMae?'met_eireann':'open_meteo';
-  const upcoming=[...groups.values()].filter(g=>g.end>now&&g.met_eireann||g.end>now&&g.open_meteo);
+  const upcoming=[...groups.values()].filter(g=>g.end>now&&(g.met_eireann||g.open_meteo));
   return {available:true,source:'WH40H dedicated rain gauge (not WS90 piezo)',period_basis:'06:00–18:00 and 18:00–06:00 Europe/Dublin',
     evaluation:'Both models compared over identical pre-captured periods; MAE in mm, lower is better',
     caveat:'Gauge accumulation is approximate within 15 minutes of each window boundary; periods with missing or invalid samples are excluded.',
