@@ -33,7 +33,21 @@
  async function load(){
   if(loading)return;loading=true;const button=$("rainRefresh");if(button){button.disabled=true;button.textContent="Refreshing…";}
   set("rainLoadStatus","Refreshing rainfall sources…");
-  try{const live=get("/current").then(c=>{set("rainNow",window.ParknacrossRainIntensity?.formatRate(rainState({}, {}, c).rate)||(rainState({}, {}, c).rate!==null?`${n(c.rain_rate_mm_h)} mm/h`:"--"));set("rainToday",usable(correctedCurrentRain(c))?`${n(correctedCurrentRain(c))} mm`:"--");return c;});
+  try{const live=get("/current").then(c=>{
+     // Do not hold today's live status hostage to slow archive and event requests.
+     const rs=rainState({}, {}, c),rate=rs.rate;
+     const updated=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null);
+     set("rainUpdated",updated?`Station reading: ${dt(updated)} · Irish time`:"Live station reading unavailable");
+     set("rainNow",rate===null?"--":window.ParknacrossRainIntensity?.formatRate(rate)||`${n(rate)} mm/h`);
+     set("rainToday",usable(correctedCurrentRain(c))?`${n(correctedCurrentRain(c))} mm`:"--");
+     set("rainCondition",rs.status==="measured"?"Rain measured · "+(window.ParknacrossRainIntensity?.formatRate(rate)||n(rate)+" mm/h")
+       :rs.status==="sensor_disagreement"?"Possible rain · WH40H and piezo disagree"
+       :rs.status==="possible"?"Possible rain · piezo indication only"
+       :rs.status==="unavailable"?"Current rain status unavailable"
+       :rs.status==="recent"?"Rain measured recently · not confirmed now"
+       :"No current rain measured by the dedicated gauge");
+     return c;
+   });
    const results=await Promise.allSettled([get("/rain-summary"),get("/daily?days=30"),get("/history?hours=1"),live,get("/rain-events?days=30")]);
    const [s,d,h,c,e]=results.map(x=>x.status==="fulfilled"?x.value:{});
    const stamp=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null);set("rainUpdated",stamp?`Station reading: ${dt(stamp)} · Irish time`:"Live station reading unavailable");
