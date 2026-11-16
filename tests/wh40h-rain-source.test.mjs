@@ -70,7 +70,7 @@ const dashboard=read('app.js');
 assert.doesNotMatch(dashboard,/tag: "Light rain detected"/,'Piezo-only signals must not become an unconfirmed rain headline');
 assert.match(dashboard,/piezoIndicatesRain/);
 assert.match(read('rain.js'),/piezoDetected/);
-assert.match(dashboard,/piezo-only signal/,'Piezo-only readings should remain secondary to the dedicated rain gauge');
+assert.match(dashboard,/Classify only the current WH40H rain rate/,'Piezo-only readings must not determine confirmed rainfall intensity');
 assert.match(read('station.html'),/data-sensor="rain"/);
 assert.match(read('station.html'),/self-emptying tipping-bucket rain gauge/);
 assert.doesNotMatch(read('station.html'),/WS90 piezoelectric sensor/);
