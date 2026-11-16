@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-252-20261116-hourly-forecast-crosscheck-preserve-notifications";
+const CACHE_NAME = "parknacross-v38-4-252-20261116-hourly-forecast-crosscheck-v2-preserve-notifications";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./privacy-providers.css",
