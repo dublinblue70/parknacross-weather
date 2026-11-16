@@ -14,13 +14,15 @@
   const currentAge=Date.now()-stamp;
   const piezoFresh=fresh&&currentAge>=-120000&&currentAge<=180000
     &&Number.isFinite(piezoEpoch)&&piezoAge>=-120000&&piezoAge<=420000;
-  const piezoDetected=piezoFresh&&usable(current?.piezo_rain_rate_mm_h)&&Number(current.piezo_rain_rate_mm_h)>0;
+  const piezoRate=piezoFresh&&usable(current?.piezo_rain_rate_mm_h)?Number(current.piezo_rain_rate_mm_h):null;
+  const piezoDetected=piezoRate!==null&&piezoRate>0;
+  const piezoStrongSignal=piezoRate!==null&&piezoRate>=2.0;
   const piezoDailyMm=piezoFresh&&dayKey(new Date(stamp))===dayKey(new Date())&&usable(current?.piezo_daily_mm)
     ? Math.max(0,Number(current.piezo_daily_mm)):null;
   const rows=Array.isArray(history?.readings)?history.readings:[],now=current?.received_at?new Date(current.received_at).getTime():(usable(current?.epoch)?Number(current.epoch)*1000:Date.now());let lastIncrease=null,prev=null;
   for(const row of rows){const t=row?.received_at?new Date(row.received_at).getTime():usable(row?.epoch)?Number(row.epoch)*1000:NaN,total=usable(row?.rain_daily_mm)?Number(row.rain_daily_mm):NaN;if(!Number.isFinite(t)||!Number.isFinite(total))continue;if(prev&&total>=prev.total+0.05)lastIncrease=t;prev={t,total};}
   const currentTotal=usable(current?.rain_daily_mm)?Number(current.rain_daily_mm):null;if(prev&&currentTotal!==null&&currentTotal>=prev.total+0.05)lastIncrease=now;if(rate!==null&&rate>0)lastIncrease=now;
-  const age=lastIncrease?Math.max(0,now-lastIncrease):Infinity;return{rate,piezoDetected,piezoDailyMm,isRaining:(rate!==null&&rate>0)||fresh&&age<=5*60*1000,rainRecently:fresh&&(rate===null||rate<=0)&&age>5*60*1000&&age<=15*60*1000,lastIncrease};
+  const age=lastIncrease?Math.max(0,now-lastIncrease):Infinity;return{rate,piezoDetected,piezoStrongSignal,piezoRate,piezoDailyMm,isRaining:(rate!==null&&rate>0)||fresh&&age<=5*60*1000,rainRecently:fresh&&(rate===null||rate<=0)&&age>5*60*1000&&age<=15*60*1000,lastIncrease};
  };
  function eventGraphLink(event){const start=Number(event.start_epoch),end=Number(event.end_epoch),now=Math.floor(Date.now()/1000);const from=Number.isFinite(start)&&start>0?Math.floor(start)-1800:null,to=Number.isFinite(end)&&end>=start?Math.min(now,Math.ceil(end)+1800):now;return from&&to>from&&to-from<=31*86400?`graphs.html?from=${from}&to=${to}#gRain`:'history.html';}
  let chart=null,loading=false;
@@ -52,11 +54,13 @@
    const [s,d,h,c,e]=results.map(x=>x.status==="fulfilled"?x.value:{});
    const stamp=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null);set("rainUpdated",stamp?`Station reading: ${dt(stamp)} · Irish time`:"Live station reading unavailable");
    const rs=rainState(s,h,c);
-   set("rainCondition",rs.isRaining?"Rain detected by the dedicated rain gauge":rs.piezoDetected
-      ? "Piezo signal only · rain not confirmed by the gauge"
-      : rs.piezoDailyMm>0&&usable(c?.rain_daily_mm)&&Number(c.rain_daily_mm)<0.05
-        ? "No rain measured · piezo estimate unconfirmed"
-        : rs.rate===null?"Live rain-gauge data unavailable":rs.rainRecently?"Rain recently":"No rain detected by the station");
+   set("rainCondition",rs.isRaining?"Rain detected by the dedicated rain gauge":rs.piezoStrongSignal
+      ? "Possible rain · substantial piezo signal, rain gauge not confirming"
+      : rs.piezoDetected
+        ? "Weak piezo rain indication · not confirmed"
+        : rs.piezoDailyMm>0&&usable(c?.rain_daily_mm)&&Number(c.rain_daily_mm)<0.05
+          ? "No rain measured by gauge · piezo estimate unconfirmed"
+          : rs.rate===null?"Live rain-gauge data unavailable":rs.rainRecently?"Rain measured recently":"No current rain measured by the dedicated gauge");
    const piezoToday=$("rainPiezoToday");
    if(piezoToday){
      piezoToday.hidden=!usable(rs.piezoDailyMm);
