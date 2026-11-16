@@ -561,27 +561,29 @@ function conditionInfo(current, isNight) {
       className: "weather-rain", rainState
     };
   }
-  if (rainState.isRaining) {
-    if (rainState.recentIncreaseMm < 0.2 - 1e-6) {
-      return { tag: "Possible recent rain", icon: "🌦️", story: "The station registered a small amount of rain within the last few minutes.", className: "weather-neutral", rainState };
-    }
-    return { tag: "Rain detected recently", icon: "🌧️", story: "The rain gauge recorded rainfall within the last few minutes, although the current rate is 0.0 mm/h.", className: "weather-rain", rainState };
+  // Fresh secondary sensor evidence takes priority over older bucket tips.
+  // Keep the independent sensor and the uncertainty explicit to visitors.
+  if (rainState.status === "sensor_disagreement") {
+    return { tag: "Rain indicated now", icon: "🌧️",
+      story: `WS90 indicates rain at ${n(rainState.piezoRate)} mm/h, but WH40H reports ${n(rainState.rainRate)} mm/h. Current intensity is unconfirmed; the sensors disagree.`,
+      className: "weather-rain", rainState };
   }
-  if (rainState.rainRecently) {
-    if (rainState.recentIncreaseMm < 0.2 - 1e-6) {
-      return { tag: "Possible rain recently", icon: "🌦️", story: "The station registered a small amount of rain recently.", className: "weather-neutral", rainState };
-    }
-    return { tag: "Rain recently", icon: "🌦️", story: "Rain was detected recently at Parknacross.", className: "weather-rain", rainState };
+  if (rainState.status === "possible") {
+    const evidence = rainState.piezoIndicatesRain
+      ? `Fresh WS90 piezo rate: ${n(rainState.piezoRate)} mm/h`
+      : "The WS90 piezo rain counter has increased in consecutive recent observations";
+    return { tag: "Possible rain now", icon: "🌧️",
+      story: `${evidence}. WH40H is not currently confirming a positive rain rate; piezo intensity is an estimate.`,
+      className: "weather-rain", rainState };
   }
-  // A substantial, FRESH piezo reading is useful secondary evidence if the
-  // dedicated gauge has not tipped. Do not claim confirmed rain or add it to
-  // rainfall totals; equally, do not describe these conditions as "dry".
-  if (rainState.piezoStrongSignal) {
-    const gaugeText = rainState.rainAvailable
-      ? "the dedicated rain gauge has not yet measured it"
-      : "the dedicated rain-gauge reading is unavailable";
-    return { tag: "Possible rain", icon: "🌦️",
-      story: `The piezo sensor indicates rain (${n(rainState.piezoRate)} mm/h), but ${gaugeText}. Current rainfall is unconfirmed; check the gauge if rain is visible.`,
+  if (rainState.status === "new_tip") {
+    return { tag: "Rain detected", icon: "🌧️",
+      story: "The WH40H rain counter increased in the last two minutes. The current rate is zero or unavailable, so sustained rain intensity is not confirmed.",
+      className: "weather-rain", rainState };
+  }
+  if (rainState.status === "recent") {
+    return { tag: "Rain recorded recently", icon: "🌦️",
+      story: "The dedicated gauge recorded rain recently, but there is no fresh positive rain rate or piezo indication to confirm rain at this instant.",
       className: "weather-neutral", rainState };
   }
   if (!rainState.rainAvailable) {
@@ -1439,7 +1441,7 @@ function updateDashboard(current) {
     : usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : null;
   const isNight = updateSunInfo(current);
   const condition = conditionInfo(current, isNight);
-  latestRainDetected=Boolean(condition.rainState?.isRaining);
+  latestRainDetected=Boolean(condition.rainState?.rainIndicatedNow);
   updateWhatToWear(current, latestRainDetected);
   updateSoilPanel(current);
 
@@ -1575,8 +1577,10 @@ function updateDashboard(current) {
     : condition.rainState?.reason === "rate_missing" ? "WH40H current rate missing · daily total separate"
     : usable(liveRainRate) && Number(liveRainRate) > 0
       ? intensityTools?.classify(liveRainRate)?.label || "Rain measured"
-      : condition.rainState?.isRaining ? "Recent gauge tip"
-      : condition.rainState?.piezoStrongSignal ? "Possible rain · piezo unconfirmed"
+      : condition.rainState?.status === "sensor_disagreement" ? "Rain indicated · WH40H and WS90 disagree"
+      : condition.rainState?.status === "possible" ? "Possible rain · WS90 indication"
+      : condition.rainState?.status === "new_tip" ? "WH40H tip in last 2 min"
+      : condition.rainState?.status === "recent" ? "Rain recorded recently"
       : usable(liveRainRate) ? "No current rain measured" : "Rain status unavailable";
   set("rainRateVal", `${metricRateText} · ${rainRateDetail}`);
   set("pressureVal", n(current.pressure_hpa));
