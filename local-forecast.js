@@ -76,7 +76,7 @@
    if(values.some(v=>v===undefined))return null;
    const primaryMm=period.rainTotalMm,otherMm=values.reduce((a,b)=>a+b,0);
    const diff=Math.abs(primaryMm-otherMm),high=Math.max(primaryMm,otherMm),low=Math.min(primaryMm,otherMm);
-   const disagree=(diff>=5&&diff>=high*.35)||(low<.5&&high>=3&&diff>=2);
+   const disagree=(diff>=5&&diff>=high*.20)||(low<.5&&high>=3&&diff>=2);
    return {primaryMm,otherMm,disagree,hours:values.length};
   });
  }
