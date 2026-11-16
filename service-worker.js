@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-252-20261116-notification-persistence-safe-repair";
+const CACHE_NAME = "parknacross-v38-4-252-20261116-rain-headline-piezo-unconfirmed-notification-persistence";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./privacy-providers.css",
