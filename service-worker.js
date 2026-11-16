@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-256-20261116-fresh-rain-evidence-v2";
+const CACHE_NAME = "parknacross-v38-4-257-20261116-possible-rain-wording";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./privacy-providers.css",
