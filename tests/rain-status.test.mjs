@@ -22,5 +22,17 @@ assert.equal(recently.status,"recent");
 assert.equal(recently.isRaining,false,"A recent WH40H bucket tip does NOT confirm rain falling now");
 assert.equal(evaluate(reading(20,0,1),[reading(1400,0,1)],{now}).status,"no_current_rain");
 assert.equal(evaluate(reading(20,0,1,{piezo_rain_rate_mm_h:5,piezo_observed_epoch:(now-500_000)/1000}),[],{now}).status,"no_current_rain");
-assert.equal(evaluate(reading(20,null,1),[],{now}).status,"no_current_rain");
+// A recorded daily total must never be mistaken for a live rain-rate reading.
+const rateMissing=evaluate(reading(20,null,1),[],{now});
+assert.equal(rateMissing.status,"rate_unavailable");
+assert.equal(rateMissing.reason,"rate_missing");
+assert.equal(rateMissing.dailyTotalAvailable,true);
+assert.equal(rateMissing.rainAvailable,false);
+const delayed=evaluate(reading(360,0,1),[],{now});
+assert.equal(delayed.status,"unavailable");
+assert.equal(delayed.reason,"stale_observation");
+assert.equal(delayed.dailyTotalAvailable,true);
+assert.equal(delayed.rainAvailable,false);
+// A missing gauge rate is not evidence of disagreement with a fresh piezo signal.
+assert.equal(evaluate(reading(20,null,1,{piezo_rain_rate_mm_h:4,piezo_observed_epoch:(now-20_000)/1000}),[],{now}).status,"possible");
 console.log("Shared rain-status regression tests passed.");
