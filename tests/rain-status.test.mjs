@@ -44,6 +44,7 @@ assert.equal(evaluate(freshPiezo,h,{now}).rainIndicatedNow,true);
 // it remains an unconfirmed possibility rather than a rain measurement.
 const lightPiezo=reading(20,0,1.1,{piezo_rain_rate_mm_h:0.8,piezo_daily_mm:2.4,piezo_observed_epoch:(now-20_000)/1000});
 assert.equal(evaluate(lightPiezo,h,{now}).status,"possible");
+assert.equal(evaluate(lightPiezo,h,{now}).rainIndicatedNow,false,"Weak WS90-only signals must not trigger a rainy-scene assertion");
 // An accumulated 2.4 mm piezo total alone does NOT prove ongoing rain.
 const totalOnly=reading(20,0,1.1,{piezo_rain_rate_mm_h:0,piezo_daily_mm:2.4,piezo_observed_epoch:(now-20_000)/1000});
 assert.equal(evaluate(totalOnly,[],{now,trackLive:false}).status,"no_current_rain");
