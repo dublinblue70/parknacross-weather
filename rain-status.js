@@ -4,6 +4,25 @@
 const number=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v))?Number(v):null;
 const stamp=r=>{const t=r?.received_at?Date.parse(r.received_at):null;return Number.isFinite(t)?t:(number(r?.epoch)===null?null:number(r.epoch)*1000);};
 const day=t=>new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(t));
+// Track consecutive fresh gateway observations. Counters indicate recent activity,
+// not calibrated rain intensity. Only update the tracker on a newer packet.
+let lastLive=null, lastTraditionalTip=null, lastPiezoIncrease=null;
+function liveChanges(time,now,current){
+ if(time===null||now-time>180000||now-time < -90000)
+   return {traditionalTip:false,piezoIncrease:false};
+ const total=number(current?.rain_daily_mm),piezo=number(current?.piezo_daily_mm);
+ const piezoEpoch=number(current?.piezo_observed_epoch);
+ const piezoIsFresh=piezoEpoch!==null&&now-piezoEpoch*1000>=-90000&&now-piezoEpoch*1000<=180000;
+ if(lastLive&&time>lastLive.time&&time-lastLive.time<=180000&&day(time)===day(lastLive.time)){
+   if(total!==null&&lastLive.total!==null&&total-lastLive.total>=0.05)lastTraditionalTip=time;
+   if(piezoIsFresh&&piezo!==null&&lastLive.piezo!==null&&piezo-lastLive.piezo>=0.1)lastPiezoIncrease=time;
+ }
+ if(!lastLive||time>lastLive.time||day(time)!==day(lastLive.time)){
+   lastLive={time,total,piezo:piezoIsFresh?piezo:null};
+ }
+ return {traditionalTip:lastTraditionalTip!==null&&now-lastTraditionalTip>=-90000&&now-lastTraditionalTip<=120000,
+  piezoIncrease:lastPiezoIncrease!==null&&now-lastPiezoIncrease>=-90000&&now-lastPiezoIncrease<=120000};
+}
 function evaluate(current,history=[],options={}){
  const now=number(options.now)??Date.now(),time=stamp(current),ageMs=time===null?Infinity:now-time;
  const gaugeFresh=ageMs>=-90000&&ageMs<=180000;
@@ -31,10 +50,14 @@ function evaluate(current,history=[],options={}){
  if(rainRate!==null&&rainRate>0)lastIncrease=time;
  if(rows.length&&currentTotal!==null&&time-rows[0].time<=20*60000)recentIncreaseMm=Math.max(0,currentTotal-rows[0].total);
  const since=lastIncrease===null?Infinity:now-lastIncrease;
- const isRaining=rainRate!==null&&rainRate>0; // A historical bucket tip is not proof of current rain.
+ const isRaining=rainRate!==null&&rainRate>0; // Never infer current intensity from historical totals.
+ const changes=options.trackLive===false?{traditionalTip:false,piezoIncrease:false}:liveChanges(time,now,current);
  const rainRecently=gaugeFresh&&!isRaining&&since>=0&&since<=15*60000;
- const status=!gaugeFresh?"unavailable":isRaining?"measured":piezoStrongSignal&&rainAvailable?"sensor_disagreement":piezoStrongSignal?"possible":rainRecently?"recent":piezoIndicatesRain?"possible":!rainAvailable?"rate_unavailable":"no_current_rain";
- return {status,reason,rate:rainRate,rainRate,rainAvailable,dailyTotalAvailable,gaugeFresh,observationAgeMs:ageMs,piezoRate,piezoDailyMm,piezoIndicatesRain,piezoDetected:piezoIndicatesRain,piezoStrongSignal,recentIncreaseMm,isRaining,rainRecently,lastIncrease,lastIncreaseTime:lastIncrease};
+ // Fresh secondary evidence and fresh counter movements take priority over
+ // historical tips; the WH40H remains authoritative for measured totals/rate.
+ const status=!gaugeFresh?"unavailable":isRaining?"measured":piezoStrongSignal&&rainAvailable?"sensor_disagreement":piezoIndicatesRain||changes.piezoIncrease?"possible":changes.traditionalTip?"new_tip":rainRecently?"recent":!rainAvailable?"rate_unavailable":"no_current_rain";
+ const rainIndicatedNow=gaugeFresh&&(isRaining||piezoIndicatesRain||changes.piezoIncrease||changes.traditionalTip);
+ return {status,reason,rate:rainRate,rainRate,rainAvailable,dailyTotalAvailable,gaugeFresh,observationAgeMs:ageMs,piezoRate,piezoDailyMm,piezoIndicatesRain,piezoDetected:piezoIndicatesRain,piezoStrongSignal,traditionalTipRecent:changes.traditionalTip,piezoIncreaseRecent:changes.piezoIncrease,rainIndicatedNow,recentIncreaseMm,isRaining,rainRecently,lastIncrease,lastIncreaseTime:lastIncrease};
 }
 root.ParknacrossRainStatus={evaluate};
 })(typeof window!=="undefined"?window:globalThis);
