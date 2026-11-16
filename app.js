@@ -689,7 +689,7 @@ function conditionInfo(current, isNight) {
   }
   return wind < 1
     ? { tag: "Calm", icon: "☁️", story: "Calm wind at Parknacross. No current rain is confirmed by the dedicated gauge; this does not establish dry conditions.", className: "weather-neutral", rainState }
-    : { tag: "Light breeze", icon: "🌬️", story: `Wind around ${n(wind)} km/h. The dedicated rain gauge has not confirmed current rain; conditions may differ if light rain has not registered.`, className: "weather-neutral", rainState };
+    : { tag: "Light breeze", icon: "🌬️", story: `Wind around ${n(wind)} km/h. The dedicated gauge has not registered rain in this observation; this does not confirm dry conditions.`, className: "weather-neutral", rainState };
 }
 
 /* NOAA-style sunrise/sunset calculation using the public Ardamine area centre. */
