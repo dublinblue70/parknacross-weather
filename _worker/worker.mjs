@@ -1,3 +1,4 @@
+// v38.4.258 — preserve minute-level live readings independently of soil-only status packets; disclose current source/age.
 // v38.4.244 — archive-derived WH52 baseline endpoint with one-hour edge caching.
 // v38.4.243 — publish Ecowitt observations to PWSWeather over HTTPS using a Cloudflare secret.
 // v38.4.243 — WH40H primary traditional rain gauge: select traditional rain fields, never silently substitute WS90 piezo data.
@@ -2492,7 +2493,7 @@ export default {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.244",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.258",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2877,7 +2878,7 @@ export default {
       }
     }
 
-    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.244",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"public, max-age=300"});}
+    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.258",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"public, max-age=300"});}
 
     if(url.pathname==="/met/warnings"){
       if(request.method!=="GET")return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
