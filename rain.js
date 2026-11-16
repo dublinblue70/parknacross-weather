@@ -49,12 +49,20 @@
  async function load(){
   if(loading)return;loading=true;const button=$("rainRefresh");if(button){button.disabled=true;button.textContent="Refreshing…";}
   set("rainLoadStatus","Refreshing rainfall sources…");
-  try{const live=get("/current").then(c=>{set("rainNow",rainState({}, {}, c).rate!==null?`${n(c.rain_rate_mm_h)} mm/h`:"--");set("rainToday",usable(correctedCurrentRain(c))?`${n(correctedCurrentRain(c))} mm`:"--");return c;});
+  try{const live=get("/current").then(c=>{set("rainNow",window.ParknacrossRainIntensity?.formatRate(rainState({}, {}, c).rate)||(rainState({}, {}, c).rate!==null?`${n(c.rain_rate_mm_h)} mm/h`:"--"));set("rainToday",usable(correctedCurrentRain(c))?`${n(correctedCurrentRain(c))} mm`:"--");return c;});
    const results=await Promise.allSettled([get("/rain-summary"),get("/daily?days=30"),get("/history?hours=1"),live,get("/rain-events?days=30")]);
    const [s,d,h,c,e]=results.map(x=>x.status==="fulfilled"?x.value:{});
    const stamp=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null);set("rainUpdated",stamp?`Station reading: ${dt(stamp)} · Irish time`:"Live station reading unavailable");
    const rs=rainState(s,h,c);
-   set("rainCondition",rs.isRaining?"Rain detected by the dedicated rain gauge":rs.piezoStrongSignal
+   const intensityTools = window.ParknacrossRainIntensity;
+   const measuredIntensity = rs.rate !== null && rs.rate > 0
+     ? intensityTools?.classify(rs.rate)?.label || "Rain measured"
+     : null;
+   const measuredRateText = intensityTools?.formatRate(rs.rate)
+     || (rs.rate === null ? "Unavailable" : `${n(rs.rate)} mm/h`);
+   set("rainCondition",measuredIntensity ? `${measuredIntensity} · ${measuredRateText}`
+     : rs.isRaining ? "Rain measured recently · current rate 0.0 mm/h"
+     : rs.piezoStrongSignal
       ? "Possible rain · substantial piezo signal, rain gauge not confirming"
       : rs.piezoDetected
         ? "Weak piezo rain indication · not confirmed"
@@ -70,7 +78,7 @@
    }
    set("rainLoadStatus",results.some(x=>x.status==="rejected")?"Some rainfall sources are unavailable. Showing the readings that loaded successfully.":"");window.ParknacrossRainEvidence?.render(c,h.readings||[],s.last_measurable_rain?.received_at);
    const todayRain=correctedCurrentRain(c)??(usable(s.today_mm)?Number(s.today_mm):null);
-   set("rainNow",rs.isRaining&&!(rs.rate>0)?"Rain detected":rs.rate===null?"--":`${n(rs.rate)} mm/h`);set("rainToday",usable(todayRain)?`${n(todayRain)} mm`:"--");set("rainYesterday",`${n(s.yesterday_mm)} mm`);set("rain7",`${n(s.last_7_days_mm)} mm`);
+   set("rainNow",rs.rate===null?"--":measuredRateText);set("rainToday",usable(todayRain)?`${n(todayRain)} mm`:"--");set("rainYesterday",`${n(s.yesterday_mm)} mm`);set("rain7",`${n(s.last_7_days_mm)} mm`);
    set("rain7Note",s.last_7_days_complete===false&&Array.isArray(s.last_7_days_missing_dates)&&s.last_7_days_missing_dates.length?`Observed total · ${s.last_7_days_missing_dates.length} missing calendar day${s.last_7_days_missing_dates.length===1?"":"s"}`:s.last_7_days_complete===true?"Complete 7-calendar-day total":"Available archive total");
    set("rainMonth",`${n(s.month_mm)} mm`);set("rainMonthDays",usable(s.month_rain_days)?`${Number(s.month_rain_days)} days with measurable rain`:"--");set("rainYear",`${n(s.year_mm)} mm`);set("dryDays",usable(s.consecutive_dry_days)?String(Number(s.consecutive_dry_days)):"--");
    set("dryDaysNote",s.consecutive_dry_days_complete===false?"0.0 mm days · includes today so far; count stops at first missing archive day":"0.0 mm calendar days · includes today so far");
@@ -80,7 +88,7 @@
    else if(rs.isRaining){set("rainEventTotal",usable(todayRain)?`${n(todayRain)} mm today`:"Rain detected");set("rainEventStart","Rain detected recently");set("rainEventText",rs.rate>0?`Rain is falling at ${n(rs.rate)} mm/h.`:"Rain has been detected within the last few minutes, the current rain rate is 0.0 mm/h.");}
    else if(rs.rainRecently){set("rainEventTotal","Rain recently");set("rainEventStart","Within the last 15 min");set("rainEventText","Rain was detected recently at Parknacross.");}
    else if(rs.rate===null){set("rainEventTotal","Current rain status unavailable");set("rainEventStart","Live reading could not be checked");set("rainEventText","Current rain status cannot be confirmed. Showing available archive totals.");}
-   else{set("rainEventTotal","No active event");set("rainEventStart","Station currently dry");set("rainEventText","No measurable rain has been detected recently at Parknacross.");}
+   else{set("rainEventTotal","No active event");set("rainEventStart","No current gauge rain measured");set("rainEventText","No recent rainfall was registered by the dedicated rain gauge; this does not confirm that it is dry outside.");}
    if(results[1].status==="fulfilled")renderChart(d.days);else{if(chart){chart.destroy();chart=null;}set("rainChartNote","Daily rainfall history is temporarily unavailable. Try Refresh rain data.");dailyRows=[];const more=$("rainDailyMore");if(more)more.hidden=true;const table=$("rainDailyTable");if(table)table.innerHTML='<tr><td colspan="2">Daily totals unavailable.</td></tr>';}
    set("rainEventCount",usable(e.event_count)?String(Number(e.event_count)):"--");
    set("largestRainEvent",e.largest_event&&usable(e.largest_event.total_mm)?`${n(e.largest_event.total_mm)} mm`:"--");
