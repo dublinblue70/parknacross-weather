@@ -53,15 +53,15 @@
    const stamp=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null);set("rainUpdated",stamp?`Station reading: ${dt(stamp)} · Irish time`:"Live station reading unavailable");
    const rs=rainState(s,h,c);
    set("rainCondition",rs.isRaining?"Rain detected by the dedicated rain gauge":rs.piezoDetected
-      ? "Possible light rain · not yet measured by the rain gauge"
+      ? "Piezo signal only · rain not confirmed by the gauge"
       : rs.piezoDailyMm>0&&usable(c?.rain_daily_mm)&&Number(c.rain_daily_mm)<0.05
-        ? "Piezo sensor suggests rain today · gauge still records 0.0 mm"
+        ? "No rain measured · piezo estimate unconfirmed"
         : rs.rate===null?"Live rain-gauge data unavailable":rs.rainRecently?"Rain recently":"No rain detected by the station");
    const piezoToday=$("rainPiezoToday");
    if(piezoToday){
      piezoToday.hidden=!usable(rs.piezoDailyMm);
      piezoToday.textContent=usable(rs.piezoDailyMm)
-       ? `Piezo sensor estimate today: ${n(rs.piezoDailyMm)} mm · the rain gauge's measured total remains separate. The sensors may disagree; check the rain gauge if the difference persists.`
+       ? `Piezo estimate today: ${n(rs.piezoDailyMm)} mm · ${usable(c?.rain_daily_mm)&&Number(c.rain_daily_mm)<0.05?"not confirmed by the dedicated rain gauge.":"independent of the dedicated rain-gauge total."}` 
        : "";
    }
    set("rainLoadStatus",results.some(x=>x.status==="rejected")?"Some rainfall sources are unavailable. Showing the readings that loaded successfully.":"");window.ParknacrossRainEvidence?.render(c,h.readings||[],s.last_measurable_rain?.received_at);
