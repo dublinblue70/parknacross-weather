@@ -2174,6 +2174,21 @@ async function getArdamineOutlookWithBackup() {
  // rainfall outlook and laundry planning, instead of independently mixing providers.
 let sharedHourlyRequest = null;
 let sharedHourlyAt = 0;
+// Comparison runs after the primary forecast is shown and is cached briefly
+// so a refresh does not send unnecessary third-party requests.
+let independentHourlyRequest = null;
+let independentHourlyAt = 0;
+let forecastRenderId = 0;
+function independentHourlyOutlook() {
+  const now = Date.now();
+  if (independentHourlyRequest && now - independentHourlyAt < 5 * 60000) return independentHourlyRequest;
+  independentHourlyAt = now;
+  independentHourlyRequest = getBackupArdamineOutlook().catch(error => {
+    independentHourlyRequest = null;
+    throw error;
+  });
+  return independentHourlyRequest;
+}
 window.ParknacrossForecastService = {
   get() {
     const now = Date.now();
@@ -2190,9 +2205,22 @@ window.ParknacrossForecastService = {
 };
 
 async function loadForecast() {
+  const requestId = ++forecastRenderId;
   const localRequest = window.ParknacrossForecastService.get().then(feed => {
+    if (requestId !== forecastRenderId) return;
     if (!window.ParknacrossLocalForecast) throw new Error("Local forecast display unavailable");
+    // Show the official point forecast immediately. Compare independently
+    // without delaying it or swapping the source behind the user's back.
     window.ParknacrossLocalForecast.render(feed);
+    if (feed?.fallback === true) return;
+    independentHourlyOutlook().then(independent => {
+      if (requestId === forecastRenderId)
+        window.ParknacrossLocalForecast?.renderComparison(feed, independent);
+    }).catch(error => {
+      console.warn("Independent hourly rainfall cross-check unavailable:", error);
+      if (requestId === forecastRenderId)
+        window.ParknacrossLocalForecast?.renderComparison(feed, null);
+    });
   }).catch(error => {
     console.warn("Ardamine forecast:", error);
     if(window.ParknacrossLocalForecast)window.ParknacrossLocalForecast.unavailable();
