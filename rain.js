@@ -6,24 +6,8 @@
  const dayKey=v=>{const d=v instanceof Date?v:new Date(v);if(Number.isNaN(d.getTime()))return null;const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Dublin",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d),get=t=>parts.find(p=>p.type===t)?.value;return `${get("year")}-${get("month")}-${get("day")}`};
  const correctedCurrentRain=c=>{if(!usable(c?.rain_daily_mm))return null;const when=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null),key=dayKey(when);if(!when||key!==dayKey(new Date()))return null;const correction=Number(window.PARKNACROSS_DATA_CORRECTIONS?.dailyRainMm?.[key]||0);return Math.round(Math.max(0,Number(c.rain_daily_mm)-correction)*10)/10};
  async function get(p){let last;for(let attempt=0;attempt<2;attempt++){try{const r=await fetch(`${API}${p}`,{cache:"no-store",...(typeof AbortSignal!=="undefined"&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{})});if(!r.ok)throw new Error(`HTTP ${r.status}`);const data=await r.json();if(data?.error)throw new Error(data.error);return data;}catch(error){last=error;if(!attempt)await new Promise(resolve=>setTimeout(resolve,500));}}throw last;}
- const rainState=(summary,history,current)=>{
-  const stamp=current?.received_at?Date.parse(current.received_at):usable(current?.epoch)?Number(current.epoch)*1000:NaN,fresh=Number.isFinite(stamp)&&Date.now()-stamp<=600000&&stamp-Date.now()<=90000;
-  const rate=fresh&&usable(current?.rain_rate_mm_h)?Number(current.rain_rate_mm_h):null;
-  const piezoEpoch=usable(current?.piezo_observed_epoch)?Number(current.piezo_observed_epoch)*1000:NaN;
-  const piezoAge=Date.now()-piezoEpoch;
-  const currentAge=Date.now()-stamp;
-  const piezoFresh=fresh&&currentAge>=-120000&&currentAge<=180000
-    &&Number.isFinite(piezoEpoch)&&piezoAge>=-120000&&piezoAge<=420000;
-  const piezoRate=piezoFresh&&usable(current?.piezo_rain_rate_mm_h)?Number(current.piezo_rain_rate_mm_h):null;
-  const piezoDetected=piezoRate!==null&&piezoRate>0;
-  const piezoStrongSignal=piezoRate!==null&&piezoRate>=2.0;
-  const piezoDailyMm=piezoFresh&&dayKey(new Date(stamp))===dayKey(new Date())&&usable(current?.piezo_daily_mm)
-    ? Math.max(0,Number(current.piezo_daily_mm)):null;
-  const rows=Array.isArray(history?.readings)?history.readings:[],now=current?.received_at?new Date(current.received_at).getTime():(usable(current?.epoch)?Number(current.epoch)*1000:Date.now());let lastIncrease=null,prev=null;
-  for(const row of rows){const t=row?.received_at?new Date(row.received_at).getTime():usable(row?.epoch)?Number(row.epoch)*1000:NaN,total=usable(row?.rain_daily_mm)?Number(row.rain_daily_mm):NaN;if(!Number.isFinite(t)||!Number.isFinite(total))continue;if(prev&&total>=prev.total+0.05)lastIncrease=t;prev={t,total};}
-  const currentTotal=usable(current?.rain_daily_mm)?Number(current.rain_daily_mm):null;if(prev&&currentTotal!==null&&currentTotal>=prev.total+0.05)lastIncrease=now;if(rate!==null&&rate>0)lastIncrease=now;
-  const age=lastIncrease?Math.max(0,now-lastIncrease):Infinity;return{rate,piezoDetected,piezoStrongSignal,piezoRate,piezoDailyMm,isRaining:(rate!==null&&rate>0)||fresh&&age<=5*60*1000,rainRecently:fresh&&(rate===null||rate<=0)&&age>5*60*1000&&age<=15*60*1000,lastIncrease};
- };
+ const rainState=(summary,history,current)=>window.ParknacrossRainStatus.evaluate(current,history?.readings||[]);
+
  function eventGraphLink(event){const start=Number(event.start_epoch),end=Number(event.end_epoch),now=Math.floor(Date.now()/1000);const from=Number.isFinite(start)&&start>0?Math.floor(start)-1800:null,to=Number.isFinite(end)&&end>=start?Math.min(now,Math.ceil(end)+1800):now;return from&&to>from&&to-from<=31*86400?`graphs.html?from=${from}&to=${to}#gRain`:'history.html';}
  let chart=null,loading=false;
  const calendarLabel=day=>/^\d{4}-\d{2}-\d{2}$/.test(day||"")?new Date(day+"T12:00:00Z").toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",weekday:"short",day:"numeric",month:"short"}):"Date unavailable";
@@ -100,6 +84,6 @@
   }catch(e){set("rainEventText","Rainfall summary temporarily unavailable.");set("rainLoadStatus","Rainfall sources could not be reached. Use Refresh rain data to try again.");}
   finally{loading=false;if(button){button.disabled=false;button.textContent="Refresh rain data";}}
  }
- document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("rainRefresh")?.addEventListener?.("click",load);$("rainDailyMore")?.addEventListener("click",()=>{dailyExpanded=!dailyExpanded;renderDailyTable();});load();(window.ParknacrossRefresh?.every || setInterval)(load,60*1000);});
+ document.addEventListener("DOMContentLoaded",()=>{set("year",new Date().getFullYear());$("rainRefresh")?.addEventListener?.("click",load);$("rainDailyMore")?.addEventListener("click",()=>{dailyExpanded=!dailyExpanded;renderDailyTable();});load();(window.ParknacrossRefresh?.every || setInterval)(load,30*1000);});
 })();
 
