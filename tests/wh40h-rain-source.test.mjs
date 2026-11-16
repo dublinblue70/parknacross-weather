@@ -97,7 +97,7 @@ const vis={
   window:{}
 };
 vm.createContext(vis);
-vm.runInContext(read('rain-intensity.js'),{window:vis.window,Number,Object});
+vm.runInContext(read('rain-intensity.js'),vis);
 vm.runInContext(appCode.slice(ai,aj),vis);
 const base={epoch:clock,rain_rate_mm_h:0,rain_daily_mm:0,wind_speed_kmh:0,solar_w_m2:0,uv_index:0};
 assert.equal(vis.conditionInfo({...base,piezo_daily_mm:0.1,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock,solar_w_m2:600},false).tag,
