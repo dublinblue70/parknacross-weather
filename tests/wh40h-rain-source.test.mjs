@@ -67,10 +67,10 @@ assert.match(worker,/piezo_daily_mm: nullableNumber\(row.piezo_daily_mm\)/);
 assert.match(read('index.html'),/id="heroPiezoRain"/);
 assert.match(read('rain.html'),/id="rainPiezoToday"/);
 const dashboard=read('app.js');
-assert.match(dashboard,/tag: "Light rain detected"/);
+assert.doesNotMatch(dashboard,/tag: "Light rain detected"/,'Piezo-only signals must not become an unconfirmed rain headline');
 assert.match(dashboard,/piezoIndicatesRain/);
 assert.match(read('rain.js'),/piezoDetected/);
-assert.match(dashboard,/Rainfall totals are based on the dedicated gauge only/);
+assert.match(dashboard,/piezo-only signal/,'Piezo-only readings should remain secondary to the dedicated rain gauge');
 assert.match(read('station.html'),/data-sensor="rain"/);
 assert.match(read('station.html'),/self-emptying tipping-bucket rain gauge/);
 assert.doesNotMatch(read('station.html'),/WS90 piezoelectric sensor/);
@@ -98,10 +98,12 @@ const vis={
 vm.createContext(vis);
 vm.runInContext(appCode.slice(ai,aj),vis);
 const base={epoch:clock,rain_rate_mm_h:0,rain_daily_mm:0,wind_speed_kmh:0,solar_w_m2:0,uv_index:0};
+assert.equal(vis.conditionInfo({...base,piezo_daily_mm:0.1,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock,solar_w_m2:600},false).tag,
+ 'Bright','A 0.1 mm piezo estimate with a dry gauge cannot override sunshine');
 assert.equal(vis.conditionInfo({...base,piezo_daily_mm:0.4,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},true).tag,
- 'Rain noted today','WS90 recorded rain earlier, so show discrepancy even with current rate zero');
-assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0.6,piezo_observed_epoch:clock},true).tag,
- 'Light rain detected','Fresh WS90 signal overrides the time-of-day label');
+ 'Night','Earlier piezo estimate does not prove rain now or earlier');
+assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0.6,piezo_observed_epoch:clock,solar_w_m2:600},false).tag,
+ 'Bright','Piezo-only rate does not override current bright conditions');
 assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},true).tag,
  'Night','No WS90 or WH40H signal leaves night-time label unchanged');
 assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0.6,piezo_observed_epoch:clock-900},true).tag,
