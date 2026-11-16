@@ -68,7 +68,7 @@
     settingsStorageError = !writeJSON(SETTINGS_KEY, settings);
     unsavedSettings = settingsStorageError ? settings : null;
     refreshSaveStatus();
-    if(typeof CustomEvent==="function"&&window.dispatchEvent)window.dispatchEvent(new CustomEvent("parknacross:alert-settings"));
+    if(typeof CustomEvent==="function"&&window.dispatchEvent)window.dispatchEvent(new CustomEvent("parknacross:alert-settings", { detail: { changes } }));
     return !settingsStorageError;
   }
 
@@ -383,6 +383,17 @@
 
     for(const [id,key,lo,hi] of [["alertGustThreshold","gustKmh",20,100],["alertRainThreshold","heavyRainRate",2,50],["alertTemperatureThreshold","freezingC",-5,5],["alertQuietStart","quietStart",0,23],["alertQuietEnd","quietEnd",0,23]])document.getElementById(id)?.addEventListener("change",event=>{const v=Number(event.target.value);if(Number.isFinite(v)&&event.target.value!=="")saveSettings({[key]:Math.max(lo,Math.min(hi,v))});refreshUI();});document.getElementById("alertQuietEnabled")?.addEventListener("change",event=>{saveSettings({quietEnabled:event.target.checked});});
     refreshUI();
+    // A site update can reload this page before the IndexedDB backup has
+    // restored notification choices. Do not present an editable "off" toggle
+    // until that recovery finishes.
+    const stored = window.PWNotificationStorage;
+    const toggle = document.getElementById("alertsEnableButton");
+    if (toggle && stored?.ready) {
+      toggle.disabled = true;
+      toggle.textContent = "Restoring notification settings…";
+      const restored = () => { toggle.disabled = false; refreshUI(); };
+      stored.ready.then(restored, restored);
+    }
   }
 
   window.PWAlerts = {
