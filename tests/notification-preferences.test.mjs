@@ -4,7 +4,7 @@ class Node{constructor(){this.checked=false;this.value='';this.textContent='';th
 function fixture(store=new Map()){
  const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);},events={},docEvents={};let blocked=false,permission='granted',requestPermission=async()=>permission;
  const Notification={get permission(){return permission;},requestPermission:()=>requestPermission()},window={Notification,PushManager:class{},addEventListener(n,f){(events[n]??=[]).push(f)},dispatchEvent(e){for(const f of events[e.type]||[])f(e)}};
- const context={window,Notification,document:{getElementById:get,addEventListener(n,f){(docEvents[n]??=[]).push(f)},createElement:()=>new Node(),createTextNode:text=>({textContent:text})},localStorage:{getItem:k=>{if(blocked)throw Error('storage blocked');return store.get(k)??null;},setItem:(k,v)=>{if(blocked)throw Error('storage blocked');store.set(k,v);}},navigator:{},Date,Intl,console,CustomEvent:class{constructor(type){this.type=type}},Number,Math,Object,JSON,Set,String,Promise,AbortSignal,Uint8Array,atob};
+ const context={window,Notification,document:{getElementById:get,addEventListener(n,f){(docEvents[n]??=[]).push(f)},createElement:()=>new Node(),createTextNode:text=>({textContent:text})},localStorage:{getItem:k=>{if(blocked)throw Error('storage blocked');return store.get(k)??null;},setItem:(k,v)=>{if(blocked)throw Error('storage blocked');store.set(k,v);}},navigator:{},Date,Intl,console,CustomEvent:class{constructor(type,opts){this.type=type;this.detail=opts?.detail}},Number,Math,Object,JSON,Set,String,Promise,AbortSignal,Uint8Array,atob};
  vm.createContext(context);vm.runInContext(alerts,context);
  return {context,window,nodes,get,store,docEvents,setBlocked:v=>blocked=v,setPermission:v=>permission=v,setPermissionRequest:f=>requestPermission=f,async choose(id,value){const n=get(id);if(typeof value==='boolean')n.checked=value;else n.value=String(value);await n.fire('change');}};
 }
@@ -40,3 +40,41 @@ console.log('PASS: explicit disable wins over an automatic renewal in flight.');
 // saved preferences; an explicit disabled settings record is never overwritten.
 const e=fixture(new Map([['parknacross:background-alerts:v1',JSON.stringify({active:true,token:'owned-token'})]]));e.context.setTimeout=c.context.setTimeout;e.context.navigator.serviceWorker={ready:Promise.resolve({pushManager:{getSubscription:async()=>sub}})};e.context.fetch=async()=>({ok:true,json:async()=>({active:true,preferences:{rainStart:true,gust:true,gustKmh:45,lightningKm:25}})});vm.runInContext(background,e.context);await e.window.PWBackgroundAlerts.reconcile();assert.equal(e.window.PWAlerts.loadSettings().enabled,true);assert.equal(e.window.PWAlerts.loadSettings().gustKmh,45);assert.equal(e.get('alertRainStart').checked,true);e.window.PWAlerts.saveSettings({enabled:false,gustKmh:55});await e.window.PWBackgroundAlerts.reconcile();assert.equal(e.window.PWAlerts.loadSettings().enabled,false);assert.equal(e.window.PWAlerts.loadSettings().gustKmh,55);
 console.log('PASS: missing device choices recover from an owned server subscription; explicit off settings are preserved.');
+
+
+// A routine update may expose an expired server management token. It must not
+// unsubscribe the still-valid browser endpoint without an explicit repair.
+const f=fixture(new Map([[key,JSON.stringify({enabled:true,rainStart:true})],['parknacross:background-alerts:v1',JSON.stringify({active:true,token:'previous-token'})]]));
+let removedOnVerification=0;
+const subscribed={toJSON:sub.toJSON,unsubscribe:async()=>{removedOnVerification++;return true;}};
+f.context.setTimeout=c.context.setTimeout;
+f.context.navigator.serviceWorker={ready:Promise.resolve({pushManager:{getSubscription:async()=>subscribed}})};
+f.context.fetch=async()=>({ok:false,status:401,json:async()=>({error:'Subscription ownership could not be verified'})});
+vm.runInContext(background,f.context);
+assert.equal(await f.window.PWBackgroundAlerts.reconcile(),false);
+assert.equal(removedOnVerification,0,'reconciliation must not unsubscribe on a 401 response');
+assert.equal(JSON.parse(f.store.get('parknacross:background-alerts:v1')).active,true);
+assert.equal(f.window.PWAlerts.loadSettings().enabled,true);
+console.log('PASS: a server verification failure leaves the browser subscription and opt-in intact.');
+
+// Changing a threshold must never implicitly turn off an existing subscription
+// just because the device-level switch is currently off or being restored.
+const g=fixture(new Map([[key,JSON.stringify({enabled:false,gust:true,gustKmh:35})],['parknacross:background-alerts:v1',JSON.stringify({active:true,token:'owned-token'})]]));
+let accidentalStops=0;const activity=[];
+const existing={toJSON:sub.toJSON,unsubscribe:async()=>{accidentalStops++;return true;}};
+g.context.setTimeout=c.context.setTimeout;
+g.context.navigator.serviceWorker={ready:Promise.resolve({pushManager:{getSubscription:async()=>existing}})};
+g.context.fetch=async(url,options)=>{
+ if(url.endsWith('/push/public-key'))return {ok:true,json:async()=>({available:true,public_key:'AA'})};
+ const action=JSON.parse(options.body).action;activity.push(action);
+ return {ok:true,json:async()=>({active:true,management_token:'owned-token',history:[]})};
+};
+vm.runInContext(background,g.context);
+for(const callback of g.docEvents.DOMContentLoaded||[])callback();
+await g.window.PWBackgroundAlerts.reconcile();
+g.window.PWAlerts.saveSettings({gustKmh:47});
+await new Promise(r=>setImmediate(r));await new Promise(r=>setImmediate(r));
+assert.equal(accidentalStops,0,'ordinary settings changes must never unsubscribe');
+assert.equal(activity.includes('remove'),false,'ordinary settings changes must never remove a server subscription');
+assert.equal(JSON.parse(g.store.get('parknacross:background-alerts:v1')).active,true);
+console.log('PASS: ordinary preference edits cannot disable background notifications.');
