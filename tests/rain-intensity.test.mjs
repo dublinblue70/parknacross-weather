@@ -59,12 +59,16 @@ const env={
 vm.createContext(env);
 vm.runInContext(app.slice(appStart,appEnd),env);
 const base={epoch:clock,rain_daily_mm:0,rain_rate_mm_h:0,wind_speed_kmh:2.5,piezo_observed_epoch:clock,solar_w_m2:0,uv_index:0};
-assert.equal(env.conditionInfo({...base,rain_rate_mm_h:1.2,piezo_rain_rate_mm_h:40},false).tag,'Light rain','WH40H rate determines classification, not WS90 rate');
-assert.equal(env.conditionInfo({...base,rain_rate_mm_h:5},false).tag,'Moderate rain');
-assert.equal(env.conditionInfo({...base,rain_rate_mm_h:12},false).tag,'Heavy rain');
-assert.equal(env.conditionInfo({...base,rain_rate_mm_h:28},false).tag,'Very heavy rain');
-assert.equal(env.conditionInfo({...base,rain_rate_mm_h:35},false).tag,'Torrential rain');
-assert.equal(env.conditionInfo({...base,rain_rate_mm_h:0,piezo_rain_rate_mm_h:4},false).tag,'Possible rain','Piezo is only unconfirmed detection');
-assert.equal(env.conditionInfo({...base,rain_rate_mm_h:0,piezo_rain_rate_mm_h:0.3},false).tag,'Light breeze','Weak piezo must not fake a rainfall classification');
-assert.doesNotMatch(env.conditionInfo({...base,rain_rate_mm_h:0},false).story,/Dry conditions with a light breeze/);
+const condition=(changes={})=>{
+  env.lastRainIncreaseTime=null;env.lastObservedRainDay=null;env.lastObservedRainTotal=null;
+  return env.conditionInfo({...base,...changes},false);
+};
+assert.equal(condition({rain_rate_mm_h:1.2,piezo_rain_rate_mm_h:40}).tag,'Light rain','WH40H rate determines classification, not WS90 rate');
+assert.equal(condition({rain_rate_mm_h:5}).tag,'Moderate rain');
+assert.equal(condition({rain_rate_mm_h:12}).tag,'Heavy rain');
+assert.equal(condition({rain_rate_mm_h:28}).tag,'Very heavy rain');
+assert.equal(condition({rain_rate_mm_h:35}).tag,'Torrential rain');
+assert.equal(condition({rain_rate_mm_h:0,piezo_rain_rate_mm_h:4}).tag,'Possible rain','Piezo is only unconfirmed detection');
+assert.equal(condition({rain_rate_mm_h:0,piezo_rain_rate_mm_h:0.3}).tag,'Light breeze','Weak piezo must not fake a rainfall classification');
+assert.doesNotMatch(condition({rain_rate_mm_h:0}).story,/Dry conditions with a light breeze/);
 console.log('PASS: shared WH40H rain intensity bands, dashboard, Rain Centre and PWA script loading.');
