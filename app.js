@@ -1994,7 +1994,9 @@ function updateCharts() {
 
 async function getJSON(url, cacheMode = "default", timeoutMs = 12000) {
   let lastError;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  // Live readings are polled again shortly; avoid serial retries that delay visible rain changes.
+  const maxAttempts = new URL(url, location.href).pathname === "/current" ? 1 : 2;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -2007,7 +2009,7 @@ async function getJSON(url, cacheMode = "default", timeoutMs = 12000) {
       lastError = controller.signal.aborted
         ? new Error(`Weather request timed out after ${Math.ceil(timeoutMs / 1000)} seconds`)
         : error;
-      if (!attempt) await new Promise(resolve => setTimeout(resolve, 500));
+      if (attempt + 1 < maxAttempts) await new Promise(resolve => setTimeout(resolve, 500));
     } finally {
       clearTimeout(timer);
     }
