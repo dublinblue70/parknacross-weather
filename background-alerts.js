@@ -23,17 +23,38 @@
    }catch{verified=false;repair=true;status('Background connection needs retrying. Your enabled choice and weather settings are kept; reconnect when online.');return false;}
   })().finally(()=>{reconnectJob=null;});return reconnectJob;
  }
- async function reconcile(){
+ async function reconcileNow(){
   await window.PWNotificationStorage?.ready;
   verified=false;checking=read()?.active===true;
   if(!read()?.active){checking=false;return false;}
   try{const sub=await Promise.race([subscription(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Subscription check timed out')),10000))]);
-   if(!sub){repair=true;await reconnect();ui();return verified;}
+   if(!sub){
+    repair=true;
+    // Recover the previous opt-in even when the ordinary settings key went
+    // missing during a refresh. Never change an explicit saved "off" choice.
+    if(window.PWAlerts?.hasSavedSettings?.()===false&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
+     window.PWAlerts.saveSettings({enabled:true});
+    }
+    await reconnect();ui();return verified;
+   }
    if(typeof Notification==='undefined'||Notification.permission!=='granted'){repair=true;status('Notification permission is off. Your choices are preserved.');ui();return false;}
    try{const result=await request('status',sub);if(result.active!==true)throw Object.assign(Error('Subscription missing'),{status:404});verified=true;repair=false;if(result.preferences&&window.PWAlerts?.hasSavedSettings?.()===false){window.PWAlerts.saveSettings({...result.preferences,enabled:true});window.PWAlerts.refreshUI();}}
-   catch(error){if(error.status===401||error.status===404){repair=true;await reconnect(error.status===401);}else{verified=true;status('Browser subscription exists; server status could not be verified. Previously saved background settings may still apply.');}}
+   catch(error){
+    if(error.status===401){
+     // An invalid management token does not mean the browser push endpoint
+     // has expired. Do not silently unsubscribe a working endpoint on reload.
+     repair=true;status('Background alerts need reconnection. Your existing browser subscription and choices have been kept.');
+    }else if(error.status===404){repair=true;await reconnect();}
+    else{verified=true;status('Browser subscription exists; server status could not be verified. Previously saved background settings may still apply.');}
+   }
   }catch{status('Subscription status could not be verified. Open this page again when connected.');}finally{checking=false;}
   ui();return verified;
+ }
+ // Avoid overlapping verification requests from page load and resume.
+ let reconcileJob=null;
+ function reconcile(){
+  if(!reconcileJob)reconcileJob=reconcileNow().finally(()=>{reconcileJob=null;});
+  return reconcileJob;
  }
  function ui(){const b=document.getElementById('backgroundAlertToggle');if(b){b.disabled=busy||(!serverKey&&!read()?.active);b.textContent=repair?'Repair background alerts':read()?.active?'Turn off background alerts':'Enable background alerts';b.setAttribute('aria-pressed',String(read()?.active===true));}}
  async function history(){const list=document.getElementById('recentWeatherAlerts');if(!list)return;list.replaceChildren();if(!isActive()){const p=document.createElement('p');p.textContent='No background alerts are enabled on this device.';list.append(p);return;}try{const sub=await subscription();if(!sub)throw Error('Subscription missing');const data=await request('status',sub);const rows=Array.isArray(data.history)?data.history:[];if(!rows.length){const p=document.createElement('p');p.textContent='No alerts have been sent to this subscription yet.';list.append(p);}for(const row of rows.slice(-10).reverse()){const p=document.createElement('p'),strong=document.createElement('strong');strong.textContent=String(row.title||'Weather alert');p.append(strong,document.createTextNode(' · '+new Date(row.at).toLocaleString('en-IE',{timeZone:'Europe/Dublin',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' Irish time. '+String(row.body||'')+' Accepted by the push service; device delivery can be delayed.'));list.append(p);}}catch{const p=document.createElement('p');p.textContent='Recent alert history could not be checked.';list.append(p);}}
@@ -41,11 +62,12 @@
 
  async function sync(){if(!isActive())return;syncPending=true;if(syncJob)return syncJob;syncJob=(async()=>{while(syncPending&&isActive()){syncPending=false;try{const sub=await subscription();if(!sub){verified=false;repair=true;await reconnect();ui();return;}await request('save',sub,window.PWAlerts?.loadSettings());verified=true;status('Background alerts are on · notifications can arrive while the site is closed. Delivery depends on your device and connection.');}catch{status('Background settings could not be saved. Previously saved settings remain in use; retry shortly.');}}})().finally(()=>{syncJob=null;});return syncJob;}
  window.addEventListener('online',()=>{if(read()?.active)reconcile().then(()=>sync());});
+ window.addEventListener('pageshow',event=>{if(event.persisted&&read()?.active)reconcile().then(()=>sync());});
  window.PWBackgroundAlerts={isActive,isChecking:()=>checking,stop,sync,reconcile};
  document.addEventListener('DOMContentLoaded',()=>{const button=document.getElementById('backgroundAlertToggle');if(!button){reconcile();return;}
  async function check(){await window.PWNotificationStorage?.ready;button.disabled=true;if(!('PushManager' in window)||!navigator.serviceWorker||!('Notification' in window)){status('Background alerts are not supported here. On iPhone or iPad, open the installed Home Screen app.');checking=false;return;}const wasSaved=read()?.active;await reconcile();try{const response=await fetch(`${base}/push/public-key`,{cache:'no-store',signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error('Unavailable');const data=await response.json();if(!data.available||!data.public_key)throw Error('Unavailable');serverKey=data.public_key;if(!wasSaved)status(isActive()?'Background alerts are enabled on this device.':'Optional background alerts can arrive while the website is closed.');ui();if(isActive()&&window.PWAlerts?.loadSettings().enabled)await sync();await history();}catch{serverKey=null;status('Background delivery is temporarily unavailable. Page-open alerts remain available.');ui();}}
  button.addEventListener('click',async()=>{if(busy||(!serverKey&&!read()?.active))return;busy=true;ui();let created=null;try{if(read()?.active&&!repair){await stop();return;}if(repair&&read()?.active){const old=await subscription();if(old&&!await old.unsubscribe())throw Error('Old subscription could not be closed');verified=false;}const permission=Notification.permission==='granted'?'granted':await Notification.requestPermission();if(permission!=='granted'){status('Background alerts were not enabled. Notification permission is required.');return;}status('Enabling background alerts…');const registration=await navigator.serviceWorker.ready,bytes=Uint8Array.from(atob(serverKey.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));created=await registration.pushManager.getSubscription();if(created&&!read()?.token){await created.unsubscribe();created=null;}created=created||await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bytes});const settings=window.PWAlerts?.loadSettings()||{},data=await request('save',created,settings);try{write({active:true,token:data.management_token});verified=true;repair=false;}catch{await request('remove',created);await created.unsubscribe();throw Error('This browser could not save the subscription');}window.PWAlerts?.saveSettings({enabled:true});window.PWAlerts?.refreshUI();status('Background alerts are on. Select the weather events below; quiet hours use Irish time.');await history();}catch(error){if(created&&!read()?.active)await created.unsubscribe().catch(()=>{});status('Background alerts could not be changed. '+String(error.message));}finally{busy=false;ui();}});
  document.getElementById('retryBackgroundAlerts')?.addEventListener('click',()=>{check();});document.getElementById('refreshAlertHistory')?.addEventListener('click',history);
- window.addEventListener('parknacross:alert-settings',()=>{if(window.PWAlerts?.loadSettings().enabled===false&&isActive())stop().catch(()=>status('Could not confirm background alerts stopped. Retry Turn off background alerts.'));else sync();});check();
+ window.addEventListener('parknacross:alert-settings',event=>{if(event?.detail?.changes?.enabled===false&&read()?.active)stop().catch(()=>status('Could not confirm background alerts stopped. Retry Turn off background alerts.'));else sync();});check();
  });
 })();
