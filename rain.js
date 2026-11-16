@@ -37,20 +37,21 @@
      // Do not hold today's live status hostage to slow archive and event requests.
      const rs=rainState({}, {}, c),rate=rs.rate;
      const updated=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null);
-     set("rainUpdated",updated?`Station reading: ${dt(updated)} · Irish time`:"Live station reading unavailable");
+     set("rainUpdated",updated?`Station reading: ${dt(updated)} · Irish time${rs.reason==="stale_observation"?" · delayed":""}`:"Live station reading unavailable");
      set("rainNow",rate===null?"--":window.ParknacrossRainIntensity?.formatRate(rate)||`${n(rate)} mm/h`);
      set("rainToday",usable(correctedCurrentRain(c))?`${n(correctedCurrentRain(c))} mm`:"--");
      set("rainCondition",rs.status==="measured"?"Rain measured · "+(window.ParknacrossRainIntensity?.formatRate(rate)||n(rate)+" mm/h")
        :rs.status==="sensor_disagreement"?"Possible rain · WH40H and piezo disagree"
        :rs.status==="possible"?"Possible rain · piezo indication only"
-       :rs.status==="unavailable"?"Current rain status unavailable"
+       :rs.status==="unavailable"?(rs.reason==="stale_observation"?"Station observation delayed · live rain unconfirmed":"Station observation timestamp unavailable")
+       :rs.status==="rate_unavailable"?"WH40H live rain rate missing · daily total remains available"
        :rs.status==="recent"?"Rain measured recently · not confirmed now"
        :"No current rain measured by the dedicated gauge");
      return c;
    });
    const results=await Promise.allSettled([get("/rain-summary"),get("/daily?days=30"),get("/history?hours=1"),live,get("/rain-events?days=30")]);
    const [s,d,h,c,e]=results.map(x=>x.status==="fulfilled"?x.value:{});
-   const stamp=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null);set("rainUpdated",stamp?`Station reading: ${dt(stamp)} · Irish time`:"Live station reading unavailable");
+   const stamp=c.received_at||(usable(c.epoch)?Number(c.epoch)*1000:null);const liveCheck=rainState({}, {}, c);set("rainUpdated",stamp?`Station reading: ${dt(stamp)} · Irish time${liveCheck.reason==="stale_observation"?" · delayed":""}`:"Live station reading unavailable");
    const rs=rainState(s,h,c);
    const intensityTools = window.ParknacrossRainIntensity;
    const measuredIntensity = rs.rate !== null && rs.rate > 0
@@ -60,8 +61,12 @@
      || (rs.rate === null ? "Unavailable" : `${n(rs.rate)} mm/h`);
    set("rainCondition",measuredIntensity ? `${measuredIntensity} · ${measuredRateText}`
      : rs.isRaining ? "Rain measured recently · current rate 0.0 mm/h"
+     : rs.status==="unavailable"
+      ? (rs.reason==="stale_observation"?"Station observation delayed · live rain status unconfirmed":"Station observation timestamp missing")
+     : rs.status==="rate_unavailable"
+      ? "WH40H live rain rate missing · daily total is independent"
      : rs.piezoStrongSignal
-      ? "Possible rain · substantial piezo signal, rain gauge not confirming"
+      ? "Possible rain · substantial piezo signal, WH40H not confirming"
       : rs.piezoDetected
         ? "Weak piezo rain indication · not confirmed"
         : rs.piezoDailyMm>0&&usable(c?.rain_daily_mm)&&Number(c.rain_daily_mm)<0.05
