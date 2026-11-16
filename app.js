@@ -572,9 +572,10 @@ function conditionInfo(current, isNight) {
     const evidence = rainState.piezoIndicatesRain
       ? `Fresh WS90 piezo rate: ${n(rainState.piezoRate)} mm/h`
       : "The WS90 piezo rain counter has increased in consecutive recent observations";
-    return { tag: "Possible rain now", icon: "🌧️",
+    const convincing = rainState.piezoStrongSignal || rainState.piezoIncreaseRecent;
+    return { tag: convincing ? "Possible rain now" : "Unconfirmed rain indication", icon: convincing ? "🌧️" : "🌦️",
       story: `${evidence}. WH40H is not currently confirming a positive rain rate; piezo intensity is an estimate.`,
-      className: "weather-rain", rainState };
+      className: convincing ? "weather-rain" : "weather-neutral", rainState };
   }
   if (rainState.status === "new_tip") {
     return { tag: "Rain detected", icon: "🌧️",
