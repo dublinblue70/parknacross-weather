@@ -14,8 +14,8 @@ const MARINE_URL = `${API_BASE}/met/marine`;
 const ARDAMINE_LAT = 52.6247;
 const ARDAMINE_LON = -6.25;
 const STATION_TIME_ZONE = "Europe/Dublin";
-const STALE_AFTER_MS = 10 * 60 * 1000;
-const OFFLINE_AFTER_MS = 30 * 60 * 1000;
+const STALE_AFTER_MS = 3 * 60 * 1000;
+const OFFLINE_AFTER_MS = 10 * 60 * 1000;
 const SOIL_BASELINE_URL = `${API_BASE}/soil-baseline`;
 let firstValidSoilEpoch = null;
 const SOIL_SENSOR_BASELINE_DAYS = 14;
@@ -585,7 +585,21 @@ function conditionInfo(current, isNight) {
       className: "weather-neutral", rainState };
   }
   if (!rainState.rainAvailable) {
-    return { tag: "Rain data unavailable", icon: "☁️", story: "The latest observation is missing rain-sensor data, so conditions cannot be described reliably.", className: "weather-neutral", rainState };
+    if (rainState.reason === "stale_observation" || rainState.reason === "missing_timestamp") {
+      const ageMinutes = Number.isFinite(rainState.observationAgeMs) ? Math.max(0, Math.floor(rainState.observationAgeMs / 60000)) : null;
+      return {
+        tag: "Station reading delayed",
+        icon: "⏱️",
+        story: `The latest station observation is ${ageMinutes === null ? "not timestamped" : ageMinutes + " minute" + (ageMinutes === 1 ? "" : "s") + " old"}. Live rainfall cannot be confirmed. Today's rain total is a separate cumulative reading.`,
+        className: "weather-neutral", rainState
+      };
+    }
+    return {
+      tag: isNight ? "Night" : "Rain rate unavailable",
+      icon: isNight ? "🌙" : "☁️",
+      story: "The station has not supplied a usable current WH40H rain rate. Its daily rain total may still be recorded, but rainfall right now cannot be confirmed.",
+      className: "weather-neutral", rainState
+    };
   }
   if (wind >= 35) {
     return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy", rainState };
@@ -1555,11 +1569,15 @@ function updateDashboard(current) {
   const intensityTools = window.ParknacrossRainIntensity;
   const metricRateText = intensityTools?.formatRate(liveRainRate)
     || (usable(liveRainRate) ? `${n(liveRainRate)} mm/h` : "Unavailable");
-  const rainRateDetail = usable(liveRainRate) && Number(liveRainRate) > 0
-    ? intensityTools?.classify(liveRainRate)?.label || "Rain measured"
-    : condition.rainState?.isRaining ? "Recent gauge tip"
-    : condition.rainState?.piezoStrongSignal ? "Possible rain · piezo unconfirmed"
-    : usable(liveRainRate) ? "No current rain measured" : "Rain status unavailable";
+  const rainRateDetail = condition.rainState?.reason === "stale_observation"
+    ? `Station reading delayed · ${Math.max(0, Math.floor(condition.rainState.observationAgeMs / 60000))} min old`
+    : condition.rainState?.reason === "missing_timestamp" ? "Observation timestamp missing"
+    : condition.rainState?.reason === "rate_missing" ? "WH40H current rate missing · daily total separate"
+    : usable(liveRainRate) && Number(liveRainRate) > 0
+      ? intensityTools?.classify(liveRainRate)?.label || "Rain measured"
+      : condition.rainState?.isRaining ? "Recent gauge tip"
+      : condition.rainState?.piezoStrongSignal ? "Possible rain · piezo unconfirmed"
+      : usable(liveRainRate) ? "No current rain measured" : "Rain status unavailable";
   set("rainRateVal", `${metricRateText} · ${rainRateDetail}`);
   set("pressureVal", n(current.pressure_hpa));
   set("pressureTrend", pressure.trend);
