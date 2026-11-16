@@ -69,6 +69,7 @@ const DAILY_TABLE = "weather_daily_v1";
 const META_TABLE = "parknacross_meta_v1";
 const WH52_UPLOAD_META_KEY = "wh52_gateway_latest_v1";
 const WH52_UPLOAD_STATUS_META_KEY = "wh52_gateway_status_v1";
+const GATEWAY_LIVE_META_KEY = "gateway_live_observation_v1"; // independent of soil-only/status uploads
 const PWSWEATHER_LAST_EPOCH_META_KEY = "pwsweather_last_upload_epoch_v1";
 const PWSWEATHER_LAST_ACCEPTED_AT_META_KEY = "pwsweather_last_accepted_at_v1";
 const PWSWEATHER_LAST_ATTEMPT_META_KEY = "pwsweather_last_attempt_v1";
@@ -2529,6 +2530,12 @@ export default {
         if (!latest) return json({ error: "No weather readings available" }, 503, {"Cache-Control":"no-store"});
 
         const formatted = formatRow(latest);
+        // Source metadata is diagnostic, not a claim that rain is falling.
+        // The frontend can distinguish the one-minute gateway path from the
+        // five-minute archive and report any delivery problem accurately.
+        formatted.observation_source = latest?.source === "gw3001_direct_live" ? "gateway_live" : "archive_or_cloud";
+        formatted.observation_age_seconds = Number.isFinite(Number(latest?.epoch))
+          ? Math.max(0, nowEpoch - Number(latest.epoch)) : null;
         if (!usableNumber(formatted.piezo_rain_rate_mm_h) || !usableNumber(formatted.piezo_daily_mm)) {
           try {
             const piezo = await readRecentCloudPiezo(env, nowEpoch);
@@ -2989,6 +2996,21 @@ export default {
         // API used elsewhere in this Worker is explicitly requested in Celsius.
         const soil = extractWh52(payload, "f");
         const liveReading = gatewayLiveReading(payload, soil, receivedEpoch);
+        // Preserve the latest complete live weather packet independently from
+        // diagnostics/soil-only packets. Those packets must never clear the
+        // live reading and force /current to fall back to five-minute D1 slots.
+        if (liveReading) {
+          try {
+            await env.DB.prepare(
+              `INSERT INTO ${META_TABLE} (key, value) VALUES (?, ?)
+               ON CONFLICT(key) DO UPDATE SET value = excluded.value
+               WHERE CAST(COALESCE(json_extract(value, '$.epoch'), 0) AS INTEGER) <= ?`
+            ).bind(GATEWAY_LIVE_META_KEY, JSON.stringify(liveReading), receivedEpoch).run();
+          } catch (error) {
+            console.warn("Could not persist independent live gateway reading:", error);
+            // Existing status and D1 archive paths remain available.
+          }
+        }
         if (![soil.moisture_pct, soil.temperature_c, soil.ec_us_cm].some(usableNumber)) {
           await env.DB.prepare(
             `INSERT INTO ${META_TABLE} (key, value) VALUES (?, ?)
@@ -5109,20 +5131,29 @@ function gatewayLiveReading(payload, soil, receivedEpoch) {
 }
 
 async function readGatewayLiveReading(env, nowEpoch = Math.floor(Date.now() / 1000)) {
-  const row = await env.DB.prepare(
-    `SELECT value FROM ${META_TABLE} WHERE key = ? LIMIT 1`
-  ).bind(WH52_UPLOAD_STATUS_META_KEY).first();
-  if (!row?.value) return null;
-  let status;
-  try { status = JSON.parse(row.value); } catch (_) { return null; }
-  const live = status?.live_reading;
-  const epoch = nullableNumber(live?.epoch);
-  if (!live || epoch === null || epoch <= 0 || Number(nowEpoch) - epoch > 3 * 60) return null;
-  return validateWeatherReading({
-    ...live,
-    epoch,
-    received_at: live.received_at || new Date(epoch * 1000).toISOString()
-  });
+  // The dedicated record survives later soil-only/partial diagnostics.
+  // The legacy status record remains a compatible fallback during upgrades.
+  const rows = await env.DB.prepare(
+    `SELECT key, value FROM ${META_TABLE} WHERE key IN (?, ?)`
+  ).bind(GATEWAY_LIVE_META_KEY, WH52_UPLOAD_STATUS_META_KEY).all();
+  let latest = null;
+  for (const row of rows?.results || []) {
+    let stored;
+    try { stored = JSON.parse(row.value || "null"); } catch (_) { continue; }
+    const live = row.key === GATEWAY_LIVE_META_KEY ? stored : stored?.live_reading;
+    const epoch = nullableNumber(live?.epoch);
+    if (!live || epoch === null || epoch <= 0 ||
+        epoch > nowEpoch + 90 || nowEpoch - epoch > 3 * 60) continue;
+    if (!latest || epoch > latest.epoch) {
+      latest = validateWeatherReading({
+        ...live,
+        epoch,
+        received_at: live.received_at || new Date(epoch * 1000).toISOString(),
+        source: "gw3001_direct_live"
+      });
+    }
+  }
+  return latest;
 }
 
 // Optional WS90 fallback when the authenticated gateway did not include piezo
