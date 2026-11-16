@@ -15,7 +15,7 @@ function liveChanges(time,now,current){
  const piezoIsFresh=piezoEpoch!==null&&now-piezoEpoch*1000>=-90000&&now-piezoEpoch*1000<=180000;
  if(lastLive&&time>lastLive.time&&time-lastLive.time<=180000&&day(time)===day(lastLive.time)){
    if(total!==null&&lastLive.total!==null&&total-lastLive.total>=0.05)lastTraditionalTip=time;
-   if(piezoIsFresh&&piezo!==null&&lastLive.piezo!==null&&piezo-lastLive.piezo>=0.1)lastPiezoIncrease=time;
+   if(piezoIsFresh&&piezo!==null&&lastLive.piezo!==null&&piezo-lastLive.piezo>=0.2)lastPiezoIncrease=time;
  }
  if(!lastLive||time>lastLive.time||day(time)!==day(lastLive.time)){
    lastLive={time,total,piezo:piezoIsFresh?piezo:null};
@@ -56,7 +56,7 @@ function evaluate(current,history=[],options={}){
  // Fresh secondary evidence and fresh counter movements take priority over
  // historical tips; the WH40H remains authoritative for measured totals/rate.
  const status=!gaugeFresh?"unavailable":isRaining?"measured":piezoStrongSignal&&rainAvailable?"sensor_disagreement":piezoIndicatesRain||changes.piezoIncrease?"possible":changes.traditionalTip?"new_tip":rainRecently?"recent":!rainAvailable?"rate_unavailable":"no_current_rain";
- const rainIndicatedNow=gaugeFresh&&(isRaining||piezoIndicatesRain||changes.piezoIncrease||changes.traditionalTip);
+ const rainIndicatedNow=gaugeFresh&&(isRaining||piezoStrongSignal||changes.piezoIncrease||changes.traditionalTip);
  return {status,reason,rate:rainRate,rainRate,rainAvailable,dailyTotalAvailable,gaugeFresh,observationAgeMs:ageMs,piezoRate,piezoDailyMm,piezoIndicatesRain,piezoDetected:piezoIndicatesRain,piezoStrongSignal,traditionalTipRecent:changes.traditionalTip,piezoIncreaseRecent:changes.piezoIncrease,rainIndicatedNow,recentIncreaseMm,isRaining,rainRecently,lastIncrease,lastIncreaseTime:lastIncrease};
 }
 root.ParknacrossRainStatus={evaluate};
