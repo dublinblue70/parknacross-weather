@@ -645,17 +645,6 @@ function conditionInfo(current, isNight) {
     }
     return { tag: "Raining", icon: "🌧️", story: "Rain has been detected within the last few minutes.", className: "weather-rain", rainState };
   }
-  if (rainState.piezoIndicatesRain) {
-    return {
-      tag: "Light rain detected",
-      icon: "🌦️",
-      story: rainState.rainAvailable
-        ? "The piezo sensor indicates rain, but the dedicated rain gauge has not yet measured this shower. Rainfall totals are based on the dedicated gauge only."
-        : "The piezo sensor indicates possible light rain, but the rain-gauge reading is unavailable. No rainfall total is inferred.",
-      className: "weather-rain",
-      rainState
-    };
-  }
   if (rainState.rainRecently) {
     if (rainState.recentIncreaseMm < 0.2 - 1e-6) {
       return { tag: "Possible rain recently", icon: "🌦️", story: "The station registered a small amount of rain recently.", className: "weather-neutral", rainState };
@@ -665,18 +654,9 @@ function conditionInfo(current, isNight) {
   if (!rainState.rainAvailable) {
     return { tag: "Rain data unavailable", icon: "☁️", story: "The latest observation is missing rain-sensor data, so conditions cannot be described reliably.", className: "weather-neutral", rainState };
   }
-  // Daily outdoor weather sensor accumulation cannot prove it is raining right now. It can,
-  // however, prevent us describing a previously wet day as entirely dry.
-  if (rainState.piezoDailyMm > 0 && usable(current?.rain_daily_mm)
-      && Number(current.rain_daily_mm) <= 0.01) {
-    return {
-      tag: "Rain noted today",
-      icon: "🌦️",
-      story: `The piezo sensor estimates ${n(rainState.piezoDailyMm)} mm today, while the dedicated rain gauge records 0.0 mm. Rain falling right now is not confirmed.`,
-      className: "weather-neutral",
-      rainState
-    };
-  }
+  // A piezo-only signal (including 0.1 mm daily accumulation) is not proof
+  // of rainfall now or earlier today. Show it as an unconfirmed secondary
+  // sensor reading in the Rain Today card, not a headline weather condition.
   if (wind >= 35) {
     return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy" };
   }
@@ -1513,7 +1493,7 @@ function updateDashboard(current) {
     : usable(rainSummary?.today_mm) ? Number(rainSummary.today_mm) : null;
   const isNight = updateSunInfo(current);
   const condition = conditionInfo(current, isNight);
-  latestRainDetected=Boolean(condition.rainState?.isRaining || condition.rainState?.piezoIndicatesRain);
+  latestRainDetected=Boolean(condition.rainState?.isRaining);
   updateWhatToWear(current, latestRainDetected);
   updateSoilPanel(current);
 
@@ -1550,9 +1530,9 @@ function updateDashboard(current) {
   const piezoToday = condition.rainState?.piezoDailyMm;
   const piezoHero = $("heroPiezoRain");
   if (piezoHero) {
-    piezoHero.hidden = !usable(piezoToday);
-    piezoHero.textContent = usable(piezoToday)
-      ? `Piezo sensor: ${n(piezoToday)} mm indicative`
+    piezoHero.hidden = !(usable(piezoToday) && Number(piezoToday) > 0);
+    piezoHero.textContent = usable(piezoToday) && Number(piezoToday) > 0
+      ? `Piezo estimate: ${n(piezoToday)} mm · unconfirmed`
       : "";
   }
   set("heroPressure", `${n(current.pressure_hpa)} hPa`);
