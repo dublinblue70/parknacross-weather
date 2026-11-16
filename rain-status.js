@@ -10,7 +10,10 @@ function evaluate(current,history=[],options={}){
  const rainRate=gaugeFresh?number(current?.rain_rate_mm_h):null;
  const rawTotal=number(current?.rain_daily_mm),correction=number(options.correctionMm)??0;
  const currentTotal=rawTotal===null?null:Math.max(0,rawTotal-correction);
- const rainAvailable=gaugeFresh&&(rainRate!==null||rawTotal!==null);
+ // A daily accumulation is not evidence that the live rain-rate field is available.
+ const rainAvailable=gaugeFresh&&rainRate!==null;
+ const dailyTotalAvailable=rawTotal!==null&&time!==null&&day(time)===day(now);
+ const reason=!gaugeFresh?(time===null?"missing_timestamp":"stale_observation"):rainRate===null?"rate_missing":null;
  const piezoTime=number(current?.piezo_observed_epoch);
  const piezoAge=piezoTime===null?Infinity:now-piezoTime*1000;
  const piezoFresh=ageMs>=-90000&&ageMs<=180000&&piezoAge>=-90000&&piezoAge<=180000;
@@ -30,8 +33,8 @@ function evaluate(current,history=[],options={}){
  const since=lastIncrease===null?Infinity:now-lastIncrease;
  const isRaining=rainRate!==null&&rainRate>0; // A historical bucket tip is not proof of current rain.
  const rainRecently=gaugeFresh&&!isRaining&&since>=0&&since<=15*60000;
- const status=!rainAvailable?"unavailable":isRaining?"measured":piezoStrongSignal?"sensor_disagreement":rainRecently?"recent":piezoIndicatesRain?"possible":"no_current_rain";
- return {status,rate:rainRate,rainRate,rainAvailable,gaugeFresh,observationAgeMs:ageMs,piezoRate,piezoDailyMm,piezoIndicatesRain,piezoDetected:piezoIndicatesRain,piezoStrongSignal,recentIncreaseMm,isRaining,rainRecently,lastIncrease,lastIncreaseTime:lastIncrease};
+ const status=!gaugeFresh?"unavailable":isRaining?"measured":piezoStrongSignal&&rainAvailable?"sensor_disagreement":piezoStrongSignal?"possible":rainRecently?"recent":piezoIndicatesRain?"possible":!rainAvailable?"rate_unavailable":"no_current_rain";
+ return {status,reason,rate:rainRate,rainRate,rainAvailable,dailyTotalAvailable,gaugeFresh,observationAgeMs:ageMs,piezoRate,piezoDailyMm,piezoIndicatesRain,piezoDetected:piezoIndicatesRain,piezoStrongSignal,recentIncreaseMm,isRaining,rainRecently,lastIncrease,lastIncreaseTime:lastIncrease};
 }
 root.ParknacrossRainStatus={evaluate};
 })(typeof window!=="undefined"?window:globalThis);
