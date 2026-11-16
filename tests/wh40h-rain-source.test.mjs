@@ -93,9 +93,11 @@ const vis={
   stationDateKeyFromTime:()=> '2026-11-10',
   correctedDailyRain:row=>number(row?.rain_daily_mm),
   localDateKey:()=> '2026-11-10',
-  n:v=>Number(v).toFixed(1)
+  n:v=>Number(v).toFixed(1),
+  window:{}
 };
 vm.createContext(vis);
+vm.runInContext(read('rain-intensity.js'),{window:vis.window,Number,Object});
 vm.runInContext(appCode.slice(ai,aj),vis);
 const base={epoch:clock,rain_rate_mm_h:0,rain_daily_mm:0,wind_speed_kmh:0,solar_w_m2:0,uv_index:0};
 assert.equal(vis.conditionInfo({...base,piezo_daily_mm:0.1,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock,solar_w_m2:600},false).tag,
@@ -119,6 +121,9 @@ assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0,piezo_observed_ep
 assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0.6,piezo_observed_epoch:clock-900},true).tag,
  'Night','Stale piezo readings cannot claim current rain');
 assert.equal(vis.conditionInfo({...base,rain_rate_mm_h:3,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},true).tag,
- 'Rainy','Actual WH40H rain still takes priority over WS90');
+ 'Moderate rain','Actual WH40H rain still takes priority over WS90');
+assert.equal(vis.conditionInfo({...base,rain_rate_mm_h:12,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},false).tag,
+ 'Heavy rain','Rain intensity should follow the WH40H measured rate');
+assert.match(vis.conditionInfo({...base,rain_rate_mm_h:12},false).story,/12.0 mm\/h measured by the dedicated rain gauge/);
 
 console.log('PASS: WH40H rain priority, zeros, missing-data fail-closed, public source labels and version parity.');
