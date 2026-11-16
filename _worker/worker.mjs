@@ -1212,8 +1212,8 @@ async function rainAccuracyCapture(env,now=new Date()){
       const rain=rainAccuracyModelTotal(points,window.start,window.end);
       if(rain===null)continue; // do not save partial forecasts
       await env.DB.prepare('INSERT OR IGNORE INTO '+RAIN_FORECAST_ACCURACY_TABLE+
-        ' (target_start,target_end,period,model,captured_epoch,forecast_mm,status) VALUES (?,?,?,?,?,?,"pending")')
-        .bind(window.start,window.end,window.period,model,captured,rain).run();
+        ' (target_start,target_end,period,model,captured_epoch,forecast_mm,status) VALUES (?,?,?,?,?,?,?)')
+        .bind(window.start,window.end,window.period,model,captured,rain,'pending').run();
     }catch(error){console.warn('Rain skill snapshot unavailable for '+model+':',safeErrorMessage(error));}
   }
 }
@@ -1243,7 +1243,7 @@ function rainAccuracyMeasuredRows(rows,start,end){
 }
 async function rainAccuracySettle(env,now=Math.floor(Date.now()/1000)){
   const pending=await env.DB.prepare('SELECT DISTINCT target_start,target_end FROM '+RAIN_FORECAST_ACCURACY_TABLE+
-    ' WHERE status="pending" AND target_end <= ? ORDER BY target_end ASC LIMIT 4').bind(now-3600).all();
+    ' WHERE status=? AND target_end <= ? ORDER BY target_end ASC LIMIT 4').bind('pending',now-3600).all();
   for(const target of pending.results||[]){
     const start=Number(target.target_start),end=Number(target.target_end);
     const rows=await env.DB.prepare('SELECT epoch,rain_daily_mm FROM '+TABLE+
@@ -1253,14 +1253,14 @@ async function rainAccuracySettle(env,now=Math.floor(Date.now()/1000)){
       // Allow delayed gateway/cloud archive repair for up to 36 hours.
       if(now-end<36*3600)continue;
       await env.DB.prepare('UPDATE '+RAIN_FORECAST_ACCURACY_TABLE+
-        ' SET status="insufficient",quality_note=?,verified_epoch=? WHERE target_start=? AND status="pending"')
-        .bind(measured.reason,now,start).run();
+        ' SET status=?,quality_note=?,verified_epoch=? WHERE target_start=? AND status=?')
+        .bind('insufficient',measured.reason,now,start,'pending').run();
       continue;
     }
     await env.DB.prepare('UPDATE '+RAIN_FORECAST_ACCURACY_TABLE+
-      ' SET observed_mm=?,gauge_samples=?,largest_gap_sec=?,verified_epoch=?,status="scored",quality_note=? WHERE target_start=? AND status="pending"')
+      ' SET observed_mm=?,gauge_samples=?,largest_gap_sec=?,verified_epoch=?,status=?,quality_note=? WHERE target_start=? AND status=?')
       .bind(measured.total,measured.samples,measured.largest_gap_sec,now,
-        'Approximate WH40H total; both endpoints within 15 min; missing piezo data ignored',start).run();
+        'scored','Approximate WH40H total; both endpoints within 15 min; missing piezo data ignored',start,'pending').run();
   }
 }
 async function runRainForecastAccuracy(env){
@@ -4596,7 +4596,7 @@ async function ensureTable(env) {
     'target_start INTEGER NOT NULL, target_end INTEGER NOT NULL, period TEXT NOT NULL,'+
     'model TEXT NOT NULL, captured_epoch INTEGER NOT NULL, forecast_mm REAL NOT NULL,'+
     'observed_mm REAL, gauge_samples INTEGER, largest_gap_sec INTEGER,'+
-    'verified_epoch INTEGER, status TEXT NOT NULL DEFAULT "pending", quality_note TEXT,'+
+    'verified_epoch INTEGER, status TEXT NOT NULL, quality_note TEXT,'+
     'PRIMARY KEY(target_start,model))'
   ).run();
 
