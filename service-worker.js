@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-252-20261116-rain-sensor-disagreement-preserve-notifications";
+const CACHE_NAME = "parknacross-v38-4-252-20261116-shared-rain-intensity-preserve-notifications";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./privacy-providers.css",
@@ -15,6 +15,7 @@ const STATIC_ASSETS = [
   "./weather-fingerprint.css",
   "./forecast-accuracy.html",
   "./forecast-accuracy.js",
+  "./rain-intensity.js",
   "./local-forecast.js",
   "./local-forecast.css",
   "./local-planning.js",
@@ -249,6 +250,8 @@ self.addEventListener("fetch", event => {
     url.origin === self.location.origin &&
     (url.pathname.endsWith("/styles.css") ||
       url.pathname.endsWith("/app.js") ||
+      url.pathname.endsWith("/rain-intensity.js") ||
+      url.pathname.endsWith("/rain.js") ||
       url.pathname.endsWith("/forecast-accuracy.js") ||
        url.pathname.endsWith("/local-forecast.js") ||
       url.pathname.endsWith("/local-planning.js") ||
