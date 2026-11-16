@@ -92,6 +92,7 @@
    }
    else if(rs.isRaining){set("rainEventTotal",usable(todayRain)?`${n(todayRain)} mm today`:"Rain measured");set("rainEventStart","Current WH40H rate");set("rainEventText",`Rain measured at ${n(rs.rate)} mm/h.`);}
    else if(rs.rainIndicatedNow){set("rainEventTotal","Possible rain now");set("rainEventStart","Fresh sensor indication");set("rainEventText","Fresh WS90 or WH40H readings suggest rain; WH40H rate may still show 0.0 mm/h.");}
+   else if(rs.status==="possible"){set("rainEventTotal","Rain indication unconfirmed");set("rainEventStart","Weak WS90 signal");set("rainEventText","A weak piezo signal alone cannot confirm rainfall; WH40H has not measured current rain.");}
    else if(rs.status==="recent"){set("rainEventTotal","Rain recorded recently");set("rainEventStart","Within the last 15 min");set("rainEventText","Rain was measured recently, but rainfall now is unconfirmed.");}
    else if(rs.rate===null){set("rainEventTotal","Current rain status unavailable");set("rainEventStart","Live reading could not be checked");set("rainEventText","Current rain status cannot be confirmed. Showing available archive totals.");}
    else{set("rainEventTotal","No active event");set("rainEventStart","No current gauge rain measured");set("rainEventText","No current rainfall confirmed by the dedicated gauge.");}
