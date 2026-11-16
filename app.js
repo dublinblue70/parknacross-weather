@@ -606,8 +606,13 @@ function rainActivity(current) {
   const piezoAge = piezoEpoch === null ? Infinity : Date.now() - piezoEpoch;
   const piezoFresh = observationAge >= -120000 && observationAge <= 180000
     && piezoAge >= -120000 && piezoAge <= 420000;
-  const piezoIndicatesRain = piezoFresh && usable(current?.piezo_rain_rate_mm_h)
-    && Number(current.piezo_rain_rate_mm_h) > 0;
+  const piezoRate = piezoFresh && usable(current?.piezo_rain_rate_mm_h)
+    ? Number(current.piezo_rain_rate_mm_h) : null;
+  const piezoIndicatesRain = piezoRate !== null && piezoRate > 0;
+  // Low-level piezo readings (including isolated 0.1 mm estimates) can be
+  // caused by vibration or wind. Escalate only a fresh, substantial rate,
+  // and never substitute it for the dedicated gauge's rainfall total.
+  const piezoStrongSignal = piezoRate !== null && piezoRate >= 2.0;
   const piezoDailyMm = piezoFresh && usable(current?.piezo_daily_mm) && currentDay === stationDateKeyFromTime(Date.now())
     ? Math.max(0, Number(current.piezo_daily_mm))
     : null;
@@ -615,6 +620,8 @@ function rainActivity(current) {
     rainRate,
     rainAvailable,
     piezoIndicatesRain,
+    piezoStrongSignal,
+    piezoRate,
     piezoDailyMm,
     recentIncreaseMm,
     isRaining: rainRate > 0 || age <= RAIN_ACTIVE_WINDOW_MS,
@@ -654,9 +661,17 @@ function conditionInfo(current, isNight) {
   if (!rainState.rainAvailable) {
     return { tag: "Rain data unavailable", icon: "☁️", story: "The latest observation is missing rain-sensor data, so conditions cannot be described reliably.", className: "weather-neutral", rainState };
   }
-  // A piezo-only signal (including 0.1 mm daily accumulation) is not proof
-  // of rainfall now or earlier today. Show it as an unconfirmed secondary
-  // sensor reading in the Rain Today card, not a headline weather condition.
+  // A substantial, FRESH piezo reading is useful secondary evidence if the
+  // dedicated gauge has not tipped. Do not claim confirmed rain or add it to
+  // rainfall totals; equally, do not describe these conditions as "dry".
+  if (rainState.piezoStrongSignal) {
+    const gaugeText = rainState.rainAvailable
+      ? "the dedicated rain gauge has not yet measured it"
+      : "the dedicated rain-gauge reading is unavailable";
+    return { tag: "Possible rain", icon: "🌦️",
+      story: `The piezo sensor indicates rain (${n(rainState.piezoRate)} mm/h), but ${gaugeText}. Current rainfall is unconfirmed; check the gauge if rain is visible.`,
+      className: "weather-neutral", rainState };
+  }
   if (wind >= 35) {
     return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy" };
   }
@@ -672,7 +687,9 @@ function conditionInfo(current, isNight) {
   if (solar >= 100) {
     return { tag: "Some brightness", icon: "⛅", story: "Some brightness breaking through at Parknacross.", className: "weather-bright" };
   }
-  return wind < 1 ? { tag: "Calm", icon: "☁️", story: "Calm conditions at Parknacross.", className: "weather-neutral" } : { tag: "Light breeze", icon: "🌬️", story: `Dry conditions with a light breeze around ${n(wind)} km/h.`, className: "weather-neutral" };
+  return wind < 1
+    ? { tag: "Calm", icon: "☁️", story: "Calm wind at Parknacross. No current rain is confirmed by the dedicated gauge; this does not establish dry conditions.", className: "weather-neutral", rainState }
+    : { tag: "Light breeze", icon: "🌬️", story: `Wind around ${n(wind)} km/h. The dedicated rain gauge has not confirmed current rain; conditions may differ if light rain has not registered.`, className: "weather-neutral", rainState };
 }
 
 /* NOAA-style sunrise/sunset calculation using the public Ardamine area centre. */
