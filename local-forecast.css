@@ -14,3 +14,13 @@
   border-left-color:#e7bd6d;color:var(--text,#e7eef5);background:rgba(231,189,109,.07)
 }
 #forecast .forecast-grid>article>p.forecast-comparison[hidden]{display:none}
+
+#forecast .forecast-accuracy-teaser{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  margin:18px 0 0;padding:15px 18px;background:rgba(14,39,54,.65);
+  border:1px solid var(--line,#294355);border-radius:12px
+}
+#forecast .forecast-accuracy-teaser strong{font-size:.91rem}
+#forecast .forecast-accuracy-teaser p{margin:5px 0 0;font-size:.81rem;color:var(--muted,#a8bdcc);line-height:1.5}
+#forecast .forecast-accuracy-teaser a{font-size:.82rem;font-weight:750;color:var(--accent,#8bdcf2);white-space:nowrap;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:600px){#forecast .forecast-accuracy-teaser{align-items:flex-start;padding:13px 15px}}
