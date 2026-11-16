@@ -114,7 +114,7 @@ assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:4,piezo_observed_ep
  'Calm','Stale piezo reading must not suggest rain');
 const gaugeSilent=vis.conditionInfo({...base,wind_speed_kmh:2.5,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},false);
 assert.equal(gaugeSilent.tag,'Light breeze');
-assert.doesNotMatch(gaugeSilent.story,/Dry conditions/i,'Gauge zero alone must not claim it is dry outside');
+assert.doesNotMatch(gaugeSilent.story,/^Dry conditions/i,'Gauge zero alone must not claim it is dry outside');
 assert.match(gaugeSilent.story,/does not confirm dry conditions/i);
 assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},true).tag,
  'Night','No WS90 or WH40H signal leaves night-time label unchanged');
