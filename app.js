@@ -538,15 +538,19 @@ function prevailingWind() {
 }
 
 function rainActivity(current) {
-  const rainAvailable = usable(current?.rain_rate_mm_h) || usable(current?.rain_daily_mm);
-  const rainRate = usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : null;
-  const currentTime = readingTime(current) || Date.now();
+  const measuredTime = readingTime(current);
+  const currentTime = measuredTime || Date.now();
+  const ageOfReading = measuredTime ? Date.now() - measuredTime : Infinity;
+  // An old last-known observation cannot establish rain intensity *now*.
+  const gaugeFresh = ageOfReading >= -120000 && ageOfReading <= 10 * 60 * 1000;
+  const rainAvailable = gaugeFresh && (usable(current?.rain_rate_mm_h) || usable(current?.rain_daily_mm));
+  const rainRate = gaugeFresh && usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : null;
   const currentDay = stationDateKeyFromTime(currentTime);
   const currentTotal = correctedDailyRain(current);
 
   // Track live cumulative-rain changes between /current refreshes. This catches
   // light/intermittent gauge increments even when the instantaneous rate is 0.0.
-  if (usable(currentTotal)) {
+  if (gaugeFresh && usable(currentTotal)) {
     if (lastObservedRainDay !== currentDay) {
       lastObservedRainDay = currentDay;
       lastObservedRainTotal = Number(currentTotal);
@@ -604,7 +608,7 @@ function rainActivity(current) {
   const piezoEpoch = usable(current?.piezo_observed_epoch) ? Number(current.piezo_observed_epoch) * 1000 : null;
   const observationAge = Date.now() - currentTime;
   const piezoAge = piezoEpoch === null ? Infinity : Date.now() - piezoEpoch;
-  const piezoFresh = observationAge >= -120000 && observationAge <= 180000
+  const piezoFresh = gaugeFresh && observationAge >= -120000 && observationAge <= 180000
     && piezoAge >= -120000 && piezoAge <= 420000;
   const piezoRate = piezoFresh && usable(current?.piezo_rain_rate_mm_h)
     ? Number(current.piezo_rain_rate_mm_h) : null;
@@ -624,8 +628,8 @@ function rainActivity(current) {
     piezoRate,
     piezoDailyMm,
     recentIncreaseMm,
-    isRaining: rainRate > 0 || age <= RAIN_ACTIVE_WINDOW_MS,
-    rainRecently: rainRate <= 0 && age > RAIN_ACTIVE_WINDOW_MS && age <= RAIN_RECENT_WINDOW_MS,
+    isRaining: gaugeFresh && (rainRate > 0 || age <= RAIN_ACTIVE_WINDOW_MS),
+    rainRecently: gaugeFresh && rainRate <= 0 && age > RAIN_ACTIVE_WINDOW_MS && age <= RAIN_RECENT_WINDOW_MS,
     lastIncreaseTime: Number.isFinite(age) ? lastRainIncreaseTime : null
   };
 }
@@ -662,9 +666,6 @@ function conditionInfo(current, isNight) {
     }
     return { tag: "Rain recently", icon: "🌦️", story: "Rain was detected recently at Parknacross.", className: "weather-rain", rainState };
   }
-  if (!rainState.rainAvailable) {
-    return { tag: "Rain data unavailable", icon: "☁️", story: "The latest observation is missing rain-sensor data, so conditions cannot be described reliably.", className: "weather-neutral", rainState };
-  }
   // A substantial, FRESH piezo reading is useful secondary evidence if the
   // dedicated gauge has not tipped. Do not claim confirmed rain or add it to
   // rainfall totals; equally, do not describe these conditions as "dry".
@@ -675,6 +676,9 @@ function conditionInfo(current, isNight) {
     return { tag: "Possible rain", icon: "🌦️",
       story: `The piezo sensor indicates rain (${n(rainState.piezoRate)} mm/h), but ${gaugeText}. Current rainfall is unconfirmed; check the gauge if rain is visible.`,
       className: "weather-neutral", rainState };
+  }
+  if (!rainState.rainAvailable) {
+    return { tag: "Rain data unavailable", icon: "☁️", story: "The latest observation is missing rain-sensor data, so conditions cannot be described reliably.", className: "weather-neutral", rainState };
   }
   if (wind >= 35) {
     return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy", rainState };
