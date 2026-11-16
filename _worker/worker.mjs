@@ -1140,6 +1140,171 @@ function parseHourlySkyForecast(xml, nowEpoch = Math.floor(Date.now() / 1000)) {
   return [...points.values()].sort((a,b) => a.epoch-b.epoch);
 }
 
+
+/*
+ * Local rainfall forecast skill verification.
+ * Each prediction is captured BEFORE a fixed 06:00–18:00 or 18:00–06:00
+ * Europe/Dublin window. Both models are scored against the SAME WH40H gauge
+ * interval; missing rain history is never interpreted as zero.
+ */
+const RAIN_FORECAST_ACCURACY_TABLE = 'weather_rain_forecast_accuracy_v1';
+function rainAccuracyLocalEpoch(day, hour) {
+  const parts=String(day||'').split('-').map(Number);
+  if(parts.length!==3||parts.some(x=>!Number.isInteger(x)))return null;
+  const approximate=Date.UTC(parts[0],parts[1]-1,parts[2],hour)/1000;
+  for(let offset=-7200;offset<=7200;offset+=3600){
+    const epoch=approximate+offset,clock=stationClockParts(new Date(epoch*1000));
+    if(stationDayKey(new Date(epoch*1000))===day&&clock.hour===hour&&clock.minute===0)return epoch;
+  }
+  return null;
+}
+function rainAccuracyCaptureWindow(at=new Date()){
+  const clock=stationClockParts(at);
+  if(![5,17].includes(clock.hour)||clock.minute<15||clock.minute>55)return null;
+  const day=stationDayKey(at),startHour=clock.hour===5?6:18;
+  const start=rainAccuracyLocalEpoch(day,startHour);
+  const end=startHour===6?rainAccuracyLocalEpoch(day,18):rainAccuracyLocalEpoch(shiftDayKey(day,1),6);
+  const now=Math.floor(at.getTime()/1000);
+  if(!Number.isFinite(start)||!Number.isFinite(end)||start-now<300||end-start<10*3600||end-start>14*3600)return null;
+  return {start,end,day,period:startHour===6?'day':'night'};
+}
+function rainAccuracyModelTotal(points,start,end) {
+  if(!Array.isArray(points)||!Number.isInteger(start)||!Number.isInteger(end))return null;
+  const expected=(end-start)/3600;
+  if(!Number.isInteger(expected)||expected<10||expected>14)return null;
+  const indexed=new Map();
+  for(const point of points){
+    const epoch=Number(point?.epoch),amount=point?.rain_mm;
+    if(!Number.isInteger(epoch)||epoch%3600||epoch<start||epoch>=end)continue;
+    if(amount===null||amount===undefined||amount===''||!Number.isFinite(Number(amount))||Number(amount)<0||Number(amount)>100)continue;
+    indexed.set(epoch,Number(amount));
+  }
+  if(indexed.size!==expected)return null;
+  let total=0;
+  for(let epoch=start;epoch<end;epoch+=3600){
+    if(!indexed.has(epoch))return null;
+    total+=indexed.get(epoch);
+  }
+  return Math.round(total*100)/100;
+}
+async function rainAccuracyOpenMeteo(){
+  // Open-Meteo hourly precipitation is for the PRECEDING hour; move the
+  // timestamp back an hour before comparing with Met Éireann's hour starts.
+  const url='https://api.open-meteo.com/v1/forecast?latitude=52.6247&longitude=-6.25&hourly=precipitation&precipitation_unit=mm&timeformat=unixtime&timezone=GMT&forecast_days=3';
+  const response=await fetch(url,{headers:{'Accept':'application/json'},signal:AbortSignal.timeout(9000)});
+  if(!response.ok)throw Error('Open-Meteo forecast HTTP '+response.status);
+  const data=await response.json(),times=data?.hourly?.time,amounts=data?.hourly?.precipitation;
+  if(!Array.isArray(times)||!Array.isArray(amounts)||times.length!==amounts.length)throw Error('Incomplete Open-Meteo hourly forecast');
+  return times.map((epoch,i)=>({epoch:Number(epoch)-3600,rain_mm:amounts[i]}));
+}
+async function rainAccuracyCapture(env,now=new Date()){
+  const window=rainAccuracyCaptureWindow(now);
+  if(!window)return;
+  const captured=Math.floor(now.getTime()/1000);
+  const models=[['met_eireann',()=>getOutdoorOutlook().then(data=>data.points)],
+                ['open_meteo',()=>rainAccuracyOpenMeteo()]];
+  for(const [model,load] of models){
+    const existing=await env.DB.prepare('SELECT 1 AS present FROM '+RAIN_FORECAST_ACCURACY_TABLE+' WHERE target_start=? AND model=? LIMIT 1')
+      .bind(window.start,model).first();
+    if(existing)continue;
+    try{
+      const points=await load();
+      const rain=rainAccuracyModelTotal(points,window.start,window.end);
+      if(rain===null)continue; // do not save partial forecasts
+      await env.DB.prepare('INSERT OR IGNORE INTO '+RAIN_FORECAST_ACCURACY_TABLE+
+        ' (target_start,target_end,period,model,captured_epoch,forecast_mm,status) VALUES (?,?,?,?,?,?,"pending")')
+        .bind(window.start,window.end,window.period,model,captured,rain).run();
+    }catch(error){console.warn('Rain skill snapshot unavailable for '+model+':',safeErrorMessage(error));}
+  }
+}
+function rainAccuracyMeasuredRows(rows,start,end){
+  const clean=(rows||[]).map(r=>({epoch:Number(r.epoch),total:r.rain_daily_mm===null||r.rain_daily_mm===undefined?NaN:Number(r.rain_daily_mm)}))
+    .filter(r=>Number.isInteger(r.epoch)&&Number.isFinite(r.total)&&r.total>=0&&r.total<=500)
+    .sort((a,b)=>a.epoch-b.epoch);
+  const before=[...clean].reverse().find(r=>r.epoch<=start&&r.epoch>=start-900);
+  const after=clean.find(r=>r.epoch>=end&&r.epoch<=end+900);
+  if(!before||!after)return {valid:false,reason:'boundary_samples_missing'};
+  const data=clean.filter(r=>r.epoch>=before.epoch&&r.epoch<=after.epoch);
+  if(data.length<25)return {valid:false,reason:'too_few_gauge_samples'};
+  let total=0,largestGap=0;
+  for(let i=1;i<data.length;i++){
+    const prior=data[i-1],cur=data[i],gap=cur.epoch-prior.epoch;
+    if(gap<=0)continue;
+    largestGap=Math.max(largestGap,gap);
+    if(gap>1800)return {valid:false,reason:'gauge_history_gap'};
+    const reset=stationDayKey(new Date(prior.epoch*1000))!==stationDayKey(new Date(cur.epoch*1000));
+    const delta=reset&&cur.total<prior.total ? cur.total : cur.total-prior.total;
+    if(delta<-.15)return {valid:false,reason:'unexpected_gauge_counter_reset'};
+    if(delta>60)return {valid:false,reason:'implausible_gauge_increment'};
+    total+=Math.max(0,delta);
+  }
+  return {valid:true,total:Math.round(total*10)/10,samples:data.length,largest_gap_sec:largestGap,
+    boundary_max_offset_sec:Math.max(start-before.epoch,after.epoch-end)};
+}
+async function rainAccuracySettle(env,now=Math.floor(Date.now()/1000)){
+  const pending=await env.DB.prepare('SELECT DISTINCT target_start,target_end FROM '+RAIN_FORECAST_ACCURACY_TABLE+
+    ' WHERE status="pending" AND target_end <= ? ORDER BY target_end ASC LIMIT 4').bind(now-3600).all();
+  for(const target of pending.results||[]){
+    const start=Number(target.target_start),end=Number(target.target_end);
+    const rows=await env.DB.prepare('SELECT epoch,rain_daily_mm FROM '+TABLE+
+      ' WHERE epoch>=? AND epoch<=? ORDER BY epoch ASC').bind(start-900,end+900).all();
+    const measured=rainAccuracyMeasuredRows(rows.results||[],start,end);
+    if(!measured.valid){
+      // Allow delayed gateway/cloud archive repair for up to 36 hours.
+      if(now-end<36*3600)continue;
+      await env.DB.prepare('UPDATE '+RAIN_FORECAST_ACCURACY_TABLE+
+        ' SET status="insufficient",quality_note=?,verified_epoch=? WHERE target_start=? AND status="pending"')
+        .bind(measured.reason,now,start).run();
+      continue;
+    }
+    await env.DB.prepare('UPDATE '+RAIN_FORECAST_ACCURACY_TABLE+
+      ' SET observed_mm=?,gauge_samples=?,largest_gap_sec=?,verified_epoch=?,status="scored",quality_note=? WHERE target_start=? AND status="pending"')
+      .bind(measured.total,measured.samples,measured.largest_gap_sec,now,
+        'Approximate WH40H total; both endpoints within 15 min; missing piezo data ignored',start).run();
+  }
+}
+async function runRainForecastAccuracy(env){
+  const now=Math.floor(Date.now()/1000);
+  // Settlement uses only D1 observations, so external forecast outages cannot
+  // prevent scoring previously captured predictions.
+  await rainAccuracySettle(env,now);
+  await rainAccuracyCapture(env,new Date(now*1000));
+}
+async function buildRainForecastAccuracy(env,now=Math.floor(Date.now()/1000)){
+  const result=await env.DB.prepare('SELECT target_start,target_end,period,model,captured_epoch,forecast_mm,observed_mm,status,gauge_samples,largest_gap_sec FROM '+
+    RAIN_FORECAST_ACCURACY_TABLE+' WHERE target_start >= ? ORDER BY target_start DESC LIMIT 220')
+    .bind(now-120*86400).all();
+  const groups=new Map();
+  for(const row of result.results||[]){
+    let group=groups.get(row.target_start);
+    if(!group){group={start:Number(row.target_start),end:Number(row.target_end),period:row.period};groups.set(row.target_start,group);}
+    group[row.model]=row;
+  }
+  const pairs=[];
+  for(const group of groups.values()){
+    const met=group.met_eireann,open=group.open_meteo;
+    if(!met||!open||met.status!=='scored'||open.status!=='scored'||!Number.isFinite(Number(met.observed_mm))||!Number.isFinite(Number(open.observed_mm)))continue;
+    const measured=Number(met.observed_mm);
+    if(Math.abs(measured-Number(open.observed_mm))>.11)continue;
+    pairs.push({start_epoch:group.start,end_epoch:group.end,period:group.period,observed_mm:measured,
+      met_eireann_mm:Number(met.forecast_mm),open_meteo_mm:Number(open.forecast_mm),
+      met_error_mm:Math.round((Number(met.forecast_mm)-measured)*10)/10,
+      open_error_mm:Math.round((Number(open.forecast_mm)-measured)*10)/10,
+      gauge_samples:Number(met.gauge_samples),boundary_tolerance_min:15});
+  }
+  const recent=pairs.filter(p=>p.end_epoch>=now-30*86400).sort((a,b)=>b.start_epoch-a.start_epoch);
+  const means=key=>recent.length?Math.round(recent.reduce((n,r)=>n+Math.abs(r[key]),0)/recent.length*10)/10:null;
+  const metMae=means('met_error_mm'),openMae=means('open_error_mm');
+  const winner=recent.length<10?'insufficient_data':
+    Math.abs(metMae-openMae)<.3?'too_close':metMae<openMae?'met_eireann':'open_meteo';
+  const upcoming=[...groups.values()].filter(g=>g.end>now&&g.met_eireann||g.end>now&&g.open_meteo);
+  return {available:true,source:'WH40H dedicated rain gauge (not WS90 piezo)',period_basis:'06:00–18:00 and 18:00–06:00 Europe/Dublin',
+    evaluation:'Both models compared over identical pre-captured periods; MAE in mm, lower is better',
+    caveat:'Gauge accumulation is approximate within 15 minutes of each window boundary; periods with missing or invalid samples are excluded.',
+    paired_periods_30d:recent.length,minimum_periods_for_leader:10,met_eireann_mae_mm:metMae,open_meteo_mae_mm:openMae,
+    winner,history:recent.slice(0,30),pending_windows:upcoming.length,generated_at:new Date(now*1000).toISOString()};
+}
+
 async function getOutdoorOutlook() {
  const xml=await fetchMetEireannPointForecastXml(),now=Math.floor(Date.now()/1000),rows=new Map();
  const rowAt=epoch=>{if(!rows.has(epoch))rows.set(epoch,{epoch,temperature_c:null,wind_kmh:null,rain_mm:null,daylight:null});return rows.get(epoch);};
@@ -3569,6 +3734,10 @@ export default {
         return await cachedJson(request, ctx, 900, () => getPointForecast(env, { persist: false }));
       }
 
+      if (url.pathname === "/forecast-accuracy") {
+        return await cachedJson(request, ctx, 300, () => buildRainForecastAccuracy(env));
+      }
+
       if (url.pathname === "/forecast-verification") {
         return await cachedJson(request, ctx, 1800, () => buildForecastVerification(env));
       }
@@ -3695,6 +3864,9 @@ export default {
       } catch (error) {
         console.warn("Daily forecast verification snapshot failed:", error);
       }
+
+      try { await runRainForecastAccuracy(env); }
+      catch (error) { console.warn("Local forecast accuracy tracking failed:",safeErrorMessage(error)); }
 
       try {
         await runDailyBackup(env);
@@ -4417,6 +4589,15 @@ async function ensureTable(env) {
       forecast_rain_mm REAL,
       raw_json TEXT
     )`
+  ).run();
+
+  await env.DB.prepare(
+    'CREATE TABLE IF NOT EXISTS '+RAIN_FORECAST_ACCURACY_TABLE+' ('+
+    'target_start INTEGER NOT NULL, target_end INTEGER NOT NULL, period TEXT NOT NULL,'+
+    'model TEXT NOT NULL, captured_epoch INTEGER NOT NULL, forecast_mm REAL NOT NULL,'+
+    'observed_mm REAL, gauge_samples INTEGER, largest_gap_sec INTEGER,'+
+    'verified_epoch INTEGER, status TEXT NOT NULL DEFAULT "pending", quality_note TEXT,'+
+    'PRIMARY KEY(target_start,model))'
   ).run();
 
   /*
