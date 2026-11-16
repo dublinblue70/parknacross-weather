@@ -8,6 +8,19 @@
  async function get(p){let last;const attempts=p==="/current"?1:2;for(let attempt=0;attempt<attempts;attempt++){try{const r=await fetch(`${API}${p}`,{cache:"no-store",...(typeof AbortSignal!=="undefined"&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{})});if(!r.ok)throw new Error(`HTTP ${r.status}`);const data=await r.json();if(data?.error)throw new Error(data.error);return data;}catch(error){last=error;if(attempt+1<attempts)await new Promise(resolve=>setTimeout(resolve,500));}}throw last;}
  const rainState=(summary,history,current)=>window.ParknacrossRainStatus.evaluate(current,history?.readings||[]);
 
+ // The immediate and archive-complete states must have the same evidence priority.
+ function rainConditionText(rs,intensity,rateText){
+  switch(rs.status){
+    case "measured": return `${intensity||"Rain measured"} · ${rateText||window.ParknacrossRainIntensity?.formatRate(rs.rate)||n(rs.rate)+" mm/h"}`;
+    case "sensor_disagreement": return `Rain indicated now · WS90 ${n(rs.piezoRate)} mm/h, WH40H ${n(rs.rainRate)} mm/h · intensity unconfirmed`;
+    case "possible": return rs.piezoIndicatesRain?`Possible rain now · WS90 ${n(rs.piezoRate)} mm/h, WH40H not confirming`:"Possible rain now · recent WS90 rain-counter increase";
+    case "new_tip": return "Rain detected · WH40H counter increased within 2 min";
+    case "recent": return "Rain recorded recently · current rain rate unconfirmed";
+    case "unavailable": return rs.reason==="stale_observation"?"Station observation delayed · live rain unconfirmed":"Station observation timestamp unavailable";
+    case "rate_unavailable": return "WH40H live rain rate missing · daily total separate";
+    default: return "No current rain measured by the dedicated gauge";
+  }
+ }
  function eventGraphLink(event){const start=Number(event.start_epoch),end=Number(event.end_epoch),now=Math.floor(Date.now()/1000);const from=Number.isFinite(start)&&start>0?Math.floor(start)-1800:null,to=Number.isFinite(end)&&end>=start?Math.min(now,Math.ceil(end)+1800):now;return from&&to>from&&to-from<=31*86400?`graphs.html?from=${from}&to=${to}#gRain`:'history.html';}
  let chart=null,loading=false;
  const calendarLabel=day=>/^\d{4}-\d{2}-\d{2}$/.test(day||"")?new Date(day+"T12:00:00Z").toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",weekday:"short",day:"numeric",month:"short"}):"Date unavailable";
@@ -40,13 +53,7 @@
      set("rainUpdated",updated?`Station reading: ${dt(updated)} · Irish time${rs.reason==="stale_observation"?" · delayed":""}`:"Live station reading unavailable");
      set("rainNow",rate===null?"--":window.ParknacrossRainIntensity?.formatRate(rate)||`${n(rate)} mm/h`);
      set("rainToday",usable(correctedCurrentRain(c))?`${n(correctedCurrentRain(c))} mm`:"--");
-     set("rainCondition",rs.status==="measured"?"Rain measured · "+(window.ParknacrossRainIntensity?.formatRate(rate)||n(rate)+" mm/h")
-       :rs.status==="sensor_disagreement"?"Possible rain · WH40H and piezo disagree"
-       :rs.status==="possible"?"Possible rain · piezo indication only"
-       :rs.status==="unavailable"?(rs.reason==="stale_observation"?"Station observation delayed · live rain unconfirmed":"Station observation timestamp unavailable")
-       :rs.status==="rate_unavailable"?"WH40H live rain rate missing · daily total remains available"
-       :rs.status==="recent"?"Rain measured recently · not confirmed now"
-       :"No current rain measured by the dedicated gauge");
+     set("rainCondition",rainConditionText(rs));
      return c;
    });
    const results=await Promise.allSettled([get("/rain-summary"),get("/daily?days=30"),get("/history?hours=1"),live,get("/rain-events?days=30")]);
@@ -59,19 +66,7 @@
      : null;
    const measuredRateText = intensityTools?.formatRate(rs.rate)
      || (rs.rate === null ? "Unavailable" : `${n(rs.rate)} mm/h`);
-   set("rainCondition",measuredIntensity ? `${measuredIntensity} · ${measuredRateText}`
-     : rs.isRaining ? "Rain measured recently · current rate 0.0 mm/h"
-     : rs.status==="unavailable"
-      ? (rs.reason==="stale_observation"?"Station observation delayed · live rain status unconfirmed":"Station observation timestamp missing")
-     : rs.status==="rate_unavailable"
-      ? "WH40H live rain rate missing · daily total is independent"
-     : rs.piezoStrongSignal
-      ? "Possible rain · substantial piezo signal, WH40H not confirming"
-      : rs.piezoDetected
-        ? "Weak piezo rain indication · not confirmed"
-        : rs.piezoDailyMm>0&&usable(c?.rain_daily_mm)&&Number(c.rain_daily_mm)<0.05
-          ? "No rain measured by gauge · piezo estimate unconfirmed"
-          : rs.rate===null?"Live rain-gauge data unavailable":rs.rainRecently?"Rain measured recently":"No current rain measured by the dedicated gauge");
+   set("rainCondition",rainConditionText(rs,measuredIntensity,measuredRateText));
    const piezoToday=$("rainPiezoToday");
    if(piezoToday){
      piezoToday.hidden=!usable(rs.piezoDailyMm);
@@ -87,11 +82,19 @@
    set("dryDaysNote",s.consecutive_dry_days_complete===false?"0.0 mm days · includes today so far; count stops at first missing archive day":"0.0 mm calendar days · includes today so far");
    set("rainWettest",s.wettest_day&&usable(s.wettest_day.rain_mm)?`${n(s.wettest_day.rain_mm)} mm`:"--");set("rainWettestDate",s.wettest_day?.day?calendarLabel(s.wettest_day.day):"--");
    const detectedAt=rs.lastIncrease?new Date(rs.lastIncrease).toISOString():s.last_measurable_rain?.received_at;set("lastRain",detectedAt?"Last detected":results[0].status==="rejected"?"Unavailable":"None recorded");set("lastRainDate",dt(detectedAt));
-   if(s.current_event){set("rainEventTotal",`${n(s.current_event.total_mm)} mm`);set("rainEventStart",`Since ${dt(s.current_event.started_at)}`);set("rainEventText",rs.rate===null?"A recent live reading is needed to confirm rain now.":rs.isRaining?`Rain detected · ${n(s.current_event.total_mm)} mm in this event.`:`Rain paused · ${n(s.current_event.total_mm)} mm in the open event.`)}
-   else if(rs.isRaining){set("rainEventTotal",usable(todayRain)?`${n(todayRain)} mm today`:"Rain detected");set("rainEventStart","Rain detected recently");set("rainEventText",rs.rate>0?`Rain is falling at ${n(rs.rate)} mm/h.`:"Rain has been detected within the last few minutes, the current rain rate is 0.0 mm/h.");}
-   else if(rs.rainRecently){set("rainEventTotal","Rain recently");set("rainEventStart","Within the last 15 min");set("rainEventText","Rain was detected recently at Parknacross.");}
+   if(s.current_event){
+     set("rainEventTotal",`${n(s.current_event.total_mm)} mm`);
+     set("rainEventStart",`Since ${dt(s.current_event.started_at)}`);
+     set("rainEventText",rs.isRaining?`Rain measured · ${n(s.current_event.total_mm)} mm in this event.`
+       :rs.rainIndicatedNow?"Rain indicated by fresh station sensor evidence. WH40H current rate may not confirm ongoing rain."
+       :rs.status==="unavailable"||rs.status==="rate_unavailable"?"Live rain status unavailable; showing recorded event total."
+       :`No current rain confirmed · ${n(s.current_event.total_mm)} mm recorded in this event.`);
+   }
+   else if(rs.isRaining){set("rainEventTotal",usable(todayRain)?`${n(todayRain)} mm today`:"Rain measured");set("rainEventStart","Current WH40H rate");set("rainEventText",`Rain measured at ${n(rs.rate)} mm/h.`);}
+   else if(rs.rainIndicatedNow){set("rainEventTotal","Possible rain now");set("rainEventStart","Fresh sensor indication");set("rainEventText","Fresh WS90 or WH40H readings suggest rain; WH40H rate may still show 0.0 mm/h.");}
+   else if(rs.status==="recent"){set("rainEventTotal","Rain recorded recently");set("rainEventStart","Within the last 15 min");set("rainEventText","Rain was measured recently, but rainfall now is unconfirmed.");}
    else if(rs.rate===null){set("rainEventTotal","Current rain status unavailable");set("rainEventStart","Live reading could not be checked");set("rainEventText","Current rain status cannot be confirmed. Showing available archive totals.");}
-   else{set("rainEventTotal","No active event");set("rainEventStart","No current gauge rain measured");set("rainEventText","No recent rainfall was registered by the dedicated rain gauge; this does not confirm that it is dry outside.");}
+   else{set("rainEventTotal","No active event");set("rainEventStart","No current gauge rain measured");set("rainEventText","No current rainfall confirmed by the dedicated gauge.");}
    if(results[1].status==="fulfilled")renderChart(d.days);else{if(chart){chart.destroy();chart=null;}set("rainChartNote","Daily rainfall history is temporarily unavailable. Try Refresh rain data.");dailyRows=[];const more=$("rainDailyMore");if(more)more.hidden=true;const table=$("rainDailyTable");if(table)table.innerHTML='<tr><td colspan="2">Daily totals unavailable.</td></tr>';}
    set("rainEventCount",usable(e.event_count)?String(Number(e.event_count)):"--");
    set("largestRainEvent",e.largest_event&&usable(e.largest_event.total_mm)?`${n(e.largest_event.total_mm)} mm`:"--");
