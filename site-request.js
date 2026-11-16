@@ -43,7 +43,7 @@
           try{
             response=await nativeFetch(requestInput,{...init,signal:controller.signal});
             if(officialWarningFallback&&response.status>=500)return await warningResponse();
-            if(!canFallback&&isApi&&method==="GET"&&url.pathname!=="/sky-photo/likes"&&response.status>=500&&!controller.signal.aborted){
+            if(!canFallback&&isApi&&method==="GET"&&url.pathname!=="/sky-photo/likes"&&url.pathname!=="/current"&&response.status>=500&&!controller.signal.aborted){
               response=await nativeFetch(requestInput,{...init,signal:controller.signal});
             }
             if(canFallback&&response.status>=500&&!controller.signal.aborted){
@@ -54,7 +54,7 @@
             if(controller.signal.aborted)throw error;
             if(officialWarningFallback)return await warningResponse();
             if(!canFallback){
-              if(!isApi||method!=="GET"||url.pathname==="/sky-photo/likes")throw error;
+              if(!isApi||method!=="GET"||(url.pathname==="/sky-photo/likes"||url.pathname==="/current"))throw error;
               response=await nativeFetch(requestInput,{...init,signal:controller.signal});
             }else{
             const alternative=new URL(url.href);alternative.host=fallbackHost;
