@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07131f">
+  <meta name="description" content="How accurate are Met Éireann and Open-Meteo rainfall forecasts at Parknacross? Compare fixed-period forecasts with observations from our dedicated rain gauge.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://parknacrossweather.ie/forecast-accuracy.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=20261029-v38-4-234-audit">
+  <title>Local Rain Forecast Accuracy | Parknacross Weather</title>
+  <style>
+    *{box-sizing:border-box}
+    body{background:#07131f;color:#e6f1f7;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;margin:0}
+    .accuracy-shell{width:min(1050px,calc(100% - 32px));margin:0 auto;padding:25px 0 65px}
+    .accuracy-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:32px}
+    .accuracy-nav a{color:#b7e3f5;text-decoration:none;font-weight:650}
+    .accuracy-nav a:hover{text-decoration:underline}
+    .accuracy-heading small{color:#82d7df;letter-spacing:.08em;text-transform:uppercase;font-weight:750}
+    h1{font-size:clamp(1.65rem,5vw,2.7rem);line-height:1.16;margin:12px 0}
+    .accuracy-heading p{max-width:710px;color:#afc4cf;margin:10px 0 0}
+    .accuracy-note{padding:15px 17px;margin:22px 0;border:1px solid #335467;border-radius:12px;background:#102532;color:#d5e9f2}
+    .accuracy-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:25px 0}
+    .accuracy-stat{background:#0d2231;border:1px solid #294355;border-radius:14px;padding:18px;min-width:0}
+    .accuracy-stat span{display:block;color:#b0c2cd;font-size:.8rem}
+    .accuracy-stat strong{font-size:clamp(1.2rem,2.5vw,1.8rem);display:block;margin-top:9px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+    h2{font-size:1.15rem;margin:28px 0 12px}
+    .accuracy-table-wrap{max-width:100%;overflow-x:auto;border:1px solid #294355;border-radius:14px;background:#0d2231}
+    table{width:100%;border-collapse:collapse;min-width:650px;font-size:.92rem}
+    th,td{padding:13px 15px;border-bottom:1px solid #284355;text-align:left;font-variant-numeric:tabular-nums}
+    th{color:#abd3e5;font-size:.8rem}tr:last-child td{border-bottom:0}
+    .accuracy-footnote{color:#a8bfcc;font-size:.87rem}
+    .accuracy-method{background:#0e2130;border:1px solid #294355;padding:18px 20px;border-radius:14px}
+    .accuracy-method p{margin:0 0 12px}.accuracy-method p:last-child{margin-bottom:0}
+    @media(max-width:750px){.accuracy-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.accuracy-shell{width:min(100% - 26px,1050px)}}
+    @media(max-width:390px){.accuracy-grid{grid-template-columns:1fr 1fr}.accuracy-stat{padding:12px}}
+  </style>
+</head>
+<body>
+<main class="accuracy-shell" data-forecast-accuracy>
+  <nav class="accuracy-nav" aria-label="Page navigation"><a href="index.html#forecast">← Back to forecast</a><a href="rain.html">Rain Centre</a></nav>
+  <div class="accuracy-heading">
+    <small>North Wexford · Local forecast verification</small>
+    <h1>How accurate are our rain forecasts?</h1>
+    <p>Met Éireann and Open-Meteo are compared using forecasts saved <strong>before</strong> the weather arrives. Both are checked against rainfall subsequently measured by the dedicated Parknacross gauge, for the same hours.</p>
+  </div>
+  <p id="forecastAccuracyStatus" class="accuracy-note" role="status">Checking the local forecast accuracy record…</p>
+  <section class="accuracy-grid" aria-label="Forecast accuracy over the latest 30 days">
+    <div class="accuracy-stat"><span>Verified paired periods · 30 days</span><strong id="forecastAccuracyCount">—</strong></div>
+    <div class="accuracy-stat"><span>Met Éireann · mean error</span><strong id="forecastAccuracyMet">—</strong></div>
+    <div class="accuracy-stat"><span>Open-Meteo · mean error</span><strong id="forecastAccuracyOpen">—</strong></div>
+    <div class="accuracy-stat"><span>More accurate so far</span><strong id="forecastAccuracyLeader">Not established</strong></div>
+  </section>
+  <h2>Recent verified periods</h2>
+  <div class="accuracy-table-wrap">
+    <table>
+      <thead><tr><th scope="col">Period starts</th><th scope="col">Gauge measured</th><th scope="col">Met Éireann forecast</th><th scope="col">Open-Meteo forecast</th><th scope="col">Absolute errors · Met / Open</th></tr></thead>
+      <tbody id="forecastAccuracyRows"><tr><td colspan="5">Retrieving verified forecast periods…</td></tr></tbody>
+    </table>
+  </div>
+  <p class="accuracy-footnote">Each entry compares a fixed 06:00–18:00 daytime or 18:00–06:00 overnight period, in Irish local time. New entries appear only after observations have been quality checked.</p>
+  <h2>How the comparison works</h2>
+  <div class="accuracy-method">
+    <p><strong>Same time, same location.</strong> The two forecasts cover precisely the same 12-hour period (11 or 13 hours across a clock change), for the Ardamine area. Predictions are saved before the period starts; historical forecasts are never reconstructed after the event.</p>
+    <p><strong>Independent measurement.</strong> The station's dedicated traditional rain gauge supplies the observation. Piezo-only estimates are not used. Missing, interrupted or reset gauge records are excluded instead of being counted as zero.</p>
+    <p><strong>Fair scoring.</strong> Mean absolute error is the average difference, in millimetres, between forecast and observation; smaller is better. The website only identifies a leading model after at least 10 comparable periods, and does not claim a winner for near-ties. This is a local track record, not a guarantee of future accuracy.</p>
+  </div>
+</main>
+<script src="site-config.js?v=20261010-v38-4-188"></script>
+<script src="forecast-accuracy.js?v=20261116-rain-skill"></script>
+</body>
+</html>
