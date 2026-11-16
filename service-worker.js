@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-252-20261116-hourly-forecast-crosscheck-v2-preserve-notifications";
+const CACHE_NAME = "parknacross-v38-4-252-20261116-rain-skill-tracking-preserve-notifications";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./privacy-providers.css",
@@ -13,6 +13,8 @@ const STATIC_ASSETS = [
   "./graphs-controls.css",
   "./weather-fingerprint.js",
   "./weather-fingerprint.css",
+  "./forecast-accuracy.html",
+  "./forecast-accuracy.js",
   "./local-forecast.js",
   "./local-forecast.css",
   "./local-planning.js",
@@ -247,7 +249,8 @@ self.addEventListener("fetch", event => {
     url.origin === self.location.origin &&
     (url.pathname.endsWith("/styles.css") ||
       url.pathname.endsWith("/app.js") ||
-      url.pathname.endsWith("/local-forecast.js") ||
+      url.pathname.endsWith("/forecast-accuracy.js") ||
+       url.pathname.endsWith("/local-forecast.js") ||
       url.pathname.endsWith("/local-planning.js") ||
       url.pathname.endsWith("/outdoor-outlook.js") ||
       url.pathname.endsWith("/graphs.js") ||
