@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-252-20261116-shared-rain-intensity-preserve-notifications";
+const CACHE_NAME = "parknacross-v38-4-253-20261116-unified-rain-status";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./privacy-providers.css",
@@ -114,6 +114,7 @@ const STATIC_ASSETS = [
   "./radar.js",
   "./graphs.js",
   "./lightning-charts.js",
+  "./rain-status.js",
   "./rain.js",
   "./rain-gauge-audit.js",
   "./climate.js",
