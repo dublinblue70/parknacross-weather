@@ -637,20 +637,24 @@ function conditionInfo(current, isNight) {
   const solar = Number(current.solar_w_m2 || 0);
   const uv = Number(current.uv_index || 0);
 
-  if (rain >= 2.5) {
-    return { tag: "Rainy", icon: "🌧️", story: `Rain is falling at ${n(rain)} mm/h.`, className: "weather-rain", rainState };
-  }
+  // Classify only the current WH40H rain rate, never the WS90 piezo estimate.
+  // Shared thresholds keep the dashboard and Rain Centre in agreement.
   if (rain > 0) {
-    if (rainState.recentIncreaseMm < 0.2 - 1e-6) {
-      return { tag: "Possible light rain", icon: "🌦️", story: `Possible light rain detected by the station (${n(rain)} mm/h). It may be dry at your location.`, className: "weather-neutral", rainState };
-    }
-    return { tag: "Light rain", icon: "🌦️", story: `Light rain is falling at ${n(rain)} mm/h.`, className: "weather-rain", rainState };
+    const intensity = window.ParknacrossRainIntensity?.classify(rain);
+    const label = intensity?.label || "Rain measured";
+    const rateText = window.ParknacrossRainIntensity?.formatRate(rain) || `${n(rain)} mm/h`;
+    return {
+      tag: label,
+      icon: rain <= 2.5 ? "🌦️" : "🌧️",
+      story: `${label} at Parknacross · ${rateText} measured by the dedicated rain gauge.`,
+      className: "weather-rain", rainState
+    };
   }
   if (rainState.isRaining) {
     if (rainState.recentIncreaseMm < 0.2 - 1e-6) {
       return { tag: "Possible recent rain", icon: "🌦️", story: "The station registered a small amount of rain within the last few minutes.", className: "weather-neutral", rainState };
     }
-    return { tag: "Raining", icon: "🌧️", story: "Rain has been detected within the last few minutes.", className: "weather-rain", rainState };
+    return { tag: "Rain detected recently", icon: "🌧️", story: "The rain gauge recorded rainfall within the last few minutes, although the current rate is 0.0 mm/h.", className: "weather-rain", rainState };
   }
   if (rainState.rainRecently) {
     if (rainState.recentIncreaseMm < 0.2 - 1e-6) {
@@ -673,19 +677,19 @@ function conditionInfo(current, isNight) {
       className: "weather-neutral", rainState };
   }
   if (wind >= 35) {
-    return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy" };
+    return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy", rainState };
   }
   if (wind >= 20) {
-    return { tag: "Breezy", icon: "🌬️", story: `Breezy conditions with wind around ${n(wind)} km/h.`, className: "weather-windy" };
+    return { tag: "Breezy", icon: "🌬️", story: `Breezy conditions with wind around ${n(wind)} km/h.`, className: "weather-windy", rainState };
   }
   if (isNight) {
-    return { tag: "Night", icon: "🌙", story: "Night-time conditions at Parknacross.", className: "weather-neutral" };
+    return { tag: "Night", icon: "🌙", story: "Night-time conditions at Parknacross.", className: "weather-neutral", rainState };
   }
   if (uv >= 5 || solar >= 400) {
-    return { tag: "Bright", icon: "☀️", story: "Bright conditions over Parknacross right now.", className: "weather-bright" };
+    return { tag: "Bright", icon: "☀️", story: "Bright conditions over Parknacross right now.", className: "weather-bright", rainState };
   }
   if (solar >= 100) {
-    return { tag: "Some brightness", icon: "⛅", story: "Some brightness breaking through at Parknacross.", className: "weather-bright" };
+    return { tag: "Some brightness", icon: "⛅", story: "Some brightness breaking through at Parknacross.", className: "weather-bright", rainState };
   }
   return wind < 1
     ? { tag: "Calm", icon: "☁️", story: "Calm wind at Parknacross. No current rain is confirmed by the dedicated gauge; this does not establish dry conditions.", className: "weather-neutral", rainState }
@@ -1636,14 +1640,16 @@ function updateDashboard(current) {
       ? `Piezo estimate today: ${n(piezoToday)} mm · separate from the gauge's measured total`
       : "";
   }
-  set(
-    "rainRateVal",
-    condition.rainState?.isRaining && Number(current.rain_rate_mm_h || 0) <= 0
-      ? `${n(current.rain_rate_mm_h)} mm/h · recent rain-gauge tip`
-      : condition.rainState?.piezoIndicatesRain
-        ? `${n(current.rain_rate_mm_h)} mm/h · early rain indication`
-        : `${n(current.rain_rate_mm_h)} mm/h`
-  );
+  const liveRainRate = condition.rainState?.rainRate;
+  const intensityTools = window.ParknacrossRainIntensity;
+  const metricRateText = intensityTools?.formatRate(liveRainRate)
+    || (usable(liveRainRate) ? `${n(liveRainRate)} mm/h` : "Unavailable");
+  const rainRateDetail = usable(liveRainRate) && Number(liveRainRate) > 0
+    ? intensityTools?.classify(liveRainRate)?.label || "Rain measured"
+    : condition.rainState?.isRaining ? "Recent gauge tip"
+    : condition.rainState?.piezoStrongSignal ? "Possible rain · piezo unconfirmed"
+    : usable(liveRainRate) ? "No current rain measured" : "Rain status unavailable";
+  set("rainRateVal", `${metricRateText} · ${rainRateDetail}`);
   set("pressureVal", n(current.pressure_hpa));
   set("pressureTrend", pressure.trend);
   set(
