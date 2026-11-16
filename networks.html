@@ -81,6 +81,7 @@
       font-size: .84rem;
       line-height: 1.55;
     }
+    .station-network-unavailable { margin: 0; padding: 0.5rem 0; color: var(--muted); font-size: 0.86rem; line-height: 1.45; }
     @media (max-width: 900px) {
       .storage-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
@@ -230,7 +231,7 @@
 
             </div>
           </div>
-          <a class="station-external-network-link" id="stationWowBeLink" href="https://www.meteo.be/services/wow-be/index.php?lang=en&amp;version=be" target="_blank" rel="noopener noreferrer" aria-label="Open the official WOW-BE weather observation map (opens in a new tab)">Open WOW-BE map <span aria-hidden="true">↗</span></a>
+          <p class="station-network-unavailable" id="stationWowBeLink">Direct station link unavailable</p>
         </article>
       </div>
     </section>
