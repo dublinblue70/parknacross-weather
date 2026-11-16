@@ -4,3 +4,13 @@
 
 #forecast .forecast-grid>article>p.forecast-description{white-space:normal;line-height:1.65;margin:14px 0;color:var(--text,#e7eef5)}
 #forecast .forecast-description:empty{display:none}
+
+#forecast .forecast-grid>article>p.forecast-comparison{
+  white-space:normal;line-height:1.5;margin:12px 0 2px;padding:9px 11px;
+  border-left:3px solid var(--accent,#76c9ee);border-radius:5px;
+  background:rgba(100,145,175,.08);font-size:.84rem;color:var(--muted,#a8bdcc)
+}
+#forecast .forecast-grid>article>p.forecast-comparison[data-level="disagreement"]{
+  border-left-color:#e7bd6d;color:var(--text,#e7eef5);background:rgba(231,189,109,.07)
+}
+#forecast .forecast-grid>article>p.forecast-comparison[hidden]{display:none}
