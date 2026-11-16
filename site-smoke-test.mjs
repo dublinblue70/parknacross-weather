@@ -478,10 +478,10 @@ const expectedStationNetworks = [
   ["stationAwekasLink", "https://www.awekas.at/en/instrument.php?id=54012"],
   ["stationPwsweatherLink", "https://www.pwsweather.com/station/pws/PARKNACROSSWX"],
   ["stationCwopLink", "https://www.findu.com/cgi-bin/wxpage.cgi?call=GW8205&amp;last=24"],
-  ["stationWowBeLink", "https://www.meteo.be/services/wow-be/index.php?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=11&amp;lat=52.6&amp;long=-6.3"]
+  ["stationWowBeLink", "https://wow.meteo.be/?id=01a1c11f-eef7-707d-9a26-361880281a7b&amp;lang=en&amp;zoomLevel=13&amp;lat=52.623356&amp;long=-6.235606"]
 ];
-if (stationNetworksHtml.includes('href="https://wow.meteo.be/?id=')) {
-  failures.push("WOW-BE link must use the Royal Meteorological Institute station map, not its information landing page");
+if (stationNetworksHtml.includes('href="https://www.meteo.be/services/wow-be/index.php')) {
+  failures.push("WOW-BE link must use the working station-specific URL, not the legacy redirect");
 }
 for (const [id, url] of expectedStationNetworks) {
   const pos = stationNetworksHtml.indexOf('id="' + id + '"');
