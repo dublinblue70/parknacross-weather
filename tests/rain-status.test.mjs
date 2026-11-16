@@ -63,4 +63,10 @@ assert.equal(piezoIncrease.piezoIncreaseRecent,true);
 // Observation older than the freshness window is unavailable, even if its
 // last rain rate was high and a previous rate would have been positive.
 assert.equal(evaluate(reading(280,14,3),[],{now,trackLive:false}).status,"unavailable");
+// Visitor-facing wording must not imply that an unconfirmed piezo signal is light rain.
+const dashboardSource=readFileSync(new URL("../app.js",import.meta.url),"utf8");
+const rainCentreSource=readFileSync(new URL("../rain.js",import.meta.url),"utf8");
+assert.ok(dashboardSource.includes('tag: "Possible rain"'),"Dashboard should say Possible rain");
+assert.ok(!dashboardSource.includes("Unconfirmed rain indication"),"Obsolete wording must be removed");
+assert.ok(rainCentreSource.includes('set("rainEventTotal","Possible rain")'),"Rain Centre should say Possible rain");
 console.log("Shared rain-status regression tests passed.");
