@@ -3017,7 +3017,6 @@ export default {
           if(ctx?.waitUntil)ctx.waitUntil(runBackgroundAlerts(env,liveReading).catch(()=>console.warn("Background alert evaluation failed")));
           scheduleWindguruFromGateway(ctx, env, liveReading);
           schedulePwsWeatherFromGateway(ctx, env, liveReading);
-        scheduleWowBeFromGateway(ctx, env, liveReading);
           scheduleWowBeFromGateway(ctx, env, liveReading);
           const recovery = recoverArchiveFromGateway(env, receivedEpoch);
           if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(recovery);
