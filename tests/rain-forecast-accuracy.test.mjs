@@ -61,7 +61,7 @@ assert.ok(observed.total>=1.6&&observed.total<=2.0,'overnight rainfall adds pre/
 assert.equal(measure(rows.filter(r=>r.epoch<=night.end-1200),night.start,night.end).valid,false,'missing end anchor rejected');
 assert.equal(measure(rows.filter(r=>r.epoch<night.start+3600||r.epoch>night.start+6000),night.start,night.end).valid,false,'gaps >30m rejected');
 const resetting=rows.map(r=>({...r}));
-resetting.find(r=>r.epoch===night.start+3600).rain_daily_mm=-1;
+resetting.find(r=>r.epoch===night.start+3*3600).rain_daily_mm=0;
 assert.equal(measure(resetting,night.start,night.end).valid,false,'bad gauge observations rejected');
 
 const now=Math.floor(Date.parse('2026-11-18T12:00:00Z')/1000);
