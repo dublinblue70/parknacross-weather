@@ -538,100 +538,7 @@ function prevailingWind() {
 }
 
 function rainActivity(current) {
-  const measuredTime = readingTime(current);
-  const currentTime = measuredTime || Date.now();
-  const ageOfReading = measuredTime ? Date.now() - measuredTime : Infinity;
-  // An old last-known observation cannot establish rain intensity *now*.
-  const gaugeFresh = ageOfReading >= -120000 && ageOfReading <= 10 * 60 * 1000;
-  const rainAvailable = gaugeFresh && (usable(current?.rain_rate_mm_h) || usable(current?.rain_daily_mm));
-  const rainRate = gaugeFresh && usable(current?.rain_rate_mm_h) ? Number(current.rain_rate_mm_h) : null;
-  const currentDay = stationDateKeyFromTime(currentTime);
-  const currentTotal = correctedDailyRain(current);
-
-  // Track live cumulative-rain changes between /current refreshes. This catches
-  // light/intermittent gauge increments even when the instantaneous rate is 0.0.
-  if (gaugeFresh && usable(currentTotal)) {
-    if (lastObservedRainDay !== currentDay) {
-      lastObservedRainDay = currentDay;
-      lastObservedRainTotal = Number(currentTotal);
-      lastRainIncreaseTime = null;
-    } else if (usable(lastObservedRainTotal) && Number(currentTotal) >= Number(lastObservedRainTotal) + RAIN_INCREMENT_EPSILON_MM) {
-      lastRainIncreaseTime = currentTime;
-      lastObservedRainTotal = Number(currentTotal);
-    } else if (!usable(lastObservedRainTotal) || Number(currentTotal) > Number(lastObservedRainTotal)) {
-      lastObservedRainTotal = Number(currentTotal);
-    }
-  }
-
-  // Seed/refresh the detection from archived observations. Also compare the
-  // latest archived total with /current because /history is intentionally cached.
-  const rows = [...history24]
-    .filter(row => readingTime(row) && localDateKey(row) === currentDay && usable(correctedDailyRain(row)))
-    .sort((a, b) => readingTime(a) - readingTime(b));
-
-  let previous = null;
-  for (const row of rows) {
-    if (previous) {
-      const previousTotal = correctedDailyRain(previous);
-      const rowTotal = correctedDailyRain(row);
-      if (usable(previousTotal) && usable(rowTotal) && Number(rowTotal) >= Number(previousTotal) + RAIN_INCREMENT_EPSILON_MM) {
-        const increaseTime = readingTime(row);
-        if (!lastRainIncreaseTime || increaseTime > lastRainIncreaseTime) lastRainIncreaseTime = increaseTime;
-      }
-    }
-    previous = row;
-  }
-
-  const latestHistory = rows.length ? rows[rows.length - 1] : null;
-  if (latestHistory && usable(currentTotal)) {
-    const historyTotal = correctedDailyRain(latestHistory);
-    if (usable(historyTotal) && Number(currentTotal) >= Number(historyTotal) + RAIN_INCREMENT_EPSILON_MM) {
-      // The increase happened after the latest cached history sample. Treat the
-      // current observation as the best available detection time.
-      lastRainIncreaseTime = Math.max(lastRainIncreaseTime || 0, currentTime);
-    }
-  }
-
-  if (rainRate > 0) lastRainIncreaseTime = currentTime;
-
-  // A single 0.1 mm tipping-bucket increment does not always prove sustained
-  // rain. Check the recent accumulation before describing ongoing light rain
-  // as a confirmed local condition.
-  const recentBaseline = rows.find(row => readingTime(row) >= currentTime - 20 * 60 * 1000);
-  const recentIncreaseMm = recentBaseline && usable(currentTotal)
-    ? Math.max(0, Number(currentTotal) - Number(correctedDailyRain(recentBaseline)))
-    : 0;
-
-  const age = lastRainIncreaseTime ? Math.max(0, currentTime - lastRainIncreaseTime) : Infinity;
-  // Live-only outdoor weather sensor indication. Never use piezo readings to calculate rain
-  // totals or to declare a confirmed dedicated rain gauge bucket tip. Reject stale snapshots.
-  const piezoEpoch = usable(current?.piezo_observed_epoch) ? Number(current.piezo_observed_epoch) * 1000 : null;
-  const observationAge = Date.now() - currentTime;
-  const piezoAge = piezoEpoch === null ? Infinity : Date.now() - piezoEpoch;
-  const piezoFresh = gaugeFresh && observationAge >= -120000 && observationAge <= 180000
-    && piezoAge >= -120000 && piezoAge <= 420000;
-  const piezoRate = piezoFresh && usable(current?.piezo_rain_rate_mm_h)
-    ? Number(current.piezo_rain_rate_mm_h) : null;
-  const piezoIndicatesRain = piezoRate !== null && piezoRate > 0;
-  // Low-level piezo readings (including isolated 0.1 mm estimates) can be
-  // caused by vibration or wind. Escalate only a fresh, substantial rate,
-  // and never substitute it for the dedicated gauge's rainfall total.
-  const piezoStrongSignal = piezoRate !== null && piezoRate >= 2.0;
-  const piezoDailyMm = piezoFresh && usable(current?.piezo_daily_mm) && currentDay === stationDateKeyFromTime(Date.now())
-    ? Math.max(0, Number(current.piezo_daily_mm))
-    : null;
-  return {
-    rainRate,
-    rainAvailable,
-    piezoIndicatesRain,
-    piezoStrongSignal,
-    piezoRate,
-    piezoDailyMm,
-    recentIncreaseMm,
-    isRaining: gaugeFresh && (rainRate > 0 || age <= RAIN_ACTIVE_WINDOW_MS),
-    rainRecently: gaugeFresh && rainRate <= 0 && age > RAIN_ACTIVE_WINDOW_MS && age <= RAIN_RECENT_WINDOW_MS,
-    lastIncreaseTime: Number.isFinite(age) ? lastRainIncreaseTime : null
-  };
+  return window.ParknacrossRainStatus.evaluate(current, history24);
 }
 
 function conditionInfo(current, isNight) {
@@ -2826,7 +2733,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupPWA();
 
   (window.ParknacrossRefresh?.every || setInterval)(updateRelativeObservation, 15 * 1000);
-  (window.ParknacrossRefresh?.every || setInterval)(refreshCurrent, 60 * 1000);
+  (window.ParknacrossRefresh?.every || setInterval)(refreshCurrent, 30 * 1000);
   (window.ParknacrossRefresh?.every || setInterval)(refreshHistory24, 10 * 60 * 1000);
   (window.ParknacrossRefresh?.every || setInterval)(refreshHistory7d, 30 * 60 * 1000);
   (window.ParknacrossRefresh?.every || setInterval)(refreshStats, 15 * 60 * 1000);
