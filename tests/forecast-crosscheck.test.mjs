@@ -35,7 +35,7 @@ assert.equal(compare[1].disagree,true);
 assert.ok(Math.abs(compare[1].otherMm-8.4)<1e-6);
 forecast.renderComparison(met,independent,now);
 assert.equal(nodes.get('forecastTonightComparison').dataset.level,'disagreement');
-assert.match(nodes.get('forecastTonightComparison').textContent,/26\\.6 mm vs Open-Meteo 8\\.4 mm/);
+assert.ok(nodes.get('forecastTonightComparison').textContent.includes('26.6 mm vs Open-Meteo 8.4 mm'));
 assert.match(nodes.get('forecastTonightSummary').textContent,/uncertain/);
 const agreeing=forecast.compare(met,makeFeed(24,'Open-Meteo'),now);
 assert.equal(agreeing[1].disagree,false);
