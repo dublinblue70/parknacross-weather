@@ -44,21 +44,74 @@
    else if(date===tomorrowKey&&hour>=6)groups[2].push(row);
   }
   const periods=groups.map((rows,i)=>{
-   if(!rows.length)return {label:['Today · remaining hours','Tonight','Tomorrow · available hours'][i],coverage:'No hourly coverage',summary:'',text:i===0&&Number(today.hour)>=18?'Daytime has ended. See tonight’s forecast.':'Hourly forecast temporarily unavailable for this period.'};
+   if(!rows.length)return {label:['Today · remaining hours','Tonight','Tomorrow · available hours'][i],coverage:'No hourly coverage',summary:'',hours:[],rainTotalMm:null,complete:false,text:i===0&&Number(today.hour)>=18?'Daytime has ended. See tonight’s forecast.':'Hourly forecast temporarily unavailable for this period.'};
    const first=rows[0].ms,end=rows.at(-1).ms+HOUR,temps=rows.map(r=>r.temp).filter(v=>v!==null),winds=rows.map(r=>r.wind).filter(v=>v!==null),rains=rows.map(r=>r.rain).filter(v=>v!==null);
-   const contiguous=rows.every((r,index)=>index===0||r.ms===rows[index-1].ms+HOUR),complete=contiguous&&rains.length===rows.length;
+   const contiguous=rows.every((r,index)=>index===0||r.ms===rows[index-1].ms+HOUR);
+   // Never call a partial night or day a complete precipitation total.
+   const firstLocal=parts(first),endLocal=parts(end);
+   const fullWindow=i===0?(key(endLocal)===todayKey&&Number(endLocal.hour)===18)
+     :i===1?(key(firstLocal)===todayKey&&Number(firstLocal.hour)===18&&key(endLocal)===tomorrowKey&&Number(endLocal.hour)===6)
+     :(key(firstLocal)===tomorrowKey&&Number(firstLocal.hour)===6&&key(endLocal)===tomorrowKey&&Number(endLocal.hour)===18);
+   const complete=contiguous&&rains.length===rows.length&&fullWindow;
    const total=rains.reduce((sum,r)=>sum+r,0),rain=rains.length?`${complete?'Rain forecast':'Rain in available hours'}: ${number(total)} mm${complete&&total===0?' · Dry':''}`:'Rain forecast: Not available';
    const label=['Today','Tonight','Tomorrow'][i];
-   const partial=!contiguous||temps.length!==rows.length||winds.length!==rows.length||rains.length!==rows.length;
-   return {label,summary:narrative(rows,i,complete),coverage:`${stamp(first)} – ${stamp(end)} · Irish time${partial?' · some readings missing':''}`,text:`Temperature: ${range(temps,'°C')}\nWind: ${range(winds,'km/h')}\n${rain}`};
+   const partial=!complete||temps.length!==rows.length||winds.length!==rows.length;
+   return {label,summary:narrative(rows,i,complete),coverage:`${stamp(first)} – ${stamp(end)} · Irish time${partial?' · partial coverage':''}`,text:`Temperature: ${range(temps,'°C')}\nWind (sustained): ${range(winds,'km/h')}\n${rain}`,hours:rows.map(r=>r.ms),rainTotalMm:complete?total:null,complete};
   });
   let restOfNight=null;
   if(overnight.length){const first=overnight[0].ms,end=overnight.at(-1).ms+HOUR,complete=overnight.every((r,i)=>r.rain!==null&&(!i||r.ms===overnight[i-1].ms+HOUR));restOfNight={label:'Rest of tonight',summary:narrative(overnight,3,complete),coverage:`${stamp(first)} – ${stamp(end)} · Irish time`};}
   return {periods,fetched,restOfNight};
  }
+ function compare(primary,secondary,now=Date.now()){
+  const shown=describe(primary,now),other=describe(secondary,now);
+  if(!shown||!other||primary?.fallback===true||secondary?.source!=='Open-Meteo'||secondary?.fallback!==true)return null;
+  const alternative=new Map();
+  for(const row of secondary.points){
+   const seconds=bounded(row?.epoch,0,1e11),rain=bounded(row?.rain_mm,0,100);
+   if(seconds!==null&&seconds*1000%HOUR===0&&rain!==null)alternative.set(seconds*1000,rain);
+  }
+  return shown.periods.map(period=>{
+   if(!period.complete||!period.hours?.length||period.rainTotalMm===null)return null;
+   const values=period.hours.map(hour=>alternative.get(hour));
+   if(values.some(v=>v===undefined))return null;
+   const primaryMm=period.rainTotalMm,otherMm=values.reduce((a,b)=>a+b,0);
+   const diff=Math.abs(primaryMm-otherMm),high=Math.max(primaryMm,otherMm),low=Math.min(primaryMm,otherMm);
+   const disagree=(diff>=5&&diff>=high*.35)||(low<.5&&high>=3&&diff>=2);
+   return {primaryMm,otherMm,disagree,hours:values.length};
+  });
+ }
+ function renderComparison(primary,secondary,now=Date.now()){
+  const first=describe(primary,now);
+  const results=secondary?compare(primary,secondary,now):null;
+  if(!first)return;
+  ['Today','Tonight','Tomorrow'].forEach((name,i)=>{
+   const node=$('forecast'+name+'Comparison'),summary=$('forecast'+name+'Summary');
+   if(!node)return;
+   const period=first.periods[i],match=results?.[i];
+   node.hidden=false;node.dataset.level='neutral';
+   if(primary?.fallback===true){
+    node.textContent='Open-Meteo backup only · no independent model comparison.';
+   }else if(match){
+    if(match.disagree){
+     node.dataset.level='disagreement';
+     node.textContent=`Rainfall uncertain: Met Éireann ${number(match.primaryMm)} mm vs Open-Meteo ${number(match.otherMm)} mm over the same ${match.hours} hours. Models disagree.`;
+     if(summary)summary.textContent='Rainfall amount uncertain · the two forecast models differ significantly.';
+    }else{
+     node.textContent=`Rain cross-check: Open-Meteo ${number(match.otherMm)} mm vs Met Éireann ${number(match.primaryMm)} mm (same hours).`;
+    }
+   }else if(period?.rainTotalMm!==null&&period?.rainTotalMm!==undefined&&period.rainTotalMm>=15){
+    node.textContent='High rainfall model estimate · independent comparison unavailable. Exact amount uncertain.';
+   }else if(period?.hours?.length){
+    node.textContent=secondary?'Independent hourly comparison incomplete · no reliable model agreement check.':'Independent model check unavailable · amounts are estimates.';
+   }else{
+    node.hidden=true;node.textContent='';
+   }
+  });
+ }
  function unavailable(){
   if($("forecastRestOfNight"))$("forecastRestOfNight").hidden=true;
   for(const name of ['Today','Tonight','Tomorrow']){
+   if($('forecast'+name+'Comparison'))$('forecast'+name+'Comparison').hidden=true;
    if($('forecast'+name))$('forecast'+name).textContent='Local hourly forecast temporarily unavailable.';
    if($('forecast'+name+'Summary'))$('forecast'+name+'Summary').textContent='';
    if($('forecast'+name+'Coverage'))$('forecast'+name+'Coverage').textContent='No verified hourly coverage';
@@ -84,6 +137,7 @@
    $('forecast'+name).textContent=result.periods[i].text;
    $('forecast'+name+'Summary').textContent=result.periods[i].summary;
   });
+  renderComparison(feed,null,now);
   let rest=$('forecastRestOfNight');
   // Only mount an extra forecast article when overnight hours really exist.
   // A permanently hidden first article confuses both visitors' accessibility
@@ -95,5 +149,5 @@
   }else if(rest){rest.hidden=true;rest.replaceChildren();}
   $('forecastFreshness').textContent=`${backup?'Backup':'Local'} hourly forecast retrieved ${stamp(result.fetched)} Irish time`;
  }
- window.ParknacrossLocalForecast={describe,render,unavailable};
+ window.ParknacrossLocalForecast={describe,compare,render,renderComparison,unavailable};
 })();
