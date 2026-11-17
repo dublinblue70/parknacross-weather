@@ -14,6 +14,29 @@ const dst=Date.parse('2026-10-25T00:30:00Z');const d=rainOutlook({fetched_at:new
 const wind=d=>coastalWind({received_at:new Date(now).toISOString(),wind_speed_kmh:15,wind_gust_kmh:25,wind_direction_deg:d},now);
 assert.equal(wind(90).exposure,'Onshore');assert.equal(wind(90).to,270);assert.equal(wind(270).exposure,'Offshore');assert.equal(wind(270).to,90);assert.equal(wind(0).exposure,'Alongshore');assert.equal(wind(180).exposure,'Alongshore');assert.equal(wind(null).state,'direction-unavailable');assert.equal(wind(400).state,'direction-unavailable');
 assert.equal(coastalWind({epoch:now/1000,wind_speed_kmh:0,wind_direction_deg:90},now).state,'calm');
+for(const speed of [1,1.8,4.9]){
+ const light=coastalWind({epoch:now/1000,wind_speed_kmh:speed,wind_direction_deg:90},now);
+ assert.equal(light.state,'light-variable','low-speed wind must not claim onshore or offshore exposure');
+ assert.equal(light.exposure,undefined);
+}
+// A five-minute speed-weighted circular mean must wrap correctly across north,
+// ignore duplicate observations, and not invent a mean for opposing directions.
+const freshModule=()=>{const ctx={window:{},document:{addEventListener(){}}};vm.runInNewContext(fs.readFileSync('local-planning.js','utf8'),ctx);return ctx.window.ParknacrossLocalPlanning.coastalWind;};
+const smooth=freshModule(),r=(minutes,dir,speed=12)=>({received_at:new Date(now+minutes*60000).toISOString(),wind_speed_kmh:speed,wind_direction_deg:dir});
+assert.equal(smooth(r(0,350),now).averaged,false,'initial bearing is marked as one reading');
+assert.equal(smooth(r(0,350),now).averaged,false,'duplicate timestamp is not another sample');
+const averaged=smooth(r(1,10),now+60000);
+assert.equal(averaged.state,'wind');
+assert.equal(averaged.averaged,true);
+assert.equal(averaged.sampleCount,2);
+assert.ok(averaged.from<15||averaged.from>345,'circular averaging must wrap north');
+const opposing=freshModule();
+opposing(r(0,90),now);
+assert.equal(opposing(r(1,270),now+60000).state,'variable','opposite directions must not be labelled onshore/offshore');
+const reset=freshModule();
+reset(r(0,90),now);
+assert.equal(reset(r(1,270,2),now+60000).state,'light-variable');
+assert.equal(reset(r(2,270),now+120000).averaged,false,'light wind clears previous bearing history');
 assert.equal(coastalWind({epoch:(now-11*60000)/1000,wind_speed_kmh:15,wind_direction_deg:90},now).state,'unavailable');
 console.log('PASS: forecast coverage, missing/zero/drizzle, stale feeds, Irish DST epochs, meteorological from/to bearings, coastal sectors and calm wind.');
 const {observedRain,rainHeadline}=ctx.window.ParknacrossLocalPlanning;
