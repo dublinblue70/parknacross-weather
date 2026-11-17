@@ -172,7 +172,7 @@ test('History links to the single date comparison tool on Graphs',async({page})=
  await page.goto('/history.html');
  const link=page.locator('#dateComparison a[href=\"graphs.html#dateComparison\"]');
  await expect(link).toBeVisible();await link.click();
- await expect(page).toHaveURL(/graphs\\.html#dateComparison/);
+ await expect(page).toHaveURL(/graphs\.html#dateComparison/);
  await expect(page.locator('#comparisonFirst')).toBeVisible();
 });
 
