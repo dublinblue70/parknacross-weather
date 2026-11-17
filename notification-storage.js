@@ -6,7 +6,7 @@
  const valid=raw=>{try{const value=JSON.parse(raw);return value===null||typeof value==='object'&&!Array.isArray(value);}catch{return false;}};
  const local=key=>{try{const raw=localStorage.getItem(key);return raw!==null&&valid(raw)?raw:null;}catch{return null;}};
  function persist(key,value){if(!database)return;try{const tx=database.transaction('preferences','readwrite');tx.objectStore('preferences').put(value,key);tx.onerror=()=>{};}catch{}}
- function setItem(key,value){if(!keys.includes(key))throw Error('Unsupported notification key');changed.add(key);memory.set(key,value);persist(key,value);localStorage.setItem(key,value);}
+ function setItem(key,value){if(!keys.includes(key))throw Error('Unsupported notification key');changed.add(key);memory.set(key,value);persist(key,value);try{localStorage.setItem(key,value);}catch(error){if(!database)throw error;}}
  function getItem(key){return local(key)??memory.get(key)??null;}
  const ready=new Promise(resolve=>{
   if(!window.indexedDB){resolve();return;}
