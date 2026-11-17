@@ -15,6 +15,8 @@ test('expanded clothing cards keep labels headings and text close together',asyn
  for(const width of [320,390,640]){
   await page.setViewportSize({width,height:844});await page.goto('/index.html');
   await expect(page.locator('#heroTemp')).toHaveText(/12/);
+  const outer=page.locator('details[data-dashboard-extra="clothes"]');
+  if(await outer.getAttribute('open')===null)await outer.locator('summary').first().click();
   const toggle=page.locator('.wear-today-section>.mobile-detail-toggle');
   if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();
   await expect(page.locator('#wearClothing')).toBeVisible();
@@ -36,6 +38,8 @@ test('mobile Weather Window has breathing room below its button and before the s
  for(const width of [320,390,640]){
   await page.setViewportSize({width,height:844});await page.goto('/index.html');
   await expect(page.locator('#heroTemp')).toHaveText(/12/);
+  const outer=page.locator('details[data-dashboard-extra="window"]');
+  if(await outer.getAttribute('open')===null)await outer.locator('summary').first().click();
   const button=page.locator('.weather-window-section>.mobile-detail-toggle');
   if(await button.getAttribute('aria-expanded')!=='true')await button.click();
   const b=await button.boundingBox(),heading=await page.locator('.weather-window-section .section-heading').boundingBox(),scene=await page.locator('.weather-window-card').boundingBox();
