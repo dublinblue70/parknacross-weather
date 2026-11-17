@@ -10,6 +10,10 @@
   });
   document.querySelectorAll('.dashboard-shortcuts a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{const target=document.getElementById(link.getAttribute('href').slice(1));if(!target)return;
    if(target.closest('[data-user-hidden]')){event.preventDefault();const controls=document.querySelector('.dashboard-customise');if(controls){controls.open=true;controls.scrollIntoView({block:'start',behavior:'instant'});}status.textContent=link.textContent+' is hidden in your saved layout. Enable its section in Customise your dashboard.';return;}
+   // A section can be inside an optional Dashboard disclosure.
+   // Open its wrapper before following a shortcut or deep-linked anchor.
+   const disclosure=target.closest('details.dashboard-explore-group');
+   if(disclosure)disclosure.open=true;
    window.requestAnimationFrame(()=>window.dispatchEvent(new Event('hashchange')));
   }));
  });
