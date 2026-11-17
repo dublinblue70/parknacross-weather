@@ -16,7 +16,7 @@ for(const width of [390,1366]){
         });
         expect(ratio,'Today in brief should use available laptop width').toBeGreaterThan(.72);
       }
-      if(filename==='status.html')await expect(page.locator('#m2ObservationInfo')).toHaveCount(1);
+      if(filename==='status.html')await expect(page.locator('#cahoreObservationInfo')).toHaveCount(1);
       await page.screenshot({path:'test-results/audit-'+testInfo.project.name+'-'+width+'-'+filename.replace('.html','')+'.png',fullPage:false,animations:'disabled'});
     }
   });
