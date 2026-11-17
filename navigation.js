@@ -33,6 +33,17 @@
       networksLink.classList.add("active");
       networksLink.setAttribute("aria-current", "page");
     }
+    // One Reports destination in the site menu; both legacy URLs stay reachable.
+    const reportLink = menu.querySelector('a[href="monthly.html"]');
+    const annualLink = menu.querySelector('a[href="annual.html"]');
+    if (reportLink) {
+      reportLink.textContent = "Weather reports";
+      if (/\/(?:monthly|annual)\.html$/.test(window.location.pathname)) {
+        reportLink.classList.add("active");
+        reportLink.setAttribute("aria-current", "page");
+      }
+      annualLink?.remove();
+    }
     const links = [...menu.querySelectorAll(":scope > a")];
     const explore = new Set(["climate.html","station.html","coast.html","sky.html","records.html"]);
     const reports = new Set(["monthly.html","annual.html","downloads.html"]);
