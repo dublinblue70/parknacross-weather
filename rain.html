@@ -133,19 +133,7 @@
             <canvas id="rainDailyChart" role="img" aria-label="Daily rainfall totals in millimetres. Exact values are available in the table below."></canvas>
           </div>
         <details class="rain-table-details"><summary>View daily totals as a table</summary><div class="rain-table-scroll"><table><caption>Daily rainfall · Irish dates</caption><thead><tr><th scope="col">Date</th><th scope="col">Rainfall</th></tr></thead><tbody id="rainDailyTable"><tr><td colspan="2">Loading daily totals…</td></tr></tbody></table></div><button id="rainDailyMore" class="rain-daily-more" type="button" aria-controls="rainDailyTable" aria-expanded="false" hidden>Show more days</button></details></section>
-        <section class="page-section rain-events-section" aria-labelledby="rainAnalyticsHeading">
-          <div class="section-heading">
-            <div>
-              <h2 id="rainAnalyticsHeading">
-                Recent rain events
-              </h2>
-              <p>
-                Last 30 days · select a date to view the graphs.
-              </p>
-            </div>
-            <span class="source-badge source-observed">Observed locally</span>
-          </div>
-          <details class="rain-details rain-event-details"><summary>Event statistics &amp; how events are counted</summary><div class="rain-detail-content"><p class="info-note">A new event begins after at least 90 minutes without measurable rain. An event may remain open during a pause in rainfall.</p><div class="rain-event-summary">
+        <details class="page-section rain-details rain-event-details"><summary>Rain event statistics (last 30 days)</summary><div class="rain-detail-content"><p class="info-note">A new event begins after at least 90 minutes without measurable rain. An event may remain open during a pause in rainfall.</p><div class="rain-event-summary">
             <article class="climate-card">
               <span>Events</span><strong id="rainEventCount">--</strong
               ><small>Last 30 days</small>
@@ -166,10 +154,6 @@
             </article>
           </div>
           </div></details>
-          <div id="rainEventsList" class="rain-events-list">
-            <p class="info-note">Analysing recent rainfall events…</p>
-          </div>
-        </section>
 
         <details class="page-section rain-details"><summary>Rainfall statistics &amp; dry spells</summary><div class="rain-detail-content">
           <div class="rain-stat-grid">
