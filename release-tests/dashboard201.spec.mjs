@@ -67,3 +67,21 @@ test('dashboard navigation is balanced and never overflows from 320 to 1024 px',
     await nav.screenshot({path:testInfo.outputPath(`shortcuts-${width}.png`)});
   }
 });
+
+
+test('compact Dashboard preserves specialist sections through saved layout and deep links',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/index.html');
+ await expect(page.locator('details[data-dashboard-extra="charts"]')).toHaveCount(1);
+ await expect(page.locator('details[data-dashboard-extra="records"]')).toHaveCount(1);
+ await expect(page.locator('#graphs').locator('xpath=ancestor::details[@data-dashboard-extra="charts"]')).toHaveCount(1);
+ await expect(page.locator('details[data-dashboard-extra="charts"]')).not.toHaveAttribute('open','');
+ await expect(page.locator('#graphs')).toBeHidden();
+ await page.locator('.dashboard-shortcuts a[href="#graphs"]').click();
+ await expect(page.locator('details[data-dashboard-extra="charts"]')).toHaveAttribute('open','');
+ await expect(page.locator('#graphs>.mobile-detail-toggle')).toHaveAttribute('aria-expanded','true');
+ await expect(page.locator('#temperatureChart')).toBeVisible();
+ await page.goto('/index.html#records');
+ await expect(page.locator('details[data-dashboard-extra="records"]')).toHaveAttribute('open','');
+ await expect(page.locator('#records')).toBeVisible();
+});
