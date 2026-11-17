@@ -57,6 +57,8 @@ const env={
   n:v=>Number(v).toFixed(1)
 };
 vm.createContext(env);
+// The dashboard uses the shared rain-status helper; load it just as the real page does.
+vm.runInContext(read('rain-status.js'),env);
 vm.runInContext(app.slice(appStart,appEnd),env);
 const base={epoch:clock,rain_daily_mm:0,rain_rate_mm_h:0,wind_speed_kmh:2.5,piezo_observed_epoch:clock,solar_w_m2:0,uv_index:0};
 const condition=(changes={})=>{
