@@ -4,6 +4,7 @@ test('opening mobile weather trends stays at its heading, including after reopen
  await page.setViewportSize({width:390,height:844});
  await page.route('**/*.workers.dev/**',route=>route.fulfill({contentType:'application/json',body:'{}'}));
  await page.goto('/index.html');
+ await page.locator('details[data-dashboard-extra="charts"] > summary').click();
  const toggle=page.locator('#graphs .mobile-detail-toggle');
  await expect(toggle).toHaveAttribute('aria-expanded','false');
  // Start with the control toward the bottom of the viewport, where anchoring
