@@ -1478,14 +1478,6 @@ function updateDashboard(current) {
   set("heroWind", `${n(current.wind_speed_kmh)} km/h`);
   set("heroGust", `Gust ${n(current.wind_gust_kmh)} km/h`);
   set("heroRain", `${n(rainToday)} mm`);
-  const piezoToday = condition.rainState?.piezoDailyMm;
-  const piezoHero = $("heroPiezoRain");
-  if (piezoHero) {
-    piezoHero.hidden = !(usable(piezoToday) && Number(piezoToday) > 0);
-    piezoHero.textContent = usable(piezoToday) && Number(piezoToday) > 0
-      ? `Piezo estimate: ${n(piezoToday)} mm · unconfirmed`
-      : "";
-  }
   set("heroPressure", `${n(current.pressure_hpa)} hPa`);
   set("heroTrend", pressure.trend === "--" ? "--" : `${pressure.trend} pressure`);
   set("weatherStory", condition.story);
@@ -1563,13 +1555,6 @@ function updateDashboard(current) {
       : direction
   );
   set("rainVal", n(rainToday));
-  const piezoMetric = $("rainPiezoDaily");
-  if (piezoMetric) {
-    piezoMetric.hidden = !usable(piezoToday);
-    piezoMetric.textContent = usable(piezoToday)
-      ? `Piezo estimate today: ${n(piezoToday)} mm · separate from the gauge's measured total`
-      : "";
-  }
   const liveRainRate = condition.rainState?.rainRate;
   const intensityTools = window.ParknacrossRainIntensity;
   const metricRateText = intensityTools?.formatRate(liveRainRate)
