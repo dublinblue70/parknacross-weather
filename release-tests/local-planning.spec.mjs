@@ -21,7 +21,7 @@ test('Dashboard links to specialist rain and coastal tools without duplicating t
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.goto('/rain.html');await expect(page.locator('[data-rain-slots] li')).toHaveCount(6);
   await page.goto('/coast.html');
-  await expect(page.locator('[data-wind-summary]')).toHaveText('Onshore wind · from E (90°)');
+  await expect(page.locator('[data-wind-summary]')).toHaveText('Wind from E (90°) · latest reading');
   await expect(page.locator('[data-wind-arrow]')).toHaveAttribute('transform','rotate(270 90 90)');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }
@@ -32,7 +32,7 @@ test('rain refresh failure removes forecast and retry restores it; gaps stay hon
  fail=false;missing=true;await page.getByRole('button',{name:'Refresh hourly rain outlook'}).click();await expect(page.locator('[data-rain-slots] li').first()).toContainText('Unavailable');await expect(page.locator('[data-rain-context]')).toContainText('5 of 6');
 });
 test('coastal page shows offshore flow and calm hides the direction arrow',async({page})=>{
- dir=270;await page.goto('/coast.html');await expect(page.locator('[data-wind-summary]')).toHaveText('Offshore wind · from W (270°)');await expect(page.locator('[data-wind-arrow]')).toHaveAttribute('transform','rotate(90 90 90)');
+ dir=270;await page.goto('/coast.html');await expect(page.locator('[data-wind-summary]')).toHaveText('Wind from W (270°) · latest reading');await expect(page.locator('[data-wind-arrow]')).toHaveAttribute('transform','rotate(90 90 90)');
  calm=true;await page.reload();await expect(page.locator('[data-wind-summary]')).toHaveText('Calm at the station');await expect(page.locator('[data-wind-arrow]')).toBeHidden();
 });
 
