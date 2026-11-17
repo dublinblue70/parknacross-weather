@@ -20,7 +20,7 @@ test.beforeEach(async({page})=>{
 for(const width of [390,1280])test(`Ardamine forecast replaces broad text at ${width}px`,async({page},testInfo)=>{
  await page.setViewportSize({width,height:900});await page.goto('/index.html#forecast');
  const toggle=page.locator('#forecast>.mobile-detail-toggle');if(await toggle.count()&&await toggle.getAttribute('aria-expanded')==='false')await toggle.click();
- await expect(page.locator('#forecastToday')).toContainText('Temperature: 10 °C');await expect(page.locator('#forecastToday')).toContainText('Wind: 30 km/h');
+ await expect(page.locator('#forecastToday')).toContainText('Temperature: 10 °C');await expect(page.locator('#forecastToday')).toContainText('Wind (sustained): 30 km/h');
  await expect(page.locator('#forecastTodaySummary')).toContainText('Dry conditions are forecast');await expect(page.locator('#forecastTonightSummary')).toContainText('Rain is forecast');await expect(page.locator('#forecastTomorrowSummary')).toContainText('only the hours shown');
  await expect(page.locator('#forecastTomorrowLabel')).toContainText('Tomorrow morning');await expect(page.locator('#forecastTomorrowCoverage')).toContainText('22 Oct');
  await expect(page.locator('#forecast')).not.toContainText('NATIONAL TEXT');await expect(page.locator('#forecast h2')).toHaveText('Ardamine forecast · Co. Wexford');
