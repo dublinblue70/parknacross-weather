@@ -133,7 +133,7 @@
    if(v.state==='calm'){text(wind,'wind-summary','Calm at the station');text(wind,'wind-detail',`${speed} · no meaningful wind direction.`);return;}
    if(v.state==='direction-unavailable'){text(wind,'wind-summary','Wind direction unavailable');text(wind,'wind-detail',speed);return;}
    arrow.setAttribute('transform',`rotate(${v.to} 90 90)`);
-   text(wind,'wind-summary',`${v.exposure} wind · from ${v.fromName}`);
+   text(wind,'wind-summary',`${v.exposure} wind · from ${v.fromName} (${Math.round(v.from)}°)`);
    text(wind,'wind-detail',`${speed}. Blowing towards ${v.toName} (${Math.round(v.to)}°).`);
   }
   async function get(path){const r=await fetch(base+path,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Feed unavailable');return r.json();}
