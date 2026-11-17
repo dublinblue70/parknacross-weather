@@ -25,17 +25,35 @@
   if(!view)return 'Hourly rain outlook unavailable';
   return view.wet?(view.wet.from<=now?'Rain forecast this hour':`Rain forecast around ${new Date(view.wet.from).toLocaleTimeString('en-IE',{timeZone:'Europe/Dublin',hour:'2-digit',minute:'2-digit'})}`):view.complete?'Forecast shows little rain · local showers remain possible':'Limited rainfall forecast · local showers remain possible';
  }
+ // Five-minute speed-weighted vector mean. Samples are keyed by actual observation
+ // time so two page components cannot count the same GW3001 packet twice.
+ const WIND_DIRECTION_MIN_KMH=5,WIND_AVERAGE_MS=5*60000,windSamples=new Map();
  function coastalWind(c,now=Date.now()){
   const time=c?.received_at?stamp(c.received_at):c?.epoch?stamp(Number(c.epoch)):NaN;
   if(!fresh(time,10*60000,now))return {state:'unavailable'};
   const speed=number(c?.wind_speed_kmh),gust=number(c?.wind_gust_kmh),raw=number(c?.wind_direction_deg);
   if(speed===null||speed<0||speed>250)return {state:'unavailable'};
-  if(speed<1)return {state:'calm',speed,gust,time};
+  // Never carry a previous strong-wind bearing through a calm/variable spell.
+  if(speed<1){windSamples.clear();return {state:'calm',speed,gust,time};}
+  if(speed<WIND_DIRECTION_MIN_KMH){windSamples.clear();return {state:'light-variable',speed,gust,time};}
   if(raw===null||raw<0||raw>360)return {state:'direction-unavailable',speed,gust,time};
-  const from=bearing(raw),to=bearing(from+180);
-  // Same approximate coastal sectors as the existing Sea & Swim page.
+  for(const epoch of windSamples.keys()){
+   if(epoch<now-WIND_AVERAGE_MS||epoch>now+90000)windSamples.delete(epoch);
+  }
+  if(time>=now-WIND_AVERAGE_MS)windSamples.set(time,{speed,from:bearing(raw)});
+  const samples=[...windSamples.entries()].filter(([t])=>t>=now-WIND_AVERAGE_MS&&t<=now+90000);
+  let north=0,east=0,weight=0;
+  for(const [,s] of samples){
+   const angle=s.from*Math.PI/180;
+   north+=s.speed*Math.cos(angle);east+=s.speed*Math.sin(angle);weight+=s.speed;
+  }
+  const count=samples.length,resultant=weight>0?Math.hypot(north,east)/weight:0;
+  // Opposing directions cancel: a numerical mean would be misleading.
+  if(count>=2&&resultant<0.45)return {state:'variable',speed,gust,time,sampleCount:count};
+  const from=count>=2?bearing(Math.atan2(east,north)*180/Math.PI):bearing(raw),to=bearing(from+180);
   const exposure=from>=45&&from<165?'Onshore':from>=225&&from<345?'Offshore':'Alongshore';
-  return {state:'wind',speed,gust,time,from,to,exposure,fromName:compass(from),toName:compass(to)};
+  return {state:'wind',speed,gust,time,from,to,exposure,fromName:compass(from),toName:compass(to),
+   averaged:count>=2,sampleCount:count};
  }
  function laundryDryingWindows(feed,now=Date.now()){
   const fetched=stamp(feed?.fetched_at);
@@ -131,10 +149,12 @@
    text(wind,'wind-source',`Parknacross observation · ${time(v.time)} Irish time. Coastal orientation is approximate; this is not a swimming-safety assessment.`);
    const speed=`${v.speed.toFixed(1)} km/h${v.gust!==null&&v.gust>=0?` · gust ${v.gust.toFixed(1)} km/h`:''}`;
    if(v.state==='calm'){text(wind,'wind-summary','Calm at the station');text(wind,'wind-detail',`${speed} · no meaningful wind direction.`);return;}
+   if(v.state==='light-variable'){text(wind,'wind-summary','Light / variable wind');text(wind,'wind-detail',`${speed} · below 5 km/h; direction is unreliable.`);return;}
    if(v.state==='direction-unavailable'){text(wind,'wind-summary','Wind direction unavailable');text(wind,'wind-detail',speed);return;}
+   if(v.state==='variable'){text(wind,'wind-summary','Variable wind direction');text(wind,'wind-detail',`${speed} · recent bearings disagree; no reliable onshore/offshore direction.`);return;}
    arrow.setAttribute('transform',`rotate(${v.to} 90 90)`);
-   text(wind,'wind-summary',`${v.exposure} wind · from ${v.fromName} (${Math.round(v.from)}°)`);
-   text(wind,'wind-detail',`${speed}. Blowing towards ${v.toName} (${Math.round(v.to)}°).`);
+   text(wind,'wind-summary',v.averaged?`${v.exposure} wind · from ${v.fromName} (${Math.round(v.from)}°)`:`Wind from ${v.fromName} (${Math.round(v.from)}°) · latest reading`);
+   text(wind,'wind-detail',`${speed}. Blowing towards ${v.toName} (${Math.round(v.to)}°). ${v.averaged?`5-minute average · ${v.sampleCount} readings.`:'Averaging as new readings arrive.'}`);
   }
   async function get(path){const r=await fetch(base+path,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Feed unavailable');return r.json();}
   async function loadRain(){if((!rain&&!laundry)||rainLoading)return;rainLoading=true;const buttons=[rain?.querySelector('button'),laundry?.querySelector('button')].filter(Boolean);buttons.forEach(b=>b.disabled=true);try{forecast=await (window.ParknacrossForecastService?.get?.()||get('/outdoor-outlook'));}catch{forecast=null;}finally{rainLoading=false;buttons.forEach(b=>b.disabled=false);renderRain();renderLaundry();}}
