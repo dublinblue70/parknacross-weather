@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-257-20261117-coastal-wind-v1";
+const CACHE_NAME = "parknacross-v38-4-257-20261117-health-notifications-v2";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./privacy-providers.css",

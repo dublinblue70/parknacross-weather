@@ -14,7 +14,7 @@
   const RAIN_MAX_OBSERVATION_AGE_SECONDS = 10 * 60;
 
   const defaults = {
-    enabled: false,
+    enabled: false, explicitlyDisabled: false,
     rainStart: false,
     gust: false,
     frost: false,
@@ -44,6 +44,7 @@
     settings.lightningKm = LIGHTNING_DISTANCES.has(lightningKm) ? lightningKm : 0;
     for(const [key,lo,hi] of [["gustKmh",20,100],["heavyRainRate",2,50],["freezingC",-5,5],["quietStart",0,23],["quietEnd",0,23]])settings[key]=usable(settings[key])?Math.max(lo,Math.min(hi,Number(settings[key]))):defaults[key];
     settings.quietEnabled=settings.quietEnabled===true;
+     settings.explicitlyDisabled=settings.explicitlyDisabled===true;
     return settings;
   }
 
@@ -52,7 +53,7 @@
     if (overview) {
       const selected = loadSettings();
       const count = [selected.rainStart, selected.gust, selected.frost, selected.heavyRain, selected.lightningKm > 0].filter(Boolean).length;
-      const state = !selected.enabled ? "Off on this device" : canNotify() ? "Enabled on this device" : "Selected, but device notification permission is not granted";
+      const state = !selected.enabled ? "Off on this device" : canNotify() ? "Enabled on this device" : "Enabled choice saved; device permission needs checking";
       overview.textContent = `${state} · ${count} alert type${count === 1 ? "" : "s"} selected.`;
     }
     const node = document.getElementById("alertsSaveStatus");
@@ -91,7 +92,7 @@
     }
     return canNotify()
       ? "Alerts are on · choose the observations you want below"
-      : permissionText();
+      : "Your enabled choice is saved. "+permissionText()+". Allow notifications in Android/browser settings to receive alerts.";
   }
 
   async function showNotification(title, body, tag) {
@@ -339,9 +340,9 @@
 
     const button = document.getElementById("alertsEnableButton");
     if (button) {
-      const enabled = settings.enabled && canNotify();
-      button.textContent = enabled ? "Turn off notifications" : "Enable notifications";
-      button.setAttribute("aria-pressed", String(enabled));
+      const selected = settings.enabled===true;
+       button.textContent = selected ? (canNotify() ? "Turn off notifications" : "Check notification permission") : "Enable notifications";
+       button.setAttribute("aria-pressed", String(selected));
     }
   }
 
@@ -354,14 +355,15 @@
       }
       const settings = loadSettings();
       if (settings.enabled && canNotify()) {
-        saveSettings({ enabled: false });
+        saveSettings({ enabled: false, explicitlyDisabled: true });
         refreshUI();
         return;
       }
 
       let permission = Notification.permission;
       if (permission === "default") permission = await Notification.requestPermission();
-      saveSettings({ enabled: permission === "granted" });
+      if(permission === "granted") saveSettings({ enabled: true, explicitlyDisabled: false });
+       // Permission failure never erases a previously saved opt-in.
       refreshUI();
     });
 
@@ -409,6 +411,8 @@
   if (document.getElementById("alertsEnableButton")) bindUI();
   else document.addEventListener("DOMContentLoaded", bindUI);
   window.addEventListener?.("pageshow", refreshUI);
+   window.addEventListener?.("focus", refreshUI);
+   document.addEventListener?.("visibilitychange",()=>{if(!document.hidden)refreshUI();});
   window.addEventListener?.("parknacross:notification-storage-ready", refreshUI);
   window.addEventListener?.("storage", event => {
     if (event.key === SETTINGS_KEY || event.key === null) refreshUI();

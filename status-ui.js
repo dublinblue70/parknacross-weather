@@ -35,6 +35,7 @@
  const persist=()=>{try{sessionStorage.setItem('parknacross-health-session',JSON.stringify({previous,changes}));}catch{}};
  const formatTime=value=>new Date(value).toLocaleString('en-IE',{timeZone:'Europe/Dublin',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'});
  function label(text,state){
+  if(state==='info')return 'Information';
   if(text==='NOT SET')return 'Not configured';
   if(text==='PENDING')return 'Pending';
   if(['UNAVAILABLE','DOWN','FAIL','UNKNOWN'].includes(text))return 'Unavailable';
@@ -61,13 +62,13 @@
  function start(source){init();running=true;activeSource=source;for(const card of cards){if(!source||card.source===source){card.element.dataset.healthState='checking';const badge=$(card.key+'Badge');badge.className='badge';badge.textContent='Checking';}}applyFilter();}
  function update(results,meta,isRunning){
   init();running=isRunning;
-  let healthy=0,pending=0;const issues=[];
+  let healthy=0,pending=0;const issues=[],informational=[];
   for(const card of cards){
    const checked=Boolean(results[card.source])&&Boolean(meta[card.source]);
    const badge=$(card.key+'Badge');
-   const state=!checked?'checking':badge.classList.contains('bad')?'bad':badge.classList.contains('warn')?'warn':badge.classList.contains('good')?'good':'checking';
+   const state=!checked?'checking':badge.classList.contains('bad')?'bad':badge.classList.contains('warn')?'warn':badge.classList.contains('info')?'info':badge.classList.contains('good')?'good':'checking';
    card.element.dataset.healthState=state;
-   if(state==='good')healthy++;else if(state==='checking')pending++;else issues.push(card);
+   if(state==='good')healthy++;else if(state==='checking')pending++;else if(state==='info')informational.push(card);else issues.push(card);
    const time=$(card.key+'CheckedAt');if(time)time.textContent=checked?`Checked ${formatTime(meta[card.source].done)} · Irish time`:'Not yet checked';
    const technical=card.element.querySelector('.health-technical');
    let timing=technical?.querySelector('.health-response-time');
@@ -77,7 +78,7 @@
    if(impact)impact.textContent=state==='checking'?'Checking this source…':state==='good'?(card.key==='battery'?'Reported battery information is available; its measurement time may be unknown.':card.key==='soil'?'A recent soil-sensor upload and current soil values are confirmed; the sensor’s radio transmission time is not supplied.':card.key==='wh40h'?'Dedicated rain-gauge source mapping and live rain fields are available; physical battery and radio-link health are not independently checked.':card.key==='facebook'||card.key==='x'?'Delivery status is reported by the weather data service. Confirm the visible post on the platform.':'This check passed. Expand details for the source result.'):(info?.[0]||'This check needs review.');
    if(checked&&state!=='checking'&&!isRunning){
     const before=previous[card.key];
-    if(['good','warn','bad'].includes(before)&&before!==state){
+    if(['good','warn','bad','info'].includes(before)&&before!==state){
      changes.unshift({key:card.key,kind:state==='good'?'recovered':before==='good'?'new':state==='bad'?'worsened':'changed',at:new Date().toISOString()});changes=changes.slice(0,20);
     }
     previous[card.key]=state;
@@ -85,21 +86,31 @@
    const button=card.element.querySelector('[data-retry-source]');button.disabled=running;button.textContent=running&&(!activeSource||activeSource===card.source)?'Checking…':'Recheck';
   }
   persist();
-  $('healthCounts').textContent=`${issues.length} need attention · ${healthy} healthy${pending?` · ${pending} checking`:''}`;
+  $('healthCounts').textContent=`${issues.length} need attention · ${healthy} healthy${informational.length?` · ${informational.length} informational`:''}${pending?` · ${pending} checking`:''}`;
   $('healthProgress').textContent=`${Object.keys(results).length} of 20 sources checked${running?' · checks running':' · refreshes about every 5 minutes'}`;
   $('healthAttentionIntro').textContent=issues.length?'Each item explains the affected feature and the next step. Core services are assessed separately below.':pending?'No issues in completed checks. Remaining sources are still being checked.':'No issues found in the completed checks.';
   const host=$('healthAttentionList');host.replaceChildren();
   for(const card of issues.sort((a,b)=>(a.element.dataset.healthState==='bad'?-1:1)-(b.element.dataset.healthState==='bad'?-1:1))){
    const li=document.createElement('li');li.className='health-attention-item '+card.element.dataset.healthState;
    const title=document.createElement('h3');title.textContent=card.title;
-   const guidanceText=guidanceFor(card.key,results);
-   const impact=document.createElement('p');impact.textContent=guidanceText[0];
-   const action=document.createElement('p');action.className='health-next-step';action.textContent=guidanceText[1];
+   const impact=document.createElement('p');impact.textContent=($(card.key+'Value')?.textContent||guidanceFor(card.key,results)?.[0]||'Review this check').trim();
    const links=document.createElement('div');links.className='health-attention-actions';
-   const inspect=document.createElement('a');inspect.href='#health-'+card.key;inspect.textContent='View check';
-   const feature=document.createElement('a');feature.href=guidanceText[2];feature.textContent='Open related page';if(feature.href.startsWith('https:')&&!feature.href.startsWith(location.origin)){feature.target='_blank';feature.rel='noopener noreferrer';}
+   const inspect=document.createElement('a');inspect.href='#health-'+card.key;inspect.textContent='View details';
    const retry=document.createElement('button');retry.type='button';retry.textContent=running?'Checking…':'Retry';retry.disabled=running;retry.setAttribute('aria-label','Retry '+card.title);retry.addEventListener('click',()=>window.runChecks(card.source));
-   links.append(inspect,feature,retry);li.append(title,impact,action,links);host.append(li);
+   links.append(inspect,retry);li.append(title,impact,links);host.append(li);
+  }
+  const infoBox=$('healthInformation'),infoSummary=$('healthInfoSummary'),infoList=$('healthInfoList');
+  if(infoBox&&infoSummary&&infoList){
+   infoBox.hidden=informational.length===0;
+   infoSummary.textContent=`${informational.length} informational check${informational.length===1?'':'s'} · no confirmed fault`;
+   infoList.replaceChildren();
+   for(const card of informational){
+    const item=document.createElement('li'),link=document.createElement('a');
+    link.href='#health-'+card.key;link.textContent=card.title;
+    link.addEventListener('click',()=>{const toggle=$('healthIssuesOnly');if(toggle){toggle.checked=false;issuesOnly=false;applyFilter();}});
+    const detail=document.createElement('span');detail.textContent=' · '+($(card.key+'Value')?.textContent||'Unavailable').trim();
+    item.append(link,detail);infoList.append(item);
+   }
   }
   const core=cards.filter(c=>['site','api','feed','ingest'].includes(c.key));
   const bad=core.some(c=>c.element.dataset.healthState==='bad'),warn=core.some(c=>c.element.dataset.healthState==='warn'),waiting=core.some(c=>c.element.dataset.healthState==='checking');
