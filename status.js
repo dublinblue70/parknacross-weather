@@ -151,7 +151,7 @@ function describeWs90Battery(quality) {
   const archivedAt=quality?.battery_first_seen_at ?? quality?.battery_last_archived_at;
   const lastReportedAt=quality?.battery_last_reported_at;
   if(!usableNumber(voltage) || Number(voltage)<1.5 || Number(voltage)>4.0) {
-    return {state:"warn",label:"UNAVAILABLE",value:"--",detail:"Battery reading unavailable. Check Ecowitt."};
+    return {state:"info",label:"NOT REPORTED",value:"Not reported",detail:"Battery telemetry is unavailable. This does not establish low battery power; check Ecowitt for device-specific status."};
   }
   const volts=Number(voltage);
   const value=`${volts.toFixed(2)} V`;
@@ -161,7 +161,7 @@ function describeWs90Battery(quality) {
   const reportedValid=reportedDate && Number.isFinite(reportedDate.getTime());
   const reportedAge=reportedValid ? (Date.now()-reportedDate.getTime())/1000 : null;
   if(!validDate || !reportedValid || reportedAge>30*60 || reportedAge<0) {
-    return {state:"warn",label:"LAST KNOWN",value,detail:"Last known voltage. Check Ecowitt for the latest reading."};
+    return {state:"info",label:"LAST KNOWN",value,detail:"Last reported voltage has no confirmed current measurement time. Check Ecowitt if you need its latest state."};
   }
   if(volts>=3.0) {
     return {state:"good",label:"REPORTED",value,detail:"Voltage is in the normal range. Reading may be cached."};
@@ -409,8 +409,8 @@ function renderChecks(only=null) {
     if(quality.__error) {
       setBadge("samplesBadge","warn","CHECK"); setText("samplesValue","--"); setText("samplesDetail","Weather quality check unavailable");
       setBadge("gapBadge","warn","CHECK"); setText("gapValue","--"); setText("gapDetail","Weather quality check unavailable");
-      setBadge("batteryBadge","warn","UNAVAILABLE"); setText("batteryValue","--"); setText("batteryDetail","Battery reading could not be checked. This does not mean the batteries are low.");
-      setBadge("gustQualityBadge","warn","CHECK"); setText("gustQualityValue","--"); setText("gustQualityDetail","Weather quality check unavailable"); states.push("warn");
+      setBadge("batteryBadge","info","NOT REPORTED"); setText("batteryValue","Not reported"); setText("batteryDetail","Battery telemetry could not be checked. This is not evidence of low batteries.");
+      setBadge("gustQualityBadge","info","UNVERIFIED"); setText("gustQualityValue","Not verified"); setText("gustQualityDetail","Historical gust-quality counters could not be retrieved; no live sensor fault has been established."); states.push("warn");
     } else {
       const coverage=recentSampleCoverage(quality.samples_last_24h,stats.first_epoch);
       const samples=coverage.actual;
@@ -435,12 +435,11 @@ function renderChecks(only=null) {
       const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):null;
       const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):null;
       if(gust24===null||gustTotal===null){
-        setBadge("gustQualityBadge","warn","CHECK");
-        setText("gustQualityValue","Unavailable");
-        setText("gustQualityDetail","Wind-reading quality counters could not be retrieved");
-        states.push("warn");
+        setBadge("gustQualityBadge","info","UNVERIFIED");
+        setText("gustQualityValue","Not verified");
+        setText("gustQualityDetail","Wind-quality history could not be read; this does not establish a live sensor failure.");
       }else{
-        setBadge("gustQualityBadge",gust24>0?"warn":"good",gust24>0?"REVIEW":gustTotal>0?"RECORDED":"OK");
+        setBadge("gustQualityBadge",gustTotal>0?"info":"good",gust24>0?"FILTERED":gustTotal>0?"RECORDED":"OK");
         setText("gustQualityValue",gustTotal===0?"No anomalies":gust24>0?`${gust24} recent · ${gustTotal} total`:`${gustTotal} historical`);
         const lastGust=usableNumber(quality.last_gust_exclusion_epoch)
           ? new Date(Number(quality.last_gust_exclusion_epoch)*1000).toLocaleString("en-IE",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/Dublin"})
@@ -448,7 +447,7 @@ function renderChecks(only=null) {
         setText("gustQualityDetail",gustTotal>0
           ? `${gustTotal} unusual wind reading${gustTotal===1?"":"s"} retained in the raw archive and excluded from derived peak-gust statistics${lastGust?` · last ${lastGust}`:""}`
           : "No unusual wind readings found");
-        if(gust24>0)states.push("warn");
+        // Already excluded gust outliers are recorded for transparency, not an unresolved live fault.
       }
     }
 
