@@ -5,7 +5,14 @@
  // The default order follows the essential weather story: daily context, actual readings, then forecast.
  // Visitors who deliberately customised an earlier version retain their saved section order.
  const definitions=[['today-section','At a glance'],['metrics-section','Detailed readings'],['forecast','Ardamine forecast'],['sinceVisitPanel','Since your last visit'],['todaySkyPanel','Today’s sky'],['weather-window-section','Weather Window'],['lightning-group','Lightning'],['wear-today-section','Clothing guide'],['astronomy-strip','Sun and moon'],['soilPanel','Garden soil'],['climate-section','Station climate'],['graphs','Weather graphs'],['records-section','Station records'],['signature-section','Local context']];
- const sections=definitions.map(([key,label])=>({key,label,node:document.getElementById(key)||main.querySelector('.'+key)})).filter(item=>item.node);
+ const sections=definitions.map(([key,label])=>{
+  const section=document.getElementById(key)||main.querySelector('.'+key);
+  // Move an entire compact disclosure, not only the section inside it.
+  // Otherwise saved dashboard layouts pull charts, records, etc. out of
+  // their collapsible groups and leave empty summary controls behind.
+  const node=section?.closest('details.dashboard-explore-group')||section;
+  return {key,label,node};
+ }).filter(item=>item.node);
  // One-time migration makes Sun & Moon visible again for anyone who hid it previously.
  // Keep all other saved positions and visibility choices; users may hide it again later.
  const key='parknacross:dashboard-layout:v2',legacyKey='parknacross:dashboard-layout:v1';
