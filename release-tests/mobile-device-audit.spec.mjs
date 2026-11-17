@@ -47,9 +47,7 @@ for(const width of [320,390]){
   await page.setViewportSize({width,height:900});await mockWeather(page);
   await page.goto('/index.html');
   const section=page.locator('.astronomy-strip');await expect(section).toHaveCount(1);
-  const toggle=section.locator('.mobile-detail-toggle').first();
-  await expect(toggle).toBeVisible();
-  if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();
+  // Astronomy is now a compact, always-visible section rather than an extra accordion.
   await expect(section.locator('.moon-phase-track li').first()).toBeVisible();
   await setScaledFont(page);
   const metrics=await section.evaluate(el=>{
