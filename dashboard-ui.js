@@ -16,5 +16,14 @@
    if(disclosure)disclosure.open=true;
    window.requestAnimationFrame(()=>window.dispatchEvent(new Event('hashchange')));
   }));
+  const revealSpecialistHash=()=>{
+    const id=location.hash.slice(1);
+    if(!id)return;
+    const destination=document.getElementById(id);
+    const details=destination?.closest('details.dashboard-explore-group');
+    if(details&&!details.open){details.open=true;window.dispatchEvent(new Event('resize'));}
+  };
+  window.addEventListener('hashchange',revealSpecialistHash);
+  revealSpecialistHash();
  });
 })();
