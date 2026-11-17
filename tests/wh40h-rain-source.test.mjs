@@ -69,7 +69,7 @@ assert.match(read('rain.html'),/id="rainPiezoToday"/);
 const dashboard=read('app.js');
 assert.doesNotMatch(dashboard,/tag: "Light rain detected"/,'Piezo-only signals must not become an unconfirmed rain headline');
 assert.match(dashboard,/piezoIndicatesRain/);
-assert.match(read('rain.js'),/piezoDetected/);
+assert.match(read('rain.js'),/rainIndicatedNow|piezoIndicatesRain/,'Rain Centre must retain secondary rain-evidence logic');
 assert.match(dashboard,/Classify only the current WH40H rain rate/,'Piezo-only readings must not determine confirmed rainfall intensity');
 assert.match(read('station.html'),/data-sensor="rain"/);
 assert.match(read('station.html'),/self-emptying tipping-bucket rain gauge/);
