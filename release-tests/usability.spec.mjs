@@ -82,7 +82,7 @@ test('Summary keeps observations when rain history fails',async({page})=>{
 test('History finishes loading and retains metadata when daily summaries fail',async({page})=>{
  await page.route('**/daily?**',r=>r.fulfill({status:503,contentType:'application/json',body:'{"error":"Unavailable"}'}));
  await page.route('**/stats',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({total_samples:100,month_rain_mm:2,year_rain_mm:3,first_epoch:now,records:{}})}));
- await page.goto('/history.html');await expect(page.locator('#histSamples')).toHaveText('100');await expect(page.locator('#archiveSearchStatus')).toContainText('Daily archive temporarily unavailable');await expect(page.locator('#heatmapSummary')).not.toContainText('Calculating');await expect(page.locator('#historyChartStatus')).toContainText('could not load');
+ await page.goto('/history.html');await expect(page.locator('#historySince')).not.toHaveText('--');await expect(page.locator('#historyRecordsLink a[href="records.html"]')).toBeVisible();await expect(page.locator('#archiveSearchStatus')).toContainText('Daily archive temporarily unavailable');await expect(page.locator('#heatmapSummary')).not.toContainText('Calculating');await expect(page.locator('#historyChartStatus')).toContainText('could not load');
 });
 test('Invalid download range clears the preceding preview',async({page})=>{
  await page.route('**/export-preview?**',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({count:13,first_epoch:now-3600,last_epoch:now,coverage_percent:100,columns:['epoch'],sample:[current]})}));
@@ -149,7 +149,7 @@ test('slow external marine check does not label the weather data service slow',a
  await expect(page.locator('#healthProgress')).toContainText('19 of 20 sources checked');await expect(page.locator('#refreshButton')).toBeEnabled({timeout:20000});
 });
 
-for(const file of ['graphs.html','history.html'])test(`${file} compares Irish-time dates, clears changed dates and recovers from failure`,async({page})=>{
+for(const file of ['graphs.html'])test(`${file} compares Irish-time dates, clears changed dates and recovers from failure`,async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.route('**/day?date=**',r=>{const selected=new URL(r.request().url()).searchParams.get('date');return r.fulfill({contentType:'application/json',body:JSON.stringify({available:true,readings:[{epoch:Date.parse(selected+'T08:00:00Z')/1000,temperature_c:12,rain_rate_mm_h:0},{epoch:Date.parse(selected+'T08:05:00Z')/1000,temperature_c:13,rain_rate_mm_h:.1}]})});});
  await page.goto('/'+file);
@@ -166,6 +166,14 @@ for(const file of ['graphs.html','history.html'])test(`${file} compares Irish-ti
  await page.locator('#comparisonSecond').fill('2026-10-07');await expect(page.locator('#comparisonChart')).toBeHidden();await page.locator('#compareDatesButton').click();await expect(page.locator('#comparisonStatus')).toContainText('two different dates');
  await page.locator('#comparisonSecond').fill('2026-10-08');await page.route('**/day?date=2026-10-08',r=>r.fulfill({status:503,body:'Unavailable'}));await page.locator('#compareDatesButton').click();await expect(page.locator('#comparisonStatus')).toContainText('could not be loaded');await expect(page.locator('#compareDatesButton')).toBeEnabled();await expect(page.locator('#comparisonChart')).toBeHidden();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2)).toBe(true);
+});
+
+test('History links to the single date comparison tool on Graphs',async({page})=>{
+ await page.goto('/history.html');
+ const link=page.locator('#dateComparison a[href=\"graphs.html#dateComparison\"]');
+ await expect(link).toBeVisible();await link.click();
+ await expect(page).toHaveURL(/graphs\\.html#dateComparison/);
+ await expect(page.locator('#comparisonFirst')).toBeVisible();
 });
 
 test('footer links remain centred, touchable and within narrow screens',async({page})=>{
