@@ -64,6 +64,16 @@ assert.equal(calm.get("coastExposure").textContent,"Calm");
 assert.match(calm.get("coastExposureDetail").textContent,/No meaningful wind direction/);
 assert.match(calm.get("swimSummary").textContent,/calm wind 0\.0 km\/h · direction unavailable/i);
 
+const light = await runApi(async url => ({ok:true,async json(){
+  if(url.endsWith("/current"))return {epoch:Date.now()/1000,wind_speed_kmh:1.8,wind_gust_kmh:4.7,wind_direction_deg:99};
+  if(url.includes("/marine/tides"))return {events:[]};
+  return {};
+}}));
+assert.match(light.get("coastDir").textContent,/Light \/ variable/);
+assert.equal(light.get("coastExposure").textContent,"Light / variable");
+assert.match(light.get("swimSummary").textContent,/direction unreliable/);
+assert.doesNotMatch(light.get("swimSummary").textContent,/onshore|offshore/i);
+
 const predicted = await runApi(async url => ({ok:true,async json(){
   if(url.includes("/marine/tides"))return {events:[
     {time:new Date(Date.now()-60*60*1000).toISOString(),type:"low",height_m:-0.09},
