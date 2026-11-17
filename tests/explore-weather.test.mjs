@@ -6,9 +6,12 @@ const events={},timers=[],document={hidden:true,addEventListener:(n,f)=>events[n
 const values=new Map([['parknacross:graph-hours','168']]),location={search:'?hours=48',href:'https://example.test/graphs.html?hours=48'},selectionWindow={addEventListener(){}};let url;
 vm.runInNewContext(source('graph-selection.js'),{window:selectionWindow,document:{addEventListener(){}},location,localStorage:{getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)},history:{replaceState:(_,__,u)=>url=u},URL,URLSearchParams,Date,Number,Math,String,Event});assert.equal(selectionWindow.ParknacrossGraphSelection.get().hours,48);selectionWindow.ParknacrossGraphSelection.choose(720);assert.equal(values.get('parknacross:graph-hours'),'720');assert.equal(url.searchParams.get('hours'),'720');
 const to=Math.floor(Date.now()/1000)-86400,from=to-3600,rangeWindow={addEventListener(){}};vm.runInNewContext(source('graph-selection.js'),{window:rangeWindow,document:{addEventListener(){}},location:{search:`?from=${from}&to=${to}`,href:`https://example.test/graphs.html?from=${from}&to=${to}`},history:{replaceState(){}},URL,URLSearchParams,Date,Number,Math,String,Event});assert.equal(rangeWindow.ParknacrossGraphSelection.historyPath(),`/history?from_epoch=${from}&to_epoch=${to}`);rangeWindow.ParknacrossGraphSelection.choose(24);assert.equal(rangeWindow.ParknacrossGraphSelection.get().range,null);
-// Rain links use numeric event bounds and context, rather than a different day's current weather.
-const rainWindow={PARKNACROSS_CONFIG:{apiBase:'https://example.test'}};vm.runInNewContext(source('rain.js').replace(/\}\)\(\);\s*$/,'window.testRainLink=eventGraphLink;})();'),{window:rainWindow,document:{addEventListener(){}},Date,Intl,Number,String,Math});const link=new URL(rainWindow.testRainLink({start_epoch:from,end_epoch:to}),'https://example.test');assert.equal(Number(link.searchParams.get('from')),from-1800);assert.equal(Number(link.searchParams.get('to')),to+1800);assert.equal(link.hash,'#gRain');assert.equal(rainWindow.testRainLink({start_epoch:'bad'}),'history.html');
-console.log('PASS: hidden-tab refresh suppression, immediate non-overlapping resume, remembered/bookmarked ranges and date-correct rain-event links.');
+// The long public event table was removed; the existing summary statistics still use the event API.
+const rainHtml=source('rain.html'),rainScript=source('rain.js');
+assert.doesNotMatch(rainHtml,/id="rainEventsList"/,'Long event table must not reappear');
+assert.match(rainHtml,/id="rainEventCount"/,'Collapsible event summary remains');
+assert.match(rainScript,/get\("\/rain-events\?days=30"\)/,'Event calculations remain available');
+console.log('PASS: hidden-tab refresh suppression, remembered/bookmarked ranges and concise rainfall event summaries.');
 
 // Switching archive dates while a photograph request is pending cannot show the old date's image.
 const historySource=source('history.js'),photoSource=historySource.slice(historySource.indexOf('function historicalSkyTimestamp(photo)'),historySource.indexOf('async function loadDay(day)'));
