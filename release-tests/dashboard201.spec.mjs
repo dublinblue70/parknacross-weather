@@ -9,12 +9,14 @@ test('mobile soil disclosure aligns with other section buttons and still opens',
 
 test('live indicator and halo never overlap the status text on phones and laptops',async({page})=>{test.setTimeout(90000);for(const width of [320,390,640,768,1024,1280,1440]){await page.setViewportSize({width,height:844});await page.goto('/index.html');await expect(page.locator('#heroTemp')).toHaveText(/12/);const dot=await page.locator('#livePill .live-dot').boundingBox(),label=await page.locator('#liveText').boundingBox();expect(dot.x+dot.width+5).toBeLessThanOrEqual(label.x);expect(Math.abs(dot.y+dot.height/2-label.y-label.height/2)).toBeLessThan(2);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}});
 
-test('all mobile section buttons share the same edges and forecast still opens',async({page})=>{for(const width of [320,390,640]){await page.setViewportSize({width,height:844});await page.goto('/index.html');await expect(page.locator('#heroTemp')).toHaveText(/12/);const reference=await page.locator('.metrics-section>.mobile-detail-toggle').boundingBox(),buttons=page.locator('#dashboardOptionalSections .mobile-detail-toggle');for(let i=0;i<await buttons.count();i++){const button=buttons.nth(i);if(!await button.isVisible())continue;const box=await button.boundingBox();expect(Math.abs(box.x-reference.x),await button.textContent()).toBeLessThan(1);expect(Math.abs(box.width-reference.width),await button.textContent()).toBeLessThan(1);}if(await page.locator('#forecast>.mobile-detail-toggle').getAttribute('aria-expanded')!=='true')await page.locator('#forecast>.mobile-detail-toggle').click();await expect(page.locator('#forecastToday')).toBeVisible();await expect(page.locator('#forecast')).toContainText('Wind:');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}});
+test('all mobile section buttons share the same edges and forecast still opens',async({page})=>{for(const width of [320,390,640]){await page.setViewportSize({width,height:844});await page.goto('/index.html');await expect(page.locator('#heroTemp')).toHaveText(/12/);const reference=await page.locator('.metrics-section>.mobile-detail-toggle').boundingBox(),buttons=page.locator('#dashboardOptionalSections .mobile-detail-toggle');for(let i=0;i<await buttons.count();i++){const button=buttons.nth(i);if(!await button.isVisible())continue;const box=await button.boundingBox();expect(Math.abs(box.x-reference.x),await button.textContent()).toBeLessThan(1);expect(Math.abs(box.width-reference.width),await button.textContent()).toBeLessThan(1);}if(await page.locator('#forecast>.mobile-detail-toggle').getAttribute('aria-expanded')!=='true')await page.locator('#forecast>.mobile-detail-toggle').click();await expect(page.locator('#forecastToday')).toBeVisible();await expect(page.locator('#forecast')).toContainText('Wind (sustained):');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}});
 
 test('expanded clothing cards keep labels headings and text close together',async({page})=>{
  for(const width of [320,390,640]){
   await page.setViewportSize({width,height:844});await page.goto('/index.html');
   await expect(page.locator('#heroTemp')).toHaveText(/12/);
+  const outer=page.locator('details[data-dashboard-extra="clothes"]');
+  if(await outer.getAttribute('open')===null)await outer.locator('summary').first().click();
   const toggle=page.locator('.wear-today-section>.mobile-detail-toggle');
   if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();
   await expect(page.locator('#wearClothing')).toBeVisible();
@@ -36,6 +38,8 @@ test('mobile Weather Window has breathing room below its button and before the s
  for(const width of [320,390,640]){
   await page.setViewportSize({width,height:844});await page.goto('/index.html');
   await expect(page.locator('#heroTemp')).toHaveText(/12/);
+  const outer=page.locator('details[data-dashboard-extra="window"]');
+  if(await outer.getAttribute('open')===null)await outer.locator('summary').first().click();
   const button=page.locator('.weather-window-section>.mobile-detail-toggle');
   if(await button.getAttribute('aria-expanded')!=='true')await button.click();
   const b=await button.boundingBox(),heading=await page.locator('.weather-window-section .section-heading').boundingBox(),scene=await page.locator('.weather-window-card').boundingBox();
@@ -66,4 +70,22 @@ test('dashboard navigation is balanced and never overflows from 320 to 1024 px',
     }
     await nav.screenshot({path:testInfo.outputPath(`shortcuts-${width}.png`)});
   }
+});
+
+
+test('compact Dashboard preserves specialist sections through saved layout and deep links',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/index.html');
+ await expect(page.locator('details[data-dashboard-extra="charts"]')).toHaveCount(1);
+ await expect(page.locator('details[data-dashboard-extra="records"]')).toHaveCount(1);
+ await expect(page.locator('#graphs').locator('xpath=ancestor::details[@data-dashboard-extra="charts"]')).toHaveCount(1);
+ await expect(page.locator('details[data-dashboard-extra="charts"]')).not.toHaveAttribute('open','');
+ await expect(page.locator('#graphs')).toBeHidden();
+ await page.locator('.dashboard-shortcuts a[href="#graphs"]').click();
+ await expect(page.locator('details[data-dashboard-extra="charts"]')).toHaveAttribute('open','');
+ await expect(page.locator('#graphs>.mobile-detail-toggle')).toHaveAttribute('aria-expanded','true');
+ await expect(page.locator('#temperatureChart')).toBeVisible();
+ await page.goto('/index.html#records');
+ await expect(page.locator('details[data-dashboard-extra="records"]')).toHaveAttribute('open','');
+ await expect(page.locator('#records')).toBeVisible();
 });

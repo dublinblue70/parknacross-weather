@@ -64,12 +64,12 @@ assert.match(worker,/wh40h_primary_rain:true/);
 assert.match(worker,/readRecentCloudPiezo/);
 assert.match(worker,/piezo_observed_epoch/);
 assert.match(worker,/piezo_daily_mm: nullableNumber\(row.piezo_daily_mm\)/);
-assert.match(read('index.html'),/id="heroPiezoRain"/);
+assert.doesNotMatch(read('index.html'),/id="heroPiezoRain"/,'Secondary piezo accumulation must stay off the visitor dashboard');
 assert.match(read('rain.html'),/id="rainPiezoToday"/);
 const dashboard=read('app.js');
 assert.doesNotMatch(dashboard,/tag: "Light rain detected"/,'Piezo-only signals must not become an unconfirmed rain headline');
 assert.match(dashboard,/piezoIndicatesRain/);
-assert.match(read('rain.js'),/piezoDetected/);
+assert.match(read('rain.js'),/rainIndicatedNow|piezoIndicatesRain/,'Rain Centre must retain secondary rain-evidence logic');
 assert.match(dashboard,/Classify only the current WH40H rain rate/,'Piezo-only readings must not determine confirmed rainfall intensity');
 assert.match(read('station.html'),/data-sensor="rain"/);
 assert.match(read('station.html'),/self-emptying tipping-bucket rain gauge/);
@@ -98,17 +98,19 @@ const vis={
 };
 vm.createContext(vis);
 vm.runInContext(read('rain-intensity.js'),vis);
+vm.runInContext(read('rain-status.js'),vis);
 vm.runInContext(appCode.slice(ai,aj),vis);
 const base={epoch:clock,rain_rate_mm_h:0,rain_daily_mm:0,wind_speed_kmh:0,solar_w_m2:0,uv_index:0};
 assert.equal(vis.conditionInfo({...base,piezo_daily_mm:0.1,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock,solar_w_m2:600},false).tag,
  'Bright','A 0.1 mm piezo estimate with a dry gauge cannot override sunshine');
 assert.equal(vis.conditionInfo({...base,piezo_daily_mm:0.4,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},true).tag,
  'Night','Earlier piezo estimate does not prove rain now or earlier');
-assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:0.6,piezo_observed_epoch:clock,solar_w_m2:600},false).tag,
- 'Bright','Piezo-only rate does not override current bright conditions');
+const weakPiezo=vis.conditionInfo({...base,piezo_rain_rate_mm_h:0.6,piezo_observed_epoch:clock,solar_w_m2:600},false);
+assert.equal(weakPiezo.tag,'Possible rain','Weak piezo evidence must not claim measured rain');
+assert.match(weakPiezo.story,/wind or vibration/i,'Weak piezo signal must disclose uncertainty');
 const strongPiezo=vis.conditionInfo({...base,piezo_rain_rate_mm_h:4,piezo_observed_epoch:clock,wind_speed_kmh:2.5},false);
-assert.equal(strongPiezo.tag,'Possible rain','A substantial fresh piezo reading should never result in a dry headline');
-assert.match(strongPiezo.story,/not yet measured/,'Explain the dedicated rain gauge disagrees without treating piezo as measured rainfall');
+assert.equal(strongPiezo.tag,'Rain indicated now','A substantial fresh piezo reading should never result in a dry headline');
+assert.match(strongPiezo.story,/unconfirmed|disagree/i,'Explain disagreement without counting piezo as confirmed rainfall');
 assert.equal(strongPiezo.rainState.isRaining,false,'Piezo indication must never count as confirmed WH40H rain');
 assert.equal(vis.conditionInfo({...base,piezo_rain_rate_mm_h:4,piezo_observed_epoch:clock-900},false).tag,
  'Calm','Stale piezo reading must not suggest rain');

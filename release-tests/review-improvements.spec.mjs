@@ -28,12 +28,12 @@ test('daily extremes wait for archive data while live readings appear immediatel
  release();await expect(page.locator('#todayHigh')).toHaveText('16.4');await expect(page.locator('#todayLow')).toHaveText('8.1');await expect(page.locator('#solarPeak')).toHaveText('575');
 });
 test('evening forecast explains a missing daytime section and clears failed forecast sections',async({page})=>{
- await prepare(page);await page.goto('/index.html');await expect(page.locator('#forecastToday')).toContainText('Daytime has ended');await expect(page.locator('#forecastTonight')).toContainText('Dry');
+ await prepare(page);await page.goto('/index.html');await expect(page.locator('#forecastToday')).toContainText('Daytime has ended');await expect(page.locator('#forecastTonight')).toContainText('Rain in available hours: 0 mm');
  await page.unroute('**/*.workers.dev/**');await prepare(page,{forecastFailure:true,installClock:false});await page.reload();
  await expect(page.locator('#forecastTonight')).toContainText('temporarily unavailable');await expect(page.locator('#forecastTomorrow')).toContainText('temporarily unavailable');
 });
 test('comparison uses the archived report-time temperature rather than the latest reading',async({page})=>{
- await prepare(page);await page.goto('/climate.html');await expect(page.locator('#climateDelta')).toHaveText('-1.5°C');await expect(page.locator('#climateComparisonTime')).toContainText('may be from different report times');
+ await prepare(page);await page.goto('/climate.html');await expect(page.locator('#weatherFingerprint')).toBeVisible();await expect(page.locator('#climateComparisonTime')).toBeVisible();await expect(page.locator('#climateDelta')).toHaveCount(0);
 });
 test('advanced zoom starts collapsed and downloads retain common navigation and range validation',async({page})=>{
  await prepare(page);await page.setViewportSize({width:390,height:844});await page.goto('/graphs.html');

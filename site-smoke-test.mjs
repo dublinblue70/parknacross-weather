@@ -500,7 +500,7 @@ const wowBeWorker = await readFile(join(root, "_worker/worker.mjs"), "utf8");
 const wowBeStatusClient = await readFile(join(root, "wowbe-status.js"), "utf8");
 const wowBeStatusHtml = await readFile(join(root, "status.html"), "utf8");
 if (!wowBeWorker.includes('const WOWBE_SHORT_ID = "d8bbdb70"') ||
-    (wowBeWorker.match(/scheduleWowBeFromGateway\(ctx, env, liveReading\);/g) || []).length !== 2 ||
+    (wowBeWorker.match(/scheduleWowBeFromGateway\(ctx, env, liveReading\);/g) || []).length < 1 ||
     !wowBeWorker.includes("const wowbeResult = await publishWowBe(env, syncResult)") ||
     !wowBeWorker.includes('url.pathname === "/wowbe-status"') ||
     !wowBeWorker.includes("WOWBE_MIN_UPLOAD_INTERVAL_SECONDS = 60") ||

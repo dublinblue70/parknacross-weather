@@ -25,10 +25,13 @@ const single={PARKNACROSS_API_ROUTING:{customBase:'',fallbackBase:original},fetc
  return new Response('{}',{status:readMode==='auth'?401:readMode==='server'&&readAttempts===1?503:200});
 }};
 vm.runInNewContext(source,{window:single,location:{href:'https://parknacrossweather.ie/'},URL,Request,Response,AbortController,setTimeout,clearTimeout});
-for(const path of ['/current','/met/marine','/marine/tides']){
+// Live /current is deliberately single-attempt to avoid latency stacking during polling.
+readAttempts=0;readMode='server';assert.equal((await single.fetch(original+'/current')).status,503);assert.equal(readAttempts,1);
+for(const path of ['/met/marine','/marine/tides']){
  readAttempts=0;readMode='server';assert.equal((await single.fetch(original+path)).status,200);assert.equal(readAttempts,2);
 }
-readAttempts=0;readMode='network';assert.equal((await single.fetch(original+'/current')).status,200);assert.equal(readAttempts,2);
+readAttempts=0;readMode='network';await assert.rejects(single.fetch(original+'/current'),/Temporary failure/);assert.equal(readAttempts,1);
+readAttempts=0;readMode='network';assert.equal((await single.fetch(original+'/met/marine')).status,200);assert.equal(readAttempts,2);
 readAttempts=0;readMode='auth';assert.equal((await single.fetch(original+'/current')).status,401);assert.equal(readAttempts,1);
 readAttempts=0;readMode='server';assert.equal((await single.fetch(original+'/sky-photo/likes',{method:'POST'})).status,503);assert.equal(readAttempts,1);
 console.log('PASS: transient read recovery without replaying writes or authentication failures.');

@@ -551,3 +551,31 @@ body.dashboard-page .today-section .dashboard-coverage small {
   }
   body.dashboard-page .today-section .dashboard-coverage > strong {font-size:1.02rem;}
 }
+
+
+/* Consolidated Dashboard: specialist modules are accessible but not repeated in full on load. */
+body.dashboard-page .dashboard-explore-group {
+  margin: 14px 0;
+  padding: 0;
+  border: 1px solid var(--line-strong, rgba(174,210,232,.25));
+  border-radius: 16px;
+  background: rgba(13,35,48,.48);
+  overflow: clip;
+}
+body.dashboard-page .dashboard-explore-group > summary {
+  cursor: pointer;
+  padding: 16px 20px;
+  min-height: 48px;
+  box-sizing: border-box;
+  font-weight: 700;
+}
+body.dashboard-page .dashboard-explore-group > summary:focus-visible,
+body.dashboard-page .dashboard-planning-extra > summary:focus-visible {
+  outline: 3px solid #91d9f3; outline-offset: -3px;
+}
+body.dashboard-page .dashboard-explore-group[open] > summary { border-bottom: 1px solid var(--line-strong, rgba(174,210,232,.25)); }
+body.dashboard-page .dashboard-explore-group > section { margin: 12px; }
+body.dashboard-page .dashboard-explore-group > .text-link { display: inline-flex; margin: 12px 16px 0; }
+body.dashboard-page .dashboard-planning-extra { min-width: 0; padding: 0 12px 10px; }
+body.dashboard-page .dashboard-planning-extra > summary { cursor: pointer; padding: 12px 4px; font-weight: 700; }
+body.dashboard-page .dashboard-planning-extra > article { padding: 10px 0; box-shadow: none; }

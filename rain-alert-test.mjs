@@ -7,7 +7,7 @@ const appSource = await readFile(new URL("./app.js", import.meta.url), "utf8");
 assert.match(source, /RAIN_ACTIVE_WINDOW_MS\s*=\s*5\s*\*\s*60\s*\*\s*1000/);
 assert.match(appSource, /RAIN_ACTIVE_WINDOW_MS\s*=\s*5\s*\*\s*60\s*\*\s*1000/);
 assert.match(source, /RAIN_CONFIRM_INCREMENT_MM\s*=\s*0\.2/);
-assert.match(appSource, /recentIncreaseMm\s*<\s*0\.2/);
+assert.match(appSource, /ParknacrossRainStatus\.evaluate/,'Dashboard delegates rain evidence to shared status logic');
 
 function makeAlerts(startTime) {
   let now = startTime;

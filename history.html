@@ -303,61 +303,15 @@
           </article>
         </section>
 
-        <section class="page-section">
-          <div class="section-heading">
-            <div>
-              <span class="section-eyebrow">Records</span>
-              <h2>All-time station records</h2>
-              <p>Since the station archive began.</p>
-            </div>
-          </div>
-          <div class="records-grid-page">
-            <article class="climate-card">
-              <span>Highest temperature</span
-              ><strong id="histAllHigh">--</strong
-              ><small id="histAllHighDate">--</small>
-            </article>
-            <article class="climate-card">
-              <span>Lowest temperature</span><strong id="histAllLow">--</strong
-              ><small id="histAllLowDate">--</small>
-            </article>
-            <article class="climate-card">
-              <span>Strongest gust</span><strong id="histAllGust">--</strong
-              ><small id="histAllGustDate">--</small>
-            </article>
-            <article class="climate-card">
-              <span>Highest sea-level pressure</span
-              ><strong id="histAllPressureHigh">--</strong
-              ><small id="histAllPressureHighDate">--</small>
-            </article>
-            <article class="climate-card">
-              <span>Lowest sea-level pressure</span
-              ><strong id="histAllPressureLow">--</strong
-              ><small id="histAllPressureLowDate">--</small>
-            </article>
-            <article class="climate-card">
-              <span>Total readings saved</span
-              ><strong id="histSamples">--</strong
-              ><small>Historical archive</small>
-            </article>
-          </div>
-        </section>
+        <section class="page-section info-card" id="historyRecordsLink" aria-label="Weather station records">
+  <div class="section-heading"><div><span class="section-eyebrow">Archive records</span><h2>All-time station records</h2><p>Browse the authoritative record board on the Records page.</p></div></div>
+  <a class="secondary-button" href="records.html">View all weather records →</a>
+</section>
 
-<section id="dateComparison" class="info-card date-comparison" aria-labelledby="comparisonHeading">
-  <span class="section-eyebrow">Two-date comparison</span>
-  <h2 id="comparisonHeading">Compare two dates</h2>
-  <p>See how temperature, wind, rain and other readings changed at the same time of day.</p>
-  <form id="comparisonForm" class="comparison-form">
-    <label for="comparisonFirst">First date<input id="comparisonFirst" type="date" required></label>
-    <label for="comparisonSecond">Second date<input id="comparisonSecond" type="date" required></label>
-    <label for="comparisonMetric">Measurement<select id="comparisonMetric">
-      <option value="temperature_c">Temperature · °C</option><option value="wind_speed_kmh">Wind speed · km/h</option><option value="wind_gust_kmh">Wind gust · km/h</option><option value="rain_rate_mm_h">Rain rate · mm/h</option><option value="pressure_hpa">Sea-level pressure · hPa</option><option value="soil_moisture_pct">Soil moisture · %</option>
-    </select></label>
-    <button id="compareDatesButton" type="submit" class="secondary-button">Compare dates</button>
-  </form>
-  <p id="comparisonStatus" class="action-status" role="status" aria-live="polite">Choose two dates, then select Compare dates. Both curves use Irish time; missing readings stay blank.</p>
-  <div class="chart-wrap" hidden><canvas id="comparisonChart" role="img" aria-label="Two-date weather comparison" hidden></canvas></div>
-  <p id="comparisonSummary" class="info-note comparison-summary"></p>
+<section id="dateComparison" class="page-section info-card" aria-labelledby="comparisonHeading">
+  <span class="section-eyebrow">Two-date comparison</span><h2 id="comparisonHeading">Compare two dates</h2>
+  <p>The interactive date comparison is available in Graphs, alongside the detailed measurements.</p>
+  <a class="secondary-button" href="graphs.html#dateComparison">Open date comparison →</a>
 </section>
       </main>
 
@@ -375,7 +329,7 @@
     <script src="archive-quality.js?v=20261008-v38-4-170"></script>
 <script src="maintenance-log.js?v=20261026-v38-4-232"></script><script src="maintenance-markers.js?v=20261009-v38-4-173"></script><script src="history-links.js?v=20261008-v38-4-170"></script><script src="history.js?v=20261102-history-inspector-1"></script>
     <script src="site-config.js?v=20261010-v38-4-188"></script>
-    <script src="date-comparison.js?v=20261010-v38-4-188"></script>
+    
     <!-- Cloudflare Web Analytics -->
     <script
       type="module"

@@ -57,6 +57,8 @@ const env={
   n:v=>Number(v).toFixed(1)
 };
 vm.createContext(env);
+// The dashboard uses the shared rain-status helper; load it just as the real page does.
+vm.runInContext(read('rain-status.js'),env);
 vm.runInContext(app.slice(appStart,appEnd),env);
 const base={epoch:clock,rain_daily_mm:0,rain_rate_mm_h:0,wind_speed_kmh:2.5,piezo_observed_epoch:clock,solar_w_m2:0,uv_index:0};
 const condition=(changes={})=>{
@@ -68,7 +70,11 @@ assert.equal(condition({rain_rate_mm_h:5}).tag,'Moderate rain');
 assert.equal(condition({rain_rate_mm_h:12}).tag,'Heavy rain');
 assert.equal(condition({rain_rate_mm_h:28}).tag,'Very heavy rain');
 assert.equal(condition({rain_rate_mm_h:35}).tag,'Torrential rain');
-assert.equal(condition({rain_rate_mm_h:0,piezo_rain_rate_mm_h:4}).tag,'Possible rain','Piezo is only unconfirmed detection');
-assert.equal(condition({rain_rate_mm_h:0,piezo_rain_rate_mm_h:0.3}).tag,'Light breeze','Weak piezo must not fake a rainfall classification');
+const strongPiezo=condition({rain_rate_mm_h:0,piezo_rain_rate_mm_h:4});
+assert.equal(strongPiezo.tag,'Rain indicated now','Strong piezo is a secondary indication, not measured gauge rain');
+assert.match(strongPiezo.story,/unconfirmed|disagree/i,'Sensor disagreement must be explicit');
+const weakPiezo=condition({rain_rate_mm_h:0,piezo_rain_rate_mm_h:0.3});
+assert.equal(weakPiezo.tag,'Possible rain','Weak piezo indication must not be labelled measured rainfall');
+assert.match(weakPiezo.story,/wind or vibration/i,'Weak piezo uncertainty must be disclosed');
 assert.doesNotMatch(condition({rain_rate_mm_h:0}).story,/Dry conditions with a light breeze/);
 console.log('PASS: shared WH40H rain intensity bands, dashboard, Rain Centre and PWA script loading.');

@@ -7,6 +7,7 @@ test.beforeEach(async({page})=>{
 });
 for(const [file,id,width] of [['graphs.html','gWindRose',390],['index.html','windRose',1280]])test(`${file} has speed spokes and a calm centre at ${width}px`,async({page},testInfo)=>{
  await page.setViewportSize({width,height:900});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/'+file);
+ if(file==='index.html')await page.locator('details[data-dashboard-extra="charts"] > summary').click();
  await expect.poll(()=>page.evaluate(id=>Boolean(window.Chart?.getChart(document.getElementById(id))),id)).toBe(true);
  const result=await page.evaluate(({id,rows,end})=>{
   const c=Chart.getChart(document.getElementById(id));const result=ParknacrossWindRose.update(c,rows,null,{endEpoch:end,hours:24});

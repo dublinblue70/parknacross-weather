@@ -19,6 +19,7 @@ jobs:
       - run: npm ci
       - run: node tests/site-release-integrity.test.mjs
       - run: node tests/whole-site-structure.test.mjs
+      - run: node tests/site-consolidation.test.mjs
       - run: node tests/published-release.test.mjs
       - run: node tests/rain-pipeline-monitor.test.mjs
       - run: node tests/wh52-upload-monitor.test.mjs

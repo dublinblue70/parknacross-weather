@@ -80,11 +80,8 @@ test('public pages fit both compact phones and tablets',async({page})=>{
 test('moon phase labels stay readable on compact phones',async({page})=>{
  await page.setViewportSize({width:320,height:900});
  await page.goto('/index.html',{waitUntil:'domcontentloaded'});
- // Expand mobile astronomy before measuring track widths; hidden grids return
- // CSS repeat() tokens rather than resolved pixel columns.
- const toggle=page.locator('.astronomy-strip .mobile-detail-toggle').first();
- await expect(toggle).toBeVisible();
- if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();
+ // The Sun & Moon section is restored as an always-visible compact block.
+ await expect(page.locator('.astronomy-strip')).toBeVisible();
  await expect(page.locator('.moon-phase-track li').first()).toBeVisible();
  const result=await page.locator('.moon-phase-track').evaluate(el=>({
   columns:getComputedStyle(el).gridTemplateColumns.split(' ').length,
