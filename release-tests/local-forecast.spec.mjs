@@ -22,7 +22,7 @@ for(const width of [390,1280])test(`Ardamine forecast replaces broad text at ${w
  const toggle=page.locator('#forecast>.mobile-detail-toggle');if(await toggle.count()&&await toggle.getAttribute('aria-expanded')==='false')await toggle.click();
  await expect(page.locator('#forecastToday')).toContainText('Temperature: 10 °C');await expect(page.locator('#forecastToday')).toContainText('Wind (sustained): 30 km/h');
  await expect(page.locator('#forecastTodaySummary')).toContainText('Dry · 10 °C · Wind 30 km/h');await expect(page.locator('#forecastTonightSummary')).toContainText('Rain');await expect(page.locator('#forecastTomorrowSummary')).not.toBeEmpty();
- await expect(page.locator('#forecastTomorrowLabel')).toContainText('Tomorrow morning');await expect(page.locator('#forecastTomorrowCoverage')).toContainText('22 Oct');
+ await expect(page.locator('#forecastTomorrowLabel')).toHaveText('Tomorrow');await expect(page.locator('#forecastTomorrowCoverage')).toContainText('22 Oct');await expect(page.locator('#forecastTomorrowCoverage')).toContainText('partial coverage');
  await expect(page.locator('#forecast')).not.toContainText('NATIONAL TEXT');await expect(page.locator('#forecast h2')).toHaveText('Ardamine forecast · Co. Wexford');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
  await page.locator('#forecast').screenshot({path:testInfo.outputPath('local-forecast.png')});
