@@ -255,9 +255,10 @@
             <h2>Recent station changes</h2>
             <p>Firmware, sensor installation, calibration and maintenance changes are recorded so historical observations have useful context.</p>
           </div>
-          <a class="primary-button station-log-link" href="maintenance.html">Open station log</a>
+          <a class="text-link station-log-link" href="#stationMaintenanceFull">Full maintenance history below ↓</a>
         </div>
         <div id="stationMaintenancePreview" class="station-maintenance-preview"><p class="info-note">Loading recorded changes…</p></div>
+        <details id="stationMaintenanceFull" class="station-fold"><summary>Full maintenance &amp; change log</summary><div id="maintenanceLog" class="maintenance-log"><p class="info-note">Loading recorded changes…</p></div></details>
       </article>
     </section>
 
@@ -610,7 +611,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<script src="offline.js?v=20261010-v38-4-190"></script><script src="notification-storage.js?v=20261027-persistence"></script><script src="alert-settings.js?v=20261116-notification-persistence"></script><script src="notification-test.js?v=20261101"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="maintenance-log.js?v=20261113-sensor-language"></script><script src="station-page.js?v=20261113-sensor-language"></script><script src="station-v2.js?v=20261113-sensor-language"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="offline.js?v=20261010-v38-4-190"></script><script src="notification-storage.js?v=20261027-persistence"></script><script src="alert-settings.js?v=20261116-notification-persistence"></script><script src="notification-test.js?v=20261101"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="maintenance-log.js?v=20261113-sensor-language"></script><script src="maintenance.js?v=20261117-station-full-history"></script><script src="station-page.js?v=20261113-sensor-language"></script><script src="station-v2.js?v=20261113-sensor-language"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20261008-v38-4-170"></script>
 <script src="pwa-diagnostics.js?v=20261006-v38-4-144"></script>
 <script src="accessibility.js?v=20260924-v38-4-97"></script>
