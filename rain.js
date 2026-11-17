@@ -23,7 +23,6 @@
     default: return "No current rain measured by the dedicated gauge";
   }
  }
- function eventGraphLink(event){const start=Number(event.start_epoch),end=Number(event.end_epoch),now=Math.floor(Date.now()/1000);const from=Number.isFinite(start)&&start>0?Math.floor(start)-1800:null,to=Number.isFinite(end)&&end>=start?Math.min(now,Math.ceil(end)+1800):now;return from&&to>from&&to-from<=31*86400?`graphs.html?from=${from}&to=${to}#gRain`:'history.html';}
  let chart=null,loading=false;
  const calendarLabel=day=>/^\d{4}-\d{2}-\d{2}$/.test(day||"")?new Date(day+"T12:00:00Z").toLocaleDateString("en-IE",{timeZone:"Europe/Dublin",weekday:"short",day:"numeric",month:"short"}):"Date unavailable";
 
@@ -105,7 +104,6 @@
    set("peakRainEventRate",e.highest_rate_event&&usable(e.highest_rate_event.peak_rate_mm_h)?`${n(e.highest_rate_event.peak_rate_mm_h)} mm/h`:"--");
    set("peakRainEventDate",e.highest_rate_event?.start_at?dt(e.highest_rate_event.start_at):"--");
    set("longestDryInterval",usable(e.longest_dry_hours)?`${n(e.longest_dry_hours)} h`:"--");
-   const list=$("rainEventsList");if(list){const events=Array.isArray(e.events)?e.events:[];list.innerHTML=events.length?events.slice(0,10).map(event=>{const mins=Number(event.duration_minutes||0),dur=mins>=60?`${Math.floor(mins/60)}h ${mins%60}m`:`${mins} min`;return `<article class="rain-event-row"><a href="${eventGraphLink(event)}">${dt(event.start_at)}${event.active?" · active":""}</a><strong>${n(event.total_mm)} mm</strong><span>${dur}</span><span>Peak ${n(event.peak_rate_mm_h)} mm/h</span></article>`;}).join(""):results[4].status==="rejected"?'<p class="info-note">Rain event history is temporarily unavailable.</p>':'<p class="info-note">No measurable rain events were identified in the last 30 days.</p>';}
   }catch(e){set("rainEventText","Rainfall summary temporarily unavailable.");set("rainLoadStatus","Rainfall sources could not be reached. Use Refresh rain data to try again.");}
   finally{loading=false;if(button){button.disabled=false;button.textContent="Refresh rain data";}}
  }
