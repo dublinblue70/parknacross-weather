@@ -107,6 +107,7 @@
    for(const card of informational){
     const item=document.createElement('li'),link=document.createElement('a');
     link.href='#health-'+card.key;link.textContent=card.title;
+    link.addEventListener('click',()=>{const toggle=$('healthIssuesOnly');if(toggle){toggle.checked=false;issuesOnly=false;applyFilter();}});
     const detail=document.createElement('span');detail.textContent=' · '+($(card.key+'Value')?.textContent||'Unavailable').trim();
     item.append(link,detail);infoList.append(item);
    }
