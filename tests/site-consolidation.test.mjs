@@ -22,6 +22,11 @@ for(const id of ["heroTemp","heroRain","windVal","rainVal","socialAdminPanel","t
 }
 assert(home.includes("data-laundry-window"),"Laundry tool must remain available");
 assert(app.includes("function updateCharts()")&&app.includes('set("heroRain",'),"Dashboard logic must remain");
+const preferences=await read("dashboard-preferences.js");
+const shortcutScript=await read("dashboard-ui.js");
+assert(preferences.includes("section?.closest('details.dashboard-explore-group')"),"Custom layout must keep optional disclosure wrappers");
+assert(shortcutScript.includes("revealSpecialistHash"),"Direct links must open collapsed specialist sections");
+assert(home.includes("dashboard-preferences.js?v=20261117-preserve-disclosures"),"Dashboard preference changes must use refreshed assets");
 assert(history.includes('href="records.html"')&&history.includes('href="graphs.html#dateComparison"'),"History links to definitive tools missing");
 assert(!history.includes('id="comparisonForm"')&&graphs.includes('id="comparisonForm"'),"Duplicate date comparison still shown");
 assert(graphs.includes('id="comparisonChart"'),"Date comparison chart was removed");
