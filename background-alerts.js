@@ -27,11 +27,6 @@
   await window.PWNotificationStorage?.ready;
   verified=false;checking=read()?.active===true;
   if(!read()?.active){checking=false;return false;}
-   // Restore a previously saved background opt-in only when there is no explicit opt-out.
-   const preferences=window.PWAlerts?.loadSettings?.();
-   if(preferences?.enabled===false&&preferences.explicitlyDisabled!==true&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
-    window.PWAlerts?.saveSettings?.({enabled:true,explicitlyDisabled:false});
-   }
    try{const sub=await Promise.race([subscription(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Subscription check timed out')),10000))]);
    if(!sub){
     repair=true;
