@@ -9,6 +9,8 @@ assert.ok(declaration, "the shared JSON request helper includes an explicit time
 let attempts = 0;
 const getJSON = runInNewContext(`(${declaration})`, {
   AbortController,
+  URL,
+  location: {href: 'https://weather.example/'},
   setTimeout,
   clearTimeout,
   fetch: (_url, options) => {
@@ -24,6 +26,6 @@ let failure;
 try { await getJSON("https://weather.example/current", "no-store", 5); }
 catch (error) { failure = error; }
 assert.equal(failure?.message, "Weather request timed out after 1 seconds", "a stalled request returns a clear timeout error");
-assert.equal(attempts, 2, "the current-reading request retries once after a timeout");
+assert.equal(attempts, 1, "the current-reading request has one fast attempt, avoiding serial retry delay");
 
-console.log("Dashboard API requests time out and retry instead of leaving readings on an endless loading state.");
+console.log("PASS: Dashboard API requests time out, and the live current feed does not stall on serial retries.");
