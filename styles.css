@@ -2631,3 +2631,13 @@ footer > .footer-links a:focus-visible {
 .history-chart-inspector[hidden] { display: none; }
 .history-chart-inspector strong { font-size: .9rem; }
 .history-chart-inspector small { color: var(--muted); font-size: .78rem; }
+
+/* Dashboard: source-aware last observation stamp, intentionally unobtrusive on mobile. */
+.hero-observation-time {
+  display: block;
+  margin-top: 8px;
+  color: #a9becb;
+  font-size: .86rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}

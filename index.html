@@ -34,7 +34,7 @@
     <link rel="manifest" href="manifest.webmanifest?v=20260924-v38-4-97" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20261029-v38-4-234-audit" />
+    <link rel="stylesheet" href="styles.css?v=20261118-observation-freshness" />
     <link rel="stylesheet" href="site-enhancements.css?v=20261010-v38-4-190">
     <link rel="stylesheet" href="weather-window.css?v=20261009-v38-4-184" />
     <!-- Critical astronomy styles stay with the markup so an older PWA cache
@@ -768,6 +768,7 @@
                     >Loading your Parknacross station…</span
                   >
                 </div>
+                <small id="heroObservationTime" class="hero-observation-time" role="status">Checking observation time…</small>
                 <div class="summary-line">
                   Feels like <strong id="heroFeels">--</strong>
                   <span>·</span>
@@ -804,7 +805,7 @@
             <strong id="liveText">CHECKING STATION…</strong>
           </div>
           <div class="station-status observation-status">
-            <span class="status-label">Latest saved observation</span>
+            <span class="status-label">Latest station observation</span>
             <strong id="lastUpdatedRelative">Connecting…</strong>
             <small id="lastUpdated">--</small>
           </div>
@@ -1840,7 +1841,7 @@ Building wind direction distribution…
     <script src="source-freshness.js?v=20261026-v38-4-232"></script>
     <script src="dashboard-enhancements.js?v=20261114-sun-moon-visible"></script>
     <script src="archive-quality.js?v=20261115-coverage-clarity"></script>
-<script src="chart-explorer.js?v=20261027-compact-zoom"></script><script src="dashboard-preferences.js?v=20261117-preserve-disclosures"></script><script src="local-forecast.js?v=20261116-rain-crosscheck-v2"></script><script src="forecast-accuracy.js?v=20261116-rain-skill" defer></script><script src="hydrangea-soil.js?v=20261113-sensor-language"></script><script src="rain-intensity.js?v=20261116-rain-rate-bands"></script><script src="rain-status.js?v=20261116-fresh-rain-evidence-v2"></script><script src="app.js?v=20261117-hide-piezo-dashboard"></script>
+<script src="chart-explorer.js?v=20261027-compact-zoom"></script><script src="dashboard-preferences.js?v=20261117-preserve-disclosures"></script><script src="local-forecast.js?v=20261116-rain-crosscheck-v2"></script><script src="forecast-accuracy.js?v=20261116-rain-skill" defer></script><script src="hydrangea-soil.js?v=20261113-sensor-language"></script><script src="rain-intensity.js?v=20261116-rain-rate-bands"></script><script src="rain-status.js?v=20261116-fresh-rain-evidence-v2"></script><script src="app.js?v=20261118-source-aware-freshness"></script>
     <script>
       /* Self-heal text written by any older dashboard script still resident in
          an installed PWA. This observer can be removed after legacy caches age out. */
