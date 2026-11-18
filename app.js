@@ -14,8 +14,12 @@ const MARINE_URL = `${API_BASE}/met/marine`;
 const ARDAMINE_LAT = 52.6247;
 const ARDAMINE_LON = -6.25;
 const STATION_TIME_ZONE = "Europe/Dublin";
-const STALE_AFTER_MS = 3 * 60 * 1000;
-const OFFLINE_AFTER_MS = 10 * 60 * 1000;
+// Direct gateway packets normally arrive about once per minute; saved
+// archive observations occupy five-minute slots. Keep the independent
+// three-minute rainfall-evidence limit in rain-status.js unchanged.
+const GATEWAY_EXPECTED_INTERVAL_MS = 60 * 1000;
+const ARCHIVE_EXPECTED_INTERVAL_MS = 5 * 60 * 1000;
+const OFFLINE_AFTER_MS = 20 * 60 * 1000;
 const SOIL_BASELINE_URL = `${API_BASE}/soil-baseline`;
 let firstValidSoilEpoch = null;
 const SOIL_SENSOR_BASELINE_DAYS = 14;
@@ -58,6 +62,7 @@ let deferredInstallPrompt = null;
 let latestObservationTime = null;
 let latestGatewayUploadTime = null;
 let latestCurrent = null;
+let currentResponseAvailable = false;
 let latestRainDetected = false;
 let latestForecastToday = "";
 let visitComparisonRendered = false;
@@ -399,6 +404,20 @@ function updateRelativeObservation() {
       `Gateway received ${relativeObservationAge(latestGatewayUploadTime)}`
     );
   }
+  if (latestCurrent) {
+    // Age changes while a visitor keeps the page open, even without a new packet.
+    updateFreshness(latestCurrent);
+    updateHeroObservationTime(latestCurrent);
+    const rainState = rainActivity(latestCurrent);
+    if (rainState.reason === "stale_observation" || rainState.reason === "missing_timestamp") {
+      const condition = conditionInfo(latestCurrent, false);
+      set("conditionsTag", condition.tag);
+      set("weatherStory", condition.story);
+      document.body.classList.remove("weather-rain", "weather-bright", "weather-windy");
+      document.body.classList.add("weather-neutral");
+      latestRainDetected = false;
+    }
+  }
 }
 
 function dateLabel(value) {
@@ -591,11 +610,17 @@ function conditionInfo(current, isNight) {
   }
   if (!rainState.rainAvailable) {
     if (rainState.reason === "stale_observation" || rainState.reason === "missing_timestamp") {
-      const ageMinutes = Number.isFinite(rainState.observationAgeMs) ? Math.max(0, Math.floor(rainState.observationAgeMs / 60000)) : null;
+      const observation = stationObservationState(current);
+      const when = observation.time === null
+        ? "at an unknown time"
+        : `at ${irishObservationClock(observation.time)} Irish time (${relativeObservationAge(observation.time)})`;
+      const delayed = observation.status === "delayed" || observation.status === "offline";
       return {
-        tag: "Station reading delayed",
-        icon: "⏱️",
-        story: `The latest station observation is ${ageMinutes === null ? "not timestamped" : ageMinutes + " minute" + (ageMinutes === 1 ? "" : "s") + " old"}. Live rainfall cannot be confirmed. Today's rain total is a separate cumulative reading.`,
+        tag: observation.status === "missing" ? "Observation time unavailable"
+          : delayed ? "Station reading delayed"
+          : observation.source === "archive" ? "Saved station reading" : "Rain status updating",
+        icon: delayed ? "⏱️" : "☁️",
+        story: `Latest ${observation.source === "archive" ? "saved " : ""}station observation ${when}. Live rainfall cannot be confirmed from this reading; today's rain total is cumulative, not current intensity.`,
         className: "weather-neutral", rainState
       };
     }
@@ -1026,28 +1051,76 @@ function dailyRainTotals() {
   });
 }
 
-function updateFreshness(current) {
+// Source-aware freshness: the normal archive cadence is NOT a station fault.
+// The live rain gauge independently requires a <= 3-minute observation.
+function stationObservationState(current, now = Date.now()) {
+  const source = current?.observation_source === "gateway_live" ? "gateway"
+    : current?.observation_source === "archive_or_cloud" ? "archive" : "unknown";
   const time = readingTime(current);
+  if (!Number.isFinite(time) || time <= 0 || time > now + 90 * 1000) {
+    return {status:"missing", source, time:null, ageMs:null};
+  }
+  const ageMs = Math.max(0, now - time);
+  const expectedIntervalMs = source === "gateway"
+    ? GATEWAY_EXPECTED_INTERVAL_MS : ARCHIVE_EXPECTED_INTERVAL_MS;
+  const delayedAfterMs = source === "gateway"
+    ? 3 * expectedIntervalMs : 2 * expectedIntervalMs;
+  const status = ageMs >= OFFLINE_AFTER_MS ? "offline"
+    : ageMs >= delayedAfterMs ? "delayed"
+    : source === "gateway" ? "live" : "saved";
+  return {status, source, time, ageMs, expectedIntervalMs, delayedAfterMs};
+}
+
+function irishObservationClock(time) {
+  return new Date(time).toLocaleTimeString("en-IE", {
+    timeZone: STATION_TIME_ZONE, hour:"2-digit", minute:"2-digit",
+    second:"2-digit", hour12:false
+  });
+}
+
+function updateHeroObservationTime(current) {
+  const observation = stationObservationState(current);
+  const sourceLabel = observation.source === "gateway" ? "Direct station upload"
+    : observation.source === "archive" ? "Saved archive observation"
+    : "Station observation";
+  set("heroObservationTime", observation.time === null
+    ? "Observation time unavailable"
+    : `${sourceLabel}: ${irishObservationClock(observation.time)} Irish time · ${relativeObservationAge(observation.time)}`);
+}
+
+function updateFreshness(current) {
   const pill = $("livePill");
-  if (!time || !pill) return;
-
-  const age = Date.now() - time;
+  if (!pill) return;
+  const observation = stationObservationState(current);
   pill.classList.remove("delayed", "offline", "checking");
-
-  if (age >= OFFLINE_AFTER_MS) {
+  $("cloudStatus")?.classList.remove("bad", "warn", "ok");
+  if (!currentResponseAvailable) {
+    pill.classList.add("offline");
+    set("liveText", navigator.onLine ? "LIVE FEED UNAVAILABLE · LAST SAVED DATA" : "OFFLINE · LAST SAVED DATA");
+    set("cloudStatus", "Unavailable");
+    $("cloudStatus")?.classList.add("bad");
+  } else if (observation.status === "missing") {
+    pill.classList.add("delayed");
+    set("liveText", "STATION TIMESTAMP UNAVAILABLE");
+    set("cloudStatus", "Time unknown");
+    $("cloudStatus")?.classList.add("warn");
+  } else if (observation.status === "offline") {
     pill.classList.add("offline");
     set("liveText", "STATION DATA OFFLINE");
     set("cloudStatus", "Offline");
     $("cloudStatus")?.classList.add("bad");
-  } else if (age >= STALE_AFTER_MS) {
+  } else if (observation.status === "delayed") {
     pill.classList.add("delayed");
     set("liveText", "STATION DATA DELAYED");
     set("cloudStatus", "Delayed");
     $("cloudStatus")?.classList.add("warn");
+  } else if (observation.status === "saved") {
+    pill.classList.add("checking");
+    set("liveText", "SAVED STATION READING");
+    set("cloudStatus", "Archive available");
   } else {
     set("liveText", "LIVE FROM PARKNACROSS");
     set("cloudStatus", "Connected");
-    $("cloudStatus")?.classList.remove("bad", "warn");
     $("cloudStatus")?.classList.add("ok");
   }
 }
@@ -1448,6 +1521,7 @@ function updateDashboard(current) {
   updateWhatToWear(current, latestRainDetected);
   updateSoilPanel(current);
 
+  updateHeroObservationTime(current);
   if (currentTime) {
     latestObservationTime = currentTime;
     const date = new Date(currentTime);
@@ -1467,6 +1541,7 @@ function updateDashboard(current) {
       })}`
     );
   } else {
+    latestObservationTime = null;
     set("lastUpdatedRelative", "Unavailable");
     set("lastUpdated", "No observation timestamp");
   }
@@ -1560,7 +1635,7 @@ function updateDashboard(current) {
   const metricRateText = intensityTools?.formatRate(liveRainRate)
     || (usable(liveRainRate) ? `${n(liveRainRate)} mm/h` : "Unavailable");
   const rainRateDetail = condition.rainState?.reason === "stale_observation"
-    ? `Station reading delayed · ${Math.max(0, Math.floor(condition.rainState.observationAgeMs / 60000))} min old`
+    ? `Live rain rate unconfirmed · observation ${relativeObservationAge(readingTime(current))}`
     : condition.rainState?.reason === "missing_timestamp" ? "Observation timestamp missing"
     : condition.rainState?.reason === "rate_missing" ? "WH40H current rate missing · daily total separate"
     : usable(liveRainRate) && Number(liveRainRate) > 0
@@ -2484,6 +2559,7 @@ async function loadEverything() {
     current = await getJSON(CURRENT_URL, "no-store");
     current = await restoreBatteryIfMissing(current);
     latestCurrent = current;
+    currentResponseAvailable = true;
     writeLocalCache("current", current);
     liveCurrent = true;
     markLiveMode();
@@ -2492,6 +2568,7 @@ async function loadEverything() {
     updateDashboard(current);
   } catch (error) {
     console.error("Current conditions:", error);
+    currentResponseAvailable = false;
     const cached = readLocalCache("current");
     current = cached?.value || null;
     if (!current) {
@@ -2571,16 +2648,17 @@ async function refreshCurrent() {
     let current = await getJSON(CURRENT_URL, "no-store");
     current = await restoreBatteryIfMissing(current);
     latestCurrent = current;
+    currentResponseAvailable = true;
     writeLocalCache("current", current);
     markLiveMode();
     updateDashboard(current);
     window.PWAlerts?.evaluateCurrent?.(current);
   } catch (error) {
     console.error("Current refresh:", error);
+    currentResponseAvailable = false;
     if (latestCurrent) {
       markOfflineMode(latestCurrent);
-      $("livePill")?.classList.add("offline");
-      set("liveText", navigator.onLine ? "LIVE FEED UNAVAILABLE · LAST SAVED DATA" : "OFFLINE · LAST SAVED DATA");
+      updateFreshness(latestCurrent);
     }
   }
 }
