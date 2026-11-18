@@ -1,0 +1,56 @@
+name: Build Parknacross coastal app icons
+on:
+  push:
+    branches:
+      - codex/coastal-app-icon-20261118
+    paths:
+      - branding/coastal-weather-master-256.webp.b64
+      - tools/build_coastal_icons.py
+      - .github/workflows/build-coastal-icons.yml
+      - tools/apply_coastal_branding.py
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  generate-icons:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow==11.3.0
+      - run: python tools/build_coastal_icons.py
+      - run: python tools/apply_coastal_branding.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:smoke
+      - run: npm run test:release
+      - run: node tests/site-release-integrity.test.mjs
+      - name: Validate generated assets
+        run: |
+          file favicon.ico icon-192.png icon-512.png icon-maskable-192.png icon-maskable-512.png apple-touch-icon.png
+          python - <<'PY'
+          from PIL import Image
+          for fn in ["icon-192.png","icon-512.png","icon-maskable-192.png","icon-maskable-512.png","apple-touch-icon.png"]:
+              with Image.open(fn) as im:
+                  im.verify()
+          print("PASS: all key icons decode")
+          PY
+      - name: Commit updated icon artwork to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add favicon.ico favicon-*.png icon-192.png icon-256.png icon-512.png icon-maskable-192.png icon-maskable-512.png apple-touch-icon*.png mstile-150x150.png parknacross-master-1024.png manifest.webmanifest service-worker.js *.html
+          if git diff --cached --quiet; then
+            echo "All icon assets already current"
+          else
+            git commit -m "Generate approved coastal artwork for Android, Apple and desktop"
+            git push
+          fi
