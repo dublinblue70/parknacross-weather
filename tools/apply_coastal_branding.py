@@ -103,6 +103,6 @@ assert "self.addEventListener(\"notificationclick\"" in sw_new
 assert data["id"] == "/"
 assert data["start_url"] == "./index.html"
 assert len([x for x in data["icons"] if x["purpose"] == "maskable"]) >= 2
-assert any(x["src"].startswith("icon-512.png?") for x in data["icons"])
-assert any(x["src"].startswith("icon-maskable-512.png?") for x in data["icons"])
+assert any(x["src"] == "icon-512.png" for x in data["icons"])
+assert any(x["src"] == "icon-maskable-512.png" for x in data["icons"])
 print(f"PASS: icon references/cache updated in {len(modified)} files: {', '.join(modified)}")
