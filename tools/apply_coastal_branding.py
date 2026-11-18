@@ -62,10 +62,10 @@ for html in sorted(ROOT.glob("*.html")):
 manifest = ROOT / "manifest.webmanifest"
 data = json.loads(manifest.read_text(encoding="utf-8"))
 for item in data.get("icons", []):
-    item["src"] = item["src"].split("?")[0] + "?v=" + TAG
+    item["src"] = item["src"].split("?")[0]
 for shortcut in data.get("shortcuts", []):
     for item in shortcut.get("icons", []):
-        item["src"] = item["src"].split("?")[0] + "?v=" + TAG
+        item["src"] = item["src"].split("?")[0]
 # Important: keep PWA id, scope and start_url exactly as before.
 out = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 if manifest.read_text(encoding="utf-8") != out:
