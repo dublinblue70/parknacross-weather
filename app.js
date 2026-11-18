@@ -562,6 +562,20 @@ function rainActivity(current) {
 
 function conditionInfo(current, isNight) {
   const rainState = rainActivity(current);
+  // A cached reading cannot establish that rain is falling right now, even
+  // if its old rate would otherwise still fall within the rain sensor window.
+  if (!currentResponseAvailable) {
+    const observation = stationObservationState(current);
+    const when = observation.time === null ? "at an unknown time"
+      : `at ${irishObservationClock(observation.time)} Irish time (${relativeObservationAge(observation.time)})`;
+    return {
+      tag: "Live feed unavailable",
+      icon: "☁️",
+      story: `Last saved observation ${when}. Live rainfall cannot be verified while the station feed is unavailable.`,
+      className: "weather-neutral",
+      rainState: {...rainState, rainRate:null, rainAvailable:false, rainIndicatedNow:false}
+    };
+  }
   const rain = rainState.rainRate;
   const wind = Number(current.wind_speed_kmh || 0);
   const solar = Number(current.solar_w_m2 || 0);
@@ -1530,15 +1544,11 @@ function updateDashboard(current) {
 
     set(
       "lastUpdated",
-      `Updated ${date.toLocaleTimeString("en-IE", {
-        timeZone: STATION_TIME_ZONE,
-        hour: "2-digit",
-        minute: "2-digit"
-      })} · ${date.toLocaleDateString("en-IE", {
+      `Observed ${irishObservationClock(currentTime)} · ${date.toLocaleDateString("en-IE", {
         timeZone: STATION_TIME_ZONE,
         day: "2-digit",
         month: "short"
-      })}`
+      })} Irish time`
     );
   } else {
     latestObservationTime = null;
