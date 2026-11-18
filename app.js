@@ -564,7 +564,7 @@ function conditionInfo(current, isNight) {
   const rainState = rainActivity(current);
   // A cached reading cannot establish that rain is falling right now, even
   // if its old rate would otherwise still fall within the rain sensor window.
-  if (!currentResponseAvailable) {
+  if (typeof currentResponseAvailable !== "undefined" && !currentResponseAvailable) {
     const observation = stationObservationState(current);
     const when = observation.time === null ? "at an unknown time"
       : `at ${irishObservationClock(observation.time)} Irish time (${relativeObservationAge(observation.time)})`;
