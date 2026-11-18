@@ -566,12 +566,10 @@ function conditionInfo(current, isNight) {
   // if its old rate would otherwise still fall within the rain sensor window.
   if (typeof currentResponseAvailable !== "undefined" && !currentResponseAvailable) {
     const observation = stationObservationState(current);
-    const when = observation.time === null ? "at an unknown time"
-      : `at ${irishObservationClock(observation.time)} Irish time (${relativeObservationAge(observation.time)})`;
     return {
       tag: "Live feed unavailable",
       icon: "☁️",
-      story: `Last saved observation ${when}. Live rainfall cannot be verified while the station feed is unavailable.`,
+      story: "Showing the last saved weather values. Live rainfall cannot be verified until the station feed reconnects.",
       className: "weather-neutral",
       rainState: {...rainState, rainRate:null, rainAvailable:false, rainIndicatedNow:false}
     };
@@ -625,16 +623,17 @@ function conditionInfo(current, isNight) {
   if (!rainState.rainAvailable) {
     if (rainState.reason === "stale_observation" || rainState.reason === "missing_timestamp") {
       const observation = stationObservationState(current);
-      const when = observation.time === null
-        ? "at an unknown time"
-        : `at ${irishObservationClock(observation.time)} Irish time (${relativeObservationAge(observation.time)})`;
       const delayed = observation.status === "delayed" || observation.status === "offline";
       return {
         tag: observation.status === "missing" ? "Observation time unavailable"
           : delayed ? "Station reading delayed"
           : observation.source === "archive" ? "Saved station reading" : "Rain status updating",
         icon: delayed ? "⏱️" : "☁️",
-        story: `Latest ${observation.source === "archive" ? "saved " : ""}station observation ${when}. Live rainfall cannot be confirmed from this reading; today's rain total is cumulative, not current intensity.`,
+        story: observation.status === "missing"
+          ? "No valid observation timestamp was supplied. Live rainfall cannot be confirmed."
+          : delayed
+            ? "This observation is overdue. Live rainfall cannot be confirmed; today's rain total remains cumulative."
+            : "Live rainfall cannot be confirmed from this reading. Today's rain total is cumulative, not current intensity.",
         className: "weather-neutral", rainState
       };
     }
