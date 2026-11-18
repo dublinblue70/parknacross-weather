@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-257-20261117-health-notifications-v2";
+const CACHE_NAME = "parknacross-v38-4-257-20261118-coastal-icons";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./privacy-providers.css",
@@ -141,6 +141,13 @@ const STATIC_ASSETS = [
   "./pwa-diagnostics.js",
   "./manifest.webmanifest",
   "./favicon.svg",
+  "./icon-256.png",
+  "./mstile-150x150.png",
+  "./browserconfig.xml",
+  "./safari-pinned-tab.svg",
+  "./favicon-32.png",
+  "./favicon-16.png",
+  "./favicon.ico",
   "./icon-192.png",
   "./icon-512.png",
   "./icon-maskable-192.png",
