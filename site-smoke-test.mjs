@@ -134,8 +134,8 @@ const requiredChecks = [
   ["service-worker.js", "./ardamine-weather.html"],
   ["service-worker.js", "./north-wexford-coastal-weather.html"],
   ["intelligence.html", "window.location.replace(\"summary.html\")"],
-  ["summary.html", "Significant weather check"],
-  ["summary.js", "renderSignificantWeather"],
+  ["summary.html", "id=\"officialWarningBadge\""],
+  ["summary.js", "function renderOfficialWarningStatus"],
   ["summary.js", "AbortSignal.timeout(30000)"],
   ["coast.html", "Water Safety Ireland"],
   ["records.js", "under 0.2 mm/day"],
@@ -275,6 +275,7 @@ if (!statusScript.includes("coverage · ${reliability.actual_samples")) failures
 const summaryHtml = await readFile(join(root, "summary.html"), "utf8");
 const summaryApp = await readFile(join(root, "summary.js"), "utf8");
 if (!summaryHtml.includes('id="officialWarningBadge"') || !summaryApp.includes('function renderOfficialWarningStatus')) failures.push("summary: official warning colour status is missing");
+if (/Significant weather check|How to read these checks|significantWeatherBadge|significantWeatherNarrative/.test(summaryHtml + summaryApp)) failures.push("summary: obsolete significant-weather checker must remain removed");
 if (!summaryApp.includes('warning-green') || !summaryApp.includes('warning-yellow') || !summaryApp.includes('warning-orange') || !summaryApp.includes('warning-red') || !summaryApp.includes('warning-white')) failures.push("summary.js: official warning colour states are incomplete");
 try {
   const start = summaryApp.indexOf("function renderOfficialWarningStatus(");
