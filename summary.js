@@ -245,28 +245,6 @@ function renderRainSummary(rain, todayRain) {
     : "0.0 mm calendar days · includes today so far");
 }
 
-function renderSignificantWeather(rows){
-  const cutoff=Date.now()-24*60*60*1000;
-  const recent=(rows||[]).filter(row=>{const date=readingDate(row);return date&&date.getTime()>=cutoff;}).sort((a,b)=>readingDate(a)-readingDate(b));
-  if(!recent.length){set("significantWeatherBadge","Unavailable");set("significantWeatherNarrative","The latest 24-hour observation review is temporarily unavailable.");return;}
-  const pressures=recent.filter(row=>usable(row.pressure_hpa));
-  const pressureChange=pressures.length>1?Number(pressures.at(-1).pressure_hpa)-Number(pressures[0].pressure_hpa):null;
-  const gustRow=maxGustReading(recent),maxGust=usable(gustRow?.wind_gust_kmh)?Number(gustRow.wind_gust_kmh):null;
-  const rainRates=recent.filter(row=>usable(row.rain_rate_mm_h)).map(row=>Number(row.rain_rate_mm_h));
-  const maxRain=rainRates.length?Math.max(...rainRates):null;
-  const lightningRows=recent.filter(row=>usable(row.lightning_strikes)).map(row=>({time:readingDate(row)?.getTime(),count:Number(row.lightning_strikes)})).filter(row=>Number.isFinite(row.time));
-  let lightningChange=lightningRows.length?0:null;
-  if(lightningRows.length>1){for(let i=1;i<lightningRows.length;i++){const previous=lightningRows[i-1],current=lightningRows[i],elapsed=current.time-previous.time;if(elapsed>0&&elapsed<=20*60*1000&&current.count>=previous.count)lightningChange+=current.count-previous.count;}}
-  const indicators=[];
-  if(usable(pressureChange)&&pressureChange<=-8)indicators.push(`pressure fell ${Math.abs(pressureChange).toFixed(1)} hPa`);
-  if(usable(maxGust)&&maxGust>=50)indicators.push(`the strongest accepted gust reached ${maxGust.toFixed(1)} km/h`);
-  if(usable(maxRain)&&maxRain>=7.5)indicators.push(`the peak rain rate reached ${maxRain.toFixed(1)} mm/h`);
-  if(usable(lightningChange)&&lightningChange>0)indicators.push(`${Math.round(lightningChange)} lightning detection${Math.round(lightningChange)===1?" was":"s were"} recorded`);
-  const badge=$("significantWeatherBadge");
-  if(badge){badge.textContent=indicators.length?"Indicator reached":"No indicator reached";badge.classList.toggle("storm-active",indicators.length>0);}
-  set("significantWeatherNarrative",indicators.length?`In the latest 24 hours, ${indicators.join(", ")}. Check Met Éireann for official warnings.`:"No site-defined significant-weather indicator was reached in the latest 24 hours.");
-}
-
 function renderOfficialWarningStatus(payload){
   const badge=$("officialWarningBadge"),detail=$("officialWarningDetail");
   if(!badge||!detail)return;
@@ -367,11 +345,10 @@ async function loadSummary(){
     const fresh=recentObservation(todayRows.at(-1)),status=$("summaryDataStatus");if(status){status.textContent=!todayRows.length?"Unavailable":failed.length?"Some data unavailable":fresh?"Up to date":"Latest reading delayed";if(status.dataset)status.dataset.state=failed.length||!fresh?"review":"good";}
     set("summaryUpdated",todayMetrics.latest?`Latest observation: ${exactDateTime(todayMetrics.latest)} · Irish time`:"No station observations available");set("summarySubtitle",todayRows.length?`${failed.length||!fresh?"Available":"Live day-so-far"} summary from ${todayRows.length.toLocaleString("en-IE")} station readings${failed.length?"":fresh?", including the latest live update":", using the latest available observations"} · latest observation ${shortTime(todayMetrics.latest)}.${failed.length?` Some sources could not refresh: ${failed.join(", ")}. Figures use available observations and may be incomplete.`:""}`:"Today's observations are temporarily unavailable.");
     const recentCompletedDays=(Array.isArray(daily?.days)?daily.days:[]).filter(row=>row.day!==todayKey).slice(-7);
-    renderToday(todayMetrics,yesterdayMetrics,recentCompletedDays);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);renderSignificantWeather(rows);renderSoil(current,rows);
-    if(results[0].status==="rejected"){set("significantWeatherBadge","Unavailable");set("significantWeatherNarrative","The latest 24-hour review could not refresh. Available observations elsewhere remain visible.");}
+    renderToday(todayMetrics,yesterdayMetrics,recentCompletedDays);renderComparison(todayMetrics,yesterdayMetrics);renderRainSummary(rainDisplay,todayMetrics.rain);renderSoil(current,rows);
     $("downloadCsvButton").disabled=!todayRows.length;$("shareWeatherButton").disabled=!latestShareRow;
     set("actionStatus",todayRows.length?`${todayRows.length.toLocaleString("en-IE")} observations ready. Download or share using the buttons above.`:"No observations are available yet.");if(todayRows.length&&!latestShareRow)set("actionStatus","Available daily observations can be downloaded. Sharing current weather needs a recent reading.");
-  }catch(error){console.error("Daily summary:",error);set("summarySubtitle","The daily summary is temporarily unavailable.");set("dayStory","Live station observations could not be loaded. Please try again shortly.");set("significantWeatherBadge","Unavailable");set("significantWeatherNarrative","The latest 24-hour observation review is temporarily unavailable.");currentTodayRows=[];currentTodayKey=null;latestShareRow=null;$("downloadCsvButton").disabled=true;$("shareWeatherButton").disabled=true;set("actionStatus","Summary tools are temporarily unavailable.");}
+  }catch(error){console.error("Daily summary:",error);set("summarySubtitle","The daily summary is temporarily unavailable.");set("dayStory","Live station observations could not be loaded. Please try again shortly.");currentTodayRows=[];currentTodayKey=null;latestShareRow=null;$("downloadCsvButton").disabled=true;$("shareWeatherButton").disabled=true;set("actionStatus","Summary tools are temporarily unavailable.");}
   finally{summaryLoading=false;if(refresh){refresh.disabled=false;refresh.textContent="Refresh summary";}}
 }
 
