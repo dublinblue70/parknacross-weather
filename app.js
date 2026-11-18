@@ -409,7 +409,7 @@ function updateRelativeObservation() {
     updateFreshness(latestCurrent);
     updateHeroObservationTime(latestCurrent);
     const rainState = rainActivity(latestCurrent);
-    if (rainState.reason === "stale_observation" || rainState.reason === "missing_timestamp") {
+    if (!currentResponseAvailable || rainState.reason === "stale_observation" || rainState.reason === "missing_timestamp") {
       const condition = conditionInfo(latestCurrent, false);
       set("conditionsTag", condition.tag);
       set("weatherStory", condition.story);
@@ -2668,7 +2668,7 @@ async function refreshCurrent() {
     currentResponseAvailable = false;
     if (latestCurrent) {
       markOfflineMode(latestCurrent);
-      updateFreshness(latestCurrent);
+      updateRelativeObservation();
     }
   }
 }
