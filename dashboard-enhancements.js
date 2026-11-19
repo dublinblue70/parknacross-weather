@@ -5,6 +5,9 @@
  const mobile=window.matchMedia('(max-width:640px)');
  for(const [selector,label] of groups){
    const section=document.querySelector(selector);if(!section)continue;
+   // Clothing advice stays immediately visible on every screen size.
+   // Never wrap it in an additional mobile-only disclosure.
+   if(selector==='.wear-today-section')continue;
    // The surrounding Dashboard disclosure already provides the mobile toggle.
    // Do not add a second nested 'What to wear' / charts / records button.
    if(section.closest('details.dashboard-explore-group'))continue;
