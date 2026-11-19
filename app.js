@@ -569,7 +569,7 @@ function conditionInfo(current, isNight) {
     return {
       tag: "Live feed unavailable",
       icon: "☁️",
-      story: "Showing the last saved weather values. Live rainfall cannot be verified until the station feed reconnects.",
+      story: "Live station data unavailable. Showing the last saved readings.",
       className: "weather-neutral",
       rainState: {...rainState, rainRate:null, rainAvailable:false, rainIndicatedNow:false}
     };
@@ -588,7 +588,7 @@ function conditionInfo(current, isNight) {
     return {
       tag: label,
       icon: rain <= 2.5 ? "🌦️" : "🌧️",
-      story: `${label} at Parknacross · ${rateText} measured by the dedicated rain gauge.`,
+      story: `Rain detected at Parknacross · ${label.toLowerCase()} (${rateText}) measured by the dedicated gauge.`, 
       className: "weather-rain", rainState
     };
   }
@@ -596,28 +596,25 @@ function conditionInfo(current, isNight) {
   // Keep the independent sensor and the uncertainty explicit to visitors.
   if (rainState.status === "sensor_disagreement") {
     return { tag: "Rain indicated now", icon: "🌧️",
-      story: `WS90 indicates rain at ${n(rainState.piezoRate)} mm/h, but WH40H reports ${n(rainState.rainRate)} mm/h. Current intensity is unconfirmed; the sensors disagree.`,
+      story: `Rain uncertain: WS90 indicates rain, but WH40H reports none. Current intensity is unconfirmed.`, 
       className: "weather-rain", rainState };
   }
   if (rainState.status === "possible") {
-    const evidence = rainState.piezoIndicatesRain
-      ? `Fresh WS90 piezo rate: ${n(rainState.piezoRate)} mm/h`
-      : "The WS90 piezo rain counter has increased in consecutive recent observations";
     const convincing = rainState.piezoStrongSignal || rainState.piezoIncreaseRecent;
     return { tag: "Possible rain", icon: convincing ? "🌧️" : "🌦️",
       story: convincing
-        ? `${evidence}. The dedicated WH40H gauge isn't confirming rain right now, so the intensity is uncertain.`
-        : "The WS90 suggests rain may be falling, but the WH40H gauge isn't confirming it. Weak piezo signals can also be caused by wind or vibration.",
+        ? "Possible rain indicated by WS90. The dedicated gauge has not confirmed it."
+        : "Possible rain indication from WS90; the dedicated gauge has not confirmed it.",
       className: convincing ? "weather-rain" : "weather-neutral", rainState };
   }
   if (rainState.status === "new_tip") {
     return { tag: "Rain detected", icon: "🌧️",
-      story: "The WH40H rain counter increased in the last two minutes. The current rate is zero or unavailable, so sustained rain intensity is not confirmed.",
+      story: "Rain detected by the dedicated gauge recently; current intensity unconfirmed.", 
       className: "weather-rain", rainState };
   }
   if (rainState.status === "recent") {
     return { tag: "Rain recorded recently", icon: "🌦️",
-      story: "The dedicated gauge recorded rain recently, but there is no fresh positive rain rate or piezo indication to confirm rain at this instant.",
+      story: "Rain recorded recently. No rain detected now.", 
       className: "weather-neutral", rainState };
   }
   if (!rainState.rainAvailable) {
@@ -630,38 +627,38 @@ function conditionInfo(current, isNight) {
           : observation.source === "archive" ? "Saved station reading" : "Rain status updating",
         icon: delayed ? "⏱️" : "☁️",
         story: observation.status === "missing"
-          ? "No valid observation timestamp was supplied. Live rainfall cannot be confirmed."
+          ? "Observation time unavailable. Live rain status cannot be confirmed."
           : delayed
-            ? "This observation is overdue. Live rainfall cannot be confirmed; today's rain total remains cumulative."
-            : "Live rainfall cannot be confirmed from this reading. Today's rain total is cumulative, not current intensity.",
+            ? "Latest station observation delayed. Live rain status cannot be confirmed."
+            : "Live rain status cannot be confirmed from this reading.",
         className: "weather-neutral", rainState
       };
     }
     return {
-      tag: isNight ? "Night" : "Rain rate unavailable",
-      icon: isNight ? "🌙" : "☁️",
-      story: "The station has not supplied a usable current WH40H rain rate. Its daily rain total may still be recorded, but rainfall right now cannot be confirmed.",
+      tag: "Rain status unavailable",
+      icon: "☁️",
+      story: "Rainfall data temporarily unavailable.", 
       className: "weather-neutral", rainState
     };
   }
   if (wind >= 35) {
-    return { tag: "Very windy", icon: "💨", story: `A lively Wexford breeze is blowing at ${n(wind)} km/h.`, className: "weather-windy", rainState };
+    return { tag: "Very windy", icon: "💨", story: `Very windy at Parknacross (${n(wind)} km/h). No rain detected.`, className: "weather-windy", rainState };
   }
   if (wind >= 20) {
-    return { tag: "Breezy", icon: "🌬️", story: `Breezy conditions with wind around ${n(wind)} km/h.`, className: "weather-windy", rainState };
+    return { tag: "Breezy", icon: "🌬️", story: `Breezy conditions at Parknacross (${n(wind)} km/h). No rain detected.`, className: "weather-windy", rainState };
   }
   if (isNight) {
-    return { tag: "Night", icon: "🌙", story: "Night-time conditions at Parknacross.", className: "weather-neutral", rainState };
+    return { tag: "Night", icon: "🌙", story: "Night-time conditions at Parknacross. No rain detected.", className: "weather-neutral", rainState };
   }
   if (uv >= 5 || solar >= 400) {
-    return { tag: "Bright", icon: "☀️", story: "Bright conditions over Parknacross right now.", className: "weather-bright", rainState };
+    return { tag: "Bright", icon: "☀️", story: "Bright conditions at Parknacross. No rain detected.", className: "weather-bright", rainState };
   }
   if (solar >= 100) {
-    return { tag: "Some brightness", icon: "⛅", story: "Some brightness breaking through at Parknacross.", className: "weather-bright", rainState };
+    return { tag: "Some brightness", icon: "⛅", story: "Some brightness at Parknacross. No rain detected.", className: "weather-bright", rainState };
   }
   return wind < 1
-    ? { tag: "Calm", icon: "☁️", story: "Calm wind at Parknacross. No current rain is confirmed by the dedicated gauge; this does not establish dry conditions.", className: "weather-neutral", rainState }
-    : { tag: "Light breeze", icon: "🌬️", story: `Wind around ${n(wind)} km/h. The dedicated gauge has not registered rain in this observation; this does not confirm dry conditions.`, className: "weather-neutral", rainState };
+    ? { tag: "Calm", icon: "☁️", story: "Calm conditions at Parknacross. No rain detected.", className: "weather-neutral", rainState }
+    : { tag: "Light breeze", icon: "🌬️", story: `Light breeze at Parknacross (${n(wind)} km/h). No rain detected.`, className: "weather-neutral", rainState };
 }
 
 /* NOAA-style sunrise/sunset calculation using the public Ardamine area centre. */
