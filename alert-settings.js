@@ -24,6 +24,7 @@
 
   let unsavedSettings = null;
   let settingsStorageError = false;
+  let settingsRestorePending = false;
 
   const readJSON = (key, fallback) => {
     try {
@@ -57,9 +58,18 @@
       overview.textContent = `${state} · ${count} alert type${count === 1 ? "" : "s"} selected.`;
     }
     const node = document.getElementById("alertsSaveStatus");
-    if (node) node.textContent = settingsStorageError
-      ? "Your browser could not save these choices. They apply to this page only and may be lost when you leave. Allow site storage and select them again."
-      : "Saved automatically on this browser.";
+    if (node) {
+      const saved = unsavedSettings !== null || readJSON(SETTINGS_KEY, null) !== null;
+      node.textContent = settingsRestorePending
+        ? "Checking previously saved notification choices…"
+        : settingsStorageError
+          ? "Your browser could not save these choices. They apply to this page only and may be lost when you leave. Allow site storage and select them again."
+          : window.PWNotificationStorage?.wasRecovered?.(SETTINGS_KEY)
+            ? "Your enabled notification settings were restored from the device backup."
+            : saved
+              ? "Saved automatically on this browser."
+              : "No saved notification preferences were found on this device.";
+    }
   }
 
   function saveSettings(changes) {
@@ -340,9 +350,15 @@
 
     const button = document.getElementById("alertsEnableButton");
     if (button) {
-      const selected = settings.enabled===true;
-       button.textContent = selected ? (canNotify() ? "Turn off notifications" : "Check notification permission") : "Enable notifications";
-       button.setAttribute("aria-pressed", String(selected));
+      if (settingsRestorePending) {
+        button.disabled = true;
+        button.textContent = "Restoring notification settings…";
+      } else {
+        button.disabled = false;
+        const selected = settings.enabled===true;
+        button.textContent = selected ? (canNotify() ? "Turn off notifications" : "Check notification permission") : "Enable notifications";
+        button.setAttribute("aria-pressed", String(selected));
+      }
     }
   }
 
@@ -384,18 +400,15 @@
     });
 
     for(const [id,key,lo,hi] of [["alertGustThreshold","gustKmh",20,100],["alertRainThreshold","heavyRainRate",2,50],["alertTemperatureThreshold","freezingC",-5,5],["alertQuietStart","quietStart",0,23],["alertQuietEnd","quietEnd",0,23]])document.getElementById(id)?.addEventListener("change",event=>{const v=Number(event.target.value);if(Number.isFinite(v)&&event.target.value!=="")saveSettings({[key]:Math.max(lo,Math.min(hi,v))});refreshUI();});document.getElementById("alertQuietEnabled")?.addEventListener("change",event=>{saveSettings({quietEnabled:event.target.checked});});
-    refreshUI();
-    // A site update can reload this page before the IndexedDB backup has
-    // restored notification choices. Do not present an editable "off" toggle
-    // until that recovery finishes.
+    // Never offer the off/enable toggle while the IndexedDB preference backup
+    // is still being recovered after an app update.
     const stored = window.PWNotificationStorage;
-    const toggle = document.getElementById("alertsEnableButton");
-    if (toggle && stored?.ready) {
-      toggle.disabled = true;
-      toggle.textContent = "Restoring notification settings…";
-      const restored = () => { toggle.disabled = false; refreshUI(); };
+    if (stored?.ready) {
+      settingsRestorePending = true;
+      refreshUI();
+      const restored = () => { settingsRestorePending = false; refreshUI(); };
       stored.ready.then(restored, restored);
-    }
+    } else refreshUI();
   }
 
   window.PWAlerts = {
