@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-258-20261119-rain-language";
+const CACHE_NAME = "parknacross-v38-4-258-20261120-notification-persistence";
 const STATIC_ASSETS = [
   "./site-polish.css",
   "./privacy-providers.css",
@@ -268,6 +268,8 @@ self.addEventListener("fetch", event => {
       url.pathname.endsWith("/navigation.js") ||
       url.pathname.endsWith("/downloads.js") ||
       url.pathname.endsWith("/alert-settings.js") ||
+      url.pathname.endsWith("/notification-storage.js") ||
+      url.pathname.endsWith("/background-alerts.js") ||
       url.pathname.endsWith("/pwa-update.js") ||
       url.pathname.endsWith("/pwa-diagnostics.js") ||
       url.pathname.endsWith("/platform.js"));
