@@ -1845,6 +1845,8 @@ function uvDataset() {
 }
 
 function createCharts() {
+  // The Dashboard now links to dedicated charts. Do not construct hidden charts.
+  if (!window.Chart || document.querySelector('details[data-dashboard-extra="charts"][hidden]')) return;
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
     Chart.defaults.animation = false;
   }
