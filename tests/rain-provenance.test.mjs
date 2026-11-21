@@ -10,7 +10,8 @@ assert.match(read('radar.html'),/rainfall.*dedicated tipping-bucket rain gauge/i
 assert.doesNotMatch(read('radar.js'),/Check the WS90 reading for the local observation/,'Radar guidance must not name obsolete rain sensor');
 assert.match(read('radar.js'),/Check the dedicated rain-gauge reading/);
 assert.match(read('maintenance-log.js'),/13:00 GMT.*No rain was falling/);
-assert.match(read('rain.html'),/13:00 GMT \(Irish time\), dry conditions/);
+assert.match(read('rain.html'),/primary rainfall sensor on 3 November 2026/);
+assert.doesNotMatch(read('rain.html'),/13:00 GMT \(Irish time\), dry conditions/,'Public rain source text should omit the unnecessary changeover time');
 assert.match(rainy,/rain-day-date/);
 assert.match(rainy,/gauge-change day \(provisional total\)/);
 assert.match(rainy,/2026-11-03/);
