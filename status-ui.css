@@ -73,3 +73,16 @@
 .health-information ul{margin:4px 0 10px;padding-left:22px;display:grid;gap:6px;font-size:.84rem;line-height:1.5}
 .health-information a{color:var(--accent);text-underline-offset:3px}
 .health-attention-item p{line-height:1.4;margin:2px 0 10px}
+
+/* Detailed read-only rain-gauge checks now belong with System Health. */
+.health-specialist-check { margin: 14px 0 22px; }
+.health-specialist-check .health-rain-audit { border: 1px solid var(--line-strong, #2c4652); border-radius: 14px; overflow: hidden; background: rgba(255,255,255,.015); }
+.health-specialist-check .health-rain-audit > summary { min-height: 48px; padding: 15px 18px; cursor: pointer; font-weight: 650; }
+.health-specialist-check .health-rain-audit[open] > summary { border-bottom: 1px solid var(--line-strong, #2c4652); }
+.health-specialist-check .rain-detail-content { padding: 16px 18px; }
+.health-specialist-check .rain-stat-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 14px 0; }
+.health-specialist-check .rain-stat-grid article { min-width: 0; padding: 14px; border: 1px solid var(--line-strong, #2c4652); border-radius: 12px; }
+.health-specialist-check .rain-stat-grid span,.health-specialist-check .rain-stat-grid strong,.health-specialist-check .rain-stat-grid small { display: block; }
+.health-specialist-check .rain-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.health-specialist-check .rain-toolbar button { min-height: 44px; }
+@media (max-width: 680px) { .health-specialist-check .rain-stat-grid { grid-template-columns: 1fr; } .health-specialist-check .rain-toolbar button { width: 100%; } }
