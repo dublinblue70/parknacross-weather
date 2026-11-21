@@ -19,6 +19,11 @@
   const revealSpecialistHash=()=>{
     const id=location.hash.slice(1);
     if(!id)return;
+    // Preserve legacy Dashboard deep links when charts and records move off this page.
+    const legacyCharts=new Set(['graphs','trendsHeading','temperatureChart','windChart','rainChart']);
+    const legacyRecords=new Set(['records','recordsHeading','recordHigh']);
+    if(legacyCharts.has(id)) { window.location.replace('graphs.html'); return; }
+    if(legacyRecords.has(id)) { window.location.replace('records.html'); return; }
     const destination=document.getElementById(id);
     const details=destination?.closest('details.dashboard-explore-group');
     if(details&&!details.open){details.open=true;window.dispatchEvent(new Event('resize'));}
