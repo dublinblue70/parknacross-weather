@@ -24,3 +24,18 @@
 
 /* Balance the three genuinely distinct recent-rain details without an empty fourth card. */
 .summary-page .rain-detail-grid { grid-template-columns: repeat(auto-fit,minmax(min(100%,185px),1fr)); }
+
+/* Keep the daily report first; share/export tools are available without cluttering the hero. */
+.summary-page .summary-actions { display:flex;align-items:flex-start;gap:10px 14px;flex-wrap:wrap; }
+.summary-page .summary-actions-more { min-width:0;align-self:stretch; }
+.summary-page .summary-actions-more > summary {
+  cursor:pointer; min-height:44px; padding:10px 14px; border-radius:10px;
+  border:1px solid var(--line-strong,rgba(174,210,232,.25));
+  color:var(--text); font-size:.88rem; font-weight:600;
+}
+.summary-page .summary-actions-extra { display:flex;flex-wrap:wrap;gap:10px;padding:12px 0 2px;align-items:center; }
+.summary-page .summary-actions-extra #actionStatus { flex-basis:100%; }
+@media(max-width:560px) {
+ .summary-page .summary-actions-more { flex-basis:100%; }
+ .summary-page .summary-actions-extra button { flex:1 1 145px; }
+}
