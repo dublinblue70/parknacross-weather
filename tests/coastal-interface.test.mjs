@@ -18,7 +18,7 @@ for(const file of publicPages) {
  if(file!=="intelligence.html") assert.match(page,/navigation\.js\?v=20261121-coastal-ui-v1/,file+": new navigation missing");
 }
 const nav=read("navigation.js"),css=read("site-design.css"),sw=read("service-worker.js");
-for(const term of ["pw-mobile-nav","pw-has-mobile-nav","pw-skip-link","menuForButton","Summary","Other Networks"]) {
+for(const term of ["pw-mobile-nav","pw-has-mobile-nav","pw-skip-link","menuForButton","summary.html","history.html","networks.html"]) {
  assert(nav.includes(term),"Shared navigation missing "+term);
 }
 for(const term of ["@media (max-width: 760px)","prefers-reduced-motion",":focus-visible","pw-mobile-nav","pw-has-mobile-nav"]) {
