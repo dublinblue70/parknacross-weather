@@ -118,7 +118,7 @@
         It provides local observations for a coastal location where conditions can vary noticeably from larger inland stations.
         Location details on this website are intentionally approximate; linked weather networks may display the coordinates registered with those services.
       </p>
-      <nav class="station-jumps" aria-label="On this page"><a href="#stationSensorHealth">Sensor health</a><a href="#meetSensors">Meet the sensors</a><a href="#understandingReadings">Understanding the readings</a><a href="#stationReliability">Reliability</a><a href="#stationMaintenance">Recent changes</a><a href="#alertsHeading">Notification settings</a><a href="#stationTechnical">Archive storage</a></nav>
+      <nav class="station-jumps" aria-label="On this page"><a href="#stationSensorHealth">Sensor health</a><a href="#meetSensors">Meet the sensors</a><a href="#alertsHeading">Notifications</a><a href="#stationMaintenance">Recent changes</a><a href="#stationTechnical">Technical details</a></nav>
     </section>
 
     <section class="station-health-bar" aria-label="Station at a glance">
@@ -225,36 +225,22 @@
       <p class="station-copy">Site elevation is an approximate 25 m above sea level. Linked weather networks may use their own terrain estimates, and sensor mounting height above ground is a separate measurement.</p>
     </details></section>
 
-    <section class="bottom-grid">
-      <article class="info-card">
-        <div class="section-heading compact-heading"><div><span class="section-eyebrow">Measurements</span><h2>What it observes</h2></div></div>
-        <div class="info-grid">
-          <div class="info-item"><span>Temperature</span><strong>Outdoor air temperature</strong></div>
-          <div class="info-item"><span>Moisture</span><strong>Relative humidity</strong></div>
-          <div class="info-item"><span>Wind</span><strong>Speed, gust & direction</strong></div>
-          <div class="info-item"><span>Rain</span><strong>How hard it’s raining &amp; how much has fallen today</strong></div>
-          <div class="info-item"><span>Atmosphere</span><strong>Barometric pressure</strong></div>
-          <div class="info-item"><span>Sun</span><strong>Solar radiation & UV</strong></div>
-          <div class="info-item"><span>Garden soil</span><strong>Moisture, temperature &amp; conductivity</strong></div>
-          <div class="info-item"><span>Lightning</span><strong>Strike count &amp; estimated distance</strong></div>
-        </div>
-        <p class="station-copy"><strong>Calculated from observations:</strong> feels-like temperature, dew point and sea-level pressure. These are derived values, rather than separate outdoor sensor measurements.</p>
-      </article>
+    <details class="station-fold station-measurements" id="stationMeasurements">
+      <summary>More about measurements and data flow</summary>
+      <div class="station-context-grid">
+        <article>
+          <h2>What it observes</h2>
+          <p>Temperature, humidity, wind, rainfall, pressure, sunlight, lightning and garden soil. Feels-like temperature, dew point and sea-level pressure are calculated from observations, not separate sensor measurements.</p>
+          <p><a href="graphs.html">Explore measurements and trends</a></p>
+        </article>
+        <article>
+          <h2>How the site works</h2>
+          <p>Sensors transmit readings through the indoor gateway. The live dashboard refreshes approximately every minute; the weather archive normally saves readings around every five minutes.</p>
+          <p><a href="status.html">Check data collection and service health</a></p>
+        </article>
+      </div>
+    </details>
 
-      <article class="info-card">
-        <div class="section-heading compact-heading"><div><span class="section-eyebrow">Data path</span><h2>How the site works</h2></div></div>
-        <div class="info-grid">
-          <div class="info-item"><span>Data collection</span><strong>Temperature, humidity, wind, rainfall, lightning and soil conditions — collected by the weather station and transmitted to the website.</strong></div>
-          <div class="info-item"><span>Data processing</span><strong>Secure cloud processing</strong></div>
-          <div class="info-item"><span>Live dashboard</span><strong>Updated approximately every 60 seconds</strong></div>
-          <div class="info-item"><span>Weather history</span><strong>Readings archived approximately every 5 minutes</strong></div>
-          <div class="info-item"><span>Garden soil feed</span><strong>Soil conditions recorded from the potted hydrangea</strong></div>
-          <div class="info-item"><span>Website</span><strong>Parknacrossweather.ie</strong></div>
-          <div class="info-item"><span>Official forecast</span><strong>Met Éireann</strong></div>
-          <div class="info-item"><span>System health</span><strong><a href="status.html" style="color:inherit;text-underline-offset:3px">Check live data &amp; sensor status</a></strong></div>
-        </div>
-      </article>
-    </section>
 
     <section class="page-section info-card" id="understandingReadings" aria-labelledby="understandingHeading">
       <div class="section-heading"><div><span class="section-eyebrow">Reading the weather</span><h2 id="understandingHeading">Understanding these observations</h2><p>A little context helps when comparing Parknacross with another station.</p></div></div>
@@ -267,8 +253,8 @@
     </section>
 
     <section class="page-section" id="stationReliability">
-      <div class="section-heading"><div><span class="section-eyebrow">Station quality</span><h2>Observation freshness &amp; archive coverage</h2><p>A simple overview of how reliably the station is collecting and saving weather data.</p></div></div>
-<div class="station-reliability-grid"><article class="climate-card"><span>Feed status</span><strong id="qualityFeed">--</strong><small id="qualityAge">Latest weather reading</small></article><article class="climate-card"><span>Archive reliability</span><strong id="qualityReliability">--</strong><small id="qualityReliabilityNote">Percentage of expected 5-minute readings successfully saved this month</small></article></div><p class="station-copy">Freshness describes the latest observation; coverage describes how many expected readings were saved. Missing older readings do not necessarily mean the station is offline now. <a href="history.html#completenessHeading">Explore archive coverage</a> · <a href="status.html">Open system status</a></p><details class="station-fold"><summary>More collection statistics</summary><div class="quality-grid"><article class="climate-card"><span>Readings saved (24h)</span><strong id="quality24">--</strong><small>Weather observations stored</small></article><article class="climate-card"><span>Typical update interval</span><strong id="qualityInterval">--</strong><small>Time between saved readings</small></article><article class="climate-card"><span>Longest archive gap</span><strong id="qualityGap">--</strong><small>Largest gap in the last 24 hours</small></article><article class="climate-card"><span>Total readings saved</span><strong id="qualityTotal">--</strong><small>Historical archive</small></article></div></details>
+      <div class="section-heading"><div><span class="section-eyebrow">Station quality</span><h2>Archive reliability</h2><p>How consistently the station saves its readings. Current feed status is shown at the top of this page.</p></div></div>
+<div class="station-reliability-grid"><article class="climate-card"><span>Archive reliability</span><strong id="qualityReliability">--</strong><small id="qualityReliabilityNote">Percentage of expected 5-minute readings successfully saved this month</small></article></div><p class="station-copy">Archive coverage describes saved observations, not current feed status. A missing historical reading does not necessarily mean the station is offline now. <a href="history.html#completenessHeading">Explore archive coverage</a> · <a href="status.html">Open system status</a></p><details class="station-fold"><summary>More collection statistics</summary><div class="quality-grid"><article class="climate-card"><span>Readings saved (24h)</span><strong id="quality24">--</strong><small>Weather observations stored</small></article><article class="climate-card"><span>Typical update interval</span><strong id="qualityInterval">--</strong><small>Time between saved readings</small></article><article class="climate-card"><span>Longest archive gap</span><strong id="qualityGap">--</strong><small>Largest gap in the last 24 hours</small></article><article class="climate-card"><span>Total readings saved</span><strong id="qualityTotal">--</strong><small>Historical archive</small></article></div></details>
     </section>
 
     <section class="page-section" id="stationMaintenance">
@@ -279,7 +265,7 @@
             <h2>Recent station changes</h2>
             <p>Firmware, sensor installation, calibration and maintenance changes are recorded so historical observations have useful context.</p>
           </div>
-          <a class="text-link station-log-link" href="#stationMaintenanceFull">Full maintenance history below ↓</a>
+          
         </div>
         <div id="stationMaintenancePreview" class="station-maintenance-preview"><p class="info-note">Loading recorded changes…</p></div>
         <details id="stationMaintenanceFull" class="station-fold"><summary>Full maintenance &amp; change log</summary><div id="maintenanceLog" class="maintenance-log"><p class="info-note">Loading recorded changes…</p></div></details>
