@@ -10,7 +10,7 @@
    if(selector==='.wear-today-section')continue;
    // The surrounding Dashboard disclosure already provides the mobile toggle.
    // Do not add a second nested 'What to wear' / charts / records button.
-   if(section.closest('details.dashboard-explore-group'))continue;
+   if(section.closest?.('details.dashboard-explore-group'))continue;
    const body=document.createElement('div');body.className='mobile-detail-body';body.id=`mobile-detail-${label.toLowerCase().replace(/[^a-z]+/g,'-')}`;
    while(section.firstChild)body.append(section.firstChild);
    const preferenceKey='parknacross:section:'+body.id;let expanded=false;try{expanded=localStorage.getItem(preferenceKey)==='open';}catch(_){}
