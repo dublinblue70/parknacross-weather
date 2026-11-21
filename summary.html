@@ -32,7 +32,7 @@
     @media(max-width:900px){.compare-grid,.rain-detail-grid,.report-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:600px){.compare-grid,.rain-detail-grid,.report-links{grid-template-columns:1fr}}
   </style>
-<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="summary-ui.css?v=20261121-value-alignment"><link rel="stylesheet" href="hydrangea-soil.css?v=20261105-v38-4-246"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
+<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="summary-ui.css?v=20261121-streamlined-actions"><link rel="stylesheet" href="hydrangea-soil.css?v=20261105-v38-4-246"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
 <script src="site-polish.js?v=20261113-sensor-language" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
   <link rel="stylesheet" href="weather-icons.css?v=20261109-sitewide-svg1">
@@ -59,9 +59,15 @@
       <h1 id="summaryTitle">Today’s weather in Parknacross</h1>
       <p id="summaryDate" class="summary-date">Today · Irish time</p><p id="summarySubtitle">Building today's summary from live station observations…</p>
       <div class="summary-update"><span id="summaryUpdated">Waiting for observations…</span><span id="summaryDataStatus" class="summary-data-status" role="status">Checking</span></div><div class="summary-actions">
-        <button id="summaryRefresh" type="button">Refresh summary</button><button id="downloadCsvButton" type="button" disabled>Download today’s CSV</button>
-        <button id="shareWeatherButton" type="button" disabled>Share current weather</button>
-        <small id="actionStatus" role="status" aria-live="polite">Preparing today’s observations…</small>
+        <button id="summaryRefresh" type="button">Refresh summary</button>
+        <details class="summary-actions-more">
+          <summary>Download or share</summary>
+          <div class="summary-actions-extra">
+            <button id="downloadCsvButton" type="button" disabled>Download today’s CSV</button>
+            <button id="shareWeatherButton" type="button" disabled>Share current weather</button>
+            <small id="actionStatus" role="status" aria-live="polite">Preparing today’s observations…</small>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -84,7 +90,7 @@
 
     <section class="page-section" id="summaryOverview" aria-labelledby="summaryOverviewHeading">
       <div class="section-heading">
-        <div><span class="section-eyebrow">Today's observations</span><h2 id="summaryOverviewHeading">Today at a glance</h2><p>Since midnight Irish time · today is still in progress.</p></div>
+        <div><span class="section-eyebrow">Daily report</span><h2 id="summaryOverviewHeading">Today’s extremes and totals</h2><p>Since midnight Irish time · today is still in progress.</p></div>
       </div>
       <div class="rain-stat-grid">
         <article class="climate-card"><span>Highest temperature</span><strong id="todayHigh">--</strong><small id="todayHighTime">--</small></article>
