@@ -1,5 +1,6 @@
-const CACHE_NAME = "parknacross-v38-4-261-20261121-station-sensor-health";
+const CACHE_NAME = "parknacross-v38-4-261-20261121-coastal-design";
 const STATIC_ASSETS = [
+  "./site-design.css",
   "./site-polish.css",
   "./privacy-providers.css",
   "./site-polish.js",
