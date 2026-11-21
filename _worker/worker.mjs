@@ -1,3 +1,4 @@
+// v38.4.260 — read WH52 channel-one voltage via documented cloud alias and authenticated gateway data.
 // v38.4.259 — additive, read-only battery reports for rain gauge, lightning and WH52 soil sensor.
 // v38.4.258 — preserve minute-level live readings independently of soil-only status packets; disclose current source/age.
 // v38.4.244 — archive-derived WH52 baseline endpoint with one-hour edge caching.
@@ -2494,7 +2495,7 @@ export default {
       try {
         if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
         if (!(await adminDiagnosticAuthorized(request, env))) return unauthorizedResponse(request);
-        return json({worker_version:"38.4.259",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"no-store"});
+        return json({worker_version:"38.4.260",features:{rain_override:true,sky_override:true,photo_calendar:true,social_history:true,archive_coverage:true,history_photos:true,export_preview:true,history_range:true,public_photo_calendar:true,photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"no-store"});
       } catch (_) {
         return json({error:"Admin authentication is temporarily unavailable. Please retry."},503,{"Cache-Control":"no-store"});
       }
@@ -2879,7 +2880,7 @@ export default {
       }
     }
 
-    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.259",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"public, max-age=300"});}
+    if(url.pathname==="/site-capabilities"){if(request.method!=="GET")return json({error:"Method not allowed"},405);return json({worker_version:"38.4.260",features:{photo_gallery:true,selected_export_fields:true,annual_coverage:true,exposure_history:true,social_recovery:true,streamed_csv_exports:true,wh40h_primary_rain:true}},200,{"Cache-Control":"public, max-age=300"});}
 
     if(url.pathname==="/met/warnings"){
       if(request.method!=="GET")return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
@@ -3050,8 +3051,18 @@ export default {
           return new Response("success", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
         }
 
+        // This WH52-specific field is sent by the authenticated GW3001
+        // custom upload. Do not use generic soilbatt1 unless its sensor
+        // identity can be established separately.
+        const wh52Battery = sensorBatteryVoltage(payload, [
+          `soil_ec_batt${soil.channel}`,
+          `soil_ec_battery${soil.channel}`,
+          `battery.soil_ec_batt${soil.channel}`
+        ]);
         const record = {
           ...soil,
+          battery_v: wh52Battery.state === "unavailable" ? null : wh52Battery.value,
+          battery_report_epoch: wh52Battery.state === "unavailable" ? null : receivedEpoch,
           received_epoch: receivedEpoch,
           source: "gw3001_custom_upload"
         };
@@ -6245,47 +6256,90 @@ async function buildSensorHealth(env) {
     source: "Ecowitt battery reports",
     sensors: { rain: unavailable(), lightning: unavailable(), soil: unavailable() }
   };
-  let row;
+  const now = Math.floor(Date.now() / 1000);
+  const isRecent = (epoch, maxAge = 30 * 60) => {
+    const n = Number(epoch);
+    return Number.isFinite(n) && n > 0 && n <= now + 120 && now - n <= maxAge;
+  };
+
+  // The cloud source may omit WH52 entirely on some Ecowitt accounts.
+  // Missing or stale cloud reports must not hide fresh authenticated
+  // WH52 battery data received directly from the user's GW3001.
+  let cloudRow;
   try {
-    row = await env.DB.prepare(
+    cloudRow = await env.DB.prepare(
       `SELECT epoch, raw_json FROM ${PAYLOAD_TABLE} WHERE id = 1 LIMIT 1`
     ).first();
   } catch (error) {
-    console.warn("Battery reports unavailable:", error);
-    return result;
+    console.warn("Ecowitt cloud battery reports unavailable:", error);
   }
-  const epoch = Number(row?.epoch);
-  const age = Math.floor(Date.now() / 1000) - epoch;
-  // A stale weather upload cannot establish present battery condition.
-  if (!Number.isFinite(epoch) || epoch <= 0 || age < -120 || age > 30 * 60 ||
-      !row?.raw_json) return result;
-  let payload;
+  if (isRecent(cloudRow?.epoch) && cloudRow?.raw_json) {
+    try {
+      const payload = typeof cloudRow.raw_json === "string"
+        ? JSON.parse(cloudRow.raw_json) : cloudRow.raw_json;
+      const data = payload?.data || payload;
+      if (data && typeof data === "object") {
+        result.reported_at = new Date(Number(cloudRow.epoch) * 1000).toISOString();
+        result.sensors.rain = sensorBatteryVoltage(data, [
+          "battery.rainfall_sensor", "battery.wh40batt", "battery.battWh40",
+          "wh40batt", "battWh40"
+        ]);
+        result.sensors.lightning = lightningBatteryLevel(data);
+
+        const wh52 = extractWh52(data, "c");
+        const hasWh52Channel1 = Number(wh52.channel) === 1 &&
+          [wh52.temperature_c, wh52.ec_us_cm].some(usableNumber);
+        const explicitWh52Paths = [
+          "battery.soil_ec_sensor_ch1", "battery.soil_ec_sensor",
+          "battery.soil_ec_batt1", "battery.wh52batt",
+          "soil_ec_batt1", "soil_ec_battery1", "wh52batt"
+        ];
+        const channelBatteryPaths = [
+          // Ecowitt real-time API's documented key (no underscore in
+          // soilmoisture), often shared by WH51 and WH52 channel slots.
+          "battery.soilmoisture_sensor_ch1",
+          "battery.soil_moisture_sensor_ch1",
+          "battery.soil_sensor_ch1", "battery.soilbatt1", "soilbatt1"
+        ];
+        result.sensors.soil = sensorBatteryVoltage(data,
+          hasWh52Channel1 ? explicitWh52Paths.concat(channelBatteryPaths)
+                          : explicitWh52Paths
+        );
+        if (result.sensors.soil.state !== "unavailable") {
+          result.sensors.soil.source = "Ecowitt cloud";
+          result.sensors.soil.reported_at = result.reported_at;
+        }
+      }
+    } catch (error) {
+      console.warn("Could not parse Ecowitt cloud battery fields:", error);
+    }
+  }
+
+  // Authenticated gateway uploads carry WH52-specific soil_ec_batt1.
+  // The independent soil metadata already exists; extend it without
+  // modifying live weather, rain archive, or alert evaluation.
   try {
-    payload = typeof row.raw_json === "string" ? JSON.parse(row.raw_json) : row.raw_json;
-  } catch (_) { return result; }
-  const data = payload?.data || payload;
-  if (!data || typeof data !== "object") return result;
-  result.reported_at = new Date(epoch * 1000).toISOString();
-  result.sensors.rain = sensorBatteryVoltage(data, [
-    "battery.rainfall_sensor", "battery.wh40batt", "battery.battWh40",
-    "wh40batt", "battWh40"
-  ]);
-  result.sensors.lightning = lightningBatteryLevel(data);
-  // WH52 uses soil channel 1. Generic channel-1 battery aliases are safe
-  // only when this payload also contains WH52 temperature or EC readings.
-  const wh52 = extractWh52(data, "c");
-  const hasWh52 = [wh52.temperature_c, wh52.ec_us_cm].some(usableNumber);
-  const explicitWh52Paths = [
-    "battery.soil_ec_sensor_ch1", "battery.soil_ec_sensor",
-    "battery.soil_ec_batt1", "battery.wh52batt",
-    "soil_ec_batt1", "soil_ec_battery1", "wh52batt"
-  ];
-  result.sensors.soil = sensorBatteryVoltage(data,
-    hasWh52 ? explicitWh52Paths.concat([
-      "battery.soil_moisture_sensor_ch1",
-      "battery.soil_sensor_ch1", "battery.soilbatt1", "soilbatt1"
-    ]) : explicitWh52Paths
-  );
+    const row = await env.DB.prepare(
+      `SELECT value FROM ${META_TABLE} WHERE key = ? LIMIT 1`
+    ).bind(WH52_UPLOAD_META_KEY).first();
+    const direct = row?.value ? JSON.parse(row.value) : null;
+    const directEpoch = Number(direct?.battery_report_epoch);
+    if (Number(direct?.channel) === 1 && isRecent(directEpoch) &&
+        [direct?.temperature_c, direct?.ec_us_cm].some(usableNumber)) {
+      const battery = sensorBatteryVoltage({ v: direct.battery_v }, ["v"]);
+      if (battery.state !== "unavailable" &&
+          (result.sensors.soil.state === "unavailable" ||
+           directEpoch >= Number(cloudRow?.epoch || 0))) {
+        result.sensors.soil = {
+          ...battery,
+          source: "GW3001 WH52 upload",
+          reported_at: new Date(directEpoch * 1000).toISOString()
+        };
+      }
+    }
+  } catch (error) {
+    console.warn("WH52 gateway battery report unavailable:", error);
+  }
   return result;
 }
 
