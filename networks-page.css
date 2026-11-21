@@ -1,5 +1,5 @@
-/* Other Networks: compact, editorial directory rather than oversized button cards.
-   Scoped to the dedicated page so Station and its other controls are unaffected. */
+/* Other Networks directory — one compact, accessible external link per provider.
+   Scoped to networks.html; no changes to Station cards or alert settings. */
 body.networks-directory-page .networks-intro {
   max-width: none;
   margin: 8px 0 20px;
@@ -33,59 +33,98 @@ body.networks-directory-page .station-external-networks {
 body.networks-directory-page .station-external-network-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 11px;
   align-items: stretch;
+  gap: 12px;
 }
 body.networks-directory-page .station-external-network {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: space-between;
+  display: block;
   min-width: 0;
-  min-height: 132px;
-  gap: 12px;
+  min-height: 0;
   margin: 0;
-  padding: 17px 19px 13px;
-  border: 1px solid rgba(174,210,232,.17);
-  border-radius: 11px;
-  background: rgba(174,210,232,.018);
+  padding: 0;
+  border: 1px solid rgba(174,210,232,.22);
+  border-radius: 14px;
+  background: rgba(174,210,232,.025);
   box-shadow: none;
+  overflow: hidden;
   transition: border-color .18s ease, background-color .18s ease;
 }
-body.networks-directory-page .station-external-network:hover {
-  border-color: rgba(123,215,239,.4);
-  background: rgba(123,215,239,.045);
+body.networks-directory-page .station-external-network:is(:hover, :focus-within) {
+  border-color: rgba(123,215,239,.55);
+  background: rgba(123,215,239,.065);
 }
-body.networks-directory-page .station-external-network > div {
-  flex: 0 1 auto;
-  min-width: 0;
-}
-/* Brand-colour weather glyphs: self-contained vector artwork, no remote
-   logo or font requests. Icons are decorative; network names remain text. */
-body.networks-directory-page .station-network-identity {
+/* The link itself fills the card: tapping anywhere opens the provider. */
+body.networks-directory-page .station-external-network-link {
+  box-sizing: border-box;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  flex: 1 1 auto;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  align-self: stretch;
+  gap: 14px;
+  width: 100%;
+  max-width: none;
   min-width: 0;
+  min-height: 80px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  white-space: normal;
 }
-body.networks-directory-page .station-network-copy {
+body.networks-directory-page .station-external-network-link:is(:hover, :active) {
+  background: transparent;
+  color: var(--text);
+  border-color: transparent;
+  text-decoration: none;
+}
+body.networks-directory-page .station-external-network-link:focus-visible {
+  outline: 3px solid #91d9f3;
+  outline-offset: -4px;
+  border-radius: 12px;
+}
+body.networks-directory-page .station-external-network h2 {
   flex: 1 1 auto;
   min-width: 0;
-  padding-top: 1px;
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(.98rem, 1.15vw, 1.08rem);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -.018em;
+  overflow-wrap: anywhere;
 }
+body.networks-directory-page .station-network-arrow {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: #8ddcf0;
+  font-size: 1.16rem;
+  line-height: 1;
+  transition: transform .18s ease;
+}
+body.networks-directory-page .station-external-network-link:hover .station-network-arrow {
+  transform: translate(2px, -2px);
+}
+/* Preserve existing per-network colours, icon shapes and self-contained SVGs. */
 body.networks-directory-page .station-network-brand {
   --brand-ink: #a3d7e7;
-  --brand-surface: rgba(123, 215, 239, .13);
-  --brand-border: rgba(123, 215, 239, .24);
+  --brand-surface: rgba(123,215,239,.13);
+  --brand-border: rgba(123,215,239,.24);
   display: inline-grid;
   place-items: center;
-  flex: 0 0 42px;
-  width: 42px;
-  height: 42px;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
   color: var(--brand-ink);
   border: 1px solid var(--brand-border);
   border-radius: 12px;
-  background: linear-gradient(145deg, var(--brand-surface), rgba(9, 25, 38, .34));
+  background: linear-gradient(145deg, var(--brand-surface), rgba(9,25,38,.34));
   box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 5px 14px rgba(0,0,0,.08);
   line-height: 1;
   pointer-events: none;
@@ -123,228 +162,25 @@ body.networks-directory-page .station-network-brand--cwop {
 body.networks-directory-page .station-network-brand--wowbe {
   --brand-ink: #f7cc85; --brand-surface: rgba(229, 171, 79, .14); --brand-border: rgba(243, 193, 115, .27);
 }
-body.networks-directory-page .station-external-network h2 {
-  margin: 0;
-  color: var(--text);
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.3;
-  letter-spacing: -.018em;
-}
-body.networks-directory-page .station-external-network p {
-  margin: 6px 0 0;
-  max-width: none;
-  color: #a7bccb;
-  font-size: .84rem;
-  line-height: 1.45;
-}
-body.networks-directory-page .station-external-network-link {
-  margin-left: 54px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  align-self: flex-start;
-  flex-shrink: 0;
-  width: auto;
-  max-width: 100%;
-  min-height: 34px;
-  padding: 3px 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: #8ddcf0;
-  font-size: .84rem;
-  font-weight: 650;
-  line-height: 1.35;
-  text-align: left;
-  text-decoration: none;
-  text-underline-offset: 4px;
-}
-body.networks-directory-page .station-external-network-link:hover {
-  color: #c0effa;
-  background: transparent;
-  border-color: transparent;
-  text-decoration: underline;
-}
-body.networks-directory-page .station-external-network-link:focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: 4px;
-  border-radius: 3px;
-}
-body.networks-directory-page .station-external-network-link span[aria-hidden] {
-  font-size: .95em;
-  transition: transform .18s ease;
-}
-body.networks-directory-page .station-external-network-link:hover span[aria-hidden] {
-  transform: translate(2px, -2px);
-}
-@media (min-width: 1200px) {
-  body.networks-directory-page .station-external-network-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
 @media (max-width: 760px) {
-  body.networks-directory-page .networks-intro {
-    margin: 5px 0 16px;
-  }
-  body.networks-directory-page .networks-intro h1 {
-    font-size: clamp(1.8rem, 7vw, 2.15rem);
-  }
+  body.networks-directory-page .networks-intro { margin: 5px 0 16px; }
+  body.networks-directory-page .networks-intro h1 { font-size: clamp(1.8rem, 7vw, 2.15rem); }
   body.networks-directory-page .station-external-network-list {
     grid-template-columns: minmax(0, 1fr);
     gap: 9px;
   }
-  body.networks-directory-page .station-external-network {
-    min-height: 0;
-    padding: 16px 17px 12px;
-    gap: 9px;
-  }
-  body.networks-directory-page .station-network-identity { gap: 11px; }
-  body.networks-directory-page .station-network-brand {
-    flex-basis: 38px;
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
-  }
-  body.networks-directory-page .station-network-brand svg {
-    width: 22px;
-    height: 22px;
-  }
   body.networks-directory-page .station-external-network-link {
-    min-height: 44px;
-    margin-left: 49px;
+    min-height: 78px;
+    padding: 12px 15px;
+    gap: 12px;
+  }
+  body.networks-directory-page .station-network-brand {
+    flex-basis: 46px;
+    width: 46px;
+    height: 46px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   body.networks-directory-page .station-external-network,
-  body.networks-directory-page .station-external-network-link span[aria-hidden] {
-    transition: none;
-  }
-}
-
-/* Keep provider card action alignment consistent, including the CWOP primary link. */
-body.networks-directory-page .station-network-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  column-gap: 18px;
-  row-gap: 2px;
-  margin-left: 54px;
-  min-width: 0;
-}
-body.networks-directory-page .station-network-links > .station-external-network-link {
-  margin-left: 0;
-  overflow-wrap: anywhere;
-}
-@media (max-width: 760px) {
-  body.networks-directory-page .station-network-links { margin-left: 49px; column-gap: 14px; }
-  body.networks-directory-page .station-network-links > .station-external-network-link { min-height: 44px; }
-}
-
-/* Compact provider health: green only for a recent API-confirmed event,
-   amber for stale and neutral when publication is not independently known. */
-body.networks-directory-page .station-external-network p.station-network-status {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  overflow-wrap: anywhere;
-  color: #a7bccb;
-  font-variant-numeric: tabular-nums;
-}
-body.networks-directory-page .station-network-status::before {
-  content: "";
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
-  border-radius: 100%;
-  background: #8395a2;
-  align-self: center;
-}
-body.networks-directory-page .station-network-status[data-state="recent"]::before { background: #65cfb4; }
-body.networks-directory-page .station-network-status[data-state="stale"]::before { background: #f4bd73; }
-body.networks-directory-page .station-network-status[data-state="error"]::before { background: #e89091; }
-
-/* Visitor-first directory: remove operational status clutter and reduce card
-   height while preserving each destination and keyboard focus behaviour. */
-body.networks-directory-page .station-external-network {
-  min-height: 104px;
-  gap: 8px;
-  padding: 16px 18px 11px;
-}
-body.networks-directory-page .station-network-identity { align-items: center; }
-body.networks-directory-page .station-network-copy { padding-top: 0; }
-body.networks-directory-page .station-external-network-link { min-height: 30px; }
-body.networks-directory-page .station-network-links { row-gap: 0; }
-@media (max-width: 760px) {
-  body.networks-directory-page .station-external-network {
-    min-height: 0; padding: 13px 15px 9px; gap: 4px;
-  }
-  body.networks-directory-page .station-external-network-link { min-height: 40px; }
-}
-
-/* Consistent, compact desktop directory cards. Keep this page scoped. */
-@media (min-width: 761px) {
-  body.networks-directory-page .station-external-network-list {
-    gap: 14px;
-  }
-  body.networks-directory-page .station-external-network {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
-    align-content: center;
-    justify-content: stretch;
-    min-height: 114px;
-    gap: 12px;
-    padding: 18px 20px;
-  }
-  body.networks-directory-page .station-network-identity {
-    gap: 14px;
-    align-items: center;
-  }
-  body.networks-directory-page .station-network-brand {
-    flex-basis: 44px;
-    width: 44px;
-    height: 44px;
-  }
-  body.networks-directory-page .station-external-network-link {
-    margin-left: 58px;
-    min-height: 24px;
-    padding: 0;
-    white-space: nowrap;
-  }
-  body.networks-directory-page .station-network-links {
-    margin-left: 58px;
-    gap: 8px 18px;
-  }
-  body.networks-directory-page .station-network-links > .station-external-network-link {
-    margin-left: 0;
-  }
-}
-@media (min-width: 1200px) {
-  body.networks-directory-page .station-external-network-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-@media (min-width: 761px) and (max-width: 1199px) {
-  body.networks-directory-page .station-external-network-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-/* Permit long translated primary link labels to wrap without overflow. */
-body.networks-directory-page .station-network-links > .station-external-network-link {
-  white-space: normal;
-}
-
-/* Ensure every provider action has a 44px touch target on compact screens.
-   The directory's compact-card rule must not reduce accessible link heights. */
-@media (max-width: 760px) {
-  body.networks-directory-page .station-external-network-link,
-  body.networks-directory-page .station-network-links > .station-external-network-link {
-    box-sizing: border-box;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-  }
+  body.networks-directory-page .station-network-arrow { transition: none; }
 }
