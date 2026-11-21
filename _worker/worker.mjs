@@ -1,3 +1,4 @@
+// v38.4.259 — additive, read-only battery reports for rain gauge, lightning and WH52 soil sensor.
 // v38.4.258 — preserve minute-level live readings independently of soil-only status packets; disclose current source/age.
 // v38.4.244 — archive-derived WH52 baseline endpoint with one-hour edge caching.
 // v38.4.243 — publish Ecowitt observations to PWSWeather over HTTPS using a Cloudflare secret.
@@ -3648,6 +3649,10 @@ export default {
       }
 
 
+      if (url.pathname === "/sensor-health" && request.method === "GET") {
+        return await cachedJson(request, ctx, 120, () => buildSensorHealth(env));
+      }
+
       if (url.pathname === "/quality") {
         return await cachedJson(request, ctx, 300, () => buildQuality(env));
       }
@@ -6184,6 +6189,96 @@ async function getMetWarnings(){
   return {county:"Wexford",warnings,source,checked_at:new Date().toISOString()};
 }
 
+
+/* Read battery indicators from the most recent Cloud Ecowitt payload.
+ * These are battery reports, not a test of radio reception or proof of a
+ * fresh physical battery measurement. Never assume missing means normal.
+ */
+function reportedSensorBatteryValue(data, paths) {
+  for (const path of paths) {
+    let node = data;
+    for (const key of path.split(".")) {
+      if (node === null || typeof node !== "object" || !(key in node)) {
+        node = undefined;
+        break;
+      }
+      node = node[key];
+    }
+    if (node && typeof node === "object") node = node.value ?? node.voltage;
+    if (node === null || node === undefined || node === "") continue;
+    const value = Number(node);
+    if (Number.isFinite(value)) return value;
+  }
+  return null;
+}
+
+function sensorBatteryVoltage(data, paths) {
+  const voltage = reportedSensorBatteryValue(data, paths);
+  if (voltage === null || voltage < 0.9 || voltage > 2.2) {
+    return { state: "unavailable" };
+  }
+  return {
+    state: voltage <= 1.2 ? "low" : "normal",
+    value: Math.round(voltage * 100) / 100,
+    unit: "V"
+  };
+}
+
+function lightningBatteryLevel(data) {
+  const level = reportedSensorBatteryValue(data, [
+    "battery.lightning_sensor",
+    "battery.wh57batt",
+    "battery.battWh57",
+    "wh57batt",
+    "battWh57"
+  ]);
+  if (level === null || !Number.isInteger(level) || level < 0 || level > 5) {
+    return { state: "unavailable" };
+  }
+  return { state: level <= 1 ? "low" : "normal", value: level, unit: "level" };
+}
+
+async function buildSensorHealth(env) {
+  const unavailable = () => ({ state: "unavailable" });
+  const result = {
+    checked_at: new Date().toISOString(),
+    source: "Ecowitt battery reports",
+    sensors: { rain: unavailable(), lightning: unavailable(), soil: unavailable() }
+  };
+  let row;
+  try {
+    row = await env.DB.prepare(
+      `SELECT epoch, raw_json FROM ${PAYLOAD_TABLE} WHERE id = 1 LIMIT 1`
+    ).first();
+  } catch (error) {
+    console.warn("Battery reports unavailable:", error);
+    return result;
+  }
+  const epoch = Number(row?.epoch);
+  const age = Math.floor(Date.now() / 1000) - epoch;
+  // A stale weather upload cannot establish present battery condition.
+  if (!Number.isFinite(epoch) || epoch <= 0 || age < -120 || age > 30 * 60 ||
+      !row?.raw_json) return result;
+  let payload;
+  try {
+    payload = typeof row.raw_json === "string" ? JSON.parse(row.raw_json) : row.raw_json;
+  } catch (_) { return result; }
+  const data = payload?.data || payload;
+  if (!data || typeof data !== "object") return result;
+  result.reported_at = new Date(epoch * 1000).toISOString();
+  result.sensors.rain = sensorBatteryVoltage(data, [
+    "battery.rainfall_sensor", "battery.wh40batt", "battery.battWh40",
+    "wh40batt", "battWh40"
+  ]);
+  result.sensors.lightning = lightningBatteryLevel(data);
+  // WH52 is the soil EC sensor on channel 1, not an arbitrary WH51 probe.
+  result.sensors.soil = sensorBatteryVoltage(data, [
+    "battery.soil_ec_sensor_ch1", "battery.soil_ec_sensor",
+    "battery.soil_ec_batt1", "battery.wh52batt",
+    "soil_ec_batt1", "soil_ec_battery1", "wh52batt"
+  ]);
+  return result;
+}
 
 async function buildQuality(env) {
   const latest = await getLatest(env);
