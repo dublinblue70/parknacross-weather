@@ -99,7 +99,7 @@
 
     <section class="page-section">
       <div class="section-heading">
-        <div><span class="section-eyebrow">Compared with yesterday</span><h2>Compared with yesterday</h2><p>Change from yesterday’s full-day totals and extremes; today is still in progress.</p></div>
+        <div><span class="section-eyebrow">Daily comparison</span><h2>Compared with yesterday</h2><p>Change from yesterday’s full-day totals and extremes; today is still in progress.</p></div>
       </div>
       <div class="compare-grid">
         <article class="compare-card"><span>High temperature</span><strong id="compareHigh">--</strong><small id="compareHighNote">Waiting for data</small></article>
@@ -109,14 +109,14 @@
       </div>
     </section>
 
-    <details class="page-section summary-details"><summary>Rain details &amp; dry spells</summary><div class="summary-detail-content">
+    <details class="page-section summary-details"><summary>Last rain &amp; dry spells</summary><div class="summary-detail-content">
       <div class="section-heading">
         <div><span class="section-eyebrow">Rain status</span><h2>Last rain</h2><p>The dedicated tipping-bucket rain gauge is the primary source from 3 November 2026. Older archived measurements came from the previous gauge; the changeover day may contain both.</p></div>
       </div>
       <div class="rain-detail-grid">
         <article class="climate-card"><span>Last measurable rain</span><strong id="lastRainWhen">--</strong><small id="lastRainExact">--</small></article>
         <article class="climate-card"><span>Current rain rate</span><strong id="currentRainRate">--</strong><small id="rainNowNote">--</small></article>
-        <article class="climate-card"><span>Rain today</span><strong id="rainTodayPanel">--</strong><small>Since midnight · Irish time</small></article>
+        <span id="rainTodayPanel" hidden aria-hidden="true"></span>
         <article class="climate-card"><span>Rain-free days</span><strong id="drySpell">--</strong><small id="drySpellNote">0.0 mm calendar days · includes today so far</small></article>
       </div>
     </div></details>
