@@ -53,6 +53,10 @@
   line-height: 1.5;
   color: var(--muted);
 }
+body.dashboard-page .station-bar {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+body.dashboard-page #dashboard > .sensor-battery-warning { order: 4; }
 body.dashboard-page .sensor-battery-warning {
   display: flex;
   align-items: center;
@@ -75,6 +79,10 @@ body.dashboard-page .sensor-battery-warning a {
   text-underline-offset: 3px;
 }
 @media (max-width: 700px) {
+  body.dashboard-page .station-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body.dashboard-page .station-bar > .data-feed-status { grid-column: 1 / -1; }
   .station-sensor-health .sensor-health-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
