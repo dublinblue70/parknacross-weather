@@ -1,0 +1,24 @@
+name: Sensor battery health checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - '_worker/worker.mjs'
+      - 'sensor-health.js'
+      - 'sensor-health.css'
+      - 'index.html'
+      - 'tests/sensor-health.test.mjs'
+      - '.github/workflows/sensor-health.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check _worker/worker.mjs
+      - run: node --check sensor-health.js
+      - run: node tests/sensor-health.test.mjs
