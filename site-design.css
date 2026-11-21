@@ -86,17 +86,17 @@ body .nav-more-menu a:where(:hover,:focus-visible) { background:rgba(133,225,243
   body .topbar .nav > a,body .topbar .nav .nav-more-button { padding:9px 10px;font-size:.81rem; }
 }
 @media (max-width: 760px) {
-  body { padding-bottom:calc(77px + env(safe-area-inset-bottom)); }
+  body.pw-has-mobile-nav { padding-bottom:calc(77px + env(safe-area-inset-bottom)); }
   body .shell { width:100%;max-width:100%;margin:0 auto;border:0;border-radius:0;box-shadow:none; }
   body .topbar { padding:12px 17px;min-height:66px; gap:12px; }
   body .topbar .brand-mark { width:39px;height:39px; }
   body .topbar .brand-title { font-size:clamp(.88rem,3.4vw,1.08rem);line-height:1.25; }
   body .topbar .brand-copy p {font-size:.69rem;line-height:1.25;}
-  body .topbar .nav { display:none!important; }
+  body.pw-has-mobile-nav .topbar .nav { display:none!important; }
   body main { padding-left:16px; padding-right:16px; }
   body .page-hero { padding-top:12px; }
   body .page-hero h1 { font-size:clamp(1.62rem,6.5vw,2.18rem); }
-  body main :where(.metric-panel,.info-card,.chart-card,.context-card,.climate-card,.local-planning-card) { border-radius:14px; }
+  body main :where(.metric-panel,.info-card,.chart-card,.context-card,.climate-card,.local-planning-card) { border-radius:14px;box-shadow:none; }
   body main :where(.section-heading,.chart-title){gap:8px;}
   .pw-mobile-nav {
     position:fixed;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
