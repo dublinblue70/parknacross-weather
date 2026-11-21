@@ -61,14 +61,14 @@
         </section>
         <div class="rain-toolbar"><p id="rainUpdated" role="status">Waiting for a station reading…</p><button id="rainRefresh" type="button">Refresh rain data</button></div>
         <p id="rainLoadStatus" class="info-note" role="status" aria-live="polite">Checking rainfall sources…</p><p class="source-note">Rain totals use the dedicated gauge. <a href="station.html#understandingReadings">How the station measures rain →</a></p>
-        <details class="rain-details rain-source-explainer"><summary>How rainfall is measured and why older totals differ</summary><div class="rain-detail-content">
+        <details class="rain-details rain-source-explainer"><summary>Rain gauge and historical totals</summary><div class="rain-detail-content">
           <p class="source-note">The dedicated tipping-bucket rain gauge became the primary rainfall sensor on 3 November 2026. A reading of 0 mm/h means no measurable bucket tip during that interval; traces below the 0.1 mm resolution may not register. The piezo sensor can give an early indication of light rain before the bucket tips, but can sometimes react to vibration. Piezo readings never contribute to rain totals or historical records. The hourly forecast is not a live rain measurement.</p>
           <p class="source-note"><strong>Rain gauge change · 3 November 2026:</strong> Recent charts and multi-day totals span two rainfall instruments. The 3 November changeover-day rainfall total is provisional because the two instruments may have different accumulated counters. Original observations are preserved; cross-gauge totals have not been invented.</p>
         </div></details>
         <details class="rain-details" id="rainIntensityGuide">
           <summary>What counts as light, moderate or heavy rain?</summary>
           <div class="rain-detail-content">
-            <p class="source-note">These categories describe the <strong>current measured WH40H rain rate</strong>, not today's accumulated rainfall. They are practical display bands; drizzle is defined by droplet size, not rainfall rate alone.</p>
+            <p class="source-note">These categories describe the <strong>current measured rain rate</strong>, not today's accumulated rainfall. They are practical display bands; drizzle is defined by droplet size, not rainfall rate alone.</p>
             <ul>
               <li><strong>Very light:</strong> above 0 to 0.5 mm/h</li>
               <li><strong>Light:</strong> above 0.5 to 2.5 mm/h</li>
@@ -98,7 +98,8 @@
             ><small id="rain7Note">Combined total</small>
           </article>
         </section>
-        <details class="page-section rain-details" id="rainGaugeAudit">
+        <p class="source-note rain-technical-link">For rain-gauge data-feed diagnostics, see <a href="status.html#health-wh40h">System Health</a>.</p>
+        <details class="page-section rain-details" id="rainGaugeAudit" hidden>
           <summary>Rain-gauge verification and 3 November changeover analysis</summary>
           <div class="rain-detail-content">
             <p class="source-note">This read-only check examines archived rainfall counters. It does not confirm gauge calibration, battery condition, radio reception or tipping-bucket operation. Archived totals are never modified.</p>
