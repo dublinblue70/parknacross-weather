@@ -127,6 +127,6 @@ assert.equal(vis.conditionInfo({...base,rain_rate_mm_h:3,piezo_rain_rate_mm_h:0,
  'Moderate rain','Actual WH40H rain still takes priority over WS90');
 assert.equal(vis.conditionInfo({...base,rain_rate_mm_h:12,piezo_rain_rate_mm_h:0,piezo_observed_epoch:clock},false).tag,
  'Heavy rain','Rain intensity should follow the WH40H measured rate');
-assert.match(vis.conditionInfo({...base,rain_rate_mm_h:12},false).story,/12.0 mm\/h measured by the dedicated rain gauge/);
+assert.match(vis.conditionInfo({...base,rain_rate_mm_h:12},false).story,/12.0 mm\/h\) measured by the dedicated gauge/);
 
 console.log('PASS: WH40H rain priority, zeros, missing-data fail-closed, public source labels and version parity.');
