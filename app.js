@@ -596,15 +596,15 @@ function conditionInfo(current, isNight) {
   // Keep the independent sensor and the uncertainty explicit to visitors.
   if (rainState.status === "sensor_disagreement") {
     return { tag: "Rain indicated now", icon: "🌧️",
-      story: `Rain uncertain: WS90 indicates rain, but WH40H reports none. Current intensity is unconfirmed.`, 
+      story: `Rain uncertain: the secondary sensor indicates rain, but the dedicated gauge reports none. Current intensity is unconfirmed.`, 
       className: "weather-rain", rainState };
   }
   if (rainState.status === "possible") {
     const convincing = rainState.piezoStrongSignal || rainState.piezoIncreaseRecent;
     return { tag: "Possible rain", icon: convincing ? "🌧️" : "🌦️",
       story: convincing
-        ? "Possible rain indicated by WS90. The dedicated gauge has not confirmed it."
-        : "Possible rain indication from WS90; the dedicated gauge has not confirmed it.",
+        ? "Possible rain indicated by the secondary sensor. The dedicated rain gauge has not confirmed it."
+        : "Possible rain indication from the secondary sensor; wind or vibration can cause false detections. The dedicated rain gauge has not confirmed rain.",
       className: convincing ? "weather-rain" : "weather-neutral", rainState };
   }
   if (rainState.status === "new_tip") {
@@ -1643,12 +1643,12 @@ function updateDashboard(current) {
   const rainRateDetail = condition.rainState?.reason === "stale_observation"
     ? `Live rain rate unconfirmed · observation ${relativeObservationAge(readingTime(current))}`
     : condition.rainState?.reason === "missing_timestamp" ? "Observation timestamp missing"
-    : condition.rainState?.reason === "rate_missing" ? "WH40H current rate missing · daily total separate"
+    : condition.rainState?.reason === "rate_missing" ? "Rain-gauge rate unavailable · daily total separate"
     : usable(liveRainRate) && Number(liveRainRate) > 0
       ? intensityTools?.classify(liveRainRate)?.label || "Rain measured"
-      : condition.rainState?.status === "sensor_disagreement" ? "Rain indicated · WH40H and WS90 disagree"
-      : condition.rainState?.status === "possible" ? "Possible rain · WS90 indication"
-      : condition.rainState?.status === "new_tip" ? "WH40H tip in last 2 min"
+      : condition.rainState?.status === "sensor_disagreement" ? "Rain indication · sensors disagree"
+      : condition.rainState?.status === "possible" ? "Possible rain · secondary sensor"
+      : condition.rainState?.status === "new_tip" ? "Rain-gauge tip in last 2 min"
       : condition.rainState?.status === "recent" ? "Rain recorded recently"
       : usable(liveRainRate) ? "No current rain measured" : "Rain status unavailable";
   set("rainRateVal", `${metricRateText} · ${rainRateDetail}`);
