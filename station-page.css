@@ -397,3 +397,11 @@ section.page-section:has(> .alert-settings-panel) + section.page-section {
 @media (max-width: 480px) {
   .station-health-bar > .station-time-note { padding-inline: 14px; }
 }
+
+/* Compact station details: one archive metric, measurement data behind one disclosure. */
+#stationReliability .station-reliability-grid { grid-template-columns: minmax(0,1fr); }
+.station-measurements { margin: 18px 0 26px; }
+.station-measurements > summary { padding: 12px 4px; }
+.station-measurements .station-context-grid { margin-top: 14px; }
+.station-measurements .station-context-grid article { min-width: 0; }
+.station-measurements .station-context-grid p + p { margin-top: 10px; }
