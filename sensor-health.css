@@ -1,73 +1,83 @@
-/* Single compact, accessible sensor-battery panel below live observation cards. */
-body.dashboard-page .station-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-body.dashboard-page .station-bar > .sensor-health-card {
-  order: 4;
+/* Battery diagnostics appear once, within Station at a glance.
+ * Dashboard has no battery tiles; only a small confirmed low-battery alert.
+ */
+.station-health-bar > .station-sensor-health {
   grid-column: 1 / -1;
   display: block;
   min-width: 0;
-  padding: 14px 16px;
+  padding: 16px 18px;
+  scroll-margin-top: 100px;
 }
-body.dashboard-page .station-bar > .data-feed-status { order: 3; }
-body.dashboard-page .station-bar > .sensor-health-card .sensor-health-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  margin-bottom: 12px;
+.station-sensor-health h2 {
+  margin: 0 0 14px;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: var(--text);
 }
-body.dashboard-page .station-bar > .sensor-health-card .status-label {
-  display: inline;
-  min-height: 0;
-  margin: 0;
-  font-size: .77rem;
-  font-weight: 700;
-  letter-spacing: .025em;
-  text-transform: uppercase;
-}
-body.dashboard-page .sensor-health-grid {
+.station-sensor-health .sensor-health-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
-body.dashboard-page .sensor-health-item {
+.station-sensor-health .sensor-health-item {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 5px;
+  align-items: flex-start;
+  gap: 6px;
   min-width: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--line, #284352);
+  padding: 11px 12px;
+  border: 1px solid var(--line, #294451);
   border-radius: 10px;
   background: rgba(255,255,255,.025);
 }
-body.dashboard-page .sensor-health-name {
+.station-sensor-health .sensor-health-name {
   display: block;
-  min-height: 0;
-  font-size: .77rem;
-  line-height: 1.4;
-  color: var(--muted, #9eb4c2);
+  font-size: .8rem;
+  line-height: 1.45;
+  color: var(--muted);
 }
-body.dashboard-page .station-bar .sensor-health-item strong {
+.station-sensor-health .sensor-health-item strong {
   display: block;
   margin: 0;
-  font-size: .92rem;
-  line-height: 1.4;
+  font-size: .91rem;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
-body.dashboard-page .sensor-health-item strong.bad { color: #ff9d93; }
-body.dashboard-page .sensor-health-item strong.ok { color: #62d7a3; }
-body.dashboard-page .sensor-health-note {
-  display: block;
-  margin-top: 10px;
-  font-size: .74rem;
-  line-height: 1.45;
-  color: var(--muted, #9eb4c2);
+.station-sensor-health .sensor-health-item strong.ok { color: #77dcae; }
+.station-sensor-health .sensor-health-item strong.warn { color: var(--amber, #f1bc76); }
+.station-sensor-health .sensor-health-item strong.bad { color: #ff9d93; }
+.station-sensor-health .sensor-health-note {
+  margin: 12px 0 0;
+  font-size: .77rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+body.dashboard-page .sensor-battery-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 10px 0 0;
+  padding: 11px 14px;
+  border: 1px solid rgba(245,183,100,.6);
+  border-radius: 11px;
+  background: rgba(245,183,100,.07);
+  color: var(--text);
+  font-size: .88rem;
+  line-height: 1.5;
+}
+body.dashboard-page .sensor-battery-warning[hidden] { display: none !important; }
+body.dashboard-page .sensor-battery-warning a {
+  color: inherit;
+  font-weight: 700;
+  text-underline-offset: 3px;
 }
 @media (max-width: 700px) {
-  body.dashboard-page .station-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  body.dashboard-page .station-bar > .data-feed-status { grid-column: 1 / -1; }
-  body.dashboard-page .station-bar > .sensor-health-card { padding: 12px; }
-  body.dashboard-page .sensor-health-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  body.dashboard-page .sensor-health-item { padding: 9px 10px; }
+  .station-sensor-health .sensor-health-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .station-health-bar > .station-sensor-health { padding: 12px; }
+  .station-sensor-health .sensor-health-item { padding: 10px; }
 }
