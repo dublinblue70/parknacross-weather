@@ -9,7 +9,7 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="theme-color" content="#07131f" />
-    <meta name="parknacross-site-version" content="38.4.259" />
+    <meta name="parknacross-site-version" content="38.4.261" />
     <meta
       name="description"
       content="Live Ardamine weather and garden-soil readings from Parknacross near Courtown, Co. Wexford, with rain, wind, radar, coastal conditions and weather history."
@@ -643,7 +643,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico?v=20261118-coastal-icons">
     <link rel="mask-icon" href="safari-pinned-tab.svg?v=20261118-coastal-icons" color="#071f50">
     <meta name="msapplication-config" content="browserconfig.xml?v=20261118-coastal-icons">
-<link rel="stylesheet" href="sensor-health.css?v=20261121-four-sensors">
+<link rel="stylesheet" href="sensor-health.css?v=20261121-station-relocation">
   </head>
 
   <body class="weather-neutral dashboard-page">
@@ -814,36 +814,16 @@
             <strong id="lastUpdatedRelative">Connecting…</strong>
             <small id="lastUpdated">--</small>
           </div>
-          <div class="station-status sensor-health-card" aria-label="Sensor battery health">
-            <div class="sensor-health-title">
-              <span class="status-label">Sensor batteries</span>
-            </div>
-            <div class="sensor-health-grid" role="list">
-              <div class="sensor-health-item" role="listitem">
-                <span class="sensor-health-name">Main weather sensor</span>
-                <strong id="battery">--</strong>
-              </div>
-              <div class="sensor-health-item" role="listitem">
-                <span class="sensor-health-name">Rain gauge</span>
-                <strong id="sensorHealthRain" aria-live="polite">Checking…</strong>
-              </div>
-              <div class="sensor-health-item" role="listitem">
-                <span class="sensor-health-name">Lightning detector</span>
-                <strong id="sensorHealthLightning" aria-live="polite">Checking…</strong>
-              </div>
-              <div class="sensor-health-item" role="listitem">
-                <span class="sensor-health-name">Garden soil</span>
-                <strong id="sensorHealthSoil" aria-live="polite">Checking…</strong>
-              </div>
-            </div>
-            <small class="sensor-health-note" id="sensorHealthNote">Checking Ecowitt battery reports…</small>
-          </div>
           <div class="station-status data-feed-status">
             <span class="status-label">Data feed</span
             ><strong id="cloudStatus">Connecting</strong>
             <small id="gatewayReceived">Checking gateway…</small>
           </div>
         </section>
+        <aside id="sensorBatteryWarning" class="sensor-battery-warning" role="alert" hidden>
+          <span id="sensorBatteryWarningText">Sensor battery low.</span>
+          <a href="station.html#stationSensorHealth">View sensor health</a>
+        </aside>
 
         <section class="today-section" aria-labelledby="todayHeading">
           <div class="section-heading compact-heading">
@@ -1866,21 +1846,7 @@ Building wind direction distribution…
     <script src="dashboard-enhancements.js?v=20261119-clothing-visible"></script>
     <script src="archive-quality.js?v=20261115-coverage-clarity"></script>
 <script src="chart-explorer.js?v=20261027-compact-zoom"></script><script src="dashboard-preferences.js?v=20261117-preserve-disclosures"></script><script src="local-forecast.js?v=20261116-rain-crosscheck-v2"></script><script src="forecast-accuracy.js?v=20261116-rain-skill" defer></script><script src="hydrangea-soil.js?v=20261113-sensor-language"></script><script src="rain-intensity.js?v=20261116-rain-rate-bands"></script><script src="rain-status.js?v=20261116-fresh-rain-evidence-v2"></script><script src="app.js?v=20261119-clear-rain-language"></script>
-    <script src="sensor-health.js?v=20261121-four-sensors" defer></script>
-    <script>
-      /* Self-heal text written by any older dashboard script still resident in
-         an installed PWA. This observer can be removed after legacy caches age out. */
-      (() => {
-        const battery = document.getElementById("battery");
-        if (!battery) return;
-        const repair = () => {
-          const corrected = battery.textContent.replace(/Â[·•]?\s*/g, ": ").replace(/\s{2,}/g, " ");
-          if (corrected !== battery.textContent) battery.textContent = corrected;
-        };
-        new MutationObserver(repair).observe(battery, { childList: true, characterData: true, subtree: true });
-        repair();
-      })();
-    </script>
+    <script src="sensor-health.js?v=20261121-station-relocation" defer></script>
 
     <script src="site-config.js?v=20261010-v38-4-188"></script>
     <script src="comparison-alignment.js?v=20261010-v38-4-190"></script><script src="platform.js?v=20261113-local-context"></script>
