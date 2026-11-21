@@ -554,7 +554,7 @@ if (!stationNetworksHtml.includes('id="stationCwopLink" href="https://www.findu.
 if (stationPageHtml.includes('class="station-external-network-list"') ||
     stationPageHtml.includes('id="otherWeatherNetworks"') ||
     stationPageHtml.includes('<a href="networks.html">Other Networks</a>') ||
-    !stationPageHtml.includes('class="station-jumps" aria-label="On this page"><a href="#meetSensors">')) {
+    (!stationPageHtml.includes('class="station-jumps" aria-label="On this page">') || !stationPageHtml.includes('<a href="#meetSensors">Meet the sensors</a>'))) {
   failures.push("station.html: remove redundant Other Networks quick link while preserving on-page section jumps");
 }
 const navScript = await readFile(join(root, "navigation.js"), "utf8");
