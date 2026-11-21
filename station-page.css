@@ -383,3 +383,17 @@ section.page-section:has(> .alert-settings-panel) + section.page-section {
   .alert-settings-panel > .visitor-detail[open] > .visitor-tools { margin-inline: 16px; }
   .alert-settings-panel > .visitor-detail[open] > :is(.visitor-note,h3,#refreshAlertHistory,#recentWeatherAlerts) { margin-inline: 16px; }
 }
+
+/* Keep the local-time note below all six summary tiles without leaving an empty grid cell. */
+.station-health-bar > .station-time-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 8px 20px;
+  background: #0a1b26;
+  color: var(--muted-2);
+  font-size: .73rem;
+  line-height: 1.5;
+}
+@media (max-width: 480px) {
+  .station-health-bar > .station-time-note { padding-inline: 14px; }
+}
