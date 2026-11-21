@@ -94,6 +94,8 @@
       moreWrap.append(mobileButton,mobileMenu);
       mobileNav.append(moreWrap);
       document.body.appendChild(mobileNav);
+      // Never suppress the original navigation when scripts are unavailable.
+      document.body.classList.add("pw-has-mobile-nav");
       buttons.push(mobileButton);
     }
   }
