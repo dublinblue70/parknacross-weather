@@ -89,7 +89,7 @@
       .storage-meter-copy { flex-direction: column; gap: 3px; }
     }
   </style>
-<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261120-persistent-notifications" defer></script><link rel="stylesheet" href="station-page.css?v=20261106-notifications-spacing-fix"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
+<link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="background-alerts.js?v=20261120-persistent-notifications" defer></script><link rel="stylesheet" href="station-page.css?v=20261106-notifications-spacing-fix"><link rel="stylesheet" href="sensor-health.css?v=20261121-station-relocation"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
 <script src="site-polish.js?v=20261113-sensor-language" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
   <link rel="stylesheet" href="weather-icons.css?v=20261109-sitewide-svg1">
@@ -118,7 +118,7 @@
         It provides local observations for a coastal location where conditions can vary noticeably from larger inland stations.
         Location details on this website are intentionally approximate; linked weather networks may display the coordinates registered with those services.
       </p>
-      <nav class="station-jumps" aria-label="On this page"><a href="#meetSensors">Meet the sensors</a><a href="#understandingReadings">Understanding the readings</a><a href="#stationReliability">Reliability</a><a href="#stationMaintenance">Recent changes</a><a href="#alertsHeading">Notification settings</a><a href="#stationTechnical">Archive storage</a></nav>
+      <nav class="station-jumps" aria-label="On this page"><a href="#stationSensorHealth">Sensor health</a><a href="#meetSensors">Meet the sensors</a><a href="#understandingReadings">Understanding the readings</a><a href="#stationReliability">Reliability</a><a href="#stationMaintenance">Recent changes</a><a href="#alertsHeading">Notification settings</a><a href="#stationTechnical">Archive storage</a></nav>
     </section>
 
     <section class="station-health-bar" aria-label="Station at a glance">
@@ -132,15 +132,33 @@
         <small id="stationLastUpdated">--</small>
       </div>
       <div class="station-health-item">
-        <span>Outdoor array battery</span>
-        <strong id="stationBattery">--</strong>
-      </div>
-      <div class="station-health-item">
         <span>Archive since</span>
         <strong id="stationStarted">--</strong>
       </div>
       <div class="station-health-item"><span>Location</span><strong>Ardamine, Co. Wexford</strong><small>Approx. 500 m from the Irish Sea</small></div>
       <div class="station-health-item"><span>Approximate elevation</span><strong>25 m above sea level</strong><small>Irish local dates and times</small></div>
+      <div class="station-health-item station-sensor-health" id="stationSensorHealth" aria-labelledby="sensorHealthHeading">
+        <h2 id="sensorHealthHeading">Sensor health</h2>
+        <div class="sensor-health-grid" role="list">
+          <div class="sensor-health-item" role="listitem">
+            <span class="sensor-health-name">Main weather sensor</span>
+            <strong id="stationBattery">Unavailable</strong>
+          </div>
+          <div class="sensor-health-item" role="listitem">
+            <span class="sensor-health-name">Rain gauge</span>
+            <strong id="sensorHealthRain">Checking…</strong>
+          </div>
+          <div class="sensor-health-item" role="listitem">
+            <span class="sensor-health-name">Lightning detector</span>
+            <strong id="sensorHealthLightning">Checking…</strong>
+          </div>
+          <div class="sensor-health-item" role="listitem">
+            <span class="sensor-health-name">Garden soil</span>
+            <strong id="sensorHealthSoil">Checking…</strong>
+          </div>
+        </div>
+        <p class="sensor-health-note" id="sensorHealthNote" role="status" aria-live="polite">Checking Ecowitt battery reports…</p>
+      </div>
     </section>
 
     <section class="page-section info-card" id="meetSensors" aria-labelledby="meetSensorsHeading">
@@ -248,7 +266,7 @@
 
     <section class="page-section" id="stationReliability">
       <div class="section-heading"><div><span class="section-eyebrow">Station quality</span><h2>Observation freshness &amp; archive coverage</h2><p>A simple overview of how reliably the station is collecting and saving weather data.</p></div></div>
-<div class="station-reliability-grid"><article class="climate-card"><span>Feed status</span><strong id="qualityFeed">--</strong><small id="qualityAge">Latest weather reading</small></article><article class="climate-card"><span>Archive reliability</span><strong id="qualityReliability">--</strong><small id="qualityReliabilityNote">Percentage of expected 5-minute readings successfully saved this month</small></article></div><p class="station-copy">Freshness describes the latest observation; coverage describes how many expected readings were saved. Missing older readings do not necessarily mean the station is offline now. <a href="history.html#completenessHeading">Explore archive coverage</a> · <a href="status.html">Open system status</a></p><details class="station-fold"><summary>More collection statistics</summary><div class="quality-grid"><article class="climate-card"><span>Readings saved (24h)</span><strong id="quality24">--</strong><small>Weather observations stored</small></article><article class="climate-card"><span>Typical update interval</span><strong id="qualityInterval">--</strong><small>Time between saved readings</small></article><article class="climate-card"><span>Longest archive gap</span><strong id="qualityGap">--</strong><small>Largest gap in the last 24 hours</small></article><article class="climate-card"><span>Total readings saved</span><strong id="qualityTotal">--</strong><small>Historical archive</small></article><article class="climate-card"><span>Weather sensor battery</span><strong id="qualityBattery">--</strong><small>Battery status</small></article></div></details>
+<div class="station-reliability-grid"><article class="climate-card"><span>Feed status</span><strong id="qualityFeed">--</strong><small id="qualityAge">Latest weather reading</small></article><article class="climate-card"><span>Archive reliability</span><strong id="qualityReliability">--</strong><small id="qualityReliabilityNote">Percentage of expected 5-minute readings successfully saved this month</small></article></div><p class="station-copy">Freshness describes the latest observation; coverage describes how many expected readings were saved. Missing older readings do not necessarily mean the station is offline now. <a href="history.html#completenessHeading">Explore archive coverage</a> · <a href="status.html">Open system status</a></p><details class="station-fold"><summary>More collection statistics</summary><div class="quality-grid"><article class="climate-card"><span>Readings saved (24h)</span><strong id="quality24">--</strong><small>Weather observations stored</small></article><article class="climate-card"><span>Typical update interval</span><strong id="qualityInterval">--</strong><small>Time between saved readings</small></article><article class="climate-card"><span>Longest archive gap</span><strong id="qualityGap">--</strong><small>Largest gap in the last 24 hours</small></article><article class="climate-card"><span>Total readings saved</span><strong id="qualityTotal">--</strong><small>Historical archive</small></article></div></details>
     </section>
 
     <section class="page-section" id="stationMaintenance">
@@ -412,7 +430,7 @@ let latestObservationTime = null;
 let stationRequestOK = false;
 
 function batteryStatus(voltage) {
-  if (!usable(voltage)) return "--";
+  if (!usable(voltage)) return "Unavailable";
   const v = Number(voltage);
   if (v >= 3.0) return `Normal · ${v.toFixed(2)} V`;
   if (v >= 2.7) return `Check · ${v.toFixed(2)} V`;
@@ -596,13 +614,25 @@ async function loadStationStatus() {
       }
 
       set("stationBattery", batteryStatus(current.battery_v));
+      const batteryElement = document.getElementById("stationBattery");
+      if (batteryElement) {
+        batteryElement.classList.remove("ok", "warn", "bad");
+        if (usable(current.battery_v) && Number(current.battery_v) >= 1.5 && Number(current.battery_v) <= 4) {
+          const v = Number(current.battery_v);
+          batteryElement.classList.add(v < 2.7 ? "bad" : v < 3 ? "warn" : "ok");
+        }
+      }
     } else {
       stationRequestOK = false;
+      set("stationBattery", "Unavailable");
+      document.getElementById("stationBattery")?.classList.remove("ok", "warn", "bad");
       refreshRelativeAge();
     }
   } catch (error) {
     console.warn("Station page data:", error);
     stationRequestOK = false;
+    set("stationBattery", "Unavailable");
+    document.getElementById("stationBattery")?.classList.remove("ok", "warn", "bad");
     refreshRelativeAge();
   }
 }
@@ -615,7 +645,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<script src="offline.js?v=20261010-v38-4-190"></script><script src="notification-storage.js?v=20261120-persistent-notifications"></script><script src="alert-settings.js?v=20261120-persistent-notifications"></script><script src="notification-test.js?v=20261101"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="maintenance-log.js?v=20261113-sensor-language"></script><script src="maintenance.js?v=20261117-station-full-history"></script><script src="station-page.js?v=20261113-sensor-language"></script><script src="station-v2.js?v=20261113-sensor-language"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="offline.js?v=20261010-v38-4-190"></script><script src="notification-storage.js?v=20261120-persistent-notifications"></script><script src="alert-settings.js?v=20261120-persistent-notifications"></script><script src="notification-test.js?v=20261101"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="maintenance-log.js?v=20261113-sensor-language"></script><script src="maintenance.js?v=20261117-station-full-history"></script><script src="station-page.js?v=20261113-sensor-language"></script><script src="station-v2.js?v=20261113-sensor-language"></script><script src="sensor-health.js?v=20261121-station-relocation" defer></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20261008-v38-4-170"></script>
 <script src="pwa-diagnostics.js?v=20261006-v38-4-144"></script>
 <script src="accessibility.js?v=20260924-v38-4-97"></script>
