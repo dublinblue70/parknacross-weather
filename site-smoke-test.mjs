@@ -428,7 +428,7 @@ const networkDirectoryCss = await readFile(join(root, "networks-page.css"), "utf
 if (!stationNetworksHtml.includes('aria-labelledby="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('id="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('class="networks-directory-page"') ||
-    !/networks-page\\.css\\?v=[A-Za-z0-9._-]+/.test(stationNetworksHtml) ||
+    !/networks-page\.css\?v=[A-Za-z0-9._-]+/.test(stationNetworksHtml) ||
     !networkDirectoryCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") ||
     !networkDirectoryCss.includes("grid-template-columns: minmax(0, 1fr)") ||
     !networkDirectoryCss.includes("@media (max-width: 760px)") ||
@@ -441,11 +441,11 @@ if (stationNetworksHtml.includes("Parknacross Weather elsewhere") ||
     stationNetworksHtml.includes(">View on Windy.com <")) {
   failures.push("networks.html: avoid duplicated headings and verbose labels");
 }
-const networkCardMarkup = [...stationNetworksHtml.matchAll(/<article class="station-external-network"[^>]*>([\\s\\S]*?)<\\/article>/g)].map(match => match[1]);
+const networkCardMarkup = [...stationNetworksHtml.matchAll(/<article class="station-external-network"[^>]*>([\s\S]*?)<\/article>/g)].map(match => match[1]);
 if (networkCardMarkup.length !== 9 ||
-    networkCardMarkup.some(card => (card.match(/<p(?:\\s[^>]*)?>/g) || []).length !== 0 ||
+    networkCardMarkup.some(card => (card.match(/<p(?:\s[^>]*)?>/g) || []).length !== 0 ||
       (card.match(/class="station-external-network-link"/g) || []).length !== 1 ||
-      (card.match(/<h2\\b/g) || []).length !== 1)) {
+      (card.match(/<h2\b/g) || []).length !== 1)) {
   failures.push("networks.html: exactly nine simple full-card links with no duplicated descriptions");
 }
 const stationBrandSlugs = [
@@ -457,8 +457,8 @@ if (networkCardMarkup.length !== stationBrandSlugs.length ||
       !card.includes('class="station-network-brand station-network-brand--'+stationBrandSlugs[index]+'" aria-hidden="true"') ||
       !card.includes('<svg viewBox="0 0 24 24"') ||
       !card.includes('focusable="false"') ||
-      (card.match(/<svg\\b/g) || []).length !== 1 ||
-      (card.match(/<\\/svg>/g) || []).length !== 1 ||
+      (card.match(/<svg\b/g) || []).length !== 1 ||
+      (card.match(/<\/svg>/g) || []).length !== 1 ||
       (!card.includes('<path') && !card.includes('<circle'))
     ) ||
     !stationBrandSlugs.every(slug => networkDirectoryCss.includes(".station-network-brand--"+slug)) ||
