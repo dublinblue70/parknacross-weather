@@ -1,0 +1,142 @@
+/* Parknacross Weather — coordinated visitor interface, November 2026.
+   A single visual layer across live weather, reports, history and station.
+   Existing sensor, alert, map and chart-specific styles remain authoritative. */
+:root {
+  --pw-bg: #06131e;
+  --pw-raised: #0d2332;
+  --pw-raised-alt: #102b3d;
+  --pw-border: rgba(168,210,231,.18);
+  --pw-border-strong: rgba(168,210,231,.28);
+  --pw-ink: #f3f8fc;
+  --pw-subtle: #afc4d0;
+  --pw-highlight: #85e1f3;
+  --pw-focus: #a9e8f5;
+  --pw-radius: 16px;
+  --pw-shadow: 0 12px 32px rgba(1,9,18,.16);
+}
+html { scroll-padding-top: 24px; }
+body { color-scheme:dark; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+body .shell { border-color:var(--pw-border); }
+body .topbar { border-color:var(--pw-border); }
+body .topbar .brand-title { letter-spacing:.025em; }
+body .topbar .brand-copy p { color:var(--pw-subtle); }
+body .topbar .nav { gap:5px; align-items:center; }
+body .topbar .nav > a,
+body .topbar .nav .nav-more-button {
+  min-height:44px; display:inline-flex; align-items:center; justify-content:center;
+  padding:9px 13px; border-radius:12px; font-size:.87rem;
+  font-weight:620; letter-spacing:0; text-decoration:none;
+  transition:background-color .16s ease, color .16s ease;
+}
+body .topbar .nav > a:where(:hover,:focus-visible),
+body .topbar .nav .nav-more-button:where(:hover,:focus-visible) {
+  background:rgba(133,225,243,.10);color:var(--pw-ink);
+}
+body .topbar .nav > a.active,body .topbar .nav > a[aria-current="page"],
+body .topbar .nav .nav-more-button.nav-more-active {
+  background:rgba(133,225,243,.13); color:var(--pw-highlight);
+}
+body .page-hero { max-width:1050px; }
+body .page-hero h1 { font-size:clamp(1.7rem,3vw,2.55rem); line-height:1.15; letter-spacing:-.035em; text-wrap:balance; }
+body main .section-heading h2,body main .chart-title h2 {
+  font-size:clamp(1.16rem,1.75vw,1.47rem);letter-spacing:-.023em;line-height:1.25;
+}
+body main p { line-height:1.6; }
+body main :where(.source-note,.info-note,.status-note,.forecast-local-note) {
+  color:var(--pw-subtle);line-height:1.55;
+}
+body main :where(.info-card,.chart-card,.context-card,.climate-card,.metric-panel,.records-panel,.local-planning-card,.report-link) {
+  border-radius:var(--pw-radius);
+}
+body main :where(.chart-card,.info-card,.context-card,.climate-card) { box-shadow:var(--pw-shadow); }
+body main :where(button,select,input[type="button"],input[type="submit"],input[type="date"]) { min-height:44px; }
+body main :where(button,a,summary,input,select,textarea):focus-visible,
+body .pw-mobile-nav :where(button,a):focus-visible {
+  outline:3px solid var(--pw-focus)!important; outline-offset:3px;
+}
+body main :where(details > summary) { cursor:pointer; line-height:1.45; }
+body main :where(.source-badge,.coverage-badge) { font-weight:650; }
+body main :where(.section-heading,.chart-title,.card-head) { gap:10px; }
+/* One-tap explanatory links stand apart from measurements, not inside them. */
+body .dashboard-specialist-links a,body .feature-links a,
+body .report-links a { transition:border-color .16s ease,background-color .16s ease,transform .16s ease; }
+body .dashboard-specialist-links a:where(:hover,:focus-visible),
+body .feature-links a:where(:hover,:focus-visible),
+body .report-links a:where(:hover,:focus-visible) {
+  border-color:rgba(133,225,243,.48);background:rgba(133,225,243,.07);
+}
+body .nav-more-menu[data-nav-more-popup="true"] {
+  padding:12px!important;border:1px solid var(--pw-border-strong);border-radius:17px;
+  background:#0b202e;box-shadow:0 24px 65px rgba(0,6,14,.52);
+}
+body .nav-more-menu .nav-menu-group { gap:4px!important;padding:9px 0 6px; }
+body .nav-more-menu .nav-menu-group-label { color:var(--pw-highlight); font-size:.7rem; }
+body .nav-more-menu a { min-height:42px; display:flex;align-items:center; padding:9px 12px; border-radius:10px; }
+body .nav-more-menu a:where(:hover,:focus-visible) { background:rgba(133,225,243,.10); }
+.pw-skip-link {
+  position:fixed;left:12px;top:-90px;z-index:20000;
+  padding:11px 17px;color:#071827;background:#b7edf6;font-weight:750;
+  border-radius:9px;text-decoration:none;
+}
+.pw-skip-link:focus { top:12px; }
+/* Mobile shortcuts are real links; only More opens a popup, never a nested menu. */
+.pw-mobile-nav { display:none; }
+@media (max-width: 1000px) and (min-width: 761px) {
+  body .topbar { gap:15px; padding:16px 18px; }
+  body .topbar .nav > a,body .topbar .nav .nav-more-button { padding:9px 10px;font-size:.81rem; }
+}
+@media (max-width: 760px) {
+  body { padding-bottom:calc(77px + env(safe-area-inset-bottom)); }
+  body .shell { width:100%;max-width:100%;margin:0 auto;border:0;border-radius:0;box-shadow:none; }
+  body .topbar { padding:12px 17px;min-height:66px; gap:12px; }
+  body .topbar .brand-mark { width:39px;height:39px; }
+  body .topbar .brand-title { font-size:clamp(.88rem,3.4vw,1.08rem);line-height:1.25; }
+  body .topbar .brand-copy p {font-size:.69rem;line-height:1.25;}
+  body .topbar .nav { display:none!important; }
+  body main { padding-left:16px; padding-right:16px; }
+  body .page-hero { padding-top:12px; }
+  body .page-hero h1 { font-size:clamp(1.62rem,6.5vw,2.18rem); }
+  body main :where(.metric-panel,.info-card,.chart-card,.context-card,.climate-card,.local-planning-card) { border-radius:14px; }
+  body main :where(.section-heading,.chart-title){gap:8px;}
+  .pw-mobile-nav {
+    position:fixed;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+    align-items:stretch;left:0;right:0;bottom:0;z-index:10049;
+    min-height:calc(65px + env(safe-area-inset-bottom));
+    padding:5px max(8px,env(safe-area-inset-left)) calc(5px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-right));
+    border-top:1px solid var(--pw-border-strong);background:rgba(8,26,39,.97);
+    box-shadow:0 -12px 36px rgba(0,8,16,.32);backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+  }
+  .pw-mobile-nav .pw-mobile-nav-item {
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;min-width:0;min-height:55px;padding:6px 2px;
+    border:0;border-radius:11px;background:transparent;color:var(--pw-subtle);
+    font:600 .72rem/1.15 system-ui,-apple-system,"Segoe UI",sans-serif;
+    text-decoration:none;white-space:nowrap;cursor:pointer;
+  }
+  .pw-mobile-nav .pw-mobile-nav-item svg {width:21px;height:21px;flex:none;}
+  .pw-mobile-nav .pw-mobile-nav-item:is(:hover,.is-current,[aria-current="page"],[aria-expanded="true"]) {
+    color:var(--pw-highlight);background:rgba(133,225,243,.10);
+  }
+  .pw-mobile-more {display:flex;min-width:0;}
+  .pw-mobile-more > button {width:100%;box-shadow:none!important;}
+  body .nav-more-menu[data-nav-more-popup="true"] {
+    max-width:calc(100vw - 16px);border-radius:16px;
+  }
+  body #pwaUpdateBanner { bottom:calc(84px + env(safe-area-inset-bottom))!important; }
+  body main :where(.local-planning-card,.report-link,.feature-links a) { min-height:44px; }
+  body main .dashboard-shortcuts { gap:7px; }
+  body main .dashboard-shortcuts a { min-height:43px; padding:8px 11px; font-size:.81rem; }
+}
+@media (max-width: 380px) {
+  .pw-mobile-nav .pw-mobile-nav-item {font-size:.68rem;}
+  body .topbar .brand-copy p {font-size:.64rem;}
+}
+@media (prefers-reduced-motion: reduce) {
+  body .topbar .nav > a,body .topbar .nav .nav-more-button,
+  .pw-mobile-nav .pw-mobile-nav-item,body .report-links a {transition:none!important;transform:none!important;}
+}
+@media print {
+  .pw-mobile-nav,.pw-skip-link {display:none!important;}
+  body {padding-bottom:0!important;}
+}
