@@ -90,6 +90,14 @@
       mobileButton.innerHTML = icon("more") + "<span>More</span>";
       if (!targets.some(([href]) => href === page)) mobileButton.classList.add("is-current");
       const mobileMenu = originalMenu.cloneNode(true);
+      // Graphs is a primary desktop link, but it must remain reachable
+      // when the desktop navigation is replaced by the bottom mobile bar.
+      const desktopGraphs = document.querySelector('header .nav > a[href="graphs.html"]');
+      if (desktopGraphs) {
+        const mobileGraphs = desktopGraphs.cloneNode(true);
+        mobileGraphs.setAttribute("role", "menuitem");
+        mobileMenu.appendChild(mobileGraphs);
+      }
       mobileMenu.hidden = true;
       moreWrap.append(mobileButton,mobileMenu);
       mobileNav.append(moreWrap);
@@ -131,7 +139,7 @@
       annualLink?.remove();
     }
     const links = [...menu.querySelectorAll(":scope > a")];
-    const explore = new Set(["climate.html","station.html","networks.html","coast.html","sky.html","records.html","history.html"]);
+    const explore = new Set(["climate.html","station.html","networks.html","coast.html","sky.html","records.html","history.html","graphs.html"]);
     const reports = new Set(["summary.html","monthly.html","annual.html","downloads.html"]);
     const groups = [
       ["Explore", links.filter(link => explore.has(link.getAttribute("href")))],
