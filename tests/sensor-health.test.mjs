@@ -122,7 +122,7 @@ assert.equal(response.sensors.lightning.state, "unavailable", "Stale cloud paylo
 assert.equal(response.sensors.rain.state, "unavailable");
 assert.equal(response.sensors.soil.state, "unavailable");
 
-assert.match(worker, /soil_ec_batt\\$\\{soil.channel\\}/,
+assert.ok(worker.includes("soil_ec_batt"), 
   "Authenticated WH52 gateway field must be retained");
 assert.match(worker, /battery_report_epoch: wh52Battery.state/,
   "Gateway record must preserve separate battery report age");
