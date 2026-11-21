@@ -56,3 +56,13 @@
 
 /* Gauge-change provenance: amber identifies provisional 3 Nov 2026 rain totals. */
 .rain-page tr[data-rain-day="2026-11-03"] .rain-day-date{color:var(--amber);font-weight:650}
+
+/* Advanced rainfall statistics and measurement notes stay in two clear, optional sections. */
+.rain-page .rain-more-statistics .rain-optional-section + .rain-optional-section,
+.rain-page .rain-measurement-notes h3:not(:first-child) { margin-top:22px; padding-top:18px; border-top:1px solid var(--line-strong); }
+.rain-page .rain-more-statistics .rain-optional-section h3,
+.rain-page .rain-measurement-notes h3 { margin:0 0 10px; font-size:1.02rem; }
+.rain-page .rain-more-statistics .rain-event-summary,
+.rain-page .rain-more-statistics .rain-stat-grid { margin-top:12px; }
+.rain-page .rain-measurement-notes #rainEvidence { margin:10px 0 14px; }
+.rain-page .rain-measurement-notes ul { padding-left:22px; }
