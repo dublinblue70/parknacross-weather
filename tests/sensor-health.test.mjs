@@ -5,6 +5,8 @@ import { runInNewContext } from "node:vm";
 const root = new URL("../", import.meta.url);
 const worker = readFileSync(new URL("_worker/worker.mjs", root), "utf8");
 const html = readFileSync(new URL("index.html", root), "utf8");
+const station = readFileSync(new URL("station.html", root), "utf8");
+const css = readFileSync(new URL("sensor-health.css", root), "utf8");
 const ui = readFileSync(new URL("sensor-health.js", root), "utf8");
 const sw = readFileSync(new URL("service-worker.js", root), "utf8");
 const start = worker.indexOf("/* Read battery indicators from the most recent Cloud Ecowitt payload.");
@@ -127,15 +129,91 @@ assert.ok(worker.includes("soil_ec_batt"),
 assert.match(worker, /battery_report_epoch: wh52Battery.state/,
   "Gateway record must preserve separate battery report age");
 assert.match(worker, /url\.pathname === "\/sensor-health"/);
-assert.match(html, /id="sensorHealthRain"/);
-assert.match(html, /id="sensorHealthLightning"/);
-assert.match(html, /id="sensorHealthSoil"/);
-assert.equal((html.match(/id="battery"/g) || []).length, 1, "Main weather battery must retain its existing ID");
-assert.match(html, /sensor-health\.css\?v=/);
-assert.match(html, /sensor-health\.js\?v=/);
+assert.match(station, /id="stationSensorHealth"/);
+for (const id of ["sensorHealthRain", "sensorHealthLightning", "sensorHealthSoil", "stationBattery"]) {
+  assert.match(station, new RegExp('id="' + id + '"'), id + " belongs on Station");
+  assert.doesNotMatch(html, new RegExp('id="' + id + '"'), id + " should not be on dashboard");
+}
+assert.doesNotMatch(html, /id="battery"/, "Dashboard battery tile is removed");
+assert.doesNotMatch(station, /id="qualityBattery"/, "No second battery display in collection statistics");
+assert.match(html, /id="sensorBatteryWarning"[^>]*hidden/, "Warning starts hidden");
+assert.match(html, /href="station.html#stationSensorHealth"/);
+assert.match(html, /sensor-health\\.css\\?v=/);
+assert.match(html, /sensor-health\\.js\\?v=/);
+assert.match(station, /sensor-health\\.css\\?v=/);
+assert.match(station, /sensor-health\\.js\\?v=/);
+assert.match(css, /sensor-battery-warning\\[hidden\\]/, "Hidden alert remains visually hidden");
+assert.match(css, /#dashboard > \\.sensor-battery-warning \\{ order: 4;/,
+  "Low-battery banner follows live status in flex layout");
 assert.match(ui, /"Unavailable"/);
 assert.match(ui, /"Low battery"/);
+assert.match(ui, /mainBatteryLow/, "Dashboard independently monitors WS90 for genuinely low voltage");
+assert.match(ui, /sensorReport\\?\\.sensors\\?\\.\\[key\\]\\?\\.state === "low"/,
+  "Unavailable sensor reports must not trigger dashboard warnings");
+assert.match(station, /notification-storage\\.js\\?v=20261120-persistent-notifications/);
+assert.match(html, /notification-storage\\.js\\?v=20261120-persistent-notifications/);
 assert.match(sw, /\.\/sensor-health\.js/);
 assert.match(sw, /\.\/sensor-health\.css/);
 assert.match(sw, /\.\/notification-storage\.js/, "PWA notification preferences must remain cached");
-console.log("PASS: four-sensor battery UI, low/normal/unavailable classification, WH52 provenance and stale-data handling");
+console.log("PASS: Ecowitt battery mappings, stale-data handling and site layout assertions");
+
+// Exercise the actual client-side report rendering without a browser or network.
+async function renderSensorHealth(page, batteryReport, current) {
+  const node = () => ({
+    textContent: "", title: "", hidden: false,
+    classList: { remove() {}, add() {} }
+  });
+  const names = page === "station"
+    ? ["stationSensorHealth", "stationBattery", "sensorHealthRain",
+       "sensorHealthLightning", "sensorHealthSoil", "sensorHealthNote"]
+    : ["sensorBatteryWarning", "sensorBatteryWarningText"];
+  const elements = Object.fromEntries(names.map(name => [name, node()]));
+  if (page === "station") elements.stationBattery.textContent = "Normal · 3.02 V";
+  const sandbox = {
+    document: {readyState: "complete", getElementById: id => elements[id] ?? null},
+    fetch: async uri => ({
+      ok: true, json: async () => String(uri).endsWith("/current") ? current : batteryReport
+    }),
+    AbortController,
+    setTimeout: () => 1, clearTimeout: () => {}, setInterval: () => 2,
+    Date, Number, Object
+  };
+  runInNewContext(ui, sandbox);
+  await new Promise(resolve => setImmediate(resolve));
+  return elements;
+}
+
+const now = Math.floor(Date.now()/1000);
+let rendered = await renderSensorHealth("station", {sensors: {
+  rain: {state:"normal", value:1.49, unit:"V"},
+  lightning: {state:"low", value:1, unit:"level"},
+  soil: {state:"unavailable"}
+}}, null);
+assert.match(rendered.sensorHealthRain.textContent, /^Normal/);
+assert.match(rendered.sensorHealthLightning.textContent, /^Low battery/);
+assert.equal(rendered.sensorHealthSoil.textContent, "Unavailable");
+assert.equal(rendered.stationBattery.textContent, "Normal · 3.02 V",
+  "Sensor report must not overwrite main battery sourced from /current");
+
+rendered = await renderSensorHealth("dashboard", {sensors: {
+  rain: {state:"unavailable"}, lightning: {state:"normal"}, soil: {state:"unavailable"}
+}}, {epoch:now,battery_v:3.01});
+assert.equal(rendered.sensorBatteryWarning.hidden, true,
+  "Missing and normal readings do not show a dashboard warning");
+
+rendered = await renderSensorHealth("dashboard", {sensors: {
+  rain: {state:"low"}, lightning: {state:"normal"}, soil: {state:"unavailable"}
+}}, {epoch:now,battery_v:3.01});
+assert.equal(rendered.sensorBatteryWarning.hidden, false);
+assert.match(rendered.sensorBatteryWarningText.textContent, /Rain gauge battery low/);
+
+rendered = await renderSensorHealth("dashboard", null, {epoch:now,battery_v:2.54});
+assert.equal(rendered.sensorBatteryWarning.hidden, false);
+assert.match(rendered.sensorBatteryWarningText.textContent, /Main weather sensor battery low/);
+
+rendered = await renderSensorHealth("dashboard", null, {epoch:now-3600,battery_v:2.54});
+assert.equal(rendered.sensorBatteryWarning.hidden, true,
+  "Stale weather readings must never create low-battery alerts");
+
+console.log("PASS: battery readings moved to Station; only confirmed low-battery warnings on dashboard");
+
