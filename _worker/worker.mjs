@@ -6290,6 +6290,8 @@ async function buildSensorHealth(env) {
         const hasWh52Channel1 = Number(wh52.channel) === 1 &&
           [wh52.temperature_c, wh52.ec_us_cm].some(usableNumber);
         const explicitWh52Paths = [
+          // Dedicated WH52 (soil moisture + EC) battery field in Ecowitt API.
+          "battery.soilmoisture_ec_sensor_ch1",
           "battery.soil_ec_sensor_ch1", "battery.soil_ec_sensor",
           "battery.soil_ec_batt1", "battery.wh52batt",
           "soil_ec_batt1", "soil_ec_battery1", "wh52batt"
