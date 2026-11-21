@@ -597,3 +597,19 @@ body.dashboard-page .dashboard-specialist-links a:focus-visible { outline: 2px s
   body.dashboard-page .dashboard-specialist-links { grid-template-columns: 1fr; gap: 10px; }
   body.dashboard-page .dashboard-specialist-links a { padding: 13px 15px; }
 }
+
+/* Keep the visitor Dashboard focused on live weather, forecast and daily essentials. */
+body.dashboard-page .dashboard-daily-report-link { display:inline-flex;margin-top:7px;font-size:.82rem;line-height:1.5; }
+body.dashboard-page .today-grid #todayTempCompare,
+body.dashboard-page .today-grid #todayRainCompare { display:none; }
+body.dashboard-page .dashboard-coverage-more { margin-top:10px;max-width:100%;border-top:1px solid var(--line-strong,rgba(174,210,232,.20)); }
+body.dashboard-page .dashboard-coverage-more > summary { padding:12px 4px;min-height:44px;cursor:pointer;font-size:.82rem;color:var(--muted);font-weight:600; }
+body.dashboard-page .dashboard-coverage-more > .dashboard-coverage { margin:0 0 12px; }
+body.dashboard-page .local-planning .local-planning-quick { min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:12px 15px;border:1px solid var(--line-strong,rgba(174,210,232,.25));border-radius:12px;text-decoration:none;color:var(--text);background:rgba(174,210,232,.035); }
+body.dashboard-page .local-planning .local-planning-quick strong {font-size:.9rem;font-weight:650;}
+body.dashboard-page .local-planning .local-planning-quick span {font-size:.77rem;color:var(--muted);}
+body.dashboard-page .local-planning .local-planning-quick:hover,body.dashboard-page .local-planning .local-planning-quick:focus-visible {outline:2px solid var(--accent);outline-offset:2px;}
+body.dashboard-page .dashboard-optional-extras {margin:14px 0;}
+body.dashboard-page .dashboard-optional-extras > summary {padding:15px 18px;min-height:48px;cursor:pointer;font-weight:650;}
+body.dashboard-page .dashboard-optional-extras > section {margin-top:12px;}
+@media(max-width:560px) {body.dashboard-page .local-planning .local-planning-quick {padding:11px 12px;}body.dashboard-page .dashboard-optional-extras > summary {padding:13px 14px;}}
