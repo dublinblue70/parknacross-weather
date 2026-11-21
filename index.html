@@ -634,7 +634,7 @@
         }
       }
     </style>
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261027-compact-zoom"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261117-consolidated-dashboard"><link rel="stylesheet" href="hydrangea-soil.css?v=20261106-wh52-offline"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="wind-rose.css?v=20261115-full-width-legend"><link rel="stylesheet" href="local-forecast.css?v=20261116-rain-crosscheck"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261115-climate-panel-spacing">
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261027-compact-zoom"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261121-simplified-home"><link rel="stylesheet" href="hydrangea-soil.css?v=20261106-wh52-offline"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="wind-rose.css?v=20261115-full-width-legend"><link rel="stylesheet" href="local-forecast.css?v=20261116-rain-crosscheck"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261115-climate-panel-spacing">
 <script src="site-polish.js?v=20261113-sensor-language" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
   <link rel="stylesheet" href="weather-icons.css?v=20261109-sitewide-svg1">
@@ -803,7 +803,7 @@
           </div>
         </section>
 
-<nav class="dashboard-shortcuts" aria-label="Jump to weather information"><a href="#todayHeading">Today</a><a href="#observationsHeading">Readings</a><a href="#forecast">Forecast</a><a href="#planning">Plan ahead</a><a href="#graphs">Charts</a><a href="#soilPanel">Garden soil</a><a href="#sunMoon">Sun &amp; Moon</a><a href="rain.html">Rain Centre</a><a href="coast.html">Sea &amp; swim</a></nav>
+<nav class="dashboard-shortcuts" aria-label="Jump to weather information"><a href="#todayHeading">Today</a><a href="#observationsHeading">Readings</a><a href="#forecast">Forecast</a><a href="rain.html">Rain Centre</a><a href="coast.html">Sea &amp; Swim</a><a href="#sunMoon">Sun &amp; Moon</a><a href="#soilPanel">Garden soil</a></nav>
         <section class="station-bar" aria-label="Station status">
           <div id="livePill" class="station-status live-pill checking">
             <span class="live-dot"></span>
@@ -1608,7 +1608,11 @@
         </section>
 
         
-<details class="dashboard-explore-group" data-dashboard-extra="charts"><summary>Explore 24-hour charts</summary><a class="text-link" href="graphs.html">Detailed graphs →</a><section
+<nav class="dashboard-specialist-links" aria-label="Explore detailed weather information">
+          <a href="graphs.html"><strong>Weather graphs</strong><span>See detailed trends and compare dates</span></a>
+          <a href="records.html"><strong>Station records</strong><span>Browse all-time highs, lows and extremes</span></a>
+        </nav>
+        <details class="dashboard-explore-group" data-dashboard-extra="charts" hidden><summary>Explore 24-hour charts</summary><a class="text-link" href="graphs.html">Detailed graphs →</a><section
           class="trends-section"
           id="graphs"
           aria-labelledby="trendsHeading"
@@ -1724,7 +1728,7 @@ Building wind direction distribution…
           </div>
         </section></details>
 
-        <details class="dashboard-explore-group" data-dashboard-extra="records"><summary>View station record details</summary><a class="text-link" href="records.html">All records →</a><section
+        <details class="dashboard-explore-group" data-dashboard-extra="records" hidden><summary>View station record details</summary><a class="text-link" href="records.html">All records →</a><section
           class="records-section"
           id="records"
           aria-labelledby="recordsHeading"
@@ -1845,7 +1849,7 @@ Building wind direction distribution…
     <script src="source-freshness.js?v=20261026-v38-4-232"></script>
     <script src="dashboard-enhancements.js?v=20261119-clothing-visible"></script>
     <script src="archive-quality.js?v=20261115-coverage-clarity"></script>
-<script src="chart-explorer.js?v=20261027-compact-zoom"></script><script src="dashboard-preferences.js?v=20261117-preserve-disclosures"></script><script src="local-forecast.js?v=20261116-rain-crosscheck-v2"></script><script src="forecast-accuracy.js?v=20261116-rain-skill" defer></script><script src="hydrangea-soil.js?v=20261113-sensor-language"></script><script src="rain-intensity.js?v=20261116-rain-rate-bands"></script><script src="rain-status.js?v=20261116-fresh-rain-evidence-v2"></script><script src="app.js?v=20261119-clear-rain-language"></script>
+<script src="chart-explorer.js?v=20261027-compact-zoom"></script><script src="dashboard-preferences.js?v=20261121-dedicated-graphs-records"></script><script src="local-forecast.js?v=20261116-rain-crosscheck-v2"></script><script src="forecast-accuracy.js?v=20261116-rain-skill" defer></script><script src="hydrangea-soil.js?v=20261113-sensor-language"></script><script src="rain-intensity.js?v=20261116-rain-rate-bands"></script><script src="rain-status.js?v=20261116-fresh-rain-evidence-v2"></script><script src="app.js?v=20261119-clear-rain-language"></script>
     <script src="sensor-health.js?v=20261121-station-relocation" defer></script>
 
     <script src="site-config.js?v=20261010-v38-4-188"></script>
