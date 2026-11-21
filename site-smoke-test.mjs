@@ -410,64 +410,60 @@ if (/mask-image\s*:/.test(styles)) {
 const stationNetworksHtml = await readFile(join(root, "networks.html"), "utf8");
 const stationPageHtml = await readFile(join(root, "station.html"), "utf8");
 const stationNetworksCss = await readFile(join(root, "station-page.css"), "utf8");
-// Priority order: source network, public/coastal services, secondary platforms,
-// and networks whose activation has not yet been completed.
+// Keep the nine network links in the current user-prioritised order.
 const stationNetworkIds = [
-  "stationEcowittLink", "stationWeatherUndergroundLink", "stationWindguruLink",
-  "stationWindyLink", "stationWeathercloudLink", "stationAwekasLink",
-  "stationPwsweatherLink", "stationCwopLink", "stationWowBeLink"
+  "stationEcowittLink", "stationWeatherUndergroundLink", "stationWindyLink",
+  "stationWeathercloudLink", "stationAwekasLink", "stationPwsweatherLink",
+  "stationWindguruLink", "stationWowBeLink", "stationCwopLink"
 ];
 const stationNetworkPositions = stationNetworkIds.map(id => stationNetworksHtml.indexOf('id="' + id + '"'));
 if (!stationNetworksHtml.includes('id="stationEcowittLink" href="https://www.ecowitt.net/home/share?authorize=RVM47S"') ||
     !stationNetworksHtml.includes('referrerpolicy="no-referrer"')) {
   failures.push("networks.html: shared Ecowitt link must match provided URL and avoid referrer leaks");
 }
-
 if (stationNetworkPositions.some(pos => pos < 0) || stationNetworkPositions.some((pos, i) => i && pos <= stationNetworkPositions[i - 1])) {
-  failures.push("networks.html: all nine weather-network links must appear in priority order");
+  failures.push("networks.html: the nine weather-network links must follow the current priority order");
 }
 const networkDirectoryCss = await readFile(join(root, "networks-page.css"), "utf8");
 if (!stationNetworksHtml.includes('aria-labelledby="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('id="otherNetworksHeading"') ||
     !stationNetworksHtml.includes('class="networks-directory-page"') ||
-    !/networks-page\.css\?v=[A-Za-z0-9._-]+/.test(stationNetworksHtml) ||
-    !networkDirectoryCss.includes("grid-template-columns: repeat(3, minmax(0, 1fr))") ||
+    !/networks-page\\.css\\?v=[A-Za-z0-9._-]+/.test(stationNetworksHtml) ||
     !networkDirectoryCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") ||
     !networkDirectoryCss.includes("grid-template-columns: minmax(0, 1fr)") ||
-    !networkDirectoryCss.includes("@media (min-width: 1200px)") ||
     !networkDirectoryCss.includes("@media (max-width: 760px)") ||
     !networkDirectoryCss.includes("background: transparent") ||
     !stationNetworksCss.includes(".station-external-network-list")) {
-  failures.push("networks.html: sleek compact directory requires accessible heading, subtle links and responsive 3/2/1 columns");
+  failures.push("networks.html: accessible compact directory requires responsive 2/1 columns");
 }
 if (stationNetworksHtml.includes("Parknacross Weather elsewhere") ||
     stationNetworksHtml.includes(">View on Weather Underground <") ||
     stationNetworksHtml.includes(">View on Windy.com <")) {
-  failures.push("networks.html: avoid duplicate hero eyebrow and oversized verbose link labels");
+  failures.push("networks.html: avoid duplicated headings and verbose labels");
 }
-const networkCardMarkup = [...stationNetworksHtml.matchAll(/<article class="station-external-network"[^>]*>([\s\S]*?)<\/article>/g)].map(match => match[1]);
-if (networkCardMarkup.length !== 9 || networkCardMarkup.some(card => (card.match(/<p(?:\s[^>]*)?>/g) || []).length !== 0 || (card.match(/View weather data <span/g) || []).length !== 1)) {
-  failures.push("networks.html: exactly nine concise network cards with one description each required");
+const networkCardMarkup = [...stationNetworksHtml.matchAll(/<article class="station-external-network"[^>]*>([\\s\\S]*?)<\\/article>/g)].map(match => match[1]);
+if (networkCardMarkup.length !== 9 ||
+    networkCardMarkup.some(card => (card.match(/<p(?:\\s[^>]*)?>/g) || []).length !== 0 ||
+      (card.match(/class="station-external-network-link"/g) || []).length !== 1 ||
+      (card.match(/<h2\\b/g) || []).length !== 1)) {
+  failures.push("networks.html: exactly nine simple full-card links with no duplicated descriptions");
 }
 const stationBrandSlugs = [
-  "ecowitt", "wunderground", "windguru", "windy", "weathercloud",
-  "awekas", "pwsweather", "cwop", "wowbe"
+  "ecowitt", "wunderground", "windy", "weathercloud", "awekas",
+  "pwsweather", "windguru", "wowbe", "cwop"
 ];
 if (networkCardMarkup.length !== stationBrandSlugs.length ||
     networkCardMarkup.some((card,index) =>
-      !card.includes('class="station-network-identity"') ||
-      !card.includes('class="station-network-copy"') ||
       !card.includes('class="station-network-brand station-network-brand--'+stationBrandSlugs[index]+'" aria-hidden="true"') ||
       !card.includes('<svg viewBox="0 0 24 24"') ||
       !card.includes('focusable="false"') ||
-      (card.match(/<svg\b/g) || []).length !== 1 ||
-      (card.match(/<\/svg>/g) || []).length !== 1 ||
-      !card.includes('<path') && !card.includes('<circle')
+      (card.match(/<svg\\b/g) || []).length !== 1 ||
+      (card.match(/<\\/svg>/g) || []).length !== 1 ||
+      (!card.includes('<path') && !card.includes('<circle'))
     ) ||
     !stationBrandSlugs.every(slug => networkDirectoryCss.includes(".station-network-brand--"+slug)) ||
-    !networkDirectoryCss.includes("margin-left: 54px") ||
-    !networkDirectoryCss.includes("flex-basis: 38px")) {
-  failures.push("networks.html: all nine premium SVG badges must be distinct, decorative, correctly labelled and responsive");
+    !networkDirectoryCss.includes("flex-basis: 46px")) {
+  failures.push("networks.html: all nine SVG badges must remain distinct, labelled and responsive");
 }
 
 const expectedStationNetworks = [
