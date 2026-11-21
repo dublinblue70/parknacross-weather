@@ -21,3 +21,6 @@
 
 /* Align overview values when labels have different line counts. */
 .summary-page #summaryOverview .climate-card {grid-template-rows:minmax(4.1em,auto) auto 1fr;}
+
+/* Balance the three genuinely distinct recent-rain details without an empty fourth card. */
+.summary-page .rain-detail-grid { grid-template-columns: repeat(auto-fit,minmax(min(100%,185px),1fr)); }
