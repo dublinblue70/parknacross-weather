@@ -6271,12 +6271,21 @@ async function buildSensorHealth(env) {
     "wh40batt", "battWh40"
   ]);
   result.sensors.lightning = lightningBatteryLevel(data);
-  // WH52 is the soil EC sensor on channel 1, not an arbitrary WH51 probe.
-  result.sensors.soil = sensorBatteryVoltage(data, [
+  // WH52 uses soil channel 1. Generic channel-1 battery aliases are safe
+  // only when this payload also contains WH52 temperature or EC readings.
+  const wh52 = extractWh52(data, "c");
+  const hasWh52 = [wh52.temperature_c, wh52.ec_us_cm].some(usableNumber);
+  const explicitWh52Paths = [
     "battery.soil_ec_sensor_ch1", "battery.soil_ec_sensor",
     "battery.soil_ec_batt1", "battery.wh52batt",
     "soil_ec_batt1", "soil_ec_battery1", "wh52batt"
-  ]);
+  ];
+  result.sensors.soil = sensorBatteryVoltage(data,
+    hasWh52 ? explicitWh52Paths.concat([
+      "battery.soil_moisture_sensor_ch1",
+      "battery.soil_sensor_ch1", "battery.soilbatt1", "soilbatt1"
+    ]) : explicitWh52Paths
+  );
   return result;
 }
 
