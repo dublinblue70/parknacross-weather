@@ -24,6 +24,8 @@ for(const term of ["pw-mobile-nav","pw-has-mobile-nav","pw-skip-link","menuForBu
 for(const term of ["@media (max-width: 760px)","prefers-reduced-motion",":focus-visible","pw-mobile-nav","pw-has-mobile-nav"]) {
  assert(css.includes(term),"Design system missing "+term);
 }
+assert(nav.includes('desktopGraphs.cloneNode(true)'),"Mobile More must include Graphs when the desktop navigation is hidden");
+assert(nav.includes('"graphs.html"]'),"Graphs must remain available in the grouped mobile menu");
 assert(sw.includes('"./site-design.css"'),"The installed app must cache the new design system");
 assert(!css.includes("url(http"),"The design system must not require external assets");
 console.log("PASS: all 25 public pages share the new coastal design, accessible navigation and offline CSS.");
