@@ -33,7 +33,7 @@
         set("qualityInterval", usable(q.median_interval_minutes) ? Number(q.median_interval_minutes).toFixed(1) + " min" : "--");
         set("qualityGap", formatGap(q.largest_recent_gap_minutes));
         set("qualityTotal", usable(q.total_samples) ? Number(q.total_samples).toLocaleString("en-IE") : "--");
-        set("qualityBattery", q.battery_status || "Unavailable");
+        
         set("qualityReliability", usable(reliability?.archive_reliability_percent) ? `${Number(reliability.archive_reliability_percent).toFixed(1)}%` : "--");
         const reliabilityDetail = usable(reliability?.actual_samples) && usable(reliability?.expected_samples)
           ? `${Number(reliability.actual_samples).toLocaleString("en-IE")} of ${Number(reliability.expected_samples).toLocaleString("en-IE")} expected 5-minute readings saved this month`
