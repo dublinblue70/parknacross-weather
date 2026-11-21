@@ -138,20 +138,20 @@ assert.doesNotMatch(html, /id="battery"/, "Dashboard battery tile is removed");
 assert.doesNotMatch(station, /id="qualityBattery"/, "No second battery display in collection statistics");
 assert.match(html, /id="sensorBatteryWarning"[^>]*hidden/, "Warning starts hidden");
 assert.match(html, /href="station.html#stationSensorHealth"/);
-assert.match(html, /sensor-health\\.css\\?v=/);
-assert.match(html, /sensor-health\\.js\\?v=/);
-assert.match(station, /sensor-health\\.css\\?v=/);
-assert.match(station, /sensor-health\\.js\\?v=/);
-assert.match(css, /sensor-battery-warning\\[hidden\\]/, "Hidden alert remains visually hidden");
-assert.match(css, /#dashboard > \\.sensor-battery-warning \\{ order: 4;/,
+assert.match(html, /sensor-health\.css\?v=/);
+assert.match(html, /sensor-health\.js\?v=/);
+assert.match(station, /sensor-health\.css\?v=/);
+assert.match(station, /sensor-health\.js\?v=/);
+assert.match(css, /sensor-battery-warning\[hidden\]/, "Hidden alert remains visually hidden");
+assert.match(css, /#dashboard > \.sensor-battery-warning \{ order: 4;/,
   "Low-battery banner follows live status in flex layout");
 assert.match(ui, /"Unavailable"/);
 assert.match(ui, /"Low battery"/);
 assert.match(ui, /mainBatteryLow/, "Dashboard independently monitors WS90 for genuinely low voltage");
-assert.match(ui, /sensorReport\\?\\.sensors\\?\\.\\[key\\]\\?\\.state === "low"/,
+assert.match(ui, /sensorReport\?\.sensors\?\.\[key\]\?\.state === "low"/,
   "Unavailable sensor reports must not trigger dashboard warnings");
-assert.match(station, /notification-storage\\.js\\?v=20261120-persistent-notifications/);
-assert.match(html, /notification-storage\\.js\\?v=20261120-persistent-notifications/);
+assert.match(station, /notification-storage\.js\?v=20261120-persistent-notifications/);
+assert.match(html, /notification-storage\.js\?v=20261120-persistent-notifications/);
 assert.match(sw, /\.\/sensor-health\.js/);
 assert.match(sw, /\.\/sensor-health\.css/);
 assert.match(sw, /\.\/notification-storage\.js/, "PWA notification preferences must remain cached");
