@@ -38,6 +38,18 @@ assert(menu.includes('reportLink.textContent = "Weather reports"'),"Unified navi
 assert(station.includes('id="stationMaintenancePreview"')&&station.includes('id="maintenanceLog"'),"Station log must retain preview and full history");
 assert(station.includes('maintenance.js?v='),"Full maintenance-log renderer not loaded");
 assert(rain.includes('id="rainNow"')&&rain.includes('id="rainToday"'),"Rain Centre core measurements missing");
+// Visitor-first streamlining: keep core data, reduce duplicate panels and preserve direct links.
+const summary=await read("summary.html");
+assert(home.includes('class="dashboard-coverage-more"')&&home.includes('id="dashboardCoveragePercent"'),"Archive coverage must remain accessible without crowding the Dashboard");
+assert(home.includes('data-dashboard-extra="climate"')&&home.includes('data-dashboard-extra="context"'),"Climate and local context details must remain available on demand");
+assert(home.includes('class="local-planning-quick" href="rain.html#rainOutlookHeading"')&&
+       home.includes('class="local-planning-quick" href="coast.html#coastalCompassHeading"'),"One-tap local planning shortcuts missing");
+assert(summary.includes('class="summary-actions-more"')&&summary.includes('id="downloadCsvButton"')&&summary.includes('id="shareWeatherButton"'),"Report export and share controls must remain accessible");
+assert(rain.includes('id="rainMoreStatistics"')&&rain.includes('id="rainMeasurementNotes"')&&rain.includes('id="rainIntensityGuide"'),"Rain measurement and historical detail must remain accessible");
+assert(rain.indexOf('id="rainNow"')<rain.indexOf('id="rainMeasurementNotes"'),"Live rainfall must precede technical notes");
+for(const id of ["rainEventCount","rainMonth","rainYear","dryDays","rainEvidence"])assert(rain.includes('id="'+id+'"'),"Rain Centre lost the data binding "+id);
+assert(menu.includes('"networks.html"'),"The external network directory must remain in main navigation");
+
 for(const path of ["monthly.html","annual.html","history.html","maintenance.html","records.html","sky.html","status.html","coast.html","rain.html","graphs.html","station.html"]){
  await access(join(root,path));
 }
