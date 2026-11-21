@@ -82,6 +82,13 @@ response = await read({ soil_ec_temp1: 12, battery: { soilbatt1: { value: 1.5 } 
 assert.equal(response.sensors.soil.state, "normal", "A WH52 channel-one upload may use soilbatt1");
 
 response = await read({
+  battery: { soilmoisture_ec_sensor_ch1: { value: "1.44" } }
+});
+assert.equal(response.sensors.soil.state, "normal",
+  "The dedicated WH52 Ecowitt API battery field works without separate EC measurements");
+assert.equal(response.sensors.soil.value, 1.44);
+
+response = await read({
   soil_ec_temp1: 13,
   battery: { soilmoisture_sensor_ch1: { value: "1.48" } }
 });
