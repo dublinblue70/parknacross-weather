@@ -1,0 +1,73 @@
+/* Single compact, accessible sensor-battery panel below live observation cards. */
+body.dashboard-page .station-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+body.dashboard-page .station-bar > .sensor-health-card {
+  order: 4;
+  grid-column: 1 / -1;
+  display: block;
+  min-width: 0;
+  padding: 14px 16px;
+}
+body.dashboard-page .station-bar > .data-feed-status { order: 3; }
+body.dashboard-page .station-bar > .sensor-health-card .sensor-health-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-bottom: 12px;
+}
+body.dashboard-page .station-bar > .sensor-health-card .status-label {
+  display: inline;
+  min-height: 0;
+  margin: 0;
+  font-size: .77rem;
+  font-weight: 700;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+}
+body.dashboard-page .sensor-health-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+body.dashboard-page .sensor-health-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #284352);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+}
+body.dashboard-page .sensor-health-name {
+  display: block;
+  min-height: 0;
+  font-size: .77rem;
+  line-height: 1.4;
+  color: var(--muted, #9eb4c2);
+}
+body.dashboard-page .station-bar .sensor-health-item strong {
+  display: block;
+  margin: 0;
+  font-size: .92rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+body.dashboard-page .sensor-health-item strong.bad { color: #ff9d93; }
+body.dashboard-page .sensor-health-item strong.ok { color: #62d7a3; }
+body.dashboard-page .sensor-health-note {
+  display: block;
+  margin-top: 10px;
+  font-size: .74rem;
+  line-height: 1.45;
+  color: var(--muted, #9eb4c2);
+}
+@media (max-width: 700px) {
+  body.dashboard-page .station-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.dashboard-page .station-bar > .data-feed-status { grid-column: 1 / -1; }
+  body.dashboard-page .station-bar > .sensor-health-card { padding: 12px; }
+  body.dashboard-page .sensor-health-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.dashboard-page .sensor-health-item { padding: 9px 10px; }
+}
