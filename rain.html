@@ -22,7 +22,7 @@
       Rainfall in Ardamine &amp; North Wexford | Parknacross Weather
     </title>
     <link rel="canonical" href="https://parknacrossweather.ie/rain.html" />
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="rain-ui.css?v=20261031-visual-consistency"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261008-v38-4-170"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="rain-ui.css?v=20261121-focused-rain-centre"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261106-v38-4-248-audit">
 <script src="site-polish.js?v=20261113-sensor-language" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
   <link rel="stylesheet" href="weather-icons.css?v=20261109-sitewide-svg1">
@@ -61,25 +61,6 @@
         </section>
         <div class="rain-toolbar"><p id="rainUpdated" role="status">Waiting for a station reading…</p><button id="rainRefresh" type="button">Refresh rain data</button></div>
         <p id="rainLoadStatus" class="info-note" role="status" aria-live="polite">Checking rainfall sources…</p><p class="source-note">Rain totals use the dedicated gauge. <a href="station.html#understandingReadings">How the station measures rain →</a></p>
-        <details class="rain-details rain-source-explainer"><summary>Rain gauge and historical totals</summary><div class="rain-detail-content">
-          <p class="source-note">The dedicated tipping-bucket rain gauge became the primary rainfall sensor on 3 November 2026. A reading of 0 mm/h means no measurable bucket tip during that interval; traces below the 0.1 mm resolution may not register. The piezo sensor can give an early indication of light rain before the bucket tips, but can sometimes react to vibration. Piezo readings never contribute to rain totals or historical records. The hourly forecast is not a live rain measurement.</p>
-          <p class="source-note"><strong>Rain gauge change · 3 November 2026:</strong> Recent charts and multi-day totals span two rainfall instruments. The 3 November changeover-day rainfall total is provisional because the two instruments may have different accumulated counters. Original observations are preserved; cross-gauge totals have not been invented.</p>
-        </div></details>
-        <details class="rain-details" id="rainIntensityGuide">
-          <summary>What counts as light, moderate or heavy rain?</summary>
-          <div class="rain-detail-content">
-            <p class="source-note">These categories describe the <strong>current measured rain rate</strong>, not today's accumulated rainfall. They are practical display bands; drizzle is defined by droplet size, not rainfall rate alone.</p>
-            <ul>
-              <li><strong>Very light:</strong> above 0 to 0.5 mm/h</li>
-              <li><strong>Light:</strong> above 0.5 to 2.5 mm/h</li>
-              <li><strong>Moderate:</strong> above 2.5 to 7.5 mm/h</li>
-              <li><strong>Heavy:</strong> above 7.5 to 15 mm/h</li>
-              <li><strong>Very heavy:</strong> above 15 to 30 mm/h</li>
-              <li><strong>Torrential:</strong> above 30 mm/h</li>
-            </ul>
-            <p class="source-note">A 0.0 mm/h reading means no current rain registered by the dedicated gauge; it does not prove the weather is dry. A piezo-only indication is always labelled unconfirmed.</p>
-          </div>
-        </details>
         <section class="page-section rain-hero-grid" aria-label="Current rain and recent totals">
           <article class="rain-primary">
             <span class="section-eyebrow">Right now</span><h2 id="rainCondition">Checking rain…</h2><strong id="rainNow">-- mm/h</strong><small>Measured rain rate · mm/h</small><p id="rainPiezoToday" class="source-note" hidden></p>
@@ -98,7 +79,7 @@
             ><small id="rain7Note">Combined total</small>
           </article>
         </section>
-        <p class="source-note rain-technical-link">For rain-gauge data-feed diagnostics, see <a href="status.html#health-wh40h">System Health</a>.</p>
+        
         
 
 <section class="local-planning single" aria-label="Hourly rain outlook"><article class="local-planning-card" data-rain-outlook aria-labelledby="rainOutlookHeading">
@@ -123,7 +104,12 @@
             <canvas id="rainDailyChart" role="img" aria-label="Daily rainfall totals in millimetres. Exact values are available in the table below."></canvas>
           </div>
         <details class="rain-table-details"><summary>View daily totals as a table</summary><div class="rain-table-scroll"><table><caption>Daily rainfall · Irish dates</caption><thead><tr><th scope="col">Date</th><th scope="col">Rainfall</th></tr></thead><tbody id="rainDailyTable"><tr><td colspan="2">Loading daily totals…</td></tr></tbody></table></div><button id="rainDailyMore" class="rain-daily-more" type="button" aria-controls="rainDailyTable" aria-expanded="false" hidden>Show more days</button></details></section>
-        <details class="page-section rain-details rain-event-details"><summary>Rain event statistics (last 30 days)</summary><div class="rain-detail-content"><p class="info-note">A new event begins after at least 90 minutes without measurable rain. An event may remain open during a pause in rainfall.</p><div class="rain-event-summary">
+        <details class="page-section rain-details rain-more-statistics" id="rainMoreStatistics">
+          <summary>More rainfall statistics &amp; dry spells</summary>
+          <div class="rain-detail-content">
+            <section class="rain-optional-section" aria-label="Rain event statistics">
+              <h3>Rain events · last 30 days</h3>
+              <p class="info-note">A new event begins after at least 90 minutes without measurable rain. An event may remain open during a pause in rainfall.</p><div class="rain-event-summary">
             <article class="climate-card">
               <span>Events</span><strong id="rainEventCount">--</strong
               ><small>Last 30 days</small>
@@ -143,9 +129,11 @@
               ><small>Based only on periods with station data</small>
             </article>
           </div>
-          </div></details>
-
-        <details class="page-section rain-details"><summary>Rainfall statistics &amp; dry spells</summary><div class="rain-detail-content">
+          
+            </section>
+            <section class="rain-optional-section" aria-label="Monthly, annual and dry-spell statistics">
+              <h3>Rain totals &amp; dry spells</h3>
+              
           <div class="rain-stat-grid">
             <article class="climate-card">
               <span>This month</span><strong id="rainMonth">--</strong
@@ -173,8 +161,37 @@
               ><small id="rainEventStart">--</small>
             </article>
           </div>
-        </div></details>
-      <details class="info-card visitor-detail"><summary>Why the station describes rain this way</summary><div id="rainEvidence" role="status">Checking recent rain evidence…</div></details></main>
+        
+            </section>
+          </div>
+        </details>
+        <details class="page-section rain-details rain-measurement-notes" id="rainMeasurementNotes">
+          <summary>Rain measurement notes</summary>
+          <div class="rain-detail-content">
+            <h3>Rain gauge and historical totals</h3>
+            
+          <p class="source-note">The dedicated tipping-bucket rain gauge became the primary rainfall sensor on 3 November 2026. A reading of 0 mm/h means no measurable bucket tip during that interval; traces below the 0.1 mm resolution may not register. The piezo sensor can give an early indication of light rain before the bucket tips, but can sometimes react to vibration. Piezo readings never contribute to rain totals or historical records. The hourly forecast is not a live rain measurement.</p>
+          <p class="source-note"><strong>Rain gauge change · 3 November 2026:</strong> Recent charts and multi-day totals span two rainfall instruments. The 3 November changeover-day rainfall total is provisional because the two instruments may have different accumulated counters. Original observations are preserved; cross-gauge totals have not been invented.</p>
+        
+            <h3 id="rainIntensityGuide">Rainfall intensity guide</h3>
+            
+            <p class="source-note">These categories describe the <strong>current measured rain rate</strong>, not today's accumulated rainfall. They are practical display bands; drizzle is defined by droplet size, not rainfall rate alone.</p>
+            <ul>
+              <li><strong>Very light:</strong> above 0 to 0.5 mm/h</li>
+              <li><strong>Light:</strong> above 0.5 to 2.5 mm/h</li>
+              <li><strong>Moderate:</strong> above 2.5 to 7.5 mm/h</li>
+              <li><strong>Heavy:</strong> above 7.5 to 15 mm/h</li>
+              <li><strong>Very heavy:</strong> above 15 to 30 mm/h</li>
+              <li><strong>Torrential:</strong> above 30 mm/h</li>
+            </ul>
+            <p class="source-note">A 0.0 mm/h reading means no current rain registered by the dedicated gauge; it does not prove the weather is dry. A piezo-only indication is always labelled unconfirmed.</p>
+          
+            <h3>How the current rain status is determined</h3>
+            <div id="rainEvidence" role="status">Checking recent rain evidence…</div>
+            <p class="source-note">For detailed rain-gauge data-feed checks, see <a href="status.html#health-wh40h">System Health</a>.</p>
+          </div>
+        </details>
+      </main>
       <footer>
         <span>© <span id="year"></span> Parknacross Weather</span>
         <span
