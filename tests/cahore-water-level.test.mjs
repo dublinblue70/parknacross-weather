@@ -9,6 +9,8 @@ for(const id of ["cahoreWaterHeading","cahoreWaterLevel","cahoreWaterTrend","cah
 }
 assert.ok(html.indexOf('id="tideList"')<html.indexOf('id="cahoreWaterHeading"'));
 assert.ok(html.indexOf('id="cahoreWaterHeading"')<html.indexOf('Water safety</span>'));
+assert.match(html,/>Observed · Local water level<\/span>/, "Cahore badge should be clear to visitors");
+assert.doesNotMatch(html,/>Measured · staff gauge<\/span>/, "Old technical badge wording is removed");
 assert.match(html,/local staff-gauge zero/);
 assert.match(html,/not chart datum or predicted Arklow tide heights/);
 assert.match(html,/WaterLevel\.ie/);
