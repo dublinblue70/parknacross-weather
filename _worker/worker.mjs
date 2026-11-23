@@ -2535,6 +2535,34 @@ export default {
         if (!latest) return json({ error: "No weather readings available" }, 503, {"Cache-Control":"no-store"});
 
         const formatted = formatRow(latest);
+        // The freshest sensor-specific WH52 upload is retained separately from
+        // the latest whole-station packet and the five-minute D1 archive. A
+        // newer authenticated channel-one WH52 observation must not be hidden
+        // by an earlier zero EC value in a weather/archive snapshot.
+        try {
+          const uploadedSoil = await readFreshWh52Upload(env);
+          const uploadedEpoch = Number(uploadedSoil?.received_epoch);
+          const weatherEpoch = Number(latest?.epoch);
+          if (Number(uploadedSoil?.channel) === 1 &&
+              Number.isFinite(uploadedEpoch) && uploadedEpoch > 0 &&
+              uploadedEpoch <= nowEpoch + 120 &&
+              (!Number.isFinite(weatherEpoch) || uploadedEpoch >= weatherEpoch - 120)) {
+            for (const [field, value] of [
+              ["soil_moisture_pct", uploadedSoil.moisture_pct],
+              ["soil_temperature_c", uploadedSoil.temperature_c],
+              ["soil_ec_us_cm", uploadedSoil.ec_us_cm]
+            ]) {
+              if (usableNumber(value)) formatted[field] = Number(value);
+            }
+            formatted.soil_channel = 1;
+            formatted.soil_observed_epoch = uploadedEpoch;
+            formatted.soil_reading_source = "authenticated_wh52_gateway";
+          }
+        } catch (error) {
+          // Soil telemetry is optional; a DB read failure must not block
+          // weather observations or change the rain and alert pipelines.
+          console.warn("Independent WH52 current observation unavailable:", error);
+        }
         // Source metadata is diagnostic, not a claim that rain is falling.
         // The frontend can distinguish the one-minute gateway path from the
         // five-minute archive and report any delivery problem accurately.
@@ -5341,9 +5369,19 @@ async function syncEcowitt(env) {
   const lightning = extractLightning(data);
   const cloudSoil = extractWh52(data, "c");
   const uploadedSoil = await readFreshWh52Upload(env);
-  const soil = [cloudSoil.moisture_pct, cloudSoil.temperature_c, cloudSoil.ec_us_cm].some(usableNumber)
-    ? cloudSoil
-    : uploadedSoil || cloudSoil;
+  // The authenticated GW3001 WH52 channel is the preferred source when
+  // recently received; a partial cloud response (including a zero EC value)
+  // must not displace a newer, independently confirmed WH52 measurement.
+  // Merge each field rather than treating a cloud moisture reading as proof
+  // that its conductivity field is up-to-date.
+  const soil = uploadedSoil?.channel === 1
+    ? {
+        channel: 1,
+        moisture_pct: uploadedSoil.moisture_pct ?? cloudSoil.moisture_pct,
+        temperature_c: uploadedSoil.temperature_c ?? cloudSoil.temperature_c,
+        ec_us_cm: uploadedSoil.ec_us_cm ?? cloudSoil.ec_us_cm
+      }
+    : cloudSoil;
 
   let reading = {
     temperature_c: valueAt(data, [
@@ -9475,9 +9513,10 @@ async function readFreshWh52Upload(env) {
     if (!Number.isFinite(age) || age < -300 || age > WH52_UPLOAD_MAX_AGE_SECONDS) return null;
     const soil = {
       channel: nullableNumber(record.channel),
-      moisture_pct: nullableNumber(record.moisture_pct),
-      temperature_c: nullableNumber(record.temperature_c),
-      ec_us_cm: nullableNumber(record.ec_us_cm)
+      moisture_pct: boundedSensorNumber(record.moisture_pct, 0, 100),
+      temperature_c: boundedSensorNumber(record.temperature_c, -40, 60),
+      ec_us_cm: boundedSensorNumber(record.ec_us_cm, 0, 10000),
+      received_epoch: Number(record.received_epoch)
     };
     return [soil.moisture_pct, soil.temperature_c, soil.ec_us_cm].some(usableNumber) ? soil : null;
   } catch (_) {
