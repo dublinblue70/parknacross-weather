@@ -345,7 +345,7 @@ function renderChecks(only=null) {
       Number.isFinite(observedMs)?`Last available ${fmtIrishDateTime(cahore.observed_at)} Irish time · not current`:
       "No verified Cahore Pier observation");
     setText("cahoreDetail",current?"OPW WaterLevel.ie · Cahore Pier staff-gauge zero. Heights are not tide predictions.":
-      "The independent OPW Cahore feed is delayed or unavailable. No current height is displayed; local station readings are unaffected.");
+      "Cahore Pier data is delayed or the independent OPW relay is unavailable. No current height is displayed; local station readings are unaffected.");
   }
 
   if (checkResults.health) {
