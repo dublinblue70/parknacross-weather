@@ -1,3 +1,4 @@
+// v38.4.262 — recover WH40H/WH57 battery reports from Ecowitt's battery-only API when GW3001 weather payload omits them.
 // v38.4.260 — read WH52 channel-one voltage via documented cloud alias and authenticated gateway data.
 // v38.4.259 — additive, read-only battery reports for rain gauge, lightning and WH52 soil sensor.
 // v38.4.258 — preserve minute-level live readings independently of soil-only status packets; disclose current source/age.
@@ -6249,6 +6250,52 @@ function lightningBatteryLevel(data) {
   return { state: level <= 1 ? "low" : "normal", value: level, unit: "level" };
 }
 
+/* The latest weather payload can be a GW3001 direct upload with no battery
+ * fields. For the WH40H/WH57, ask Ecowitt's documented battery-only endpoint
+ * when the saved payload does not contain their indicators. Never use the time
+ * of the HTTP request as proof that a sensor's battery reading is fresh.
+ */
+async function fetchRecentEcowittSensorBatteries(env, isRecent) {
+  const [applicationKey, apiKey, mac] = await Promise.all([
+    readSecret(env.ECOWITT_APPLICATION_KEY),
+    readSecret(env.ECOWITT_API_KEY),
+    readSecret(env.ECOWITT_MAC)
+  ]);
+  if (!applicationKey || !apiKey || !mac) return null;
+  const url = new URL("https://api.ecowitt.net/api/v3/device/real_time");
+  url.searchParams.set("application_key", applicationKey);
+  url.searchParams.set("api_key", apiKey);
+  url.searchParams.set("mac", mac);
+  url.searchParams.set("call_back", "battery");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4500);
+  try {
+    const response = await fetch(url.toString(), {
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+    if (!response.ok) return null;
+    const payload = await response.json();
+    if (Number(payload?.code ?? -1) !== 0) return null;
+    const battery = payload?.data?.battery;
+    if (!battery || typeof battery !== "object") return null;
+    const candidate = {};
+    for (const name of ["rainfall_sensor", "lightning_sensor"]) {
+      const node = battery[name];
+      const epoch = Number(node?.time);
+      // Ecowitt reports each field's own observation time as Unix seconds.
+      // A response timestamp alone does not establish sensor freshness.
+      if (node && isRecent(epoch)) candidate[name] = node;
+    }
+    return Object.keys(candidate).length ? { battery: candidate } : null;
+  } catch (error) {
+    console.warn("Ecowitt sensor battery lookup unavailable:", error?.message || error);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function buildSensorHealth(env) {
   const unavailable = () => ({ state: "unavailable" });
   const result = {
@@ -6314,6 +6361,38 @@ async function buildSensorHealth(env) {
       }
     } catch (error) {
       console.warn("Could not parse Ecowitt cloud battery fields:", error);
+    }
+  }
+
+  // The latest saved raw weather report can be a gateway upload without
+  // cloud battery fields. Fetch only the missing WH40H/WH57 indicators, using
+  // each individual Ecowitt battery field's measurement timestamp.
+  if (result.sensors.rain.state === "unavailable" ||
+      result.sensors.lightning.state === "unavailable") {
+    const batteryPayload = await fetchRecentEcowittSensorBatteries(env, isRecent);
+    if (batteryPayload) {
+      if (result.sensors.rain.state === "unavailable" &&
+          batteryPayload.battery.rainfall_sensor) {
+        const rain = sensorBatteryVoltage(batteryPayload, ["battery.rainfall_sensor"]);
+        if (rain.state !== "unavailable") {
+          result.sensors.rain = {
+            ...rain,
+            source: "Ecowitt battery API",
+            reported_at: new Date(Number(batteryPayload.battery.rainfall_sensor.time) * 1000).toISOString()
+          };
+        }
+      }
+      if (result.sensors.lightning.state === "unavailable" &&
+          batteryPayload.battery.lightning_sensor) {
+        const lightning = lightningBatteryLevel(batteryPayload);
+        if (lightning.state !== "unavailable") {
+          result.sensors.lightning = {
+            ...lightning,
+            source: "Ecowitt battery API",
+            reported_at: new Date(Number(batteryPayload.battery.lightning_sensor.time) * 1000).toISOString()
+          };
+        }
+      }
     }
   }
 

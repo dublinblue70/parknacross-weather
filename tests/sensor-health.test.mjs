@@ -19,6 +19,9 @@ const context = {
   WH52_UPLOAD_META_KEY: "wh52_gateway_latest_v1",
   console,
   usableNumber: value => value !== null && value !== undefined && Number.isFinite(Number(value)),
+  readSecret: async value => typeof value === 'string' ? value : '',
+  URL, AbortController, setTimeout, clearTimeout,
+  fetch: async () => { throw new Error('Unexpected battery API request'); },
   extractWh52: data => ({
     channel: data.soil_ec_temp1 !== undefined || data.soil_ec1 !== undefined ? 1 : null,
     temperature_c: data.soil_ec_temp1 ?? null,
@@ -27,10 +30,19 @@ const context = {
 };
 runInNewContext(worker.slice(start, stop) +
   "\nglobalThis.batteryFns = {buildSensorHealth};", context);
-const read = async (data, ageMinutes = 2, gateway = null, gatewayAgeMinutes = 2) => {
+const read = async (data, ageMinutes = 2, gateway = null, gatewayAgeMinutes = 2, batteryApi = null) => {
+  context.fetch = async url => {
+    assert.match(String(url), /\/api\/v3\/device\/real_time\?/);
+    assert.equal(new URL(String(url)).searchParams.get('call_back'), 'battery');
+    assert.ok(batteryApi, 'A battery API request must be explicitly mocked');
+    return { ok: true, json: async () => batteryApi };
+  };
   const epoch = Math.floor(Date.now() / 1000) - Math.round(ageMinutes * 60);
   const gatewayEpoch = Math.floor(Date.now() / 1000) - Math.round(gatewayAgeMinutes * 60);
   const env = {
+    ECOWITT_APPLICATION_KEY: batteryApi ? 'application-test' : '',
+    ECOWITT_API_KEY: batteryApi ? 'api-test' : '',
+    ECOWITT_MAC: batteryApi ? 'test-mac' : '',
     DB: { prepare(sql) {
       if (sql.startsWith("SELECT epoch, raw_json FROM latest_payload_v1")) {
         return { first: async () => data ? ({ epoch, raw_json: JSON.stringify({ data }) }) : null };
@@ -102,6 +114,41 @@ response = await read({
 });
 assert.equal(response.sensors.soil.state, "unavailable",
   "Shared WH51/WH52 channel batteries cannot be assigned to WH52 without proof");
+
+// A GW3001 payload without battery fields must recover WH40H/WH57 from
+// Ecowitt's dedicated battery endpoint, but only with fresh per-sensor times.
+const batteryEpoch = Math.floor(Date.now()/1000) - 60;
+response = await read({ outdoor: { temperature: { value: 8 } } }, 2, null, 2, {
+  code: 0, data: { battery: {
+    rainfall_sensor: { value: '1.48', unit: 'V', time: String(batteryEpoch) },
+    lightning_sensor: { value: '4', time: String(batteryEpoch) }
+  } }
+});
+assert.equal(response.sensors.rain.state, 'normal', 'Rain battery must recover from battery endpoint');
+assert.equal(response.sensors.rain.value, 1.48);
+assert.equal(response.sensors.lightning.state, 'normal', 'Lightning battery must recover from battery endpoint');
+assert.equal(response.sensors.lightning.value, 4);
+assert.equal(response.sensors.rain.source, 'Ecowitt battery API');
+assert.equal(response.sensors.lightning.source, 'Ecowitt battery API');
+assert.match(response.sensors.rain.reported_at, /^20/);
+
+response = await read(null, 40, null, 2, {
+  code: 0, data: { battery: {
+    rainfall_sensor: { value: '1.51', time: String(batteryEpoch-60*60) },
+    lightning_sensor: { value: '5', time: String(batteryEpoch-60*60) }
+  } }
+});
+assert.equal(response.sensors.rain.state, 'unavailable', 'Stale Ecowitt battery reports must not show normal');
+assert.equal(response.sensors.lightning.state, 'unavailable', 'Stale lightning battery reports must not show normal');
+
+response = await read(null, 40, null, 2, {
+  code: 0, data: { battery: {
+    rainfall_sensor: { value: '0', time: String(batteryEpoch) },
+    lightning_sensor: { value: '0', time: String(batteryEpoch) }
+  } }
+});
+assert.equal(response.sensors.rain.state, 'unavailable', 'Invalid rain voltage must not be accepted');
+assert.equal(response.sensors.lightning.state, 'low', 'WH57 level zero means depleted, not unavailable');
 
 response = await read(null, 40, { value: 1.53 });
 assert.equal(response.sensors.soil.state, "normal",
