@@ -4,6 +4,27 @@ import assert from 'node:assert/strict';
 const source=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const statusCtx={window:{},document:{addEventListener(){}},Date,Intl,Number,Math};
 vm.createContext(statusCtx);vm.runInContext(source('status.js'),statusCtx);
+const nowArchive=Math.floor(Date.now()/1000);
+const archiveSlots=[
+  Math.floor((nowArchive-20*60)/300)*300,
+  Math.floor((nowArchive-15*60)/300)*300,
+  Math.floor((nowArchive-15*60)/300)*300+10,
+  Math.floor(nowArchive/300)*300
+];
+const archiveStatus=statusCtx.summarizeRecentArchive({
+  readings:archiveSlots.map(epoch=>({epoch}))
+},nowArchive);
+assert.equal(archiveStatus.samples_last_24h,3,'duplicate five-minute slots cannot inflate archive count');
+assert.equal(archiveStatus.largest_recent_gap_minutes,15,'missing five-minute slots must still be identified');
+assert.equal(statusCtx.summarizeRecentArchive({__error:new Error('offline')}),null,
+  'failed source is not evidence of lost archive readings');
+assert.equal(statusCtx.summarizeRecentArchive({readings:[]}).samples_last_24h,0,
+  'a verified empty archive must not be mistaken for an unknown source');
+const statusSource=source('status.js');
+assert.match(statusSource,/historyArchive\|\|\(!quality\.__error\?quality:null\)/,
+  'quality timeout must fall back to independent saved history');
+assert.match(statusSource,/setBadge\("cahoreBadge",current\?"good":"info"/,
+  'external OPW delays are informational, not a station fault');
 assert.equal(statusCtx.describeWs90Battery({}).state,'info','missing battery telemetry is not a low-battery fault');
 const now=new Date().toISOString(),old=new Date(Date.now()-3600000).toISOString();
 assert.equal(statusCtx.describeWs90Battery({battery_voltage_v:3.12,battery_first_seen_at:old,battery_last_reported_at:old}).state,'info','stale voltage is information only');
