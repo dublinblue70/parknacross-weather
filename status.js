@@ -71,6 +71,35 @@ async function fetchJSON(url, timeout=20000) {
     const data=await r.json();if(!data||typeof data!=="object"||data.error)throw new Error(data?.error||"Invalid data response");return data;
   } finally { clearTimeout(timer); }
 }
+// The two read-only operational status endpoints can occasionally time out
+// during a full-page sweep. Retry only transient failures; never retry
+// a confirmed 4xx configuration/deployment problem or any POST action.
+async function fetchOperationalStatus(path) {
+  let lastError;
+  for (let attempt=0; attempt<2; attempt++) {
+    try { return await fetchJSON(`${API_BASE}${path}`, 10000); }
+    catch (error) {
+      lastError=error;
+      const code=Number(String(error?.message||"").match(/^HTTP (\d{3})/)?.[1]);
+      if(code>=400 && code<500 && code!==408 && code!==429) break;
+      if(attempt===0) await new Promise(resolve=>setTimeout(resolve,450));
+    }
+  }
+  throw lastError;
+}
+function operationalErrorDetail(error,subject) {
+  const message=String(error?.message||"").slice(0,160);
+  const hint=/HTTP 404/.test(message)
+    ?"The deployed Worker does not expose this status endpoint. Check its deployed version."
+    :/HTTP 429/.test(message)
+    ?"The status service is temporarily rate limited."
+    :/HTTP 5\d\d/.test(message)
+    ?"The Worker returned a temporary server error."
+    :/abort|timeout/i.test(message)
+    ?"The Worker did not respond before the request deadline."
+    :"The status request could not be completed.";
+  return `${subject} could not be verified after a retry. ${hint} This is not confirmation that the underlying operation failed.`;
+}
 async function checkSite() {
   const controller = new AbortController();
   const timer=setTimeout(()=>controller.abort(),10000);
@@ -241,7 +270,18 @@ async function runChecks(only=null) {
   if(checksRunning)return;checksRunning=true;
   if(only){delete checkResults[only];delete checkMeta[only];}else{checkResults={};checkMeta={};}
   window.ParknacrossHealthUI?.start(only);
-  const read=async(key,fn)=>{if(only&&only!==key&&checkResults[key])return checkResults[key];const started=performance.now();const data=await fn();checkResults[key]=data;checkMeta[key]={done:Date.now(),elapsed:Math.round(performance.now()-started)};renderChecks(only);return data;};
+  // Limit concurrent read-only probes so a page refresh does not flood the
+  // single Worker/D1 instance with ~20 simultaneous queries.
+  const queue=[];let active=0;
+  const pump=()=>{
+    while(active<6&&queue.length){
+      const job=queue.shift();active++;
+      Promise.resolve().then(job.fn).then(job.resolve,job.reject)
+        .finally(()=>{active--;pump();});
+    }
+  };
+  const limited=fn=>new Promise((resolve,reject)=>{queue.push({fn,resolve,reject});pump();});
+  const read=async(key,fn)=>{if(only&&only!==key&&checkResults[key])return checkResults[key];const started=performance.now();const data=await limited(fn);checkResults[key]=data;checkMeta[key]={done:Date.now(),elapsed:Math.round(performance.now()-started)};renderChecks(only);return data;};
   const button=$("refreshButton"); if(button) button.disabled=true;
   setText("overallTitle","Checking systems…"); setText("overallText","Checking the website, weather station and saved data.");
   $("overall").className="overall";
@@ -262,8 +302,8 @@ async function runChecks(only=null) {
     read("quality",()=>fetchJSON(`${API_BASE}/quality`).catch(e=>({__error:e}))),
     read("history",()=>fetchJSON(`${API_BASE}/history?hours=24`).catch(e=>({__error:e}))),
     read("reliability",()=>fetchJSON(`${API_BASE}/reliability`).catch(e=>({__error:e}))),
-    read("backup",()=>fetchJSON(`${API_BASE}/backup-status`).catch(e=>({__error:e}))),
-    read("social",()=>fetchJSON(`${API_BASE}/social-status`).catch(e=>({__error:e}))),
+    read("backup",()=>fetchOperationalStatus("/backup-status").catch(e=>({__error:e}))),
+    read("social",()=>fetchOperationalStatus("/social-status").catch(e=>({__error:e}))),
     // Unique query values bypass the Worker's long marine cache TTLs so this
     // health check can detect an upstream outage instead of only checking cache.
     read("tides",()=>fetchJSON(`${API_BASE}/marine/tides?station=Arklow&healthcheck=${Date.now()}`,10000).catch(e=>({__error:e}))),
@@ -480,7 +520,9 @@ function renderChecks(only=null) {
 
   if (checkResults.reliability) {
     if(reliability.__error || !usableNumber(reliability.archive_reliability_percent)) {
-      setBadge("reliabilityBadge","warn","CHECK");setText("reliabilityValue","--");setText("reliabilityDetail","Archive reliability check unavailable");states.push("warn");
+      setBadge("reliabilityBadge","info","NOT VERIFIED");
+      setText("reliabilityValue","Not verified");
+      setText("reliabilityDetail","Monthly coverage could not be checked. Recent archive coverage is shown independently above; this does not confirm missing archive rows.");
     } else {
       const pct=Number(reliability.archive_reliability_percent);
       const state=pct>=97?"good":"warn";
@@ -496,7 +538,13 @@ function renderChecks(only=null) {
 
   if (checkResults.backup) {
     if(backup.__error) {
-      setBadge("backupBadge","warn","CHECK");setText("backupValue","Unavailable");setText("backupDetail","Backup status unavailable");states.push("warn");
+      setBadge("backupBadge","info","NOT VERIFIED");
+      setText("backupValue","Not verified");
+      setText("backupDetail",operationalErrorDetail(backup.__error,"Automatic backup status"));
+    } else if(typeof backup.configured!=="boolean") {
+      setBadge("backupBadge","info","NOT VERIFIED");
+      setText("backupValue","Not verified");
+      setText("backupDetail","The backup status response did not include a valid configuration field; no backup failure is established.");
     } else if(!backup.configured) {
       setBadge("backupBadge","warn","NOT SET");
       setText("backupValue","Not configured");
@@ -533,16 +581,21 @@ function renderChecks(only=null) {
     ];
     for (const [key,name] of socialNetworks) {
       if (social.__error) {
-        setBadge(`${key}Badge`,"warn","CHECK");
-        setText(`${key}Value`,"Unavailable");
-        setText(`${key}Detail`,"Posting status could not be checked. Check the platform directly.");
-        states.push("warn");
+        setBadge(`${key}Badge`,"info","NOT VERIFIED");
+        setText(`${key}Value`,"Not verified");
+        setText(`${key}Detail`,operationalErrorDetail(social.__error,`${name} delivery status`));
+        continue;
+      }
+      if(social.status!=="ok" || !Object.hasOwn(social,`${key}_verified_day`)) {
+        setBadge(`${key}Badge`,"info","NOT VERIFIED");
+        setText(`${key}Value`,"Not verified");
+        setText(`${key}Detail`,`${name} delivery markers were missing from the response; no delivery failure or success is established.`);
         continue;
       }
       const verified = social[`${key}_verified_day`];
       const attention = social[`${key}_status`] === "attention";
       const deliveredToday = verified === localToday;
-      const severity = deliveredToday ? "good" : shouldHavePosted || attention ? "warn" : "good";
+      const severity = deliveredToday ? "good" : shouldHavePosted || attention ? "warn" : "info";
       setBadge(`${key}Badge`, severity, deliveredToday ? "SENT" : shouldHavePosted || attention ? "CHECK" : "PENDING");
       setText(`${key}Value`, deliveredToday ? "Today's post sent" : verified ? `Last sent: ${verified}` : "Not confirmed");
       setText(`${key}Detail`, deliveredToday
