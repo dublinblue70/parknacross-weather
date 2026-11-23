@@ -1,3 +1,4 @@
+// v38.4.263 — OPW Cahore Pier GeoJSON latest-reading fallback when its CSV feed is unavailable or stale.
 // v38.4.262 — recover WH40H/WH57 battery reports from Ecowitt's battery-only API when GW3001 weather payload omits them.
 // v38.4.260 — read WH52 channel-one voltage via documented cloud alias and authenticated gateway data.
 // v38.4.259 — additive, read-only battery reports for rain gauge, lightning and WH52 soil sensor.
@@ -8503,16 +8504,68 @@ function parseCahoreWaterLevelCsv(csv, nowMs=Date.now()){
     readings:fresh?unique.filter(r=>r.ms>=nowMs-24*3600000).map(({time,water_level_m})=>({time,water_level_m})):[]
   };
 }
+// OPW provides a separate pre-generated latest-reading GeoJSON file.
+// Recover from a stale/missing CSV without substituting another pier or
+// sensor. A single GeoJSON point cannot establish a rising/falling trend.
+function parseCahoreLatestGeoJson(payload, nowMs=Date.now()) {
+  const features=Array.isArray(payload?.features)?payload.features:[];
+  const feature=features.find(item=>
+    Number(item?.properties?.station_ref)===11061 &&
+    String(item?.properties?.sensor_ref||"").padStart(4,"0")==="0001"
+  );
+  const data=feature?.properties;
+  const timestamp=Date.parse(data?.datetime||"");
+  const level=data?.value===null||data?.value===undefined||data?.value===""?
+    NaN:Number(data.value);
+  if(!Number.isFinite(timestamp)||!Number.isFinite(level)||level< -10||level>30) {
+    return null;
+  }
+  const at=new Date(timestamp).toISOString();
+  const fresh=nowMs-timestamp>=-10*60000&&nowMs-timestamp<=90*60000;
+  return {
+    station:"Cahore Pier",station_id:11061,source:"OPW WaterLevel.ie GeoJSON",
+    datum:"local staff gauge zero",status:fresh?"ok":"stale",
+    observed_at:at,water_level_m:fresh?level:null,
+    trend:null,readings:fresh?[{time:at,water_level_m:level}]:[]
+  };
+}
 async function getCahorePierWaterLevel(){
-  // OPW asks automated clients not to poll more frequently than every 15 minutes.
-  // Rotate the cache-buster in the same 15-minute windows as the Worker edge TTL.
+  // OPW requests no more than one automated retrieval per 15 minutes;
+  // the public Worker endpoint already has a 900-second edge cache.
   const window15=Math.floor(Date.now()/900000);
-  const url="https://waterlevel.ie/data/day/11061_0001.csv?"+window15;
-  const res=await fetch(url,{headers:{"Accept":"text/csv"},signal:AbortSignal.timeout(9000)});
-  if(!res.ok)throw Error("OPW water-level HTTP "+res.status);
-  const csv=await res.text();
-  if(csv.length>20000)throw Error("Unexpected OPW response length");
-  return parseCahoreWaterLevelCsv(csv);
+  let csvResult=null;
+  try {
+    const url="https://waterlevel.ie/data/day/11061_0001.csv?"+window15;
+    const res=await fetch(url,{headers:{"Accept":"text/csv"},signal:AbortSignal.timeout(4500)});
+    if(!res.ok)throw Error("OPW water-level HTTP "+res.status);
+    const csv=await res.text();
+    if(csv.length>20000)throw Error("Unexpected OPW response length");
+    csvResult=parseCahoreWaterLevelCsv(csv);
+    if(csvResult.status==="ok")return csvResult;
+  }catch(error){
+    console.warn("Cahore CSV feed unavailable:",error?.message||error);
+  }
+  // Prefer the OPW's current station/sensor-specific observation over a stale
+  // CSV, but retain a real stale timestamp if both sources are delayed.
+  try {
+    const url="https://waterlevel.ie/geojson/latest/?"+window15;
+    const res=await fetch(url,{headers:{"Accept":"application/json"},signal:AbortSignal.timeout(4500)});
+    if(!res.ok)throw Error("OPW GeoJSON HTTP "+res.status);
+    const geo=parseCahoreLatestGeoJson(await res.json());
+    if(geo?.status==="ok")return geo;
+    return csvResult||geo||{
+      station:"Cahore Pier",station_id:11061,source:"OPW WaterLevel.ie",
+      datum:"local staff gauge zero",status:"unavailable",
+      observed_at:null,water_level_m:null,trend:null,readings:[]
+    };
+  }catch(error){
+    console.warn("Cahore GeoJSON feed unavailable:",error?.message||error);
+    return csvResult||{
+      station:"Cahore Pier",station_id:11061,source:"OPW WaterLevel.ie",
+      datum:"local staff gauge zero",status:"unavailable",
+      observed_at:null,water_level_m:null,trend:null,readings:[]
+    };
+  }
 }
 
 async function getTides(url) {

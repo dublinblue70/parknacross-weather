@@ -190,6 +190,26 @@ function recentSampleCoverage(samples, firstEpoch, now=Date.now()/1000) {
   const actual = usableNumber(samples) && Number(samples)>=0 ? Number(samples) : null;
   return {expected,actual,percent:actual===null?null:Math.min(100,actual/expected*100),commissioning:first!==null&&first>now-86400};
 }
+// Use the same archived observations as History when /quality is slow or
+// unavailable. Five-minute slots are counted once; never infer missing
+// observations from /current or treat an unchecked metric as a confirmed fault.
+function summarizeRecentArchive(history, now=Date.now()/1000) {
+  if (history?.__error || !Array.isArray(history?.readings)) return null;
+  const epochs=[...new Set(history.readings
+    .map(row=>Number(row?.epoch))
+    .filter(epoch=>Number.isFinite(epoch)&&epoch>=now-86400&&epoch<=now+120))]
+    .sort((a,b)=>a-b);
+  const buckets=[...new Set(epochs.map(epoch=>Math.floor(epoch/300)))].sort((a,b)=>a-b);
+  const gaps=buckets.slice(1).map((slot,i)=>(slot-buckets[i])*5);
+  return {
+    samples_last_24h:buckets.length,
+    largest_recent_gap_minutes:gaps.length?Math.max(...gaps):null,
+    median_interval_minutes:gaps.length?
+      [...gaps].sort((a,b)=>a-b)[Math.floor((gaps.length-1)/2)]:null,
+    archive_source:"History · unique five-minute slots"
+  };
+}
+
 function observationAge(epoch, now=Date.now()/1000) {
   return usableNumber(epoch)&&Number(epoch)>0 ? now-Number(epoch) : null;
 }
@@ -317,14 +337,15 @@ function renderChecks(only=null) {
       cahore.water_level_m!==null&&cahore.water_level_m!==undefined&&
       Number.isFinite(Number(cahore.water_level_m))&&
       Number(cahore.water_level_m)>=-10&&Number(cahore.water_level_m)<=30;
-    setBadge("cahoreBadge",current?"good":"warn",current?"CURRENT":"UNAVAILABLE");
+    // An OPW feed delay is informational, not a Parknacross station fault.
+    // Never claim the water level is current without a valid OPW timestamp.
+    setBadge("cahoreBadge",current?"good":"info",current?"CURRENT":"AWAITING DATA");
     setText("cahoreValue",current?`${fmtNum(cahore.water_level_m,2)} m`:"No current reading");
     setText("cahoreObservationInfo",current?`Observed ${fmtIrishDateTime(cahore.observed_at)} Irish time`:
       Number.isFinite(observedMs)?`Last available ${fmtIrishDateTime(cahore.observed_at)} Irish time · not current`:
       "No verified Cahore Pier observation");
     setText("cahoreDetail",current?"OPW WaterLevel.ie · Cahore Pier staff-gauge zero. Heights are not tide predictions.":
-      "Cahore Pier data is delayed or the OPW relay is unavailable. Local station observations continue independently.");
-    if(!current)states.push("warn");
+      "Cahore Pier data is delayed or the independent OPW relay is unavailable. No current height is displayed; local station readings are unaffected.");
   }
 
   if (checkResults.health) {
@@ -406,34 +427,38 @@ function renderChecks(only=null) {
   }
 
   if (checkResults.quality) {
-    if(quality.__error) {
-      setBadge("samplesBadge","warn","CHECK"); setText("samplesValue","--"); setText("samplesDetail","Weather quality check unavailable");
-      setBadge("gapBadge","warn","CHECK"); setText("gapValue","--"); setText("gapDetail","Weather quality check unavailable");
-      setBadge("batteryBadge","info","NOT REPORTED"); setText("batteryValue","Not reported"); setText("batteryDetail","Battery telemetry could not be checked. This is not evidence of low batteries.");
-      setBadge("gustQualityBadge","info","UNVERIFIED"); setText("gustQualityValue","Not verified"); setText("gustQualityDetail","Historical gust-quality counters could not be retrieved; no live sensor fault has been established."); states.push("warn");
+    // Prefer the already-retrieved History observations; this independently
+    // checks archive coverage even if /quality times out on battery telemetry.
+    const historyArchive=summarizeRecentArchive(history);
+    const archive=historyArchive||(!quality.__error?quality:null);
+    if(!archive) {
+      setBadge("samplesBadge","info","UNVERIFIED"); setText("samplesValue","Not verified"); setText("samplesDetail","Neither the quality summary nor archived observations could be verified. See Archive collection for the independent live collection check.");
+      setBadge("gapBadge","info","UNVERIFIED"); setText("gapValue","Not verified"); setText("gapDetail","An archive gap cannot be calculated without saved observations.");
     } else {
-      const coverage=recentSampleCoverage(quality.samples_last_24h,stats.first_epoch);
+      const coverage=recentSampleCoverage(archive.samples_last_24h,stats.first_epoch);
       const samples=coverage.actual;
-      const sampleState=coverage.percent===null?"warn":coverage.percent>=97?"good":coverage.percent>=80?"warn":"bad";
+      const sampleState=coverage.percent===null?"info":coverage.percent>=97?"good":coverage.percent>=80?"warn":"bad";
       setBadge("samplesBadge",sampleState,samples===null?"CHECK":sampleState==="good"?"OK":sampleState==="warn"?"LOW":"POOR");
       setText("samplesValue",samples===null?"--":samples.toLocaleString("en-IE"));
-      setText("samplesDetail",samples===null?"Recent saved-reading count could not be verified":`${samples.toLocaleString("en-IE")} of ${coverage.expected.toLocaleString("en-IE")} expected five-minute readings · ${coverage.percent.toFixed(1)}% · ${coverage.commissioning?"since archiving began within the last 24 hours":"rolling 24 hours (not a calendar day)"}${usableNumber(quality.median_interval_minutes)?` · typical save interval ${fmtNum(quality.median_interval_minutes,1)} min`:""}`);
+      setText("samplesDetail",samples===null?"Recent saved-reading count could not be verified":`${samples.toLocaleString("en-IE")} of ${coverage.expected.toLocaleString("en-IE")} expected five-minute readings · ${coverage.percent.toFixed(1)}% · ${coverage.commissioning?"since archiving began within the last 24 hours":"rolling 24 hours (not a calendar day)"}${usableNumber(archive.median_interval_minutes)?` · typical save interval ${fmtNum(archive.median_interval_minutes,1)} min`:""}${archive.archive_source?` · ${archive.archive_source}`:""}`);
       states.push(sampleState);
-      const gap=usableNumber(quality.largest_recent_gap_minutes)?Number(quality.largest_recent_gap_minutes):null;
-      const gapState=gap===null?"warn":gap<=15?"good":"warn";
+      const gap=usableNumber(archive.largest_recent_gap_minutes)?Number(archive.largest_recent_gap_minutes):null;
+      const gapState=gap===null?"info":gap<=15?"good":"warn";
       const gapLabel=gap===null?"CHECK":gap<=15?"OK":gap<=60?"GAP":"LARGE";
       setBadge("gapBadge",gapState,gapLabel);
       setText("gapValue",fmtDurationMinutes(gap));
-      setText("gapDetail",`Largest gap between saved readings · station feed: ${quality.feed_status||"unknown"}`);
+      setText("gapDetail",gap===null?"Not enough saved readings to calculate a gap":`Largest gap between saved readings · ${archive.archive_source||"quality summary"} · station feed: ${quality.feed_status||"see live feed check"}`);
       states.push(gapState);
-      const battery=describeWs90Battery(quality);
+    }
+    {
+      const battery=describeWs90Battery(quality.__error?null:quality);
       setBadge("batteryBadge",battery.state,battery.label);
       setText("batteryValue",battery.value);
       setText("batteryDetail",battery.detail);
       states.push(battery.state);
 
-      const gust24=usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):null;
-      const gustTotal=usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):null;
+      const gust24=!quality.__error&&usableNumber(quality.gust_spikes_excluded_24h)?Number(quality.gust_spikes_excluded_24h):null;
+      const gustTotal=!quality.__error&&usableNumber(quality.gust_spikes_excluded_total)?Number(quality.gust_spikes_excluded_total):null;
       if(gust24===null||gustTotal===null){
         setBadge("gustQualityBadge","info","UNVERIFIED");
         setText("gustQualityValue","Not verified");
