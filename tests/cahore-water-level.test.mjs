@@ -29,6 +29,36 @@ const sandbox={Date,Number,Math,String,Array,JSON,Promise,parseCsvLine:line=>lin
 vm.createContext(sandbox);
 vm.runInContext(worker.slice(start,end),sandbox);
 const parse=sandbox.parseCahoreWaterLevelCsv;
+const parseLatest=sandbox.parseCahoreLatestGeoJson;
+assert.equal(typeof parseLatest,'function','Official OPW GeoJSON fallback must be available');
+const geoEpoch=Date.parse('2026-11-13T13:15:00Z');
+const geo={type:'FeatureCollection',features:[
+  {properties:{station_ref:'0000011061',sensor_ref:'0002',datetime:new Date(geoEpoch).toISOString(),value:'19.00'}},
+  {properties:{station_ref:'0000011061',sensor_ref:'0001',datetime:new Date(geoEpoch).toISOString(),value:'1.64'}}
+]};
+const freshGeo=parseLatest(geo,Date.parse('2026-11-13T13:30:00Z'));
+assert.equal(freshGeo.status,'ok');
+assert.equal(freshGeo.water_level_m,1.64);
+assert.equal(freshGeo.trend,null,'a single sample must not manufacture a tide trend');
+assert.equal(freshGeo.readings.length,1);
+assert.equal(parseLatest(geo,Date.parse('2026-11-13T17:30:00Z')).status,'stale');
+assert.equal(parseLatest({features:[{properties:{station_ref:'12007',sensor_ref:'0001',value:'2.5',datetime:new Date(geoEpoch).toISOString()}}]},Date.parse('2026-11-13T13:30:00Z')),null,'never substitute another OPW station');
+const fetchRequests=[];
+sandbox.AbortSignal={timeout:()=>null};
+sandbox.console={warn:()=>{}};
+sandbox.fetch=async url=>{
+  fetchRequests.push(String(url));
+  if(String(url).includes('/data/day/'))return {ok:false,status:503};
+  return {ok:true,json:async()=>({
+    features:[{properties:{station_ref:'0000011061',sensor_ref:'0001',
+      datetime:new Date(Date.now()-15*60000).toISOString(),value:'1.73'}}]
+  })};
+};
+const recoveredCahore=await sandbox.getCahorePierWaterLevel();
+assert.equal(recoveredCahore.status,'ok','fresh OPW GeoJSON must recover an unavailable CSV source');
+assert.equal(recoveredCahore.water_level_m,1.73);
+assert.equal(fetchRequests.length,2);
+
 const now=Date.parse("2026-11-13T13:30:00Z");
 const csv=[
   "Date,Value,Quality",
