@@ -4,6 +4,33 @@ import assert from 'node:assert/strict';
 const source=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const statusCtx={window:{},document:{addEventListener(){}},Date,Intl,Number,Math};
 vm.createContext(statusCtx);vm.runInContext(source('status.js'),statusCtx);
+// Operational status requests should recover from transient Worker errors,
+// without claiming a backup or a social post succeeded when verification fails.
+statusCtx.fetch=async url=>({ok:false,status:503});
+statusCtx.AbortController=AbortController;
+statusCtx.setTimeout=setTimeout;
+statusCtx.clearTimeout=clearTimeout;
+let attempts=0;
+statusCtx.fetch=async uri=>{
+  attempts++;
+  assert.match(String(uri),/\/backup-status$/);
+  if(attempts===1)return {ok:false,status:503};
+  return {ok:true,json:async()=>({configured:true,last_success:new Date().toISOString()})};
+};
+const backupRecovered=await statusCtx.fetchOperationalStatus('/backup-status');
+assert.equal(backupRecovered.configured,true);
+assert.equal(attempts,2,'transient Worker errors should retry once');
+attempts=0;
+statusCtx.fetch=async()=>{attempts++;return {ok:false,status:404};};
+await assert.rejects(statusCtx.fetchOperationalStatus('/social-status'),/HTTP 404/);
+assert.equal(attempts,1,'a missing Worker endpoint should not be hammered with retries');
+assert.match(statusCtx.operationalErrorDetail(new Error('HTTP 503'),'Backup status'),/not confirmation.*failed/i);
+const healthSource=source('status.js');
+assert.match(healthSource,/while\(active<6&&queue\.length\)/,'health probes must use a bounded concurrent queue');
+assert.match(healthSource,/setBadge\("backupBadge","info","NOT VERIFIED"\)/,'unreachable status must not be reported as a failed backup');
+assert.match(healthSource,/setBadge\(`\$\{key\}Badge`,"info","NOT VERIFIED"\)/,'unreachable social status must not be a fake posting failure');
+assert.match(healthSource,/shouldHavePosted \|\| attention \? "warn"/,'truly unconfirmed overdue posts must still warn');
+assert.match(healthSource,/setBadge\("backupBadge","warn","NOT SET"\)/,'a genuinely unconfigured backup remains actionable');
 const nowArchive=Math.floor(Date.now()/1000);
 const archiveSlots=[
   Math.floor((nowArchive-20*60)/300)*300,
