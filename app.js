@@ -65,7 +65,6 @@ let latestCurrent = null;
 let currentResponseAvailable = false;
 let latestRainDetected = false;
 let latestForecastToday = "";
-let visitComparisonRendered = false;
 
 const LOCAL_CACHE_PREFIX = "parknacross.dashboard.";
 const localCacheKey = name => `${LOCAL_CACHE_PREFIX}${name}.v1`;
@@ -1354,19 +1353,6 @@ function updateSoilPanel(current) {
 }
 
 function stationDayKey(epoch){return new Date(Number(epoch)*1000).toLocaleDateString("en-CA",{timeZone:STATION_TIME_ZONE});}
-function renderSinceLastVisit(current){
-  if(visitComparisonRendered||!usable(current?.epoch))return;visitComparisonRendered=true;
-  const key="parknacross.lastVisitSnapshot.v1";let previous=null;try{previous=JSON.parse(localStorage.getItem(key)||"null");}catch(_){}
-  const snapshot={epoch:Number(current.epoch),temperature_c:current.temperature_c,pressure_hpa:current.pressure_hpa,rain_daily_mm:current.rain_daily_mm,soil_moisture_pct:current.soil_moisture_pct,lightning_strikes:current.lightning_strikes};
-  try{localStorage.setItem(key,JSON.stringify(snapshot));}catch(_){}
-  if(!previous||!usable(previous.epoch)||snapshot.epoch-Number(previous.epoch)<5*60)return;
-  const changes=[];
-  const delta=(field,threshold,digits,unit,label)=>{if(!usable(snapshot[field])||!usable(previous[field]))return;const d=Number(snapshot[field])-Number(previous[field]);if(Math.abs(d)<threshold)changes.push(`${label} stayed steady`);else changes.push(`${label} ${d>0?"rose":"fell"} ${Math.abs(d).toFixed(digits)}${unit}`);};
-  delta("temperature_c",.3,1,"°C","temperature");delta("pressure_hpa",.5,1," hPa","pressure");
-  if(stationDayKey(snapshot.epoch)===stationDayKey(previous.epoch)){const rain=Math.max(0,Number(snapshot.rain_daily_mm||0)-Number(previous.rain_daily_mm||0));changes.push(rain>=.1?`${rain.toFixed(1)} mm of rain was recorded`:"no additional rain was recorded");if(usable(snapshot.soil_moisture_pct)&&usable(previous.soil_moisture_pct)){const change=Number(snapshot.soil_moisture_pct)-Number(previous.soil_moisture_pct);if(Math.abs(change)<1)changes.push("soil moisture stayed steady");else changes.push(`soil moisture ${change>0?"rose":"fell"} ${Math.abs(change).toFixed(0)} percentage point${Math.abs(change)===1?"":"s"}`);}}
-  if(!changes.length)return;const panel=$("sinceVisitPanel");if(panel)panel.hidden=false;set("sinceVisitText",`${changes.slice(0,4).join("; ")}. Compared with your visit ${lightningRelative(previous.epoch)}.`);
-}
-
 async function refreshSoilBaseline() {
   try {
     const data=await getJSON(SOIL_BASELINE_URL, "no-store");
@@ -1707,7 +1693,6 @@ function updateDashboard(current) {
 
   updateFreshness(current);
   updateStatsPanel();
-  renderSinceLastVisit(current);
   set("year", stationDateKeyFromTime(new Date())?.slice(0,4) || new Date().getFullYear());
   /* Optional dashboard art/audio updates only after established rendering. */
   publishWeatherWindowObservation(current, latestRainDetected, isNight);
