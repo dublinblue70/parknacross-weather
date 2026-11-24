@@ -73,6 +73,7 @@ const STATION_TIME_ZONE = "Europe/Dublin";
 const DAILY_TABLE = "weather_daily_v1";
 const META_TABLE = "parknacross_meta_v1";
 const WH52_UPLOAD_META_KEY = "wh52_gateway_latest_v1";
+const WH52_CLOUD_EC_META_KEY = "wh52_cloud_ec_latest_v1";
 const WH52_CLOUD_EC_MAX_AGE_SECONDS = 12 * 60;
 const WH52_UPLOAD_STATUS_META_KEY = "wh52_gateway_status_v1";
 const GATEWAY_LIVE_META_KEY = "gateway_live_observation_v1"; // independent of soil-only/status uploads
@@ -3201,18 +3202,35 @@ export default {
             `SELECT value FROM ${META_TABLE} WHERE key = ? LIMIT 1`
           ).bind(WH52_UPLOAD_META_KEY).first();
           let lastSuccessfulEpoch = null;
+          let gatewayEc = null;
           try {
             const saved = JSON.parse(lastSuccessRow?.value || "null");
             const epoch = Number(saved?.received_epoch);
             if (Number.isFinite(epoch) && epoch > 0 && epoch <= now + 120) lastSuccessfulEpoch = epoch;
+            gatewayEc = boundedSensorNumber(saved?.ec_us_cm, 0, 10000);
           } catch (_) {}
+          let cloudEc = null;
+          try { cloudEc = await readFreshWh52CloudEc(env, now); } catch (_) {}
           const { live_reading: _privateLiveReading, ...publicStatus } = status;
           return json({
             gateway_upload_received: true,
             ...publicStatus,
             age_seconds: Math.max(0, now - Number(status.received_epoch || now)),
             last_successful_upload_epoch: lastSuccessfulEpoch,
-            last_successful_upload_age_seconds: lastSuccessfulEpoch === null ? null : Math.max(0, now - lastSuccessfulEpoch)
+            last_successful_upload_age_seconds: lastSuccessfulEpoch === null ? null : Math.max(0, now - lastSuccessfulEpoch),
+            // Actual numeric readings, not mere field-presence flags. No
+            // credentials or raw EC ADC data are exposed by these diagnostics.
+            gateway_conductivity_us_cm: gatewayEc,
+            cloud_conductivity_us_cm: cloudEc?.ec_us_cm ?? null,
+            cloud_conductivity_observed_epoch: cloudEc?.observed_epoch ?? null,
+            cloud_conductivity_age_seconds: cloudEc ? Math.max(0, now - cloudEc.observed_epoch) : null,
+            conductivity_comparison: gatewayEc === 0 && cloudEc?.ec_us_cm > 0
+              ? "gateway_zero_cloud_positive"
+              : gatewayEc === 0 && cloudEc?.ec_us_cm === 0
+                ? "both_report_zero"
+                : gatewayEc === 0 && !cloudEc
+                  ? "gateway_zero_cloud_unavailable_or_stale"
+                  : "no_verified_disagreement"
           }, 200, { "Cache-Control": "no-store" });
         } catch (_) {
           return json({ gateway_upload_received: false, status_error: true }, 200, { "Cache-Control": "no-store" });
@@ -5391,6 +5409,24 @@ async function syncEcowitt(env) {
   // soil_moisture_ec_ch1.ec. Its own timestamp, not response time, establishes
   // whether this is a reliable recent measurement.
   const verifiedCloudEc = verifiedWh52CloudEc(payload, Math.floor(Date.now() / 1000));
+  // Persist the cloud EC independently. The latest_payload_v1 row also receives
+  // minute-by-minute gateway packets, so it cannot preserve cloud provenance.
+  // A missing or stale EC does not overwrite the last actual reading.
+  if (verifiedCloudEc) {
+    try {
+      await env.DB.prepare(
+        `INSERT INTO ${META_TABLE} (key, value) VALUES (?, ?)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value`
+      ).bind(WH52_CLOUD_EC_META_KEY, JSON.stringify({
+        ...verifiedCloudEc,
+        saved_epoch: Math.floor(Date.now() / 1000),
+        source: "ecowitt_cloud_api_ch1"
+      })).run();
+    } catch (error) {
+      // Optional EC diagnostics must not block weather, rain or cloud archive.
+      console.warn("Could not persist independently verified cloud WH52 EC:", error);
+    }
+  }
   const uploadedSoil = await readFreshWh52Upload(env);
   // The authenticated GW3001 WH52 channel is the preferred source when
   // recently received; a partial cloud response (including a zero EC value)
@@ -9546,6 +9582,26 @@ function verifiedWh52CloudEc(payload, nowEpoch = Math.floor(Date.now() / 1000)) 
 }
 
 async function readFreshWh52CloudEc(env, nowEpoch) {
+  // First consult the dedicated cloud-only record. Unlike latest_payload_v1,
+  // authenticated gateway packets never overwrite this metadata.
+  const saved = await env.DB.prepare(
+    `SELECT value FROM ${META_TABLE} WHERE key = ? LIMIT 1`
+  ).bind(WH52_CLOUD_EC_META_KEY).first();
+  if (saved?.value) {
+    try {
+      const ec = JSON.parse(saved.value);
+      const measured = boundedSensorNumber(ec?.ec_us_cm, 0, 10000);
+      const epoch = nullableNumber(ec?.observed_epoch);
+      if (measured !== null && epoch !== null && epoch > 0 &&
+          epoch <= nowEpoch + 120 &&
+          nowEpoch - epoch <= WH52_CLOUD_EC_MAX_AGE_SECONDS) {
+        return { ec_us_cm: measured, observed_epoch: epoch };
+      }
+    } catch (_) {}
+  }
+  // Backward-compatible fallback for a fresh cloud response saved before
+  // the dedicated metadata record exists. A gateway-only packet has no ch1
+  // cloud EC subtree, so it cannot masquerade as a cloud measurement.
   const row = await env.DB.prepare(
     `SELECT epoch, raw_json FROM ${PAYLOAD_TABLE} WHERE id = 1 LIMIT 1`
   ).first();
