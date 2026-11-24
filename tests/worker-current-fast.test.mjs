@@ -82,4 +82,47 @@ assert.equal(actualZero.soil_ec_us_cm,0,'two real zero measurements must remain 
 const directPositive=await currentWithCloudEc({cloudEc:35,directEc:45});
 assert.equal(directPositive.soil_ec_us_cm,45,'real positive gateway reading takes priority');
 
+// Regression for the production fault: a gateway packet overwrites the shared
+// latest_payload_v1 JSON, but MUST NOT erase saved, timestamped cloud-only EC.
+async function savedCloudEcCase({cloudEc=20,cloudAge=90,gatewayEc=0}={}) {
+  const now=Math.floor(Date.now()/1000);
+  const weather={...reading,epoch:now-120,soil_channel:1,soil_ec_us_cm:gatewayEc,
+    soil_moisture_pct:51,soil_temperature_c:12.2};
+  const gateway={channel:1,ec_us_cm:gatewayEc,moisture_pct:51,
+    temperature_c:12.2,received_epoch:now-55};
+  const cloud={ec_us_cm:cloudEc,observed_epoch:now-cloudAge,source:'ecowitt_cloud_api_ch1'};
+  const status={received_epoch:now-55,wh52_detected:true,channel:1,
+    fields_received:{moisture:true,temperature:true,conductivity:true}};
+  const DB={prepare(sql){let args=[];return {
+    bind(...a){args=a;return this;},
+    async all(){return {results:[]};},
+    async first(){
+      if(sql.includes('SELECT epoch, received_at'))return weather;
+      if(sql.includes('SELECT value FROM')&&args[0]==='wh52_gateway_latest_v1')return {value:JSON.stringify(gateway)};
+      if(sql.includes('SELECT value FROM')&&args[0]==='wh52_cloud_ec_latest_v1')return {value:JSON.stringify(cloud)};
+      if(sql.includes('SELECT value FROM')&&args[0]==='wh52_gateway_status_v1')return {value:JSON.stringify(status)};
+      // Shared gateway payload contains no cloud-specific branch.
+      if(sql.includes('SELECT epoch, raw_json FROM latest_payload_v1'))return {epoch:now-5,raw_json:JSON.stringify({soil_ec1:0})};
+      return null;
+    },async run(){return {success:true}};
+  }}};
+  let response=await worker.fetch(new Request('https://worker.test/current'),{DB},{waitUntil(){}});
+  assert.equal(response.status,200);
+  const current=await response.json();
+  response=await worker.fetch(new Request('https://worker.test/soil-status'),{DB},{waitUntil(){}});
+  assert.equal(response.status,200);
+  return {current,status:await response.json()};
+}
+const cloudSeparate=await savedCloudEcCase();
+assert.equal(cloudSeparate.current.soil_ec_us_cm,20,'dedicated cloud record must survive a gateway overwrite');
+assert.equal(cloudSeparate.current.soil_ec_reading_source,'ecowitt_cloud_ch1');
+assert.equal(cloudSeparate.status.gateway_conductivity_us_cm,0);
+assert.equal(cloudSeparate.status.cloud_conductivity_us_cm,20);
+assert.equal(cloudSeparate.status.conductivity_comparison,'gateway_zero_cloud_positive');
+const cloudExpired=await savedCloudEcCase({cloudAge:900});
+assert.equal(cloudExpired.current.soil_ec_us_cm,0,'old dedicated cloud metadata is not a current measurement');
+assert.equal(cloudExpired.status.cloud_conductivity_us_cm,null);
+const gatewayWins=await savedCloudEcCase({gatewayEc:30});
+assert.equal(gatewayWins.current.soil_ec_us_cm,30,'fresh gateway EC remains preferred');
+
 console.log('PASS: admin authentication, current readings and WH52 cloud EC recovery bypass migrations; invalid keys fail and timestamps remain current.');
