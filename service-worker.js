@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-261-20261121-coastal-design";
+const CACHE_NAME = "parknacross-v38-4-263-20261124-ws90-battery";
 const STATIC_ASSETS = [
   "./site-design.css",
   "./site-polish.css",
