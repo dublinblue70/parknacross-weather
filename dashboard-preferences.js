@@ -4,7 +4,7 @@
  const lightning=document.createElement('section');lightning.className='lightning-group';const firstLightning=document.getElementById('lightningSetupNotice');if(firstLightning){firstLightning.before(lightning);lightning.append(firstLightning);const liveLightning=document.getElementById('lightningPanel');if(liveLightning)lightning.append(liveLightning);}
  // The default order follows the essential weather story: daily context, actual readings, then forecast.
  // Visitors who deliberately customised an earlier version retain their saved section order.
- const definitions=[['today-section','At a glance'],['metrics-section','Detailed readings'],['forecast','Ardamine forecast'],['todaySkyPanel','Today’s sky'],['weather-window-section','Weather Window'],['lightning-group','Lightning'],['wear-today-section','Clothing guide'],['astronomy-strip','Sun and moon'],['soilPanel','Garden soil'],['climate-section','Station climate'],['signature-section','Local context']];
+ const definitions=[['today-section','At a glance'],['metrics-section','Detailed readings'],['forecast','Ardamine forecast'],['todaySkyPanel','Today’s sky'],['weather-window-section','Weather Window'],['lightning-group','Lightning'],['wear-today-section','Clothing guide'],['astronomy-strip','Sun and moon'],['soilPanel','Garden soil'],['signature-section','Local context']];
  const sections=definitions.map(([key,label])=>{
   const section=document.getElementById(key)||main.querySelector('.'+key);
   // Keep the remaining optional Weather Window grouped with its parent disclosure.

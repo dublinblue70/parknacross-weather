@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-264-20261124-remove-visit-comparison";
+const CACHE_NAME = "parknacross-v38-4-265-20261124-remove-dashboard-climate";
 const STATIC_ASSETS = [
   "./site-design.css",
   "./site-polish.css",

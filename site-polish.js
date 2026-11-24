@@ -32,38 +32,6 @@
     if (nav.querySelector("a")) before.before(nav);
   }
   ready(() => {
-    if (page === "index.html") {
-      // Collapse lower-priority background and record cards on narrow phones.
-      // The main observations, forecast, soil, charts and all direct-page links remain visible.
-      const climate = document.querySelector(".climate-section");
-      const lower = [
-        climate,
-        document.querySelector(".signature-section"),
-        document.querySelector(".records-section")
-      ].filter(Boolean);
-      if (climate && lower.length) {
-        lower.forEach((section, i) => { if (!section.id) section.id = "weatherExtra" + i; });
-        const toggle = element("button", "site-detail-toggle", "Show climate context and station records");
-        toggle.type = "button";
-        toggle.setAttribute("aria-controls", lower.map(section => section.id).join(" "));
-        const desc = element("p", "site-detail-copy",
-          "Live conditions and weather graphs remain visible. Open these additional panels when you need more detail.");
-        climate.before(toggle, desc);
-        const expandedForLink = lower.some(section => location.hash === "#" + section.id || (location.hash && section.contains(document.getElementById(decodeURIComponent(location.hash.slice(1))))));
-        const setExpanded = expanded => {
-          document.body.dataset.weatherDetails = expanded ? "expanded" : "collapsed";
-          toggle.setAttribute("aria-expanded", String(expanded));
-          toggle.textContent = expanded
-            ? "Hide extra climate and record panels"
-            : "Show climate context and station records";
-        };
-        setExpanded(expandedForLink);
-        toggle.addEventListener("click", () => setExpanded(toggle.getAttribute("aria-expanded") !== "true"));
-        window.addEventListener("hashchange", () => {
-          if (lower.some(section => location.hash && (location.hash === "#" + section.id || section.contains(document.getElementById(decodeURIComponent(location.hash.slice(1))))))) setExpanded(true);
-        });
-      }
-    }
     if (page === "graphs.html") {
       const anchor = document.querySelector(".chart-grid");
       quickNav("Weather graph categories", [
