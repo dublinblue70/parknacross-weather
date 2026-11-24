@@ -73,6 +73,7 @@ const STATION_TIME_ZONE = "Europe/Dublin";
 const DAILY_TABLE = "weather_daily_v1";
 const META_TABLE = "parknacross_meta_v1";
 const WH52_UPLOAD_META_KEY = "wh52_gateway_latest_v1";
+const WH52_CLOUD_EC_MAX_AGE_SECONDS = 12 * 60;
 const WH52_UPLOAD_STATUS_META_KEY = "wh52_gateway_status_v1";
 const GATEWAY_LIVE_META_KEY = "gateway_live_observation_v1"; // independent of soil-only/status uploads
 const PWSWEATHER_LAST_EPOCH_META_KEY = "pwsweather_last_upload_epoch_v1";
@@ -2562,6 +2563,24 @@ export default {
           // Soil telemetry is optional; a DB read failure must not block
           // weather observations or change the rain and alert pipelines.
           console.warn("Independent WH52 current observation unavailable:", error);
+        }
+        // Ecowitt's authenticated gateway may send WH52 EC as zero while its
+        // API reports a recently observed positive value. Fall back only to
+        // the actual timestamped CH1 cloud EC, never an estimate or old data.
+        if (Number(formatted.soil_channel) === 1 &&
+            (!usableNumber(formatted.soil_ec_us_cm) || Number(formatted.soil_ec_us_cm) === 0)) {
+          try {
+            const cloudEc = await readFreshWh52CloudEc(env, nowEpoch);
+            const directEpoch = nullableNumber(formatted.soil_observed_epoch);
+            if (cloudEc?.ec_us_cm > 0 &&
+                (directEpoch === null || cloudEc.observed_epoch >= directEpoch - 600)) {
+              formatted.soil_ec_us_cm = cloudEc.ec_us_cm;
+              formatted.soil_ec_observed_epoch = cloudEc.observed_epoch;
+              formatted.soil_ec_reading_source = "ecowitt_cloud_ch1";
+            }
+          } catch (error) {
+            console.warn("WH52 cloud EC fallback unavailable:", error);
+          }
         }
         // Source metadata is diagnostic, not a claim that rain is falling.
         // The frontend can distinguish the one-minute gateway path from the
@@ -5368,6 +5387,10 @@ async function syncEcowitt(env) {
 
   const lightning = extractLightning(data);
   const cloudSoil = extractWh52(data, "c");
+  // Ecowitt API v3 now publishes the WH52's measured conductivity at
+  // soil_moisture_ec_ch1.ec. Its own timestamp, not response time, establishes
+  // whether this is a reliable recent measurement.
+  const verifiedCloudEc = verifiedWh52CloudEc(payload, Math.floor(Date.now() / 1000));
   const uploadedSoil = await readFreshWh52Upload(env);
   // The authenticated GW3001 WH52 channel is the preferred source when
   // recently received; a partial cloud response (including a zero EC value)
@@ -5379,7 +5402,12 @@ async function syncEcowitt(env) {
         channel: 1,
         moisture_pct: uploadedSoil.moisture_pct ?? cloudSoil.moisture_pct,
         temperature_c: uploadedSoil.temperature_c ?? cloudSoil.temperature_c,
-        ec_us_cm: uploadedSoil.ec_us_cm ?? cloudSoil.ec_us_cm
+        // A fresh independently measured, positive Ecowitt cloud EC can
+        // correct an erroneous 0 in the custom gateway upload. Never invent
+        // EC from raw ADC values, and retain genuine zero if cloud concurs.
+        ec_us_cm: uploadedSoil.ec_us_cm === 0 && verifiedCloudEc?.ec_us_cm > 0
+          ? verifiedCloudEc.ec_us_cm
+          : uploadedSoil.ec_us_cm ?? cloudSoil.ec_us_cm
       }
     : cloudSoil;
 
@@ -9462,7 +9490,9 @@ function extractWh52(root, temperatureUnit = "c") {
       item.path.includes(`wh52.ch${channel}`) ||
       item.path.includes(`soilch${channel}`) ||
       item.path.includes(`soil.ch${channel}`) ||
-      item.path.includes(`soilec${channel}.`);
+      item.path.includes(`soilec${channel}.`) ||
+      // Official Ecowitt v3: soil_moisture_ec_ch1.{soilmoisture,temperature,ec}
+      item.path.includes(`soilmoistureecch${channel}.`);
     return wh52Branch && aliases.includes(item.key);
   })?.value ?? null;
 
@@ -9500,6 +9530,30 @@ function extractWh52(root, temperatureUnit = "c") {
   }
 
   return { channel: null, moisture_pct: null, temperature_c: null, ec_us_cm: null };
+}
+
+// Read only Ecowitt's published, calibrated soil EC reading. The companion
+// ec_ad is a raw electrode diagnostic and must NEVER be shown as conductivity.
+function verifiedWh52CloudEc(payload, nowEpoch = Math.floor(Date.now() / 1000)) {
+  const data = payload?.data || payload;
+  const ec = data?.soil_moisture_ec_ch1?.ec;
+  const value = boundedSensorNumber(ec?.value ?? ec, 0, 10000);
+  const observedEpoch = nullableNumber(ec?.time);
+  if (value === null || observedEpoch === null || observedEpoch <= 0 ||
+      observedEpoch > nowEpoch + 120 ||
+      nowEpoch - observedEpoch > WH52_CLOUD_EC_MAX_AGE_SECONDS) return null;
+  return { ec_us_cm: value, observed_epoch: observedEpoch };
+}
+
+async function readFreshWh52CloudEc(env, nowEpoch) {
+  const row = await env.DB.prepare(
+    `SELECT epoch, raw_json FROM ${PAYLOAD_TABLE} WHERE id = 1 LIMIT 1`
+  ).first();
+  const epoch = nullableNumber(row?.epoch);
+  if (!row?.raw_json || epoch === null || epoch > nowEpoch + 120 ||
+      nowEpoch - epoch > WH52_CLOUD_EC_MAX_AGE_SECONDS) return null;
+  const payload = JSON.parse(row.raw_json);
+  return verifiedWh52CloudEc(payload, nowEpoch);
 }
 
 async function readFreshWh52Upload(env) {
