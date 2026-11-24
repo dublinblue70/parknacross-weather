@@ -421,8 +421,7 @@ let stationRequestOK = false;
 function batteryStatus(voltage) {
   if (!usable(voltage)) return "Unavailable";
   const v = Number(voltage);
-  if (v >= 3.0) return `Normal · ${v.toFixed(2)} V`;
-  if (v >= 2.7) return `Check · ${v.toFixed(2)} V`;
+  if (v >= 2.7) return `Reported · ${v.toFixed(2)} V`;
   return `Low · ${v.toFixed(2)} V`;
 }
 
@@ -608,7 +607,7 @@ async function loadStationStatus() {
         batteryElement.classList.remove("ok", "warn", "bad");
         if (usable(current.battery_v) && Number(current.battery_v) >= 1.5 && Number(current.battery_v) <= 4) {
           const v = Number(current.battery_v);
-          batteryElement.classList.add(v < 2.7 ? "bad" : v < 3 ? "warn" : "ok");
+          batteryElement.classList.add(v < 2.7 ? "warn" : "ok");
         }
       }
     } else {
