@@ -104,7 +104,7 @@ async function savedCloudEcCase({cloudEc=20,cloudAge=90,gatewayEc=0}={}) {
       // Shared gateway payload contains no cloud-specific branch.
       if(sql.includes('SELECT epoch, raw_json FROM latest_payload_v1'))return {epoch:now-5,raw_json:JSON.stringify({soil_ec1:0})};
       return null;
-    },async run(){return {success:true}};
+    },async run(){return {success:true}}
   }}};
   let response=await worker.fetch(new Request('https://worker.test/current'),{DB},{waitUntil(){}});
   assert.equal(response.status,200);
