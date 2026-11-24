@@ -192,10 +192,12 @@ function describeWs90Battery(quality) {
   if(!validDate || !reportedValid || reportedAge>30*60 || reportedAge<0) {
     return {state:"info",label:"LAST KNOWN",value,detail:"Last reported voltage has no confirmed current measurement time. Check Ecowitt if you need its latest state."};
   }
-  if(volts>=3.0) {
-    return {state:"good",label:"REPORTED",value,detail:"Voltage is in the normal range. Reading may be cached."};
+  // WS90 solar-recharged battery voltage varies with charging conditions. A reading
+  // just below 3.0 V is not sufficient evidence of a battery fault.
+  if(volts>=2.7) {
+    return {state:"good",label:"REPORTED",value,detail:"Battery voltage reported. This reading alone does not indicate a battery fault; it may be cached."};
   }
-  return {state:"warn",label:"VERIFY",value,detail:"Reported voltage is below the usual range. Check the latest reading in Ecowitt."};
+  return {state:"warn",label:"CHECK VOLTAGE",value,detail:"Reported voltage is unusually low; compare with the latest WS90 reading in Ecowitt before diagnosing a battery fault."};
 }
 
 function renderIssues(issues) {
