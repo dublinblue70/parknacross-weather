@@ -44,4 +44,42 @@ assert.equal(wrongChannel.soil_ec_us_cm,0,'another soil channel must never repla
 const staleSoil=await currentWithWh52({ec:20,ageSeconds:800});
 assert.equal(staleSoil.soil_ec_us_cm,0,'older than 12-minute sensor receipts must not be treated as current');
 assert.equal(staleSoil.soil_reading_source,undefined);
-console.log('PASS: admin authentication and current readings bypass migrations; invalid keys fail and timestamps remain current.');
+// The GW3001 can supply zero WH52 EC while Ecowitt's official API v3
+// supplies a positive calibrated EC at soil_moisture_ec_ch1.ec.
+async function currentWithCloudEc({cloudEc=35,cloudAgeSeconds=80,cloudChannel=1,directEc=0}={}) {
+  const now=Math.floor(Date.now()/1000);
+  const weather={...reading,epoch:now-100,received_at:new Date((now-100)*1000).toISOString(),
+    soil_channel:1,soil_moisture_pct:50,soil_temperature_c:12.2,soil_ec_us_cm:directEc};
+  const direct={channel:1,moisture_pct:50,temperature_c:12.2,ec_us_cm:directEc,received_epoch:now-30};
+  const cloudPayload={data:{[`soil_moisture_ec_ch${cloudChannel}`]:{
+    ec:{value:String(cloudEc),unit:"µS/cm",time:String(now-cloudAgeSeconds)},
+    soilmoisture:{value:"50",time:String(now-cloudAgeSeconds)}
+  }}};
+  const DB={prepare(sql){let params=[];return {
+    bind(...a){params=a;return this;},
+    async all(){return {results:[]}},
+    async first(){
+      if(sql.includes('SELECT epoch, received_at'))return weather;
+      if(sql.includes('SELECT value FROM')&&params[0]==='wh52_gateway_latest_v1')return {value:JSON.stringify(direct)};
+      if(sql.includes('SELECT epoch, raw_json FROM latest_payload_v1'))return {epoch:now-cloudAgeSeconds,raw_json:JSON.stringify(cloudPayload)};
+      return null;
+    }, async run(){return {success:true}}
+  }}};
+  const response=await worker.fetch(new Request('https://worker.test/current'),{DB},{waitUntil(){}});
+  assert.equal(response.status,200);
+  return await response.json();
+}
+const recoveredCloud=await currentWithCloudEc();
+assert.equal(recoveredCloud.soil_ec_us_cm,35,'cloud EC must correct a gateway zero');
+assert.equal(recoveredCloud.soil_ec_reading_source,'ecowitt_cloud_ch1');
+assert.equal(recoveredCloud.soil_moisture_pct,50,'do not replace valid gateway soil moisture');
+const staleCloud=await currentWithCloudEc({cloudAgeSeconds:900});
+assert.equal(staleCloud.soil_ec_us_cm,0,'stale cloud EC must not override gateway');
+const unrelatedChannel=await currentWithCloudEc({cloudChannel:2});
+assert.equal(unrelatedChannel.soil_ec_us_cm,0,'wrong channel must not provide conductivity');
+const actualZero=await currentWithCloudEc({cloudEc:0});
+assert.equal(actualZero.soil_ec_us_cm,0,'two real zero measurements must remain zero');
+const directPositive=await currentWithCloudEc({cloudEc:35,directEc:45});
+assert.equal(directPositive.soil_ec_us_cm,45,'real positive gateway reading takes priority');
+
+console.log('PASS: admin authentication, current readings and WH52 cloud EC recovery bypass migrations; invalid keys fail and timestamps remain current.');
