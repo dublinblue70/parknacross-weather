@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-265-20261124-remove-dashboard-climate";
+const CACHE_NAME = "parknacross-v38-4-266-20261125-responsive-canvas";
 const STATIC_ASSETS = [
   "./site-design.css",
   "./site-polish.css",
@@ -260,6 +260,7 @@ self.addEventListener("fetch", event => {
   const forceFreshLocalAsset =
     url.origin === self.location.origin &&
     (url.pathname.endsWith("/styles.css") ||
+      url.pathname.endsWith("/review-tools.js") ||
       url.pathname.endsWith("/app.js") ||
       url.pathname.endsWith("/rain-intensity.js") ||
       url.pathname.endsWith("/rain.js") ||
