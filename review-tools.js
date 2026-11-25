@@ -15,7 +15,40 @@
   async function load(){retry.disabled=true;grid.replaceChildren();try{const c=await get('/current'),at=c.received_at||(Number(c.epoch)*1000);if(!fresh(at))throw Error('No fresh reading');status.textContent='Observed '+stamp(at)+' Irish time';for(const [label,key,unit] of [['Temperature','temperature_c','°C'],['Wind','wind_speed_kmh','km/h'],['Rain today','rain_daily_mm','mm'],['Pressure','pressure_hpa','hPa']]){const cell=node('div'),v=c[key];cell.append(node('span',label),node('strong',v===null||v===undefined||v===''?'Unavailable':Number(v).toFixed(1)+' '+unit));grid.append(cell);}}catch{status.textContent='No verified recent station reading. Open the dashboard for dated saved observations.';}finally{retry.disabled=false;}}retry.addEventListener('click',load);load();
  }
  function offlineAge(){if(page!=='offline.html')return;const p=panel('Last saved observation','offlineObservation');try{const saved=JSON.parse(localStorage.getItem('parknacross.dashboard.current.v1')||'null'),v=saved?.value,at=v?.received_at||(v?.epoch?Number(v.epoch)*1000:null);p.append(node('p',at?'Observed '+stamp(at)+' Irish time · '+Math.max(0,Math.floor((Date.now()-new Date(at).getTime())/60000))+' minutes old. These are saved readings, not live weather.':'No observation is saved on this browser.'),node('p',saved?.saved_at?'Last local save: '+stamp(saved.saved_at)+' Irish time.':'Last sync time is unavailable.','review-note'));}catch{p.append(node('p','Saved observation could not be read.'));}document.querySelector('main').append(p);}
- function chartTables(){if(!window.Chart)return;
+ function chartLayout(){
+  // A canvas backing store uses physical pixels; chart coordinates use CSS pixels.
+  // Restore the DPR transform at the start of each draw, including after app resume.
+  const hostFor=chart=>chart.canvas?.parentElement?.matches('.chart-wrap,.wind-rose-wrap')?chart.canvas.parentElement:null;
+  const restore=chart=>{
+   const ratio=chart.currentDevicePixelRatio,ctx=chart.ctx;
+   if(!ctx||!Number.isFinite(ratio)||ratio<=0)return;
+   const m=ctx.getTransform?.();
+   if(!m||m.a!==ratio||m.d!==ratio||m.b!==0||m.c!==0||m.e!==0||m.f!==0)ctx.setTransform(ratio,0,0,ratio,0,0);
+  };
+  const mark=chart=>{if(hostFor(chart)&&chart.options.responsive!==false)chart.canvas.dataset.pwChartFit='true';};
+  Chart.register({id:'parknacrossResponsiveCanvas',beforeDraw(chart){mark(chart);restore(chart);}});
+  let frame=0;
+  const fit=()=>{
+   frame=0;
+   for(const canvas of document.querySelectorAll('canvas')){
+    const chart=Chart.getChart(canvas);if(!chart)continue;
+    const host=hostFor(chart);mark(chart);
+    if(host&&chart.options.responsive!==false&&host.getClientRects().length&&!canvas.hidden){
+     const style=getComputedStyle(host);
+     const width=Math.floor(host.clientWidth-parseFloat(style.paddingLeft||0)-parseFloat(style.paddingRight||0));
+     const height=Math.floor(host.clientHeight-parseFloat(style.paddingTop||0)-parseFloat(style.paddingBottom||0));
+     if(width>0&&height>0&&(Math.abs(chart.width-width)>1||(!chart.options.maintainAspectRatio&&Math.abs(chart.height-height)>1)))chart.resize(width,height);
+    }
+    if(canvas.getClientRects().length&&!canvas.hidden){restore(chart);chart.draw();}
+   }
+  };
+  const schedule=()=>{if(!frame)frame=requestAnimationFrame(fit);};
+  window.addEventListener('resize',schedule,{passive:true});
+  window.addEventListener('pageshow',schedule);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedule();});
+  schedule();
+ }
+ function chartTables(){if(!window.Chart)return;chartLayout();
   // The canvas is stable when Chart.js instances are destroyed and recreated.
   // Key table controls by canvas, not chart instance, to avoid duplicate links.
   const mounted=new WeakMap();let scheduled=false;
