@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-269-20261125-laundry-heading";
+const CACHE_NAME = "parknacross-v38-4-270-20261125-laundry-no-arrow";
 const STATIC_ASSETS = [
   "./site-design.css",
   "./site-polish.css",
