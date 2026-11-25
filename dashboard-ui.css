@@ -579,7 +579,9 @@ body.dashboard-page .dashboard-explore-group > .text-link { display: inline-flex
 body.dashboard-page .dashboard-planning-extra { min-width: 0; padding: 0 12px 10px; }
 body.dashboard-page .dashboard-planning-extra > summary {
   cursor: pointer;
-  display: list-item;
+  display: flex;
+  align-items: center;
+  list-style: none;
   padding: 10px 4px;
   min-height: 44px;
   font-size: 1.125rem;
@@ -588,16 +590,19 @@ body.dashboard-page .dashboard-planning-extra > summary {
   color: var(--text, #e7f1f6);
   box-sizing: border-box;
 }
+body.dashboard-page .dashboard-planning-extra > summary::-webkit-details-marker {
+  display: none;
+}
 body.dashboard-page .dashboard-planning-extra > summary::marker {
-  font-size: 1em;
-  color: var(--accent, #7bd7ef);
+  content: "";
 }
 body.dashboard-page .dashboard-planning-extra > summary > #laundryDryingHeading {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   vertical-align: middle;
-  max-width: calc(100% - 1.5em);
+  max-width: 100%;
+  min-width: 0;
 }
 body.dashboard-page .dashboard-planning-extra [data-laundry-window] > header {
   margin-bottom: 10px;
