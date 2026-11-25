@@ -25,6 +25,15 @@
     <link rel="mask-icon" href="safari-pinned-tab.svg?v=20261118-coastal-icons" color="#071f50">
     <meta name="msapplication-config" content="browserconfig.xml?v=20261118-coastal-icons">
   <link rel="stylesheet" href="site-design.css?v=20261121-coastal-ui-v1">
+<style>
+.compact-tides .section-heading{margin-bottom:8px}
+.compact-tides .section-heading p{margin:4px 0 0}
+.compact-tides #tideFreshness{margin:0 0 12px;font-size:.85rem}
+.compact-tides .tide-item time{font-size:1.15rem;font-weight:600;color:inherit}
+.compact-tides .tide-caveat{margin-top:8px}
+@media(max-width:700px){.compact-tides .tide-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.compact-tides .tide-item{padding:12px;min-width:0}.compact-tides .tide-item strong{margin:5px 0 3px}.compact-tides .tide-item b{margin-top:4px}}
+@media(max-width:300px){.compact-tides .tide-list{grid-template-columns:1fr}}
+</style>
 </head>
 <body><div class="shell">
   <header class="topbar">
@@ -66,9 +75,8 @@
 <article class="climate-card"><span>Coastal wind</span><span class="source-badge source-observed card-source">Observed locally</span><strong id="coastExposure">--</strong><small id="coastExposureDetail">Based on Parknacross wind direction</small></article></section>
 <p id="coastLocalFreshness" class="source-note" role="status" aria-live="polite">Checking the Parknacross observation time…</p>
 
-<section class="page-section"><div class="section-heading"><div><span class="section-eyebrow">Tides</span><h2>Arklow tide predictions · Poulshone coastal context</h2><p>Nearest Marine Institute prediction station: Arklow. These are not measurements from a Poulshone tide gauge.</p></div></div><p id="tideFreshness" class="source-freshness">Checking tide prediction update…</p><div id="tideList" class="tide-list"><div class="empty-state">Loading tide predictions…</div></div>
-<p class="source-note"><strong>What does the height mean?</strong> Tide heights are in metres relative to Ordnance Datum Malin, Ireland’s national height reference. “Malin” is the reference datum, not the location of these predictions. The times and heights shown are for <strong>Arklow</strong>, not Malin Head.</p>
-<div class="source-note">Tide times are Marine Institute predictions for nearby Arklow, not measurements at Poulshone. The coastal water temperature is a local model estimate, not a sea-temperature measurement at the beach. Official marine warnings cover Wicklow Head to Carnsore Point. These figures are for general information only and must not be used for navigation or swimming-safety decisions.</div></section>
+<section class="page-section compact-tides"><div class="section-heading"><div><span class="section-eyebrow">Tides</span><h2>Local tide predictions</h2><p>Arklow · Poulshone coastal guide · Marine Institute</p></div></div><p id="tideFreshness" class="source-freshness">Checking predictions…</p><div id="tideList" class="tide-list"><div class="empty-state">Loading tide predictions…</div></div>
+<p class="source-note tide-caveat">Arklow predictions, not Poulshone measurements. Heights relative to Malin datum. Not for navigation or swimming-safety decisions.</p></section>
 <section class="page-section" aria-labelledby="cahoreWaterHeading">
   <article class="info-card cahore-water-level">
     <div class="cahore-water-head">
@@ -86,7 +94,7 @@
     <span>© <span id="year"></span> Parknacross Weather</span>
     <span>Hyperlocal weather observations · Ardamine, Co. Wexford, Ireland</span>
   <nav class="footer-links" aria-label="Parknacross Weather links"><a href="mailto:info@parknacrossweather.ie" aria-label="Email Parknacross Weather">Email</a><span aria-hidden="true">·</span><a href="https://www.facebook.com/1361994206992789" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on Facebook">Facebook</a><span aria-hidden="true">·</span><a href="https://x.com/ParknacrossWx" target="_blank" rel="noopener noreferrer" aria-label="Parknacross Weather on X, @ParknacrossWx">X</a><span aria-hidden="true">·</span><a href="install.html">Install help</a><span aria-hidden="true">·</span><a href="privacy.html">Privacy</a></nav></footer>
-</div><script src="offline.js?v=20261010-v38-4-190"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="source-freshness.js?v=20261026-v38-4-232"></script><script src="coast.js?v=20261117-variable-wind"></script><script src="cahore-waterlevel.js?v=20261113-cahore-level"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
+</div><script src="offline.js?v=20261010-v38-4-190"></script><script src="site-config.js?v=20261010-v38-4-188"></script><script src="source-freshness.js?v=20261026-v38-4-232"></script><script src="coast.js?v=20261125-compact-tides"></script><script src="cahore-waterlevel.js?v=20261113-cahore-level"></script><!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b083ca8b82ed4345a3812eb55bdb871c"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="pwa-update.js?v=20261008-v38-4-170"></script>
 <script src="accessibility.js?v=20260924-v38-4-97"></script>
 <script src="navigation.js?v=20261121-coastal-ui-v1"></script>
