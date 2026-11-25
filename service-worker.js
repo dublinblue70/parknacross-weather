@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-266-20261125-responsive-canvas";
+const CACHE_NAME = "parknacross-v38-4-267-20261125-daily-cards";
 const STATIC_ASSETS = [
   "./site-design.css",
   "./site-polish.css",
