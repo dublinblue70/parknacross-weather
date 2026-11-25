@@ -910,10 +910,22 @@ canvas {
   min-width: 0;
 }
 
-.chart-wrap,
-.chart-wrap canvas {
-  width: 100% !important;
-  max-width: 100% !important;
+.chart-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+/* Let Chart.js set its own CSS-pixel canvas size; the backing bitmap may
+   be several times larger on high-density phones. Never stretch the bitmap. */
+.chart-wrap > canvas,
+.wind-rose-wrap > canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+.chart-wrap > canvas[hidden],
+.wind-rose-wrap > canvas[hidden] {
+  display: none;
 }
 
 .section-heading > *,
