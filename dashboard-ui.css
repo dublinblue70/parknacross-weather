@@ -577,8 +577,29 @@ body.dashboard-page .dashboard-explore-group[open] > summary { border-bottom: 1p
 body.dashboard-page .dashboard-explore-group > section { margin: 12px; }
 body.dashboard-page .dashboard-explore-group > .text-link { display: inline-flex; margin: 12px 16px 0; }
 body.dashboard-page .dashboard-planning-extra { min-width: 0; padding: 0 12px 10px; }
-body.dashboard-page .dashboard-planning-extra > summary { cursor: pointer; padding: 12px 4px; font-weight: 700; }
-body.dashboard-page .dashboard-planning-extra > article { padding: 10px 0; box-shadow: none; }
+body.dashboard-page .dashboard-planning-extra > summary {
+  cursor: pointer;
+  display: list-item;
+  padding: 10px 4px;
+  min-height: 44px;
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--text, #e7f1f6);
+  box-sizing: border-box;
+}
+body.dashboard-page .dashboard-planning-extra > summary::marker {
+  font-size: 1em;
+  color: var(--accent, #7bd7ef);
+}
+body.dashboard-page .dashboard-planning-extra > article {
+  padding: 10px 4px 4px;
+  border: 0;
+  border-top: 1px solid var(--line, #263b49);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
 
 /* Visitor-facing dashboard: detailed graphs and records live on dedicated pages. */
 body.dashboard-page .dashboard-explore-group[hidden] { display: none !important; }
