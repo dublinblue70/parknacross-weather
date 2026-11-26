@@ -78,3 +78,22 @@ assert.equal(accidentalStops,0,'ordinary settings changes must never unsubscribe
 assert.equal(activity.includes('remove'),false,'ordinary settings changes must never remove a server subscription');
 assert.equal(JSON.parse(g.store.get('parknacross:background-alerts:v1')).active,true);
 console.log('PASS: ordinary preference edits cannot disable background notifications.');
+
+ 
+// Regression: a legacy/default false record must not override a saved active
+// background subscription. Actual explicit off remains authoritative.
+const h=fixture(new Map([[key,JSON.stringify({enabled:false,explicitlyDisabled:false,gust:true,gustKmh:42})],['parknacross:background-alerts:v1',JSON.stringify({active:true,token:'owned-token'})]]));
+h.context.setTimeout=c.context.setTimeout;
+h.context.navigator.serviceWorker={ready:Promise.resolve({pushManager:{getSubscription:async()=>sub}})};
+h.context.fetch=async()=>({ok:true,json:async()=>({active:true,preferences:{rainStart:true,gustKmh:50}})});
+assert.equal(h.window.PWAlerts.loadSettings().enabled,true,'saved background consent restores legacy false before network verification');
+vm.runInContext(background,h.context);
+await h.window.PWBackgroundAlerts.reconcile();
+assert.equal(JSON.parse(h.store.get(key)).enabled,true,'verified consent is repaired in persistent settings');
+assert.equal(h.window.PWAlerts.loadSettings().gustKmh,42,'locally selected thresholds are preserved');
+assert.equal(h.window.PWAlerts.loadSettings().rainStart,true,'missing preferences are recovered from the subscription');
+h.window.PWAlerts.saveSettings({enabled:false});
+await h.window.PWBackgroundAlerts.reconcile();
+assert.equal(h.window.PWAlerts.loadSettings().enabled,false,'explicit off is not silently overridden');
+assert.equal(h.window.PWAlerts.loadSettings().explicitlyDisabled,true);
+console.log('PASS: stale false records recover from active background consent; explicit off remains durable.');

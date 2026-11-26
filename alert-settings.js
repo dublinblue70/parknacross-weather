@@ -28,7 +28,7 @@
 
   const readJSON = (key, fallback) => {
     try {
-      const value = JSON.parse((key === SETTINGS_KEY && window.PWNotificationStorage ? window.PWNotificationStorage.getItem(key) : localStorage.getItem(key)) || "null");
+      const value = JSON.parse(((key === SETTINGS_KEY || key === "parknacross:background-alerts:v1") && window.PWNotificationStorage ? window.PWNotificationStorage.getItem(key) : localStorage.getItem(key)) || "null");
       return value && typeof value === "object" ? value : fallback;
     } catch (_) {
       return fallback;
@@ -41,6 +41,11 @@
 
   function loadSettings() {
     const settings = { ...defaults, ...(unsavedSettings || readJSON(SETTINGS_KEY, {})) };
+    // A saved background subscription is independent evidence of prior consent.
+    // Old/default disabled records are not opt-outs; an explicit off always wins.
+    const background = readJSON("parknacross:background-alerts:v1", null);
+    if (!settings.explicitlyDisabled && background?.active === true) settings.enabled = true;
+    if (settings.explicitlyDisabled === true) settings.enabled = false;
     const lightningKm = Number(settings.lightningKm || 0);
     settings.lightningKm = LIGHTNING_DISTANCES.has(lightningKm) ? lightningKm : 0;
     for(const [key,lo,hi] of [["gustKmh",20,100],["heavyRainRate",2,50],["freezingC",-5,5],["quietStart",0,23],["quietEnd",0,23]])settings[key]=usable(settings[key])?Math.max(lo,Math.min(hi,Number(settings[key]))):defaults[key];
@@ -54,7 +59,7 @@
     if (overview) {
       const selected = loadSettings();
       const count = [selected.rainStart, selected.gust, selected.frost, selected.heavyRain, selected.lightningKm > 0].filter(Boolean).length;
-      const state = !selected.enabled ? "Off on this device" : canNotify() ? "Enabled on this device" : "Enabled choice saved; device permission needs checking";
+      const state = settingsRestorePending ? "Restoring notification choices" : !selected.enabled ? "Off on this device" : canNotify() ? "Enabled on this device" : "Enabled choice saved; device permission needs checking";
       overview.textContent = `${state} · ${count} alert type${count === 1 ? "" : "s"} selected.`;
     }
     const node = document.getElementById("alertsSaveStatus");
@@ -76,11 +81,24 @@
     // A caller may have waited for permission or a network request. Merge only
     // its changed fields into the latest choices, never an old snapshot.
     const settings = { ...loadSettings(), ...changes };
+    if (changes.enabled === true) settings.explicitlyDisabled = false;
+    if (changes.enabled === false) settings.explicitlyDisabled = true;
     settingsStorageError = !writeJSON(SETTINGS_KEY, settings);
     unsavedSettings = settingsStorageError ? settings : null;
     refreshSaveStatus();
     if(typeof CustomEvent==="function"&&window.dispatchEvent)window.dispatchEvent(new CustomEvent("parknacross:alert-settings", { detail: { changes } }));
     return !settingsStorageError;
+  }
+
+  function restoreBackgroundOptIn(preferences) {
+    const saved = unsavedSettings || readJSON(SETTINGS_KEY, null);
+    if (saved?.explicitlyDisabled === true) return false;
+    if (saved?.enabled === true) return true;
+    // Keep locally selected fields, filling missing ones from the authenticated
+    // subscription. Never replace a current enabled choice or explicit opt-out.
+    saveSettings({ ...(preferences || {}), ...(saved || {}), enabled: true, explicitlyDisabled: false });
+    refreshUI();
+    return true;
   }
 
   function canNotify() {
@@ -415,6 +433,7 @@
     loadSettings,
     hasSavedSettings: () => unsavedSettings !== null || readJSON(SETTINGS_KEY, null) !== null,
     saveSettings,
+    restoreBackgroundOptIn,
     evaluateCurrent,
     evaluateLightning,
     refreshUI
@@ -428,6 +447,6 @@
    document.addEventListener?.("visibilitychange",()=>{if(!document.hidden)refreshUI();});
   window.addEventListener?.("parknacross:notification-storage-ready", refreshUI);
   window.addEventListener?.("storage", event => {
-    if (event.key === SETTINGS_KEY || event.key === null) refreshUI();
+    if (event.key === SETTINGS_KEY || event.key === "parknacross:background-alerts:v1" || event.key === null) refreshUI();
   });
 })();
