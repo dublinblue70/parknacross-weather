@@ -184,3 +184,9 @@ body.networks-directory-page .station-network-brand--wowbe {
   body.networks-directory-page .station-external-network,
   body.networks-directory-page .station-network-arrow { transition: none; }
 }
+
+/* Planned providers remain separate from station pages until verified. */
+body.networks-directory-page .pending-networks > h2 { margin: 0 0 5px; font-size: 1.15rem; }
+body.networks-directory-page .pending-networks > .source-note { margin: 0 0 12px; color: var(--muted); }
+body.networks-directory-page .planned-network-copy { flex: 1 1 auto; min-width: 0; }
+body.networks-directory-page .planned-network-copy small { display: block; color: var(--muted); margin-top: 3px; font-size: .79rem; line-height: 1.3; }
