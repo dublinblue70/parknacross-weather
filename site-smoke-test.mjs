@@ -441,28 +441,31 @@ if (stationNetworksHtml.includes("Parknacross Weather elsewhere") ||
   failures.push("networks.html: avoid duplicated headings and verbose labels");
 }
 const networkCardMarkup = [...stationNetworksHtml.matchAll(/<article class="station-external-network"[^>]*>([\s\S]*?)<\/article>/g)].map(match => match[1]);
-if (networkCardMarkup.length !== 9 ||
+if (networkCardMarkup.length < 9 ||
     networkCardMarkup.some(card => (card.match(/<p(?:\s[^>]*)?>/g) || []).length !== 0 ||
       (card.match(/class="station-external-network-link"/g) || []).length !== 1 ||
       (card.match(/<h2\b/g) || []).length !== 1)) {
-  failures.push("networks.html: exactly nine simple full-card links with no duplicated descriptions");
+  failures.push("networks.html: network cards need one full-card link and no duplicated descriptions");
 }
 const stationBrandSlugs = [
   "ecowitt", "wunderground", "windy", "weathercloud", "awekas",
   "pwsweather", "windguru", "wowbe", "cwop"
 ];
-if (networkCardMarkup.length !== stationBrandSlugs.length ||
-    networkCardMarkup.some((card,index) =>
-      !card.includes('class="station-network-brand station-network-brand--'+stationBrandSlugs[index]+'" aria-hidden="true"') ||
-      !card.includes('<svg viewBox="0 0 24 24"') ||
-      !card.includes('focusable="false"') ||
-      (card.match(/<svg\b/g) || []).length !== 1 ||
-      (card.match(/<\/svg>/g) || []).length !== 1 ||
-      (!card.includes('<path') && !card.includes('<circle'))
-    ) ||
+// The original nine branded stations keep their unique vector icons; later
+// platforms may use their own accessible text or image treatment.
+if (networkCardMarkup.length < stationBrandSlugs.length ||
+    stationBrandSlugs.some((slug,index) => {
+      const card=networkCardMarkup[index] || "";
+      return !card.includes('class="station-network-brand station-network-brand--'+slug+'" aria-hidden="true"') ||
+        !card.includes('<svg viewBox="0 0 24 24"') ||
+        !card.includes('focusable="false"') ||
+        (card.match(/<svg\b/g) || []).length !== 1 ||
+        (card.match(/<\/svg>/g) || []).length !== 1 ||
+        (!card.includes('<path') && !card.includes('<circle'));
+    }) ||
     !stationBrandSlugs.every(slug => networkDirectoryCss.includes(".station-network-brand--"+slug)) ||
     !networkDirectoryCss.includes("flex-basis: 46px")) {
-  failures.push("networks.html: all nine SVG badges must remain distinct, labelled and responsive");
+  failures.push("networks.html: the nine original SVG badges must remain distinct, labelled and responsive");
 }
 
 const expectedStationNetworks = [
