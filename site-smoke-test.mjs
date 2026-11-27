@@ -409,11 +409,11 @@ if (/mask-image\s*:/.test(styles)) {
 const stationNetworksHtml = await readFile(join(root, "networks.html"), "utf8");
 const stationPageHtml = await readFile(join(root, "station.html"), "utf8");
 const stationNetworksCss = await readFile(join(root, "station-page.css"), "utf8");
-// Keep the nine network links in the current user-prioritised order.
+// Keep the eleven network links in the current user-prioritised order.
 const stationNetworkIds = [
   "stationEcowittLink", "stationWeatherUndergroundLink", "stationWindyLink",
   "stationWeathercloudLink", "stationAwekasLink", "stationPwsweatherLink",
-  "stationWindguruLink", "stationWowBeLink", "stationCwopLink"
+  "stationOpenWeatherLink", "stationWindguruLink", "stationWowBeLink", "stationCwopLink", "stationVWeatherLink"
 ];
 const stationNetworkPositions = stationNetworkIds.map(id => stationNetworksHtml.indexOf('id="' + id + '"'));
 if (!stationNetworksHtml.includes('id="stationEcowittLink" href="https://www.ecowitt.net/home/share?authorize=RVM47S"') ||
@@ -421,7 +421,7 @@ if (!stationNetworksHtml.includes('id="stationEcowittLink" href="https://www.eco
   failures.push("networks.html: shared Ecowitt link must match provided URL and avoid referrer leaks");
 }
 if (stationNetworkPositions.some(pos => pos < 0) || stationNetworkPositions.some((pos, i) => i && pos <= stationNetworkPositions[i - 1])) {
-  failures.push("networks.html: the nine weather-network links must follow the current priority order");
+  failures.push("networks.html: the eleven weather-network links must follow the current priority order");
 }
 const networkDirectoryCss = await readFile(join(root, "networks-page.css"), "utf8");
 if (!stationNetworksHtml.includes('aria-labelledby="otherNetworksHeading"') ||
@@ -454,8 +454,8 @@ const stationBrandSlugs = [
 // The original nine branded stations keep their unique vector icons; later
 // platforms may use their own accessible text or image treatment.
 if (networkCardMarkup.length < stationBrandSlugs.length ||
-    stationBrandSlugs.some((slug,index) => {
-      const card=networkCardMarkup[index] || "";
+    stationBrandSlugs.some(slug => {
+      const card=networkCardMarkup.find(markup=>markup.includes("station-network-brand--"+slug+'"')) || "";
       return !card.includes('class="station-network-brand station-network-brand--'+slug+'" aria-hidden="true"') ||
         !card.includes('<svg viewBox="0 0 24 24"') ||
         !card.includes('focusable="false"') ||
@@ -469,6 +469,8 @@ if (networkCardMarkup.length < stationBrandSlugs.length ||
 }
 
 const expectedStationNetworks = [
+  ["stationOpenWeatherLink", "https://openweathermap.org/"],
+  ["stationVWeatherLink", "https://vweatherstation.com/pws/station/parknacross/"],
   ["stationEcowittLink", "https://www.ecowitt.net/home/share?authorize=RVM47S"],
   ["stationWeatherUndergroundLink", "https://www.wunderground.com/dashboard/pws/IARDAM6"],
   ["stationWindguruLink", "https://www.windguru.cz/station/16733"],
