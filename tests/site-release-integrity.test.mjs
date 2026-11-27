@@ -17,7 +17,7 @@ assert.match(read('index.html'),/site-polish\.css\?v=[A-Za-z0-9._-]+/);
 assert.match(read('index.html'),/class="section-heading planning-heading"/);
 assert.match(read('site-polish.css'),/body\.dashboard-page \.planning-heading \.source-note/);
 const names=['status.js','status-ui.js','app.js','rain.js','history.js',
- 'graphs.js','station-page.js','site-polish.js','review-tools.js','rain-gauge-audit.js','hydrangea-soil.js',
+ 'graphs.js','station-page.js','site-polish.js','review-tools.js','rain-gauge-audit.js','soil-guide.js',
  'monthly.js','annual.js','sky.js','radar.js','coast.js',
  'dashboard-ui.js','dashboard-enhancements.js','service-worker.js'];
 for(const name of names){
@@ -41,10 +41,10 @@ assert.match(read('status.html'),/id="rainGaugeAudit"/,'Read-only rain gauge ver
 assert.doesNotMatch(read('rain.html'),/id="rainGaugeAudit"/,'Visitor Rain Centre should not duplicate technical diagnostics');
 assert.match(read('status.html'),/rain-gauge-audit\.js\?v=/);
 assert.match(read('service-worker.js'),/\.\/rain-gauge-audit\.js/);
-assert.match(read('summary.html'),/Garden soil · hydrangea pot/);
+assert.match(read('summary.html'),/Garden Soil/);
 assert.match(read('index.html'),/id="soilWateringStatus"/);
 assert.match(read('summary.html'),/id="summarySoilWateringStatus"/);
-assert.match(read('service-worker.js'),/\.\/hydrangea-soil\.js/);
+assert.match(read('service-worker.js'),/\.\/soil-guide\.js/);
 // Privacy disclosures must stay readable and describe browser-facing providers.
 const privacy=read('privacy.html'),privacyCss=read('privacy-providers.css');
 assert.match(privacy,/<h2 id="privacyProvidersHeading">Technical details &amp; service providers<\/h2>/);
