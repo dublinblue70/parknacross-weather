@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-261-20261127-garden-soil";
+const CACHE_NAME = "parknacross-v38-4-261-20261127-garden-soil-notification-persistence";
 const STATIC_ASSETS = [
   "./site-design.css",
   "./site-polish.css",
@@ -164,7 +164,7 @@ const STATIC_ASSETS = [
 ];
 
 // Every advertised offline page must retain its local dependencies before activation.
-const ESSENTIAL_ASSETS = ["./", "./index.html", "./offline.html", "./styles.css", "./site-polish.css", "./site-polish.js", "./app.js", "./sensor-health.js", "./sensor-health.css", "./site-config.js", "./api-routing.js", "./pwa-update.js", "./manifest.webmanifest", "./favicon.svg"];
+const ESSENTIAL_ASSETS = ["./", "./index.html", "./offline.html", "./styles.css", "./site-polish.css", "./site-polish.js", "./app.js", "./sensor-health.js", "./sensor-health.css", "./site-config.js", "./api-routing.js", "./pwa-update.js", "./notification-storage.js", "./alert-settings.js", "./background-alerts.js", "./manifest.webmanifest", "./favicon.svg"];
 const OPTIONAL_ASSETS = new Set(STATIC_ASSETS.filter(asset => !ESSENTIAL_ASSETS.includes(asset)));
 async function verifyEssentialCache(){const cache=await caches.open(CACHE_NAME);for(const asset of ESSENTIAL_ASSETS){const response=await cache.match(new URL(asset,self.registration.scope).toString());if(!response?.ok)throw new Error(`Incomplete offline update: ${asset}`);}}
 self.addEventListener("install", event => {
