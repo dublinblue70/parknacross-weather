@@ -25,7 +25,8 @@ for(const [row,available] of [[{epoch:1790578800},true],[null,false]]){
 }
 assert.doesNotMatch(dashboard,/SOIL_SENSOR_BASELINE_START_EPOCH/);
 assert.match(dashboard,/firstValidSoilEpoch/);
-assert.match(dashboard,/Baseline not verified/);
+assert.match(dashboard,/New-pot baseline not verified/);
+assert.match(dashboard,/newPotEpoch/,"new-pot comparisons must use a relocation cutoff");
 assert.match(dashboard,/refreshSoilBaseline\(\)/);
 assert.match(dashboard,/SOIL_BASELINE_URL/);
-console.log("PASS: WH52 baseline uses earliest valid archived soil reading, not a guessed date.");
+console.log("PASS: WH52 archive endpoint remains intact; Dashboard resets the current-pot baseline without rewriting history.");
