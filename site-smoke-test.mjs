@@ -253,7 +253,7 @@ if (dashboardHtml.includes('id="wearForecast"')) failures.push("index.html: redu
 if (!dashboardApp.includes('const forecastNote=$("wearForecast")')) failures.push("app.js: removed forecast banner must be guarded when absent");
 if (!dashboardHtml.includes('aria-label="Daily sun phases"') || !dashboardHtml.includes('aria-label="Eight phases of the Moon"')) failures.push("index.html: visual sun and moon phase cycles are missing");
 if (!dashboardHtml.includes('id="seasonNextMarker"') || !dashboardHtml.includes('id="seasonDateNote"') || !dashboardHtml.includes("data-season-date")) failures.push("index.html: year-specific annual equinox and solstice outlook is missing");
-if (!dashboardHtml.includes('id="todayTempArchive"')) failures.push("index.html: latest saved daily temperature summary is not shown beside live extrema");
+if (!dashboardHtml.includes('href="climate.html"')) failures.push("index.html: climate summary must remain accessible on its dedicated page");
 if (!dashboardHtml.includes('id="weatherWindowScene"') || !dashboardHtml.includes('id="weatherWindowObservation"') || dashboardHtml.includes("weatherSoundToggle") || dashboardHtml.includes("weather-sound-controls") || dashboardHtml.includes("Illustrated from local readings")) failures.push("index.html: Weather Window should remain while all sound controls and the removed caption stay absent");
 if (!/weather-window\.css\?v=\d{8}-v\d+(?:-\d+)+/.test(dashboardHtml) || !/weather-window\.js\?v=\d{8}-(?:v\d+(?:-\d+)+|[a-z0-9-]+)/.test(dashboardHtml)) failures.push("index.html: isolated weather window assets must be versioned and loaded");
 for (const page of ["install.html", "station.html"]) {
@@ -300,13 +300,12 @@ const skyStyles = await readFile(join(root, "styles.css"), "utf8");
 if (!dashboardHtml.includes('src="sky-like-storage.js?v=20261014-v38-4-210"') || !skyPageHtml.includes('src="sky-like-storage.js?v=20261014-v38-4-210"')) failures.push("sky photos: Safari-safe likes storage must load on both dashboard and Today’s Sky page");
 /* Today's Sky copy uses a top introduction and a separate lower photo detail area.
  * This layout must keep the photo/likes controls and admin IDs intact. */
-if (!dashboardHtml.includes('class="today-sky-copy-intro"') ||
+if (!dashboardHtml.includes('id="todaySkyHeading"') ||
     !dashboardHtml.includes('class="today-sky-copy-footer"') ||
-    !dashboardHtml.includes('class="today-sky-detail-label"') ||
     !dashboardHtml.includes('id="todaySkyMeta" role="status" aria-live="polite"') ||
-    !dashboardHtml.includes("justify-content: space-between;") ||
+    !dashboardHtml.includes('id="todaySkyCaption"') ||
     !dashboardHtml.includes("Name for photo likes (optional)")) {
-  failures.push("index.html: Today's Sky copy hierarchy, photo status and discreet likes-name control must stay intact");
+  failures.push("index.html: Today's Sky heading, photo status and discreet likes-name control must remain accessible");
 }
 const dashboardSkyPhotoStyle = dashboardHtml.match(/\.today-sky-photo\s*\{([^}]+)\}/)?.[1] || "";
 if (!/height:\s*auto/.test(dashboardSkyPhotoStyle) || !/object-fit:\s*contain/.test(dashboardSkyPhotoStyle) || /max-height:\s*390px/.test(dashboardSkyPhotoStyle)) failures.push("index.html: dashboard sky photo must preserve its full image without cropping");
