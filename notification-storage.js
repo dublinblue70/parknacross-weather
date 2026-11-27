@@ -17,10 +17,11 @@
   // New explicit choices take precedence over stale copies, including opt-outs.
   if(key===keys[0]){
    if(consent(a)!==consent(b))return consent(a)>consent(b)?a:b;
-   if(x.explicitlyDisabled===true&&y.explicitlyDisabled!==true)return a;
-   if(y.explicitlyDisabled===true&&x.explicitlyDisabled!==true)return b;
-   if(x.enabled===true&&y.enabled!==true)return a;
-   if(y.enabled===true&&x.enabled!==true)return b;
+   const chosen=v=>v.explicitlyDisabled===true||v.enabled===true;
+   // Legacy records have no timestamp. Prefer an actual local decision over
+   // an unversioned backup; recover only when local is missing/default.
+   if(chosen(x)!==chosen(y))return chosen(x)?a:b;
+   if(chosen(x)&&chosen(y))return revision(b)>revision(a)?b:a;
   }
   // Old null is the legacy explicit background-off record, not missing data.
   if(key===keys[1]&&!revision(a)&&!revision(b)&&x===null)return a;
