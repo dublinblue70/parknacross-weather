@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-262-20261127-openweather-live";
+const CACHE_NAME = "parknacross-v38-4-263-20261127-openweather-contributor";
 const STATIC_ASSETS = [
   "./site-design.css",
   "./site-polish.css",

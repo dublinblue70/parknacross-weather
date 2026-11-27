@@ -413,7 +413,7 @@ const stationNetworksCss = await readFile(join(root, "station-page.css"), "utf8"
 const stationNetworkIds = [
   "stationEcowittLink", "stationWeatherUndergroundLink", "stationWindyLink",
   "stationWeathercloudLink", "stationAwekasLink", "stationPwsweatherLink",
-  "stationOpenWeatherLink", "stationWindguruLink", "stationWowBeLink", "stationCwopLink", "stationVWeatherLink"
+  "stationWindguruLink", "stationWowBeLink", "stationCwopLink", "stationVWeatherLink", "stationOpenWeatherLink"
 ];
 const stationNetworkPositions = stationNetworkIds.map(id => stationNetworksHtml.indexOf('id="' + id + '"'));
 if (!stationNetworksHtml.includes('id="stationEcowittLink" href="https://www.ecowitt.net/home/share?authorize=RVM47S"') ||

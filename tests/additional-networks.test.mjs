@@ -26,9 +26,9 @@ assert.equal((pending.match(/<article class="station-external-network"/g)||[]).l
 assert.ok(!pending.includes("VWeatherStation"));
 assert.ok(!pending.includes("OpenWeatherMap"));
 const activeIds=[...active.matchAll(/<a class="station-external-network-link" id="([^"]+)"/g)].map(match=>match[1]);
-assert.equal(activeIds[6],"stationOpenWeatherLink");
+assert.equal(activeIds[10],"stationOpenWeatherLink");
 assert.ok(active.includes('id="stationOpenWeatherLink" href="https://openweathermap.org/"'));
-assert.ok(active.includes("Provider website"));
+assert.ok(active.includes("Data contributor · No public station page"));
 assert.ok(!active.includes("appid="));
 assert.match(html,/id="pendingNetworksHeading">In preparation/);
 assert.match(html,/Station observations are not yet published/);
