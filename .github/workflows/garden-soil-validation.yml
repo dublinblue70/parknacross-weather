@@ -11,6 +11,8 @@ on:
       - 'summary.js'
       - 'station-page.js'
       - 'soil-guide.*'
+      - 'service-worker.js'
+      - 'site-smoke-test.mjs'
       - 'tests/soil-guide.test.mjs'
       - '.github/workflows/garden-soil-validation.yml'
   workflow_dispatch:
