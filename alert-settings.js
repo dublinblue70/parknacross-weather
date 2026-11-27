@@ -1,5 +1,6 @@
 (() => {
   "use strict";
+  if (window.PWAlerts) return;
 
   const SETTINGS_KEY = "parknacross.alerts.settings.v1";
   const STATE_KEY = "parknacross.alerts.state.v1";
@@ -24,7 +25,7 @@
 
   let unsavedSettings = null;
   let settingsStorageError = false;
-  let settingsRestorePending = false;
+  let settingsRestorePending = Boolean(window.PWNotificationStorage?.ready);
 
   const readJSON = (key, fallback) => {
     try {
@@ -359,12 +360,16 @@
       const element = document.getElementById(id);
       if (element) element.checked = Boolean(checked);
     }
+    for (const id of [...Object.keys(ids), "alertLightningDistance", "alertGustThreshold", "alertRainThreshold", "alertTemperatureThreshold", "alertQuietStart", "alertQuietEnd", "alertQuietEnabled"]) {
+      const element = document.getElementById(id);
+      if (element) element.disabled = settingsRestorePending;
+    }
     const lightning = document.getElementById("alertLightningDistance");
     if (lightning) lightning.value = String(settings.lightningKm || 0);
 
     for(const [id,key] of Object.entries({alertGustThreshold:"gustKmh",alertRainThreshold:"heavyRainRate",alertTemperatureThreshold:"freezingC",alertQuietStart:"quietStart",alertQuietEnd:"quietEnd"})){const node=document.getElementById(id);if(node)node.value=String(settings[key]);}const quiet=document.getElementById("alertQuietEnabled");if(quiet)quiet.checked=settings.quietEnabled;
     const status = document.getElementById("alertsPermission");
-    if (status) status.textContent = statusText(settings);
+    if (status) status.textContent = settingsRestorePending ? "Restoring notification choices…" : statusText(settings);
 
     const button = document.getElementById("alertsEnableButton");
     if (button) {
@@ -383,6 +388,7 @@
   function bindUI() {
     const button = document.getElementById("alertsEnableButton");
     button?.addEventListener("click", async () => {
+      if (settingsRestorePending || button.disabled) return;
       if (!("Notification" in window)) {
         refreshUI();
         return;
@@ -396,7 +402,11 @@
 
       let permission = Notification.permission;
       if (permission === "default") permission = await Notification.requestPermission();
-      if(permission === "granted") saveSettings({ enabled: true, explicitlyDisabled: false });
+      if(permission === "granted") {
+        saveSettings({ enabled: true, explicitlyDisabled: false });
+        // Request protection against automatic storage eviction where supported.
+        try { Promise.resolve(navigator.storage?.persist?.()).catch(() => {}); } catch (_) {}
+      }
        // Permission failure never erases a previously saved opt-in.
       refreshUI();
     });
@@ -409,15 +419,17 @@
     };
     for (const [id, key] of Object.entries(mapping)) {
       document.getElementById(id)?.addEventListener("change", event => {
+        if (settingsRestorePending) return;
         saveSettings({ [key]: Boolean(event.target.checked) });
       });
     }
     document.getElementById("alertLightningDistance")?.addEventListener("change", event => {
+      if (settingsRestorePending) return;
       const requested = Number(event.target.value || 0);
       saveSettings({ lightningKm: LIGHTNING_DISTANCES.has(requested) ? requested : 0 });
     });
 
-    for(const [id,key,lo,hi] of [["alertGustThreshold","gustKmh",20,100],["alertRainThreshold","heavyRainRate",2,50],["alertTemperatureThreshold","freezingC",-5,5],["alertQuietStart","quietStart",0,23],["alertQuietEnd","quietEnd",0,23]])document.getElementById(id)?.addEventListener("change",event=>{const v=Number(event.target.value);if(Number.isFinite(v)&&event.target.value!=="")saveSettings({[key]:Math.max(lo,Math.min(hi,v))});refreshUI();});document.getElementById("alertQuietEnabled")?.addEventListener("change",event=>{saveSettings({quietEnabled:event.target.checked});});
+    for(const [id,key,lo,hi] of [["alertGustThreshold","gustKmh",20,100],["alertRainThreshold","heavyRainRate",2,50],["alertTemperatureThreshold","freezingC",-5,5],["alertQuietStart","quietStart",0,23],["alertQuietEnd","quietEnd",0,23]])document.getElementById(id)?.addEventListener("change",event=>{if(settingsRestorePending)return;const v=Number(event.target.value);if(Number.isFinite(v)&&event.target.value!=="")saveSettings({[key]:Math.max(lo,Math.min(hi,v))});refreshUI();});document.getElementById("alertQuietEnabled")?.addEventListener("change",event=>{if(settingsRestorePending)return;saveSettings({quietEnabled:event.target.checked});});
     // Never offer the off/enable toggle while the IndexedDB preference backup
     // is still being recovered after an app update.
     const stored = window.PWNotificationStorage;
