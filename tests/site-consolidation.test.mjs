@@ -41,7 +41,7 @@ assert(rain.includes('id="rainNow"')&&rain.includes('id="rainToday"'),"Rain Cent
 // Visitor-first streamlining: keep core data, reduce duplicate panels and preserve direct links.
 const summary=await read("summary.html");
 assert(home.includes('class="dashboard-coverage-more"')&&home.includes('id="dashboardCoveragePercent"'),"Archive coverage must remain accessible without crowding the Dashboard");
-assert(home.includes('data-dashboard-extra="climate"')&&home.includes('data-dashboard-extra="context"'),"Climate and local context details must remain available on demand");
+assert(home.includes('href="climate.html"')&&home.includes('data-dashboard-extra="context"'),"Climate has its own page, while local context remains available on demand");
 assert(home.includes('class="local-planning-quick" href="rain.html#rainOutlookHeading"')&&
        home.includes('class="local-planning-quick" href="coast.html#coastalCompassHeading"'),"One-tap local planning shortcuts missing");
 assert(summary.includes('class="summary-actions-more"')&&summary.includes('id="downloadCsvButton"')&&summary.includes('id="shareWeatherButton"'),"Report export and share controls must remain accessible");
