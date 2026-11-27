@@ -1282,29 +1282,34 @@ function updateSoilPanel(current) {
     return;
   }
   const nowEpoch = usable(current?.epoch) ? Number(current.epoch) : Date.now() / 1000;
-  const phase=window.ParknacrossSoil?.baselinePhase?.(
-    firstValidSoilEpoch,nowEpoch,SOIL_SENSOR_BASELINE_DAYS);
+  const soilGuide=window.ParknacrossSoil;
+  const newPotEpoch=soilGuide?.NEW_POT_CUTOFF_EPOCH ?? Date.parse("2026-11-27T09:00:00Z")/1000;
+  const hasNewPotReading=usable(current?.soil_moisture_pct) &&
+    usable(current?.epoch) && Number(current.epoch)>=newPotEpoch;
+  const phase=hasNewPotReading?soilGuide?.baselinePhase?.(
+    firstValidSoilEpoch,nowEpoch,SOIL_SENSOR_BASELINE_DAYS):null;
   const validBaseline=phase?.verified===true;
   const baselineDay=phase?.day??null;
   const baselineBuilding=phase?.building===true;
   const baselineBadge=$("soilBaselineBadge"),baselineNote=$("soilBaselineNote");
   if(baselineBadge){
     baselineBadge.hidden=validBaseline&&!baselineBuilding;
-    baselineBadge.textContent=!validBaseline?"Baseline not verified":baselineBuilding
-      ? `Early data · day ${baselineDay} of ${SOIL_SENSOR_BASELINE_DAYS}`:"";
+    baselineBadge.textContent=!validBaseline?"New-pot baseline not verified":baselineBuilding
+      ? `New-pot data · day ${baselineDay} of ${SOIL_SENSOR_BASELINE_DAYS}`:"";
   }
   if(baselineNote){
     baselineNote.hidden=validBaseline&&!baselineBuilding;
     baselineNote.textContent=!validBaseline
-      ?"The first valid archived soil reading has not been confirmed; watering guidance is provisional."
-      :"The soil sensor is building a 14-day archive-based baseline. Guidance is provisional during this period.";
+      ?"New-pot soil readings have not yet been verified. Earlier pot measurements are excluded."
+      :"New-pot baseline restarted 27 Nov 2026 at 09:00 Irish time. Earlier pot readings are excluded; monitoring remains provisional for 14 days.";
   }
   set("soilMoisture", moisture === null ? "Unavailable" : `${moisture.toFixed(0)}%`);
   set("soilTemperature", temperature === null ? "Unavailable" : `${temperature.toFixed(1)}°C`);
   set("soilEc", ec === null ? "Unavailable" : `${Math.round(ec).toLocaleString("en-IE")} µS/cm`);
 
   const candidates = history24
-    .filter(row => usable(row?.soil_moisture_pct) && usable(row?.epoch))
+    .filter(row => usable(row?.soil_moisture_pct) && usable(row?.epoch) &&
+      Number(row.epoch)>=newPotEpoch && Number(row.epoch)<=nowEpoch)
     .sort((a, b) => Number(a.epoch) - Number(b.epoch));
   const baseline = candidates
     .filter(row => Number(row.epoch) <= nowEpoch - 2 * 3600)
@@ -1318,10 +1323,10 @@ function updateSoilPanel(current) {
     const comparisonDay=stationDateKeyFromTime(baselineTime)===stationDateKeyFromTime(nowEpoch*1000)?"today":new Date(baselineTime).toLocaleDateString("en-IE",{timeZone:STATION_TIME_ZONE,day:"numeric",month:"short"});
     set("soilMoistureTrend", `${direction} · ${change > 0 ? "+" : ""}${change.toFixed(0)} percentage points since ${timeLabel(baseline)} ${comparisonDay} (Irish time)`);
   } else {
-    set("soilMoistureTrend", "Trend building from saved readings");
+    set("soilMoistureTrend", "New-pot trend building · earlier pot excluded");
   }
   let eventText = moistureChange === null
-    ? "More saved readings are needed to describe the soil moisture trend."
+    ? "Building the new-pot soil trend from readings since 27 Nov; earlier pot excluded."
     : moistureChange >= 2
       ? `Soil moisture has increased${moistureChange < 5 ? " slightly" : ""}. This alone cannot confirm rain or watering.`
       : moistureChange <= -2
@@ -1337,14 +1342,14 @@ function updateSoilPanel(current) {
       break;
     }
   }
-  if(candidates.length<3 && moistureChange === null)eventText="More saved readings are needed to describe the soil moisture trend.";
+  if(candidates.length<3 && moistureChange === null)eventText="Building the new-pot soil trend; previous-pot readings are excluded.";
   set("soilEvent",eventText);
   set("soilSummary", "Garden Soil measures moisture, temperature and conductivity around the probe. Historical readings may include its previous pot.");
-  const soilGuide=window.ParknacrossSoil;
   if(soilGuide){
     const guidance=soilGuide.assess({
       moisture,temperature,trendChange:moistureChange,
-      epoch:usable(current?.epoch)?Number(current.epoch):null
+      epoch:usable(current?.epoch)?Number(current.epoch):null,
+      nowEpoch:Date.now()/1000
     });
     set("soilWateringStatus",guidance.status);
     set("soilWateringAdvice",guidance.advice);

@@ -21,8 +21,8 @@ Dashboard, Summary, Rain Centre, History, Records, reports and downloads.
 
 ## Garden Soil sensor context
 
-- The Ecowitt WH52 probe now measures the soil in a different garden pot. Earlier archived measurements may represent its previous location, so old readings must not be used as a baseline for the current pot.
-- Moisture bands (below 20%, 20–29%, 30–55%, above 55%) are **trial prompts only**, not plant-specific or validated watering limits. Check actual moisture and the plant’s requirements before watering.
+- The Ecowitt WH52 probe now measures the soil in a different garden pot. **27 November 2026, 09:00 Irish time** is the conservative cutover for new-pot monitoring, when the relocation was confirmed (not a claimed exact physical move time). Earlier observations remain in the historical archive but are excluded from live moisture trends, change-event detection, and current-pot watering guidance. The new 14-day baseline is provisional.
+- For the first 14 days of the new-pot baseline, do not issue automated percentage-based watering recommendations. Check actual soil moisture and the plant’s requirements before watering. Beyond that period, moisture bands (below 20%, 20–29%, 30–55%, above 55%) remain **trial prompts only**, not plant-specific or validated watering limits.
 - Advice may incorporate the trend and Irish season. Missing or stale readings must not be presented as confirmation that watering is unnecessary.
 - Soil conductivity is not a direct nutrient or plant-health measurement. Do not alter archived measurements to reflect planting context.
 

@@ -304,7 +304,7 @@ function renderSoil(current,historyRows=[]){
   const guide=window.ParknacrossSoil;
   if(guide){
     const trend=guide.trendFromReadings(historyRows,current);
-    const result=guide.assess({moisture:current.soil_moisture_pct,temperature:current.soil_temperature_c,trendChange:trend,epoch:current.epoch});
+    const result=guide.assess({moisture:current.soil_moisture_pct,temperature:current.soil_temperature_c,trendChange:trend,epoch:current.epoch,nowEpoch:Date.now()/1000});
     set("summarySoilWateringStatus",result.status);
     set("summarySoilWateringAdvice",result.advice);
     set("summarySoilWateringTrend",result.trend);
