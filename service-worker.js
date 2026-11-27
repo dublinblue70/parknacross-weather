@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-261-20261127-new-pot-baseline";
+const CACHE_NAME = "parknacross-v38-4-261-20261127-new-pot-baseline-vweather-live";
 const STATIC_ASSETS = [
   "./site-design.css",
   "./site-polish.css",
