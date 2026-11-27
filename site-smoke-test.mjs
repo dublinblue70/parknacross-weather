@@ -364,7 +364,7 @@ if (!graphHtml.includes('class="soil-chart-grid"') ||
     !soilChartCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") ||
     !soilChartCss.includes("grid-template-columns: minmax(0, 1fr)") ||
     !graphHtml.includes("graphs-controls.css?v=20261109-full-width-chart-guide")) {
-  failures.push("graphs: hydrangea soil moisture, temperature and conductivity must form three responsive, separate charts");
+  failures.push("graphs: Garden Soil moisture, temperature and conductivity must form three responsive, separate charts");
 }
 if (!historyScript.includes("Daily high °C") || !historyScript.includes("Daily low °C") || !historyScript.includes("spanGaps:false") || !historyScript.includes("no archived summary") || !historyHtml.includes('id="historyChartStatus"')) failures.push("history charts must leave missing calendar days visible as gaps");
 const downloadsHtml = await readFile(join(root, "downloads.html"), "utf8");

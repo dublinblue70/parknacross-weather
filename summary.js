@@ -301,7 +301,7 @@ function renderSoil(current,historyRows=[]){
   set("summarySoilMoisture",usable(current.soil_moisture_pct)?`${num(current.soil_moisture_pct)}%`:"--");
   set("summarySoilTemperature",usable(current.soil_temperature_c)?`${num(current.soil_temperature_c)}°C`:"--");
   set("summarySoilEc",usable(current.soil_ec_us_cm)?`${Math.round(Number(current.soil_ec_us_cm)).toLocaleString("en-IE")} µS/cm`:"--");
-  const guide=window.ParknacrossHydrangeaSoil;
+  const guide=window.ParknacrossSoil;
   if(guide){
     const trend=guide.trendFromReadings(historyRows,current);
     const result=guide.assess({moisture:current.soil_moisture_pct,temperature:current.soil_temperature_c,trendChange:trend,epoch:current.epoch});
@@ -310,7 +310,7 @@ function renderSoil(current,historyRows=[]){
     set("summarySoilWateringTrend",result.trend);
     set("summarySoilWateringContext",result.context);
   }
-  set("summarySoilUpdated","soil observation from the compost in this potted hydrangea. Compare readings with this pot’s own history.");
+  set("summarySoilUpdated","Garden Soil observation from the sensor’s current pot. Earlier readings may reflect the previous pot.");
 }
 async function shareCurrentWeather(){
   const text=shareText(); if(!text)return;

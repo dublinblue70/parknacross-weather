@@ -526,7 +526,7 @@
         }
       }
     </style>
-  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261027-compact-zoom"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261125-laundry-no-arrow"><link rel="stylesheet" href="hydrangea-soil.css?v=20261106-wh52-offline"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="wind-rose.css?v=20261115-full-width-legend"><link rel="stylesheet" href="local-forecast.css?v=20261116-rain-crosscheck"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261115-climate-panel-spacing">
+  <link rel="stylesheet" href="site-help.css?v=20261008-v38-4-170"><link rel="stylesheet" href="explore-weather.css?v=20261008-v38-4-170"><script src="visibility-refresh.js?v=20261008-v38-4-170"></script><link rel="stylesheet" href="website-usability.css?v=20261027-compact-zoom"><script src="site-request.js?v=20261027-v38-4-232"></script><script src="weather-warnings.js?v=20261027-v38-4-232"></script><link rel="stylesheet" href="visitor-tools.css?v=20261010-v38-4-193"><script src="visitor-insights.js?v=20261010-v38-4-193" defer></script><link rel="stylesheet" href="dashboard-ui.css?v=20261125-laundry-no-arrow"><link rel="stylesheet" href="soil-guide.css?v=20261106-wh52-offline"><link rel="stylesheet" href="local-planning.css?v=20261101-legibility"><link rel="stylesheet" href="wind-rose.css?v=20261115-full-width-legend"><link rel="stylesheet" href="local-forecast.css?v=20261116-rain-crosscheck"><link rel="stylesheet" href="review-ui.css?v=20261101-platform-review"><link rel="stylesheet" href="site-polish.css?v=20261115-climate-panel-spacing">
 <script src="site-polish.js?v=20261124-remove-dashboard-climate" defer></script>
 <link rel="preconnect" href="https://parknacross-weather.dave-s-carter.workers.dev/" crossorigin>
   <link rel="stylesheet" href="weather-icons.css?v=20261109-sitewide-svg1">
@@ -696,7 +696,7 @@
           </div>
         </section>
 
-<nav class="dashboard-shortcuts" aria-label="Jump to weather information"><a href="#todayHeading">Today</a><a href="#observationsHeading">Readings</a><a href="#forecast">Forecast</a><a href="rain.html">Rain Centre</a><a href="coast.html">Sea &amp; Swim</a><a href="#sunMoon">Sun &amp; Moon</a><a href="#soilPanel">Garden soil</a></nav>
+<nav class="dashboard-shortcuts" aria-label="Jump to weather information"><a href="#todayHeading">Today</a><a href="#observationsHeading">Readings</a><a href="#forecast">Forecast</a><a href="rain.html">Rain Centre</a><a href="coast.html">Sea &amp; Swim</a><a href="#sunMoon">Sun &amp; Moon</a><a href="#soilPanel">Garden Soil</a></nav>
         <section class="station-bar" aria-label="Station status">
           <div id="livePill" class="station-status live-pill checking">
             <span class="live-dot"></span>
@@ -1369,9 +1369,9 @@
 
         <section id="soilPanel" class="soil-panel" aria-labelledby="soilHeading">
           <div class="soil-panel-copy">
-            <span class="section-eyebrow">Potted hydrangea sensor</span>
-            <div class="soil-heading-row"><h2 id="soilHeading">Garden soil</h2><span id="soilBaselineBadge" class="coverage-badge">Early data</span></div>
-            <p id="soilSummary">Soil probe in a hydrangea flowerpot. Waiting for its latest reading…</p><p id="soilFeedWarning" class="soil-feed-warning" role="status" aria-live="polite" hidden></p>
+            <span class="section-eyebrow">Soil sensor</span>
+            <div class="soil-heading-row"><h2 id="soilHeading">Garden Soil</h2><span id="soilBaselineBadge" class="coverage-badge">Early data</span></div>
+            <p id="soilSummary">Soil sensor in its current pot. Waiting for the latest reading…</p><p id="soilFeedWarning" class="soil-feed-warning" role="status" aria-live="polite" hidden></p>
             <p id="soilBaselineNote" class="soil-baseline-note">The sensor is building its 14-day local baseline.</p>
             <p id="soilEvent" class="soil-event">Building a soil trend from saved readings…</p>
             <small id="soilFreshness">Waiting for sensor freshness…</small>
@@ -1381,13 +1381,13 @@
             <div><span>Root-zone temperature</span><strong id="soilTemperature">--</strong><small>Measured in the soil</small></div>
             <div><span>Conductivity</span><strong id="soilEc">--</strong><small>Dissolved-salt trend</small></div>
           </div>
-          <div class="hydrangea-watering" aria-labelledby="soilWateringHeading">
-            <h3 id="soilWateringHeading">Garden watering guidance</h3>
+          <div class="soil-watering" aria-labelledby="soilWateringHeading">
+            <h3 id="soilWateringHeading">Soil moisture guidance</h3>
             <strong id="soilWateringStatus">Checking compost moisture…</strong>
             <p id="soilWateringAdvice">Feel the compost before watering.</p>
-            <p id="soilWateringContext" class="hydrangea-watering-context">Trial guidance for this pot, not an automatic watering instruction.</p>
+            <p id="soilWateringContext" class="soil-watering-context">Trial guidance for this pot, not an automatic watering instruction.</p>
           </div>
-          <p class="soil-note">The soil sensor measures compost moisture, temperature and conductivity in this potted hydrangea. Compare readings with this pot’s own baseline.</p>
+          <p class="soil-note">Measurements describe soil around the probe in its current pot. Earlier readings may reflect a different pot.</p>
         </section>
 
         
@@ -1706,7 +1706,7 @@ Building wind direction distribution…
     <script src="source-freshness.js?v=20261026-v38-4-232"></script>
     <script src="dashboard-enhancements.js?v=20261124-remove-dashboard-climate"></script>
     <script src="archive-quality.js?v=20261115-coverage-clarity"></script>
-<script src="dashboard-preferences.js?v=20261124-remove-dashboard-climate"></script><script src="local-forecast.js?v=20261116-rain-crosscheck-v2"></script><script src="forecast-accuracy.js?v=20261116-rain-skill" defer></script><script src="hydrangea-soil.js?v=20261113-sensor-language"></script><script src="rain-intensity.js?v=20261116-rain-rate-bands"></script><script src="rain-status.js?v=20261116-fresh-rain-evidence-v2"></script><script src="app.js?v=20261124-remove-visit-comparison"></script>
+<script src="dashboard-preferences.js?v=20261124-remove-dashboard-climate"></script><script src="local-forecast.js?v=20261116-rain-crosscheck-v2"></script><script src="forecast-accuracy.js?v=20261116-rain-skill" defer></script><script src="soil-guide.js?v=20261113-sensor-language"></script><script src="rain-intensity.js?v=20261116-rain-rate-bands"></script><script src="rain-status.js?v=20261116-fresh-rain-evidence-v2"></script><script src="app.js?v=20261124-remove-visit-comparison"></script>
     <script src="sensor-health.js?v=20261121-station-relocation" defer></script>
 
     <script src="site-config.js?v=20261010-v38-4-188"></script>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-271-20261126-notification-consent-recovery";
+const CACHE_NAME = "parknacross-v38-4-271-20261127-garden-soil";
 const STATIC_ASSETS = [
   "./site-design.css",
   "./site-polish.css",
@@ -112,8 +112,8 @@ const STATIC_ASSETS = [
   "./site-config.js",
   "./platform.js",
   "./summary.js",
-  "./hydrangea-soil.js",
-  "./hydrangea-soil.css",
+  "./soil-guide.js",
+  "./soil-guide.css",
   "./radar.js",
   "./graphs.js",
   "./lightning-charts.js",

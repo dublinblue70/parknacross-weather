@@ -19,10 +19,10 @@ Dashboard, Summary, Rain Centre, History, Records, reports and downloads.
 | Official weather warning | Met Éireann information. A failed warning feed means `unavailable`, not `no warning`. |
 | Archive completeness | Ratio of saved observations to expected 5-minute slots for that Irish calendar date, including 23- and 25-hour DST dates. |
 
-## WH52 potted hydrangea context
+## Garden Soil sensor context
 
-- The Ecowitt WH52 probe is installed in compost in one outdoor **potted hydrangea**. It does not measure the acer, bays or other pots.
-- Moisture bands (below 20%, 20–29%, 30–55%, above 55%) are **trial prompts only**, not validated hydrangea watering limits. Check compost 4–5 cm below the surface.
+- The Ecowitt WH52 probe now measures the soil in a different garden pot. Earlier archived measurements may represent its previous location, so old readings must not be used as a baseline for the current pot.
+- Moisture bands (below 20%, 20–29%, 30–55%, above 55%) are **trial prompts only**, not plant-specific or validated watering limits. Check actual moisture and the plant’s requirements before watering.
 - Advice may incorporate the trend and Irish season. Missing or stale readings must not be presented as confirmation that watering is unnecessary.
 - Soil conductivity is not a direct nutrient or plant-health measurement. Do not alter archived measurements to reflect planting context.
 

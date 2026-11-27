@@ -1267,7 +1267,7 @@ function updateSoilPanel(current) {
   panel.hidden = false;
   updateSoilFeedWarning(current);
   if (moisture === null && temperature === null && ec === null) {
-    set("soilSummary", "The soil sensor in the potted hydrangea has no current measurements.");
+    set("soilSummary", "Garden Soil readings are currently unavailable.");
     set("soilMoisture", "Unavailable");
     set("soilTemperature", "Unavailable");
     set("soilEc", "Unavailable");
@@ -1282,7 +1282,7 @@ function updateSoilPanel(current) {
     return;
   }
   const nowEpoch = usable(current?.epoch) ? Number(current.epoch) : Date.now() / 1000;
-  const phase=window.ParknacrossHydrangeaSoil?.baselinePhase?.(
+  const phase=window.ParknacrossSoil?.baselinePhase?.(
     firstValidSoilEpoch,nowEpoch,SOIL_SENSOR_BASELINE_DAYS);
   const validBaseline=phase?.verified===true;
   const baselineDay=phase?.day??null;
@@ -1339,8 +1339,8 @@ function updateSoilPanel(current) {
   }
   if(candidates.length<3 && moistureChange === null)eventText="More saved readings are needed to describe the soil moisture trend.";
   set("soilEvent",eventText);
-  set("soilSummary", "The soil sensor measures compost in the potted hydrangea. Open Graphs to compare moisture, temperature and conductivity with its own history.");
-  const soilGuide=window.ParknacrossHydrangeaSoil;
+  set("soilSummary", "Garden Soil measures moisture, temperature and conductivity around the probe. Historical readings may include its previous pot.");
+  const soilGuide=window.ParknacrossSoil;
   if(soilGuide){
     const guidance=soilGuide.assess({
       moisture,temperature,trendChange:moistureChange,

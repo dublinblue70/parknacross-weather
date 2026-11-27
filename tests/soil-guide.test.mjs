@@ -4,8 +4,8 @@ import vm from 'node:vm';
 const read=f=>fs.readFileSync(new URL('../'+f,import.meta.url),'utf8');
 const context={window:{},Date,Intl,Math,Number};
 vm.createContext(context);
-vm.runInContext(read('hydrangea-soil.js'),context);
-const guide=context.window.ParknacrossHydrangeaSoil;
+vm.runInContext(read('soil-guide.js'),context);
+const guide=context.window.ParknacrossSoil;
 const now=Date.parse('2026-11-05T15:10:00Z')/1000;
 const base={epoch:now,nowEpoch:now,temperature:11.8};
 const okay=guide.assess({...base,moisture:34});
@@ -34,7 +34,13 @@ assert.equal(guide.baselinePhase(first,first+14*86400).building,false);
 assert.equal(guide.baselinePhase(null,now).verified,false);
 assert.equal(guide.baselinePhase(first,first-300).verified,false);
 
-for(const f of ['summary.html','index.html']){assert.match(read(f),/hydrangea-soil\.js\?v=/);assert.match(read(f),/hydrangea-soil\.css\?v=/);}
+for(const f of ['summary.html','index.html']){assert.match(read(f),/soil-guide\.js\?v=/);assert.match(read(f),/soil-guide\.css\?v=/);}
 assert.match(read('summary.js'),/renderSoil\(current,rows\)/);
-assert.match(read('app.js'),/ParknacrossHydrangeaSoil/);
-console.log('PASS: potted hydrangea guidance handles 34%, changing moisture, dry/wet compost, stale readings and seasonal context.');
+assert.match(read('app.js'),/ParknacrossSoil/);
+console.log('PASS: Garden Soil guidance handles 34%, changing moisture, dry/wet compost, stale readings and seasonal context.');
+
+for(const filename of ['index.html','summary.html','graphs.html','station.html','app.js','summary.js','station-page.js','soil-guide.js','soil-guide.css','service-worker.js']){
+  assert.doesNotMatch(read(filename),/hydrangea/i, filename+' should not refer to previous plant');
+}
+assert.match(read('index.html'),/>Garden Soil<\/h2>/);
+assert.match(read('summary.html'),/>Garden Soil<\/h2>/);
