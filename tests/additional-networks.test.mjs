@@ -19,7 +19,11 @@ assert.equal(helpers.vweatherParameters('fixture','dummy',missing).has('rainin')
 assert.equal(helpers.iewnRealtimeText(missing).split(' ')[9],'-');
 const html=fs.readFileSync(new URL('../networks.html',import.meta.url),'utf8');
 const active=html.split('id="connectedNetworks"')[1].split('</section>')[0];
-assert.equal((active.match(/<article class="station-external-network"/g)||[]).length,9);
+assert.equal((active.match(/<article class="station-external-network"/g)||[]).length,10);
+assert.ok(active.includes('href="https://vweatherstation.com/pws/station/parknacross/"'));
+const pending=html.split('id="pendingNetworksHeading"')[1].split('</section>')[0];
+assert.equal((pending.match(/<article class="station-external-network"/g)||[]).length,3);
+assert.ok(!pending.includes("VWeatherStation"));
 assert.match(html,/id="pendingNetworksHeading">In preparation/);
 assert.match(html,/Station observations are not yet published/);
 console.log('PASS: additional networks preserve rainfall provenance, correct units, missing values and separate pending links.');
