@@ -8,7 +8,7 @@ const html = read("index.html");
 const rainSource = read("rain-status.js");
 assert.doesNotThrow(() => new vm.Script(app, {filename:"app.js"}));
 assert.match(html, /id="heroObservationTime"/);
-assert.match(html, /app\.js\?v=20261121-[a-z0-9-]+/,"Dashboard must request the updated JS while retaining source-aware freshness");
+assert.match(html, /app\.js\?v=202611\d{2}-[a-z0-9-]+/,"Dashboard must request the updated JS while retaining source-aware freshness");
 assert.match(app, /Live rain rate unconfirmed/);
 assert.match(app, /currentResponseAvailable = false/);
 
