@@ -1,4 +1,4 @@
-const CACHE_NAME = "parknacross-v38-4-271-20261127-garden-soil";
+const CACHE_NAME = "parknacross-v38-4-261-20261127-garden-soil";
 const STATIC_ASSETS = [
   "./site-design.css",
   "./site-polish.css",
