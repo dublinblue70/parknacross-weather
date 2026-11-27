@@ -143,3 +143,15 @@ adapter=await storageFixture(bgLocal,bgBackup);
 assert.equal(JSON.parse(adapter.getItem(bgKey)).active,false,'explicit background off is retained as a versioned tombstone');
 assert.equal(requests.find(r=>r.action==='save').preferences.enabled,true,'the first background registration must send enabled consent');
 console.log('PASS: actual storage adapter recovers newest consent, handles failed writes, and retains explicit background opt-outs.');
+
+// Migration of old unversioned preferences must respect the local decision
+// in both directions. An old default false alone is not an explicit opt-out.
+for(const [localChoice,backupChoice,expected] of [
+ [{enabled:true},{enabled:false,explicitlyDisabled:true},true],
+ [{enabled:false,explicitlyDisabled:true},{enabled:true},false],
+ [{enabled:false},{enabled:true},true]
+]){
+ const legacy=await storageFixture(new Map([[key,JSON.stringify(localChoice)]]),new Map([[key,JSON.stringify(backupChoice)]]));
+ assert.equal(JSON.parse(legacy.getItem(key)).enabled,expected,'legacy migration respects actual local consent');
+}
+console.log('PASS: migration of legacy consent preserves explicit local choices in either direction.');
