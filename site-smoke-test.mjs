@@ -409,11 +409,11 @@ if (/mask-image\s*:/.test(styles)) {
 const stationNetworksHtml = await readFile(join(root, "networks.html"), "utf8");
 const stationPageHtml = await readFile(join(root, "station.html"), "utf8");
 const stationNetworksCss = await readFile(join(root, "station-page.css"), "utf8");
-// Keep the eleven network links in the current user-prioritised order.
+// Keep the ten network links in the current user-prioritised order.
 const stationNetworkIds = [
   "stationEcowittLink", "stationWeatherUndergroundLink", "stationWindyLink",
   "stationWeathercloudLink", "stationAwekasLink", "stationPwsweatherLink",
-  "stationWindguruLink", "stationWowBeLink", "stationCwopLink", "stationVWeatherLink", "stationOpenWeatherLink"
+  "stationWindguruLink", "stationWowBeLink", "stationCwopLink", "stationVWeatherLink"
 ];
 const stationNetworkPositions = stationNetworkIds.map(id => stationNetworksHtml.indexOf('id="' + id + '"'));
 if (!stationNetworksHtml.includes('id="stationEcowittLink" href="https://www.ecowitt.net/home/share?authorize=RVM47S"') ||
@@ -421,7 +421,7 @@ if (!stationNetworksHtml.includes('id="stationEcowittLink" href="https://www.eco
   failures.push("networks.html: shared Ecowitt link must match provided URL and avoid referrer leaks");
 }
 if (stationNetworkPositions.some(pos => pos < 0) || stationNetworkPositions.some((pos, i) => i && pos <= stationNetworkPositions[i - 1])) {
-  failures.push("networks.html: the eleven weather-network links must follow the current priority order");
+  failures.push("networks.html: the ten weather-network links must follow the current priority order");
 }
 const networkDirectoryCss = await readFile(join(root, "networks-page.css"), "utf8");
 if (!stationNetworksHtml.includes('aria-labelledby="otherNetworksHeading"') ||
@@ -469,7 +469,6 @@ if (networkCardMarkup.length < stationBrandSlugs.length ||
 }
 
 const expectedStationNetworks = [
-  ["stationOpenWeatherLink", "https://openweathermap.org/city/2966654"],
   ["stationVWeatherLink", "https://vweatherstation.com/pws/station/parknacross/"],
   ["stationEcowittLink", "https://www.ecowitt.net/home/share?authorize=RVM47S"],
   ["stationWeatherUndergroundLink", "https://www.wunderground.com/dashboard/pws/IARDAM6"],
