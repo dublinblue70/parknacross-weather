@@ -12,6 +12,10 @@ on:
       - 'station-page.js'
       - 'soil-guide.*'
       - 'service-worker.js'
+      - 'notification-storage.js'
+      - 'alert-settings.js'
+      - 'background-alerts.js'
+      - 'tests/notification-preferences.test.mjs'
       - 'site-smoke-test.mjs'
       - 'tests/soil-guide.test.mjs'
       - '.github/workflows/garden-soil-validation.yml'
@@ -28,6 +32,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --check app.js && node --check summary.js && node --check station-page.js && node --check soil-guide.js
+      - run: node --check notification-storage.js && node --check alert-settings.js && node --check background-alerts.js
+      - run: node tests/notification-preferences.test.mjs
       - run: node tests/soil-guide.test.mjs
       - run: node tests/site-release-integrity.test.mjs
       - run: node tests/site-consolidation.test.mjs
