@@ -469,7 +469,7 @@ if (networkCardMarkup.length < stationBrandSlugs.length ||
 }
 
 const expectedStationNetworks = [
-  ["stationOpenWeatherLink", "https://openweathermap.org/"],
+  ["stationOpenWeatherLink", "https://openweathermap.org/city/2966654"],
   ["stationVWeatherLink", "https://vweatherstation.com/pws/station/parknacross/"],
   ["stationEcowittLink", "https://www.ecowitt.net/home/share?authorize=RVM47S"],
   ["stationWeatherUndergroundLink", "https://www.wunderground.com/dashboard/pws/IARDAM6"],
