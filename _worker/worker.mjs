@@ -2506,6 +2506,30 @@ export default {
     }
 
 
+    // Public, read-only Cumulus-format feed for Ireland Weather Network.
+    if (url.pathname === "/realtime.txt") {
+      if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
+      try {
+        const observation = await additionalNetworkObservation(env);
+        if (!observation) return new Response("No fresh observation\n",{status:503,headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store"}});
+        return new Response(iewnRealtimeText(observation),{headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"public, max-age=30"}});
+      } catch (_) {
+        return new Response("Observation temporarily unavailable\n",{status:503,headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store"}});
+      }
+    }
+    if (url.pathname === "/additional-networks-status" && request.method === "GET") {
+      try {
+        const meta = await readMetaMap(env,["network_openweather_status_v1","network_vweather_status_v1"]);
+        const decode = key => { try { return JSON.parse(meta[key] || "null"); } catch (_) { return null; } };
+        return json({
+          iewn:{feed:"/realtime.txt",membership:"unverified"},
+          windfinder:{state:"provider_approval_required"},
+          openweather:{configured:Boolean((await readSecret(env.OPENWEATHER_STATION_ID)) && (await readSecret(env.OPENWEATHER_API_KEY))),last_attempt:decode("network_openweather_status_v1")},
+          vweather:{configured:Boolean((await readSecret(env.VWEATHER_STATION_ID)) && (await readSecret(env.VWEATHER_STATION_KEY))),last_attempt:decode("network_vweather_status_v1")}
+        },200,{"Cache-Control":"no-store"});
+      } catch (_) { return json({error:"Network status unavailable"},503,{"Cache-Control":"no-store"}); }
+    }
+
     // Reading the established archive does not require running migrations.
     if (url.pathname === "/current") {
       if (request.method !== "GET") return json({error:"Method not allowed"},405,{"Cache-Control":"no-store"});
@@ -3954,6 +3978,8 @@ export default {
       }
 
       try {await runBackgroundAlerts(env);}catch(error){console.warn("Scheduled background alerts failed");}
+       // Optional credential-gated publishers; do not delay or alter weather ingestion.
+       try { await publishAdditionalNetworks(env, cwopSyncResult); } catch (_) { console.warn("Additional weather network relay unavailable"); }
 
       try {
         await seedConfirmedGustExclusion(env);
@@ -10338,4 +10364,83 @@ async function previewWeatherExport(env,url) {
   const sample=await env.DB.prepare(`SELECT * FROM ${TABLE} WHERE epoch >= ? AND epoch < ? ORDER BY epoch ASC LIMIT 3`).bind(start,end).all();
   const expected=Math.max(1,Math.floor((end-1)/300)-Math.floor(start/300)+1),slots=Math.max(0,Number(stats?.slots||0));
   return json({count:Number(stats?.count||0),first_epoch:nullableNumber(stats?.first_epoch),last_epoch:nullableNumber(stats?.last_epoch),columns:rowsToCsv([]).trim().split(","),coverage_percent:Math.min(100,slots/expected*100),actual_slots:slots,expected_slots:expected,sample:(sample.results||[]).map(row=>({epoch:row.epoch,temperature_c:nullableNumber(row.temperature_c),rain_rate_mm_h:nullableNumber(row.rain_rate_mm_h),soil_moisture_pct:nullableNumber(row.soil_moisture_pct)}))},200,{"Cache-Control":"no-store"});
+}
+
+
+// Additional networks (IEWN pull feed; OpenWeatherMap and VWeatherStation push).
+// Credentials are read only from Worker bindings, never written to logs or source.
+async function additionalNetworkObservation(env, syncResult = null) {
+  const now = Math.floor(Date.now()/1000);
+  const gateway = await readGatewayLiveReading(env,now).catch(()=>null);
+  const reading = gateway || syncResult?.reading || await getLatest(env);
+  const epoch = Math.round(Number(reading?.epoch ?? syncResult?.epoch));
+  if (!reading || !Number.isFinite(epoch) || epoch <= 0 || epoch > now+90 || now-epoch > 900) return null;
+  const day=stationDayKey(new Date(epoch*1000));
+  const row=await env.DB.prepare("SELECT rain_mm FROM "+DAILY_TABLE+" WHERE day=? LIMIT 1").bind(day).first().catch(()=>null);
+  const corrected=correctedRainForDay(day,row?.rain_mm);
+  const candidates=[corrected,reading.rain_daily_mm].filter(usableNumber).map(Number).filter(x=>x>=0);
+  const rainToday=candidates.length?Math.max(...candidates):null;
+  const rainHour=await cwopRollingRain(env,epoch,rainToday,3600).catch(()=>null);
+  return {reading,epoch,rainToday,rainHour};
+}
+function iewnRealtimeText({reading:r,epoch,rainToday,rainHour}) {
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Dublin",year:"2-digit",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date(epoch*1000)).map(p=>[p.type,p.value]));
+  const f=Array(58).fill("-");
+  const put=(n,v,d=1)=>{if(usableNumber(v))f[n-1]=Number(v).toFixed(d);};
+  f[0]=parts.day+"/"+parts.month+"/"+parts.year; f[1]=parts.hour+":"+parts.minute+":"+parts.second;
+  put(3,r.temperature_c);put(4,r.humidity,0);put(5,r.dew_point_c);put(6,r.wind_speed_kmh);
+  put(8,r.wind_direction_deg,0);put(9,r.rain_rate_mm_h);put(10,rainToday);put(11,r.pressure_hpa);
+  if(usableNumber(r.wind_direction_deg))f[11]=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round(Number(r.wind_direction_deg)/22.5+16)%16];
+  if(usableNumber(r.wind_speed_kmh))f[12]=String([1,6,12,20,29,39,50,62,75,89,103,118].filter(x=>Number(r.wind_speed_kmh)>=x).length);
+  f[13]="km/h";f[14]="C";f[15]="hPa";f[16]="mm";
+  // Unavailable fields (including indoor measurements) remain missing, never zero.
+  f[38]="38.4.260"; put(44,r.uv_index);put(46,r.solar_w_m2,0);put(48,rainHour);put(55,r.feels_like_c);
+  return f.join(" ")+"\n";
+}
+function openweatherMeasurement(stationId,{reading:r,epoch,rainHour}) {
+  const data={station_id:stationId,dt:epoch};
+  const put=(key,v,factor=1)=>{if(usableNumber(v))data[key]=Number((Number(v)*factor).toFixed(3));};
+  put("temperature",r.temperature_c);put("humidity",r.humidity);put("dew_point",r.dew_point_c);
+  put("pressure",r.pressure_hpa);put("wind_speed",r.wind_speed_kmh,1/3.6);put("wind_gust",r.wind_gust_kmh,1/3.6);put("wind_deg",r.wind_direction_deg);put("rain_1h",rainHour);
+  return data;
+}
+function vweatherParameters(id,key,{reading:r,epoch,rainToday,rainHour}) {
+  const p=new URLSearchParams({ID:id,PASSWORD:key,dateutc:new Date(epoch*1000).toISOString().slice(0,19).replace("T"," "),softwaretype:"ParknacrossWeather"});
+  const put=(k,v,transform=x=>x,d=2)=>{if(usableNumber(v))p.set(k,transform(Number(v)).toFixed(d));};
+  put("tempf",r.temperature_c,x=>x*9/5+32);put("dewptf",r.dew_point_c,x=>x*9/5+32);put("humidity",r.humidity,x=>x,0);
+  put("baromin",r.pressure_hpa,x=>x*0.0295299830714);put("winddir",r.wind_direction_deg,x=>x,0);
+  put("windspeedmph",r.wind_speed_kmh,x=>x/1.609344);put("windgustmph",r.wind_gust_kmh,x=>x/1.609344);
+  // WU-style rainin is rolling hourly accumulation, not instantaneous rate.
+  put("rainin",rainHour,x=>x/25.4,4);put("dailyrainin",rainToday,x=>x/25.4,4);
+  put("solarradiation",r.solar_w_m2);put("UV",r.uv_index);p.set("action","updateraw");return p;
+}
+async function publishAdditionalNetworks(env,syncResult) {
+  const configs=[
+    {name:"openweather",id:await readSecret(env.OPENWEATHER_STATION_ID),key:await readSecret(env.OPENWEATHER_API_KEY)},
+    {name:"vweather",id:await readSecret(env.VWEATHER_STATION_ID),key:await readSecret(env.VWEATHER_STATION_KEY)}
+  ].filter(x=>x.id&&x.key);
+  if(!configs.length)return;
+  const observation=await additionalNetworkObservation(env,syncResult);
+  if(!observation)return;
+  await Promise.allSettled(configs.map(async ({name,id,key})=>{
+    const lastKey="network_"+name+"_accepted_epoch_v1", statusKey="network_"+name+"_status_v1";
+    const meta=await readMetaMap(env,[lastKey]);
+    const previous=Number(meta[lastKey]||0);
+    if(observation.epoch<=previous||observation.epoch-previous<300)return;
+    const save=async(state,httpStatus=null)=>writeMeta(env,{[statusKey]:JSON.stringify({state,at:new Date().toISOString(),observation_epoch:observation.epoch,http_status:httpStatus}),...(state==="accepted_not_display_verified"?{[lastKey]:observation.epoch}:{})});
+    try {
+      let response,ok;
+      if(name==="openweather"){
+        const url=new URL("https://api.openweathermap.org/data/3.0/measurements");url.searchParams.set("appid",key);
+        response=await fetch(url.toString(),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify([openweatherMeasurement(id,observation)]),redirect:"error",signal:AbortSignal.timeout(10000)});
+        ok=response.status===204;
+      }else{
+        // Never downgrade to HTTP, even if the provider's legacy device guide recommends it.
+        const url=new URL("https://pws.vweatherstation.com/pws/upload.php");url.search=vweatherParameters(id,key,observation).toString();
+        response=await fetch(url.toString(),{redirect:"error",signal:AbortSignal.timeout(10000)});
+        ok=response.ok&&(await response.text()).trim().toLowerCase()==="success";
+      }
+      await save(ok?"accepted_not_display_verified":"error",response.status);
+    }catch(_){await save("error").catch(()=>{});}
+  }));
 }
