@@ -12,6 +12,10 @@ on:
       - 'station-page.js'
       - 'soil-guide.*'
       - 'service-worker.js'
+      - 'networks.html'
+      - 'networks-page.css'
+      - '_worker/worker.mjs'
+      - 'tests/additional-networks.test.mjs'
       - 'notification-storage.js'
       - 'alert-settings.js'
       - 'background-alerts.js'
@@ -34,6 +38,7 @@ jobs:
       - run: node --check app.js && node --check summary.js && node --check station-page.js && node --check soil-guide.js
       - run: node --check notification-storage.js && node --check alert-settings.js && node --check background-alerts.js
       - run: node tests/notification-preferences.test.mjs
+      - run: node --check _worker/worker.mjs && node tests/additional-networks.test.mjs
       - run: node tests/soil-guide.test.mjs
       - run: node tests/site-release-integrity.test.mjs
       - run: node tests/site-consolidation.test.mjs
