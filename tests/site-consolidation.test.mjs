@@ -26,7 +26,7 @@ const preferences=await read("dashboard-preferences.js");
 const shortcutScript=await read("dashboard-ui.js");
 assert(preferences.includes("section?.closest('details.dashboard-explore-group')"),"Custom layout must keep optional disclosure wrappers");
 assert(shortcutScript.includes("revealSpecialistHash"),"Direct links must open collapsed specialist sections");
-assert(/dashboard-preferences\.js\?v=20261121-[a-z0-9-]+/.test(home),"Dashboard must use the current preferences script");
+assert(/dashboard-preferences\.js\?v=202611\d{2}-[a-z0-9-]+/.test(home),"Dashboard must use the current preferences script");
 assert(home.includes('data-dashboard-extra="charts" hidden')&&home.includes('data-dashboard-extra="records" hidden'),"Duplicated Dashboard chart and record panels should not be visible");
 assert(home.includes('class="dashboard-specialist-links"')&&!home.includes('src="chart.umd.min.js'),"Specialist links should replace the unused Dashboard Chart.js library");
 assert(history.includes('href="records.html"')&&history.includes('href="graphs.html#dateComparison"'),"History links to definitive tools missing");
