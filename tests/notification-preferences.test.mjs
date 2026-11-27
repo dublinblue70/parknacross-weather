@@ -97,3 +97,49 @@ await h.window.PWBackgroundAlerts.reconcile();
 assert.equal(h.window.PWAlerts.loadSettings().enabled,false,'explicit off is not silently overridden');
 assert.equal(h.window.PWAlerts.loadSettings().explicitlyDisabled,true);
 console.log('PASS: stale false records recover from active background consent; explicit off remains durable.');
+
+ 
+// Exercise the real storage adapter, rather than only a Map-backed preferences
+// fixture. The IndexedDB mock completes reads asynchronously as browsers do.
+const storageSource=fs.readFileSync(new URL('../notification-storage.js',import.meta.url),'utf8');
+const bgKey='parknacross:background-alerts:v1';
+async function storageFixture(localMap,backupMap,{blockWrites=false}={}){
+ const window={addEventListener(){},dispatchEvent(){},indexedDB:{open(){
+  const req={};Promise.resolve().then(()=>{req.result={
+   objectStoreNames:{contains:()=>true},close(){},transaction(){return {objectStore(){return {
+    get(k){const read={};Promise.resolve().then(()=>{read.result=backupMap.get(k);read.onsuccess?.();});return read;},
+    put(v,k){backupMap.set(k,v);}
+   };}};}
+  };req.onsuccess?.();});return req;
+ }}};
+ const localStorage={getItem:k=>localMap.get(k)??null,setItem:(k,v)=>{if(blockWrites)throw Error('local write blocked');localMap.set(k,v);}};
+ const context={window,localStorage,Event:class{constructor(type){this.type=type;}},Date,JSON,Map,Set,Promise,Number,Math};
+ vm.createContext(context);vm.runInContext(storageSource,context);
+ await window.PWNotificationStorage.ready;
+ return window.PWNotificationStorage;
+}
+const oldOn=JSON.stringify({enabled:true,explicitlyDisabled:false,rainStart:true,__pwConsentAt:100,__pwSavedAt:100});
+const oldOff=JSON.stringify({enabled:false,explicitlyDisabled:true,__pwConsentAt:50,__pwSavedAt:50});
+const l=new Map([[key,oldOff]]),backup=new Map([[key,oldOn]]);
+let adapter=await storageFixture(l,backup);
+assert.equal(JSON.parse(adapter.getItem(key)).enabled,true,'a stale explicit off cannot overwrite a newer enable');
+assert.equal(JSON.parse(l.get(key)).enabled,true,'restored consent is repaired in local storage');
+adapter=await storageFixture(l,backup,{blockWrites:true});
+adapter.setItem(key,JSON.stringify({enabled:false,explicitlyDisabled:true}));
+assert.equal(JSON.parse(adapter.getItem(key)).enabled,false,'a failed local write cannot mask newer in-memory explicit off');
+adapter=await storageFixture(l,backup);
+assert.equal(JSON.parse(adapter.getItem(key)).enabled,false,'explicit off survives reload from IndexedDB');
+adapter.setItem(key,JSON.stringify({enabled:true,explicitlyDisabled:false,rainStart:true}));
+const newOn=backup.get(key);l.set(key,oldOff);
+adapter=await storageFixture(l,backup);
+assert.equal(adapter.getItem(key),newOn,'a subsequent stale local opt-out cannot undo a new opt-in');
+const bgBackup=new Map([[bgKey,JSON.stringify({active:true,token:'preserved',__pwSavedAt:100})]]);
+const bgLocal=new Map();
+adapter=await storageFixture(bgLocal,bgBackup);
+assert.equal(JSON.parse(adapter.getItem(bgKey)).token,'preserved');
+adapter.setItem(bgKey,JSON.stringify(null));
+bgLocal.delete(bgKey);
+adapter=await storageFixture(bgLocal,bgBackup);
+assert.equal(JSON.parse(adapter.getItem(bgKey)).active,false,'explicit background off is retained as a versioned tombstone');
+assert.equal(requests.find(r=>r.action==='save').preferences.enabled,true,'the first background registration must send enabled consent');
+console.log('PASS: actual storage adapter recovers newest consent, handles failed writes, and retains explicit background opt-outs.');
