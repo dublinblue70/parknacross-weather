@@ -1,0 +1,33 @@
+name: Garden Soil website validation
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'summary.html'
+      - 'graphs.html'
+      - 'station.html'
+      - 'app.js'
+      - 'summary.js'
+      - 'station-page.js'
+      - 'soil-guide.*'
+      - 'tests/soil-guide.test.mjs'
+      - '.github/workflows/garden-soil-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  garden-soil:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check app.js && node --check summary.js && node --check station-page.js && node --check soil-guide.js
+      - run: node tests/soil-guide.test.mjs
+      - run: node tests/site-release-integrity.test.mjs
+      - run: node tests/site-consolidation.test.mjs
+      - run: node tests/station-observation-freshness.test.mjs
+      - run: node site-smoke-test.mjs
