@@ -10427,20 +10427,30 @@ async function publishAdditionalNetworks(env,syncResult) {
     const meta=await readMetaMap(env,[lastKey]);
     const previous=Number(meta[lastKey]||0);
     if(observation.epoch<=previous||observation.epoch-previous<300)return;
-    const save=async(state,httpStatus=null)=>writeMeta(env,{[statusKey]:JSON.stringify({state,at:new Date().toISOString(),observation_epoch:observation.epoch,http_status:httpStatus}),...(state==="accepted_not_display_verified"?{[lastKey]:observation.epoch}:{})});
+    const save=async(state,httpStatus=null,reason=null)=>writeMeta(env,{[statusKey]:JSON.stringify({state,at:new Date().toISOString(),observation_epoch:observation.epoch,http_status:httpStatus,reason}),...(state==="accepted_not_display_verified"?{[lastKey]:observation.epoch}:{})});
+    let response=null,phase="prepare_request";
     try {
-      let response,ok;
+      let ok;
       if(name==="openweather"){
         const url=new URL("https://api.openweathermap.org/data/3.0/measurements");url.searchParams.set("appid",key);
-        response=await fetch(url.toString(),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify([openweatherMeasurement(id,observation)]),redirect:"error",signal:AbortSignal.timeout(10000)});
+        phase="fetch";
+        response=await fetch(url.toString(),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify([openweatherMeasurement(id,observation)]),redirect:"manual",signal:AbortSignal.timeout(20000)});
         ok=response.status===204;
       }else{
         // Never downgrade to HTTP, even if the provider's legacy device guide recommends it.
         const url=new URL("https://pws.vweatherstation.com/pws/upload.php");url.search=vweatherParameters(id,key,observation).toString();
-        response=await fetch(url.toString(),{redirect:"error",signal:AbortSignal.timeout(10000)});
+        phase="fetch";
+        response=await fetch(url.toString(),{redirect:"manual",signal:AbortSignal.timeout(20000)});
+        phase="read_response";
         ok=response.ok&&(await response.text()).trim().toLowerCase()==="success";
       }
-      await save(ok?"accepted_not_display_verified":"error",response.status);
-    }catch(_){await save("error").catch(()=>{});}
+      const reason=ok?null:response.status>=300&&response.status<400?"redirect_not_followed":response.status===401||response.status===403?"authentication_rejected":!response.ok?"provider_http_error":"unexpected_response";
+      await save(ok?"accepted_not_display_verified":"error",response.status,reason);
+    }catch(error){
+      // Classify rather than expose the exception or URL: either may contain credentials.
+      const message=String(error?.message||"").toLowerCase();
+      const reason=error?.name==="TimeoutError"||error?.name==="AbortError"||/timed? ?out|timeout/.test(message)?"timeout":/tls|ssl|certificate|handshake/.test(message)?"tls_error":/dns|resolve|name resolution/.test(message)?"dns_error":/redirect/.test(message)?"redirect_error":phase==="prepare_request"?"request_preparation_failed":phase==="read_response"?"response_read_failed":"connection_failed";
+      await save("error",response?.status??null,reason).catch(()=>{});
+    }
   }));
 }
